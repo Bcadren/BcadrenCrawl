@@ -311,13 +311,14 @@ spret_type cast_summon_swarm(int pow, god_type god, bool fail)
             mon = RANDOM_ELEMENT(swarmers);
         while (player_will_anger_monster(mon));
 
-        if (create_monster(
+        if (monster *mons = create_monster(
                 mgen_data(mon, BEH_FRIENDLY, &you,
                           dur, SPELL_SUMMON_SWARM,
                           you.pos(),
                           MHITYOU,
                           0, god)))
         {
+            summoned_monster(mons, &you, SPELL_SUMMON_SWARM);
             success = true;
         }
     }
@@ -3013,7 +3014,7 @@ spret_type cast_spectral_weapon(actor *agent, int pow, god_type god, bool fail)
             agent->mindex(),
             0, god);
 
-    int skill_with_weapon = agent->skill(weapon_skill(*wpn), 1, false);
+    int skill_with_weapon = agent->skill(weapon_skill(*wpn), 10, false);
 
     mg.props[TUKIMA_WEAPON] = cp;
     mg.props[TUKIMA_POWER] = pow;
@@ -3194,6 +3195,8 @@ static const summons_desc summonsdata[] =
     { SPELL_SUMMON_DRAGON,              2, 8 },
     // Perma summons
     { SPELL_TWISTED_RESURRECTION,       3, 0 },
+    // Rod specials
+    { SPELL_SUMMON_SWARM,              99, 2 },
     { SPELL_NO_SPELL,                   0, 0 }
 };
 
@@ -3207,7 +3210,8 @@ bool summons_are_capped(spell_type spell)
 
 int summons_limit(spell_type spell)
 {
-    if (!summons_are_capped(spell)) return 0;
+    if (!summons_are_capped(spell))
+        return 0;
     const summons_desc *desc = summonsindex[spell];
     return desc->type_cap;
 }
@@ -3215,7 +3219,8 @@ int summons_limit(spell_type spell)
 // Call when a monster has been summoned to manager this summoner's caps
 bool summoned_monster(monster* mons, actor* caster, spell_type spell)
 {
-    if (!summons_are_capped(spell)) return false;
+    if (!summons_are_capped(spell))
+        return false;
 
     const summons_desc *desc = summonsindex[spell];
 

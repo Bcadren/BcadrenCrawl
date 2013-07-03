@@ -535,7 +535,7 @@ public:
                        bool calc_unid = true) const;
 
     item_def *weapon(int which_attack = -1) const;
-    item_def *shield();
+    item_def *shield() const;
 
     bool      can_wield(const item_def &item,
                         bool ignore_curse = false,
@@ -600,7 +600,8 @@ public:
     void sentinel_mark(bool trap = false);
     int hurt(const actor *attacker, int amount,
              beam_type flavour = BEAM_MISSILE,
-             bool cleanup_dead = true);
+             bool cleanup_dead = true,
+             bool attacker_effects = true);
 
     bool wont_attack() const { return true; };
     mon_attitude_type temp_attitude() const { return ATT_FRIENDLY; };
@@ -919,7 +920,7 @@ void adjust_level(int diff, bool just_xp = false);
 
 bool player_genus(genus_type which_genus,
                    species_type species = SP_UNKNOWN);
-bool is_player_same_species(const monster_type mon, bool = false);
+bool is_player_same_genus(const monster_type mon, bool = false);
 monster_type player_mons(bool transform = true);
 void update_player_symbol();
 void update_vision_range();

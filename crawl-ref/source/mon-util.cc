@@ -768,7 +768,7 @@ bool mons_is_sensed(monster_type mc)
 
 bool mons_allows_beogh(const monster* mon)
 {
-    if (you.species != SP_HILL_ORC || you.religion == GOD_BEOGH)
+    if (!player_genus(GENPC_ORCISH) || you.religion == GOD_BEOGH)
         return false; // no one else gives a damn
 
     return mons_genus(mon->type) == MONS_ORC
@@ -1344,7 +1344,8 @@ bool mons_is_ghost_demon(monster_type mc)
             || mc == MONS_PLAYER_GHOST
             || mc == MONS_PLAYER_ILLUSION
             || mons_class_is_animated_weapon(mc)
-            || mc == MONS_PANDEMONIUM_LORD;
+            || mc == MONS_PANDEMONIUM_LORD
+            || mons_class_is_chimeric(mc);
 }
 
 bool mons_is_pghost(monster_type mc)
@@ -1662,25 +1663,10 @@ mon_attack_def mons_attack_spec(const monster* mon, int attk_number)
     if (attk_number < 0 || attk_number >= MAX_NUM_ATTACKS || mon->has_hydra_multi_attack())
         attk_number = 0;
 
-    if (mons_is_ghost_demon(mc))
+    if (mons_class_is_chimeric(mc))
     {
-        if (attk_number == 0)
-        {
-            return (mon_attack_def::attk(mon->ghost->damage,
-                                         mon->ghost->att_type,
-                                         mon->ghost->att_flav));
-        }
-
-        return mon_attack_def::attk(0, AT_NONE);
-    }
-
-    if (zombified && mc != MONS_KRAKEN_TENTACLE)
-        mc = mons_zombie_base(mon);
-
-    // Chimera get attacks 0, 1 and 2 from their base components. Attack 3 is
-    // the secondary attack of the main base type.
-    if (mc == MONS_CHIMERA)
-    {
+        // Chimera get attacks 0, 1 and 2 from their base components. Attack 3 is
+        // the secondary attack of the main base type.
         switch (attk_number)
         {
         case 0:
@@ -1706,6 +1692,20 @@ mon_attack_def mons_attack_spec(const monster* mon, int attk_number)
             break;
         }
     }
+    else if (mons_is_ghost_demon(mc))
+    {
+        if (attk_number == 0)
+        {
+            return (mon_attack_def::attk(mon->ghost->damage,
+                                         mon->ghost->att_type,
+                                         mon->ghost->att_flav));
+        }
+
+        return mon_attack_def::attk(0, AT_NONE);
+    }
+
+    if (zombified && mc != MONS_KRAKEN_TENTACLE)
+        mc = mons_zombie_base(mon);
 
     ASSERT_smc();
     mon_attack_def attk = smc->attack[attk_number];
@@ -1808,9 +1808,6 @@ flight_type mons_flies(const monster* mon, bool temp)
     // the zombified monster can (e.g. spectral things).
     if (mons_is_zombified(mon))
         ret = max(ret, mons_class_flies(mon->type));
-
-    if (mon->type == MONS_CHIMERA && mon->props.exists("chimera_wings"))
-        ret = mons_class_flies(get_chimera_wings(mon));
 
     if (temp && ret < FL_LEVITATE)
     {

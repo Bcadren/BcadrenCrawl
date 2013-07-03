@@ -111,7 +111,7 @@ public:
         return weapon(0);
     }
     virtual int has_claws(bool allow_tran = true) const = 0;
-    virtual item_def *shield() = 0;
+    virtual item_def *shield() const = 0;
     virtual item_def *slot_item(equipment_type eq,
                                 bool include_melded=false) const = 0;
     virtual int wearing(equipment_type slot, int sub_type,
@@ -206,7 +206,8 @@ public:
                      bool quiet = false) = 0;
     virtual int  hurt(const actor *attacker, int amount,
                       beam_type flavour = BEAM_MISSILE,
-                      bool cleanup_dead = true) = 0;
+                      bool cleanup_dead = true,
+                      bool attacker_effects = true) = 0;
     virtual bool heal(int amount, bool max_too = false) = 0;
     virtual void banish(actor *agent, const string &who = "") = 0;
     virtual void blink(bool allow_partial_control = true) = 0;

@@ -50,6 +50,9 @@
 #include "mapmark.h"
 #include "misc.h"
 #include "mon-info.h"
+#if TAG_MAJOR_VERSION == 34
+ #include "mon-chimera.h"
+#endif
 #include "mon-util.h"
 #include "mon-transit.h"
 #include "place.h"
@@ -135,6 +138,15 @@ bool reader::valid() const
             (_pbuf && _read_offset < _pbuf->size()));
 }
 
+static NORETURN void _short_read()
+{
+    if (!crawl_state.need_save)
+        throw short_read_exception();
+    // Would be nice to name the save chunk here, but in interesting cases
+    // we're reading a copy from memory (why?).
+    die_noline("short read while reading save");
+}
+
 // Reads input in network byte order, from a file or buffer.
 unsigned char reader::readByte()
 {
@@ -142,20 +154,20 @@ unsigned char reader::readByte()
     {
         int b = fgetc(_file);
         if (b == EOF)
-            throw short_read_exception();
+            _short_read();
         return b;
     }
     else if (_chunk)
     {
         unsigned char buf;
         if (_chunk->read(&buf, 1) != 1)
-            throw short_read_exception();
+            _short_read();
         return buf;
     }
     else
     {
         if (_read_offset >= _pbuf->size())
-            throw short_read_exception();
+            _short_read();
         return (*_pbuf)[_read_offset++];
     }
 }
@@ -167,7 +179,7 @@ void reader::read(void *data, size_t size)
         if (data)
         {
             if (fread(data, 1, size, _file) != size)
-                throw short_read_exception();
+                _short_read();
         }
         else
             fseek(_file, (long)size, SEEK_CUR);
@@ -175,12 +187,12 @@ void reader::read(void *data, size_t size)
     else if (_chunk)
     {
         if (_chunk->read(data, size) != size)
-            throw short_read_exception();
+            _short_read();
     }
     else
     {
         if (_read_offset+size > _pbuf->size())
-            throw short_read_exception();
+            _short_read();
         if (data && size)
             memcpy(data, &(*_pbuf)[_read_offset], size);
 
@@ -742,9 +754,12 @@ float unmarshallFloat(reader &th)
 void marshallString(writer &th, const string &data, int maxSize)
 {
     // allow for very long strings (well, up to 32K).
-    int len = data.length();
-    if (maxSize > 0 && len > maxSize)
+    size_t len = data.length();
+    if (maxSize > 0 && len > (size_t) maxSize)
         len = maxSize;
+    // A limit of 32K.
+    if (len > SHRT_MAX)
+        die("trying to marshall too long a string (len=%ld)", len);
     marshallShort(th, len);
 
     // put in the actual string -- we'll null terminate on
@@ -765,6 +780,7 @@ static int unmarshallCString(reader &th, char *data, int maxSize)
 
     // Get length.
     short len = unmarshallShort(th);
+    ASSERT(len >= 0);
     int copylen = len;
 
     if (len >= maxSize)
@@ -1960,7 +1976,14 @@ static void tag_read_you(reader &th)
 #endif
     you.form            = static_cast<transformation_type>(unmarshallInt(th));
     ASSERT_RANGE(you.form, TRAN_NONE, LAST_FORM + 1);
+#if TAG_MAJOR_VERSION == 34
+    if (you.form == TRAN_NONE)
+        you.transform_uncancellable = false;
+#else
+    ASSERT(you.form != TRAN_NONE || !you.transform_uncancellable);
+#endif
     EAT_CANARY;
+
 
     count = unmarshallShort(th);
     ASSERT_RANGE(count, 0, 32768);
@@ -3222,6 +3245,14 @@ static mon_enchant unmarshall_mon_enchant(reader &th)
     return me;
 }
 
+enum mon_part_t
+{
+    MP_GHOST_DEMON      = BIT(0),
+    MP_CONSTRICTION     = BIT(1),
+    MP_ITEMS            = BIT(2),
+    MP_SPELLS           = BIT(3),
+};
+
 void marshallMonster(writer &th, const monster& m)
 {
     if (!m.alive())
@@ -3230,7 +3261,20 @@ void marshallMonster(writer &th, const monster& m)
         return;
     }
 
+    uint32_t parts = 0;
+    if (mons_is_ghost_demon(m.type))
+        parts |= MP_GHOST_DEMON;
+    if (m.held)
+        parts |= MP_CONSTRICTION;
+    for (int i = 0; i < NUM_MONSTER_SLOTS; i++)
+        if (m.inv[i] != NON_ITEM)
+            parts |= MP_ITEMS;
+    for (int i = 0; i < NUM_MONSTER_SPELL_SLOTS; i++)
+        if (m.spells[i])
+            parts |= MP_SPELLS;
+
     marshallShort(th, m.type);
+    marshallUnsigned(th, parts);
     ASSERT(m.mid > 0);
     marshallInt(th, m.mid);
     marshallString(th, m.mname);
@@ -3270,10 +3314,11 @@ void marshallMonster(writer &th, const monster& m)
     marshallShort(th, m.base_monster);
     marshallShort(th, m.colour);
 
-    for (int j = 0; j < NUM_MONSTER_SLOTS; j++)
-        marshallShort(th, m.inv[j]);
-
-    marshallSpells(th, m.spells);
+    if (parts & MP_ITEMS)
+        for (int j = 0; j < NUM_MONSTER_SLOTS; j++)
+            marshallShort(th, m.inv[j]);
+    if (parts & MP_SPELLS)
+        marshallSpells(th, m.spells);
     marshallByte(th, m.god);
     marshallByte(th, m.attitude);
     marshallShort(th, m.foe);
@@ -3281,14 +3326,15 @@ void marshallMonster(writer &th, const monster& m)
     marshallShort(th, m.damage_friendly);
     marshallShort(th, m.damage_total);
 
-    if (mons_is_ghost_demon(m.type))
+    if (parts & MP_GHOST_DEMON)
     {
         // *Must* have ghost field set.
         ASSERT(m.ghost.get());
         marshallGhost(th, *m.ghost);
     }
 
-    _marshall_constriction(th, &m);
+    if (parts & MP_CONSTRICTION)
+        _marshall_constriction(th, &m);
 
     m.props.write(th);
 }
@@ -3382,6 +3428,34 @@ void unmarshallMonsterInfo(reader &th, monster_info& mi)
 #endif
     unmarshallUnsigned(th, mi.mitemuse);
     mi.mbase_speed = unmarshallByte(th);
+
+#if TAG_MAJOR_VERSION == 34
+    // See comment in unmarshallMonster(): this could be an elemental
+    // wellspring masquerading as a spectral weapon, or a polymoth
+    // masquerading as a wellspring.
+    if (th.getMinorVersion() < TAG_MINOR_CANARIES
+        && th.getMinorVersion() >= TAG_MINOR_WAR_DOG_REMOVAL
+        && mi.type >= MONS_SPECTRAL_WEAPON
+        && mi.type <= MONS_POLYMOTH)
+    {
+        switch (mi.base_speed())
+        {
+        case 10:
+            mi.type = MONS_ELEMENTAL_WELLSPRING;
+            break;
+        case 12:
+            mi.type = MONS_POLYMOTH;
+            break;
+        case 25:
+        case 30:
+            mi.type = MONS_SPECTRAL_WEAPON;
+            break;
+        default:
+            die("Unexpected monster_info with type %d and speed %d",
+                mi.type, mi.base_speed());
+        }
+    }
+#endif
 
     // Some TAG_MAJOR_VERSION == 34 saves suffered data loss here, beware.
     // Should be harmless, hopefully.
@@ -3733,6 +3807,20 @@ void unmarshallMonster(reader &th, monster& m)
 
     ASSERT(!invalid_monster_type(m.type));
 
+#if TAG_MAJOR_VERSION == 34
+    uint32_t parts    = 0;
+    if (th.getMinorVersion() < TAG_MINOR_MONSTER_PARTS)
+    {
+        if (mons_is_ghost_demon(m.type))
+            parts |= MP_GHOST_DEMON;
+    }
+    else
+        parts         = unmarshallUnsigned(th);
+    if (th.getMinorVersion() < TAG_MINOR_OPTIONAL_PARTS)
+        parts |= MP_CONSTRICTION | MP_ITEMS | MP_SPELLS;
+#else
+    uint32_t parts    = unmarshallUnsigned(th);
+#endif
     m.mid             = unmarshallInt(th);
     ASSERT(m.mid > 0);
     m.mname           = unmarshallString(th, 100);
@@ -3778,10 +3866,12 @@ void unmarshallMonster(reader &th, monster& m)
     m.base_monster   = unmarshallMonType(th);
     m.colour         = unmarshallShort(th);
 
-    for (int j = 0; j < NUM_MONSTER_SLOTS; j++)
-        m.inv[j] = unmarshallShort(th);
+    if (parts & MP_ITEMS)
+        for (int j = 0; j < NUM_MONSTER_SLOTS; j++)
+            m.inv[j] = unmarshallShort(th);
 
-    unmarshallSpells(th, m.spells);
+    if (parts & MP_SPELLS)
+        unmarshallSpells(th, m.spells);
 
     m.god      = static_cast<god_type>(unmarshallByte(th));
     m.attitude = static_cast<mon_attitude_type>(unmarshallByte(th));
@@ -3791,17 +3881,98 @@ void unmarshallMonster(reader &th, monster& m)
     m.damage_friendly = unmarshallShort(th);
     m.damage_total = unmarshallShort(th);
 
-    if (mons_is_ghost_demon(m.type))
-        m.set_ghost(unmarshallGhost(th));
 #if TAG_MAJOR_VERSION == 34
     if (m.type == MONS_LABORATORY_RAT)
         unmarshallGhost(th), m.type = MONS_RAT;
-#endif
 
-    _unmarshall_constriction(th, &m);
+    // MONS_SPECTRAL_WEAPON was inserted into the wrong place
+    // (0.13-a0-1964-g2fab1c1, merged into trunk in 0.13-a0-1981-g9e80fb2),
+    // and then had a ghost_demon structure added (0.13-a0-2055-g6cfaa00).
+    // Neither event had an associated tag, but both were between the
+    // same two adjacent tags.
+    if (th.getMinorVersion() < TAG_MINOR_CANARIES
+        && th.getMinorVersion() >= TAG_MINOR_WAR_DOG_REMOVAL
+        && m.type >= MONS_SPECTRAL_WEAPON
+        && m.type <= MONS_POLYMOTH)
+    {
+        // But fortunately the three monsters it could be all have different
+        // speeds, and none of those speeds are 3/2 or 2/3 any others. We will
+        // assume that none of these had the wretched enchantment. Ugh.
+        switch (m.speed)
+        {
+        case 6: case 7: // slowed
+        case 10:
+        case 15: // hasted/berserked
+            m.type = MONS_ELEMENTAL_WELLSPRING;
+            break;
+        case 8: // slowed
+        case 12:
+        case 18: // hasted/berserked
+            m.type = MONS_POLYMOTH;
+            break;
+        case 16: case 17: case 20: // slowed
+        case 25:
+        case 30:
+        case 37: case 38: case 45: // hasted/berserked
+            m.type = MONS_SPECTRAL_WEAPON;
+            break;
+        default:
+            die("Unexpected monster with type %d and speed %d",
+                m.type, m.speed);
+        }
+    }
+
+    // Spectral weapons became speed 30 in the commit immediately preceding
+    // the one that added the ghost_demon. Since the commits were in the
+    // same batch, no one should have saves where the speed is 30 and the
+    // spectral weapon didn't have a ghost_demon, or where the speed is
+    // 25 and it did.
+    if (th.getMinorVersion() < TAG_MINOR_CANARIES
+        && m.type == MONS_SPECTRAL_WEAPON
+        // normal, slowed, and hasted, respectively.
+        && m.speed != 30 && m.speed != 20 && m.speed != 45)
+    {
+        // Don't bother trying to fix it up.
+        m.type = MONS_WOOD_GOLEM; // anything removed
+        m.mid = ++you.last_mid;   // sabotage the bond
+        parts &= MP_GHOST_DEMON;
+    }
+    else if (mons_class_is_chimeric(m.type)
+             && th.getMinorVersion() < TAG_MINOR_CHIMERA_GHOST_DEMON)
+    {
+        // Don't unmarshall the ghost demon if this is an invalid chimera
+    }
+    else
+#endif
+    if (parts & MP_GHOST_DEMON)
+        m.set_ghost(unmarshallGhost(th));
+    if (parts & MP_CONSTRICTION)
+        _unmarshall_constriction(th, &m);
 
     m.props.clear();
     m.props.read(th);
+
+#if TAG_MAJOR_VERSION == 34
+    // Now we've got props, can construct a missing ghost demon for
+    // chimera that need upgrading
+    if (th.getMinorVersion() < TAG_MINOR_CHIMERA_GHOST_DEMON
+        && mons_is_ghost_demon(m.type)
+        && mons_class_is_chimeric(m.type))
+    {
+        // Construct a new chimera ghost demon from the old parts
+        ghost_demon ghost;
+        monster_type cparts[] =
+        {
+            get_chimera_part(&m, 1),
+            get_chimera_part(&m, 2),
+            get_chimera_part(&m, 3)
+        };
+        ghost.init_chimera(&m, cparts);
+        m.set_ghost(ghost);
+        m.ghost_demon_init();
+        parts |= MP_GHOST_DEMON;
+    }
+#endif
 
     if (m.props.exists("monster_tile_name"))
     {
@@ -3850,6 +4021,9 @@ void unmarshallMonster(reader &th, monster& m)
         m.type = MONS_GHOST;
         m.props.clear();
     }
+
+    // If an upgrade synthesizes ghost_demon, please mark it in "parts" above.
+    ASSERT(parts & MP_GHOST_DEMON || !mons_is_ghost_demon(m.type));
 
     m.check_speed();
 }

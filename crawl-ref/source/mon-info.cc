@@ -359,6 +359,7 @@ monster_info::monster_info(monster_type p_type, monster_type p_base_type)
 
     fire_blocker = DNGN_UNSEEN;
 
+    u.ghost.acting_part = MONS_0;
     if (mons_is_pghost(type))
     {
         u.ghost.species = SP_HUMAN;
@@ -535,6 +536,15 @@ monster_info::monster_info(const monster* m, int milev)
         mb.set(MB_NAME_ZOMBIE);
     if (m->flags & MF_NAME_SPECIES)
         mb.set(MB_NO_NAME_TAG);
+
+    // Chimera acting head needed for name
+    u.ghost.acting_part = MONS_0;
+    if (type_known && mons_class_is_chimeric(type))
+    {
+        ASSERT(m->ghost.get());
+        ghost_demon& ghost = *m->ghost;
+        u.ghost.acting_part = ghost.acting_part;
+    }
 
     if (milev <= MILEV_NAME)
     {
@@ -927,7 +937,8 @@ string monster_info::common_name(description_level_type desc) const
     const string core = _core_name();
     const bool nocore = mons_class_is_zombified(type)
                         && mons_is_unique(base_type)
-                        && base_type == mons_species(base_type);
+                        && base_type == mons_species(base_type)
+                        || mons_class_is_chimeric(type);
 
     ostringstream ss;
 
@@ -956,6 +967,22 @@ string monster_info::common_name(description_level_type desc) const
             ss << make_stringf("%d", number);
 
         ss << "-headed ";
+    }
+
+    if (mons_class_is_chimeric(type))
+    {
+        ss << "chimera";
+        monsterentry *me = NULL;
+        if (u.ghost.acting_part != MONS_0
+            && (me = get_monster_data(u.ghost.acting_part)))
+        {
+            // Specify an acting head
+            ss << "'s " << me->name << " head";
+        }
+        else
+            // Suffix parts in brackets
+            // XXX: Should have a desc level that disables this
+            ss << " (" << core << chimera_part_names() << ")";
     }
 
     if (!nocore)
@@ -994,9 +1021,6 @@ string monster_info::common_name(description_level_type desc) const
         break;
     case MONS_PILLAR_OF_SALT:
         ss << (nocore ? "" : " ") << "shaped pillar of salt";
-        break;
-    case MONS_CHIMERA:
-        ss << chimera_part_names() << " chimera";
         break;
     default:
         break;

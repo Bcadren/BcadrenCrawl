@@ -1891,7 +1891,7 @@ static int _contamination_ratio(corpse_effect_type chunk_effect)
 // through food::_determine_chunk_effect() first. {dlb}:
 static void _eat_chunk(item_def& food)
 {
-    const bool cannibal  = is_player_same_species(food.mon_type);
+    const bool cannibal  = is_player_same_genus(food.mon_type);
     const int intel      = mons_class_intel(food.mon_type) - I_ANIMAL;
     const bool rotten    = food_is_rotten(food);
     const bool orc       = (mons_genus(food.mon_type) == MONS_ORC);
@@ -2404,7 +2404,7 @@ bool is_forbidden_food(const item_def &food)
 
     // Some gods frown upon cannibalistic behaviour.
     if (god_hates_cannibalism(you.religion)
-        && is_player_same_species(food.mon_type))
+        && is_player_same_genus(food.mon_type))
     {
         return true;
     }
@@ -2530,6 +2530,9 @@ bool can_ingest(int what_isit, int kindof_thing, bool suppress_msg,
                     return false;
 
                 if (ur_chunkslover)
+                    return true;
+
+                if (you_min_hunger() == you_max_hunger())
                     return true;
 
                 if (!suppress_msg)

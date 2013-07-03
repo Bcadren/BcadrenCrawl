@@ -2460,7 +2460,7 @@ item_def *monster::mslot_item(mon_inv_type mslot) const
     return (mi == NON_ITEM ? NULL : &mitm[mi]);
 }
 
-item_def *monster::shield()
+item_def *monster::shield() const
 {
     return mslot_item(MSLOT_SHIELD);
 }
@@ -4193,7 +4193,7 @@ bool monster::rot(actor *agent, int amount, int immediate, bool quiet)
 }
 
 int monster::hurt(const actor *agent, int amount, beam_type flavour,
-                   bool cleanup_dead)
+                   bool cleanup_dead, bool attacker_effects)
 {
     if (mons_is_projectile(type) || mindex() == ANON_FRIENDLY_MONSTER
         || type == MONS_DIAMOND_OBELISK)
@@ -4201,47 +4201,10 @@ int monster::hurt(const actor *agent, int amount, beam_type flavour,
         return 0;
     }
 
-    // XXX: tentative damage sharing with the spectral weapon monster
-    // The damage shared should not be directly lethal to the player
-    // XXX: It might be possible that the damage might be lethal if the player is at low health and is vulnerable?
-    // XXX: This makes a lot of messages, especially when the spectral weapon is hit by a monster with multiple attacks and is frozen, burned, etc.
-    if (type == MONS_SPECTRAL_WEAPON && agent)
-    {
-        // The owner should not be able to damage itself
-        actor *owner = actor_by_mid(props["sw_mid"].get_int());
-        if (owner && owner != agent)
-        {
-            // The damage should not exceed the weapon's current hp
-            // or be enough to kill the owner directly
-            int owner_hp = owner->is_player() ? you.hp
-                                              : owner->as_monster()->hit_points;
-            int shared_damage = min(min(amount,hit_points), owner_hp-1);
-            if (shared_damage > 0)
-            {
-
-                if (owner->is_player())
-                {
-                    mpr("Your spectral weapon shares its damage with you!");
-                    you.hurt(agent, shared_damage, flavour, cleanup_dead);
-                }
-                else if (owner->alive())
-                {
-                    if (you.can_see(owner))
-                    {
-                        string buf = " shares ";
-                        buf += owner->pronoun(PRONOUN_POSSESSIVE);
-                        buf += " spectral weapon's damage!";
-                        simple_monster_message(owner->as_monster(), buf.c_str());
-                    }
-                    owner->hurt(agent, shared_damage, flavour, cleanup_dead);
-                }
-            }
-        }
-    }
-
     if (alive())
     {
-        if (amount != INSTANT_DEATH && agent && agent->is_monster()
+        if (attacker_effects && amount != INSTANT_DEATH
+            && agent && agent->is_monster()
             && agent->as_monster()->has_ench(ENCH_WRETCHED))
         {
             int degree = agent->as_monster()->get_ench(ENCH_WRETCHED).degree;
@@ -4270,12 +4233,13 @@ int monster::hurt(const actor *agent, int amount, beam_type flavour,
         if (amount != INSTANT_DEATH && has_ench(ENCH_INJURY_BOND))
         {
             actor* guardian = get_ench(ENCH_INJURY_BOND).agent();
-            if (guardian && guardian->alive())
+            if (guardian && guardian->alive() && mons_aligned(guardian, this))
             {
                 int split = amount / 2;
                 if (split > 0)
                 {
-                    (new deferred_damage_fineff(agent, guardian, split))->schedule();
+                    (new deferred_damage_fineff(agent, guardian,
+                                                split, false))->schedule();
                     amount -= split;
                 }
             }
@@ -4288,7 +4252,8 @@ int monster::hurt(const actor *agent, int amount, beam_type flavour,
         else if (amount <= 0 && hit_points <= max_hit_points)
             return 0;
 
-        if (agent && agent->is_player() && you.duration[DUR_QUAD_DAMAGE]
+        if (attacker_effects && agent && agent->is_player()
+            && you.duration[DUR_QUAD_DAMAGE]
             && flavour != BEAM_TORMENT_DAMAGE)
         {
             amount *= 4;
@@ -4389,9 +4354,9 @@ void monster::set_new_monster_id()
 
 void monster::ghost_init(bool need_pos)
 {
+    type = MONS_PLAYER_GHOST;
     ghost_demon_init();
 
-    type            = MONS_PLAYER_GHOST;
     god             = ghost->religion;
     attitude        = ATT_HOSTILE;
     behaviour       = BEH_WANDER;
@@ -4437,6 +4402,11 @@ void monster::uglything_init(bool only_mutate)
 
 void monster::ghost_demon_init()
 {
+    // Unequip weapon before setting stats, in case of protection/evasion.
+    item_def *wpn = weapon();
+    if (wpn)
+        unequip_weapon(*wpn, false, false);
+
     hit_dice        = ghost->xl;
     max_hit_points  = min<short int>(ghost->max_hp, MAX_MONSTER_HP);
     hit_points      = max_hit_points;
@@ -4445,6 +4415,10 @@ void monster::ghost_demon_init()
     speed           = ghost->speed;
     speed_increment = 70;
     colour          = ghost->colour;
+
+    // And re-equip it.
+    if (wpn)
+        equip_weapon(*wpn, false, false);
 
     load_ghost_spells();
 }
@@ -5627,6 +5601,39 @@ void monster::react_to_damage(const actor *oppressor, int damage,
     if (type == MONS_ROYAL_JELLY)
         (new trj_spawn_fineff(oppressor, this, pos(), damage))->schedule();
 
+    // Damage sharing from the spectral weapon to its owner
+    // The damage shared should not be directly lethal, though like the
+    // pain spell, it can leave the player at a very dangerous 1hp.
+    // XXX: This makes a lot of messages, especially when the spectral weapon
+    //      is hit by a monster with multiple attacks and is frozen, burned, etc.
+    if (type == MONS_SPECTRAL_WEAPON && oppressor)
+    {
+        // The owner should not be able to damage itself
+        actor *owner = actor_by_mid(props["sw_mid"].get_int());
+        if (owner && owner != oppressor)
+        {
+            int shared_damage = damage / 2;
+            if (shared_damage > 0)
+            {
+
+                if (owner->is_player())
+                    mpr("Your spectral weapon shares its damage with you!");
+                else if (owner->alive() && you.can_see(owner))
+                {
+                    string buf = " shares ";
+                    buf += owner->pronoun(PRONOUN_POSSESSIVE);
+                    buf += " spectral weapon's damage!";
+                    simple_monster_message(owner->as_monster(), buf.c_str());
+                }
+
+                // Share damage using a fineff, so that it's non-fatal
+                // regardless of processing order in an AoE attack.
+                (new deferred_damage_fineff(oppressor, owner,
+                                           shared_damage, false, false))->schedule();
+            }
+        }
+    }
+
     if (!alive())
         return;
 
@@ -5645,7 +5652,8 @@ void monster::react_to_damage(const actor *oppressor, int damage,
             && !invalid_monster_index(number)
             && menv[number].is_parent_monster_of(this))
     {
-        (new deferred_damage_fineff(oppressor, &menv[number], damage))->schedule();
+        (new deferred_damage_fineff(oppressor, &menv[number],
+                                    damage, false))->schedule();
     }
     else if (mons_species(type) == MONS_BUSH
              && res_fire() < 0
