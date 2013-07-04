@@ -4569,6 +4569,7 @@ bool mons_is_child_tentacle_segment(monster_type mc)
 bool mons_is_tentacle(monster_type mc)
 {
     return (mc == MONS_ELDRITCH_TENTACLE
+            || mc == MONS_DEMONIC_TENTACLE
             || mons_is_child_tentacle(mc));
 }
 
@@ -4799,6 +4800,7 @@ bool mons_is_recallable(actor* caller, monster* targ)
     return (targ->alive()
             && !mons_class_is_stationary(targ->type)
             && !mons_is_conjured(targ->type)
+            && !mons_is_tentacle(targ->type)
             && monster_habitable_grid(targ, DNGN_FLOOR)); //XXX?
 }
 

@@ -798,6 +798,13 @@ Summon Swarm spell
 
 This spell summons forth a pestilential swarm.
 %%%%
+Summon Tentacle spell
+
+Causes a horrid tentacle to sprout from the caster's body. It will act
+independently to attack the caster's foes. The caster will suffer sympathetic
+damage when it takes damage, since while it exists it is partially integrated
+with their physiology.
+%%%%
 Summon Ugly Thing spell
 
 This spell summons a mutated otherworldly creature to the caster's aid.

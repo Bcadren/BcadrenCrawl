@@ -108,6 +108,13 @@ bool check_target_spectral_weapon(const actor* mons, const actor *defender);
 bool confirm_attack_spectral_weapon(monster* mons, const actor *defender);
 void reset_spectral_weapon(monster* mons);
 
+monster* find_demon_tentacle(const actor* agent);
+const coord_def pick_demon_tentacle_destination(const coord_def &agent_pos,
+                                                monster* tentacle = NULL,
+                                                bool prefer_foe = false);
+spret_type cast_demon_tentacle(actor *agent, int pow, god_type god, bool fail);
+const actor* pick_demon_tentacle_foe(monster* agent, const coord_def &pos);
+
 typedef bool (*summons_limit_filter)(monster*);
 bool summoned_monster(monster* mons, actor* caster, spell_type spell);
 bool summons_are_capped(spell_type spell);

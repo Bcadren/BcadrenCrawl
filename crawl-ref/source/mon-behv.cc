@@ -409,6 +409,30 @@ void handle_behaviour(monster* mon)
         }
     }
 
+    if (mon->type == MONS_DEMONIC_TENTACLE)
+    {
+        // Check if there's an existing foe within reach
+        const actor* foe = mon->get_foe();
+        if (!foe || mon->foe_distance() > 1)
+        {
+            // Scan adjacent spaces for a new square and a new foe
+            const actor* summoner = mon->props.exists("tentacle_owner_mid")
+                ? actor_by_mid(mon->props["tentacle_owner_mid"].get_int())
+                : NULL;
+
+            // Pick a new destination
+            const coord_def dest = pick_demon_tentacle_destination(
+                (summoner && summoner->alive()) ? summoner->pos()
+                                                : mon->pos(), mon);
+            if (!dest.origin())
+                mon->move_to_pos(dest);
+
+            const actor* new_foe = pick_demon_tentacle_foe(mon, mon->pos());
+            if (new_foe)
+                mon->foe = new_foe->is_player() ? MHITYOU : new_foe->mindex();
+        }
+    }
+
     // Change proxPlayer depending on invisibility and standing
     // in shallow water.
     if (proxPlayer && !you.visible_to(mon))
@@ -458,7 +482,8 @@ void handle_behaviour(monster* mon)
         && mon->behaviour != BEH_WITHDRAW
         && mon->type != MONS_GIANT_SPORE
         && mon->type != MONS_BATTLESPHERE
-        && mon->type != MONS_SPECTRAL_WEAPON)
+        && mon->type != MONS_SPECTRAL_WEAPON
+        && mon->type != MONS_DEMONIC_TENTACLE)
     {
         if  (!crawl_state.game_is_zotdef())
         {
@@ -1110,7 +1135,7 @@ void handle_behaviour(monster* mon)
     }
 }
 
-static bool _mons_check_foe(monster* mon, const coord_def& p,
+static bool _mons_check_foe(const monster* mon, const coord_def& p,
                             bool friendly, bool neutral)
 {
     // We don't check for the player here because otherwise wandering
@@ -1134,6 +1159,11 @@ static bool _mons_check_foe(monster* mon, const coord_def& p,
     return false;
 }
 
+bool monster::is_potential_foe(const coord_def& foe_pos) const
+{
+    return _mons_check_foe(as_monster(), foe_pos, friendly(), neutral());
+}
+
 // Choose random nearest monster as a foe.
 static void _set_nearest_monster_foe(monster* mon)
 {
@@ -1142,6 +1172,7 @@ static void _set_nearest_monster_foe(monster* mon)
             || mon->behaviour == BEH_WITHDRAW
             || mon->type == MONS_BATTLESPHERE
             || mon->type == MONS_SPECTRAL_WEAPON
+            || mon->type == MONS_DEMONIC_TENTACLE
             || mon->has_ench(ENCH_HAUNTING))
     {
         return;

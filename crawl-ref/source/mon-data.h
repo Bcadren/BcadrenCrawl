@@ -5146,6 +5146,18 @@ static monsterentry mondata[] = {
     MONUSE_NOTHING, MONEAT_NOTHING, SIZE_GIANT
 },
 
+{
+    MONS_DEMONIC_TENTACLE, 'w', GREEN, "demonic tentacle",
+    M_NO_POLY_TO | M_SEE_INVIS,
+    MR_NO_FLAGS,
+    0, 10, MONS_DEMONIC_TENTACLE, MONS_DEMONIC_TENTACLE, MH_DEMONIC, MAG_IMMUNE,
+    { {AT_TENTACLE_SLAP, AF_PLAIN, 15}, {AT_CONSTRICT, AF_CRUSH, 5}, AT_NO_ATK, AT_NO_ATK },
+    { 12, 3, 2, 0 },
+    8, 10, MST_NO_SPELLS, CE_NOCORPSE, Z_NOZOMBIE, S_SILENT,
+    I_PLANT, HT_AMPHIBIOUS, FL_LEVITATE, 12, DEFAULT_ENERGY,
+    MONUSE_NOTHING, MONEAT_NOTHING, SIZE_MEDIUM
+},
+
 // minor demons: imps, etc. ('5')
 // note: these things regenerate
 {

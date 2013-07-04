@@ -101,6 +101,11 @@ static coord_def overlay_directions[] = {
     coord_def(-1, 1)
 };
 
+coord_def &random_direction()
+{
+    return overlay_directions[random2(8)];
+}
+
 static void _add_directional_overlays(const coord_def& gc, packed_cell* cell,
                                       tileidx_t tile, map_predicate pred,
                                       uint8_t tile_mask = 0xFF)

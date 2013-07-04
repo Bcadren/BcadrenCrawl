@@ -1164,6 +1164,7 @@ bool setup_mons_cast(monster* mons, bolt &pbolt, spell_type spell_cast,
     case SPELL_WALL_OF_BRAMBLES:
     case SPELL_HASTE_PLANTS:
     case SPELL_WIND_BLAST:
+    case SPELL_SUMMON_TENTACLE:
         return true;
     default:
         if (check_validity)
@@ -1644,6 +1645,14 @@ static bool _ms_waste_of_time(const monster* mon, spell_type monspell)
     case SPELL_SPECTRAL_WEAPON:
         if (find_spectral_weapon(mon))
             ret = true;
+        break;
+
+    case SPELL_SUMMON_TENTACLE:
+        if (find_demon_tentacle(mon)
+            || pick_demon_tentacle_destination(mon->pos()).origin())
+        {
+            ret = true;
+        }
         break;
 
     case SPELL_INJURY_BOND:
@@ -4337,6 +4346,10 @@ void mons_cast(monster* mons, bolt &pbolt, spell_type spell_cast,
 
     case SPELL_SPECTRAL_WEAPON:
         cast_spectral_weapon(mons, min(6 * mons->hit_dice, 200), mons->god, false);
+        return;
+
+    case SPELL_SUMMON_TENTACLE:
+        cast_demon_tentacle(mons, min(6 * mons->hit_dice, 200), mons->god, false);
         return;
 
     // TODO: Outsource the cantrip messages and allow specification of

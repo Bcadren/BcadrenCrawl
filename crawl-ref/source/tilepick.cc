@@ -2419,7 +2419,18 @@ static tileidx_t _tileidx_tentacle(const monster_info& mon)
     // Tentacle only requires checking of head position.
     if (mons_is_tentacle(mon.type))
     {
-        if (no_head_connect)
+        if (mon.type == MONS_DEMONIC_TENTACLE)
+        {
+            actor* head_mon = mon.props.exists("tentacle_owner_mid")
+                ? actor_by_mid(mon.props["tentacle_owner_mid"].get_int())
+                : NULL;
+            // Disconnected tentacle thrashing around
+            if (!head_mon)
+                h_pos = t_pos + random_direction();
+            else
+                h_pos = head_mon->pos();
+        }
+        else if (no_head_connect)
         {
             if (_mons_is_kraken_tentacle(mon.type)
                 || mon.type == MONS_SNAPLASHER_VINE
@@ -2793,6 +2804,7 @@ static tileidx_t _tileidx_monster_no_props(const monster_info& mon)
         case MONS_STARSPAWN_TENTACLE_SEGMENT:
         case MONS_SNAPLASHER_VINE:
         case MONS_SNAPLASHER_VINE_SEGMENT:
+        case MONS_DEMONIC_TENTACLE:
         {
             tileidx_t tile = _tileidx_tentacle(mon);
             _handle_tentacle_overlay(mon.pos, tile, _get_tentacle_type(mon.type));

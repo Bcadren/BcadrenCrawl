@@ -202,6 +202,7 @@ public:
     void load_ghost_spells();
 
     actor *get_foe() const;
+    bool is_potential_foe(const coord_def &foe_pos) const;
 
     // actor interface
     int mindex() const;

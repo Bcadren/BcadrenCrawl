@@ -73,6 +73,8 @@ struct packed_cell
     void clear();
 };
 
+coord_def &random_direction();
+
 // For a given location, pack any waves/ink/wall shadow tiles
 // that require knowledge of the surrounding env cells.
 void pack_cell_overlays(const coord_def &gc, packed_cell *cell);

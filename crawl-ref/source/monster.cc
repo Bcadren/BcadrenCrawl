@@ -5607,23 +5607,27 @@ void monster::react_to_damage(const actor *oppressor, int damage,
     // pain spell, it can leave the player at a very dangerous 1hp.
     // XXX: This makes a lot of messages, especially when the spectral weapon
     //      is hit by a monster with multiple attacks and is frozen, burned, etc.
-    if (type == MONS_SPECTRAL_WEAPON && oppressor)
+    // XXX: Also shares demonic tentacle damage. The share rate should perhaps be different,
+    //      or damage-on-death instead.
+    if (oppressor
+        && (type == MONS_SPECTRAL_WEAPON || type == MONS_DEMONIC_TENTACLE))
     {
+        // XXX: Fix once we have owner_mid field
+        string key = type == MONS_DEMONIC_TENTACLE ? "tentacle_owner_mid" : "sw_mid";
+        actor *owner = props.exists(key) ? actor_by_mid(props[key].get_int()) : NULL;
         // The owner should not be able to damage itself
-        actor *owner = actor_by_mid(props["sw_mid"].get_int());
         if (owner && owner != oppressor)
         {
             int shared_damage = damage / 2;
             if (shared_damage > 0)
             {
-
                 if (owner->is_player())
-                    mpr("Your spectral weapon shares its damage with you!");
+                    mprf("%s shares its damage with you!", name(DESC_YOUR).c_str());
                 else if (owner->alive() && you.can_see(owner))
                 {
-                    string buf = " shares ";
-                    buf += owner->pronoun(PRONOUN_POSSESSIVE);
-                    buf += " spectral weapon's damage!";
+                    string buf = make_stringf(" shares %s %s's damage!",
+                        owner->pronoun(PRONOUN_POSSESSIVE).c_str(),
+                        name(DESC_PLAIN).c_str());
                     simple_monster_message(owner->as_monster(), buf.c_str());
                 }
 

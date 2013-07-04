@@ -3167,6 +3167,133 @@ bool confirm_attack_spectral_weapon(monster* mons, const actor *defender)
     return false;
 }
 
+monster* find_demon_tentacle(const actor* agent)
+{
+    if (agent->props.exists("tentacle_mid"))
+    {
+        monster* tent = monster_by_mid(agent->props["tentacle_mid"].get_int());
+        if (tent && tent->alive()) return tent;
+    }
+    return NULL;
+}
+
+const actor* pick_demon_tentacle_foe(monster* agent, const coord_def &pos)
+{
+    int chance = 0;
+    actor* chosen = NULL;
+    for (adjacent_iterator ai(pos); ai; ++ai)
+    {
+        monster* foe = monster_at(*ai);
+        if (!foe) continue;
+        if (agent->is_potential_foe(*ai))
+        {
+            ++chance;
+            if (x_chance_in_y(1,chance))
+                chosen = foe;
+        }
+    }
+    return chosen;
+}
+
+const coord_def pick_demon_tentacle_destination(const coord_def &agent_pos,
+                                                 monster* tentacle,
+                                                 bool prefer_foe)
+{
+    // Pick a random adjacent empty square suitable for the tentacle
+    int chance = 0;
+    coord_def chosen(0, 0);
+    for (adjacent_iterator ai(agent_pos); ai; ++ai)
+    {
+        if ((tentacle && monster_habitable_grid(tentacle, env.grid(*ai))
+            || monster_habitable_grid(MONS_DEMONIC_TENTACLE, env.grid(*ai)))
+                && (!actor_at(*ai) || tentacle && *ai == tentacle->pos())
+            // If tentacle is available, ensure a potential adjacent foe
+            && (!prefer_foe || pick_demon_tentacle_foe(tentacle, *ai)))
+        {
+            if (x_chance_in_y(1, chance++))
+                chosen = *ai;
+        }
+    }
+    // If no suitable spot was found for attacking, try to get a vanilla spot
+    if (prefer_foe && chosen.origin())
+        return pick_demon_tentacle_destination(agent_pos, tentacle);
+    return chosen;
+}
+
+spret_type cast_demon_tentacle(actor *agent, int pow, god_type god, bool fail)
+{
+    ASSERT(agent);
+
+    const int dur = min(2 + random2(1 + div_rand_round(pow, 25)), 4);
+
+    // Just don't allow casting over the limit
+    if (!summons_to_limit(agent, SPELL_SUMMON_TENTACLE))
+    {
+        if (agent->is_player())
+            mpr("You can't sustain another tentacle.");
+        return SPRET_ABORT;
+    }
+
+    const coord_def pos = pick_demon_tentacle_destination(agent->pos());
+    if (pos.origin())
+    {
+        if (agent->is_player())
+            mpr("You need a free adjacent space to summon a tentacle.");
+        return SPRET_ABORT;
+    }
+
+    fail_check();
+
+    mgen_data mg(MONS_DEMONIC_TENTACLE,
+                 agent->is_player() ? BEH_FRIENDLY
+                                    : SAME_ATTITUDE(agent->as_monster()),
+                 agent,
+                 dur, SPELL_SUMMON_TENTACLE,
+                 agent->pos(),
+                 agent->mindex(),
+                 0, god); //, MONS_NO_MONSTER, 0, 0, PROX_EXACT;
+
+    // XXX: Probably use spell power a different way
+    mg.hd = 5 + div_rand_round(pow,5);
+    monster *mons = create_monster(mg);
+
+    if (!mons)
+    {
+        canned_msg(MSG_NOTHING_HAPPENS);
+        return SPRET_SUCCESS;
+    }
+
+    // XXX: would be better to set on the mgen_data but for some
+    //      reason props aren't copied to the monster
+    mons->props["tentacle_owner_mid"] = (int)agent->mid;
+
+    if (agent->is_player())
+        mpr("A horrid tentacle sprouts from your chest!");
+    else
+    {
+        if (you.can_see(agent))
+        {
+            string buf = "";
+            if (you.can_see(mons))
+                buf += "A horrid tentacle";
+            else
+                buf += "Something";
+            buf += " sprouts from ";
+            buf += agent->pronoun(PRONOUN_POSSESSIVE);
+            buf += " body!";
+            simple_monster_message(agent->as_monster(), buf.c_str());
+        }
+        else if (you.can_see(mons))
+            simple_monster_message(mons, " appears!");
+
+        mons->props["band_leader"].get_int() = agent->mid;
+    }
+
+    agent->props["tentacle_mid"].get_int() = mons->mid;
+
+    return SPRET_SUCCESS;
+}
+
 spell_type summons_index::map(const summons_desc* val)
 {
     return val->which;
@@ -3187,6 +3314,7 @@ static const summons_desc summonsdata[] =
     { SPELL_SUMMON_DEMON,               3, 2 },
     { SPELL_DEMONIC_HORDE,              8, 5 },
     { SPELL_SUMMON_GREATER_DEMON,       3, 2 },
+    { SPELL_SUMMON_TENTACLE,            1, 0 },
     // General monsters
     { SPELL_SUMMON_ELEMENTAL,           3, 2 },
     { SPELL_SUMMON_UGLY_THING,          3, 2 },
@@ -3216,7 +3344,7 @@ int summons_limit(spell_type spell)
     return desc->type_cap;
 }
 
-// Call when a monster has been summoned to manager this summoner's caps
+// Call when a monster has been summoned to manage this summoner's caps
 bool summoned_monster(monster* mons, actor* caster, spell_type spell)
 {
     if (!summons_are_capped(spell))

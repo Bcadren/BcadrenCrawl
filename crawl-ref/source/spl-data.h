@@ -3242,6 +3242,19 @@ struct spell_desc
 },
 
 {
+    SPELL_SUMMON_TENTACLE, "Summon Tentacle",
+     SPTYP_SUMMONING | SPTYP_HEXES,
+     SPFLAG_BATTLE | SPFLAG_CHAOTIC | SPFLAG_UNHOLY,
+     3,
+     200,
+     -1, -1,
+     0,
+     NULL,
+     false,
+     true
+},
+
+{
     SPELL_NO_SPELL, "nonexistent spell",
      0,
      SPFLAG_TESTING,

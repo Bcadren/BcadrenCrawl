@@ -2452,6 +2452,9 @@ enum monster_type                      // menv[].type
     MONS_ABOMINATION_LARGE,
     MONS_CRAWLING_CORPSE,
     MONS_MACABRE_MASS,
+#if TAG_MAJOR_VERSION > 34
+    MONS_DEMONIC_TENTACLE,
+#endif
 
     // Undead:
     MONS_PLAGUE_SHAMBLER,
@@ -2695,6 +2698,10 @@ enum monster_type                      // menv[].type
     MONS_ELEMENTAL_WELLSPRING,
 
     MONS_POLYMOTH,
+
+#if TAG_MAJOR_VERSION == 34
+    MONS_DEMONIC_TENTACLE,
+#endif
 
     NUM_MONSTERS,               // used for polymorph
 
@@ -3537,6 +3544,7 @@ enum spell_type
     SPELL_SONG_OF_SLAYING,
     SPELL_SPECTRAL_WEAPON,
     SPELL_SONG_OF_SHIELDING,
+    SPELL_SUMMON_TENTACLE,
     NUM_SPELLS
 };
 

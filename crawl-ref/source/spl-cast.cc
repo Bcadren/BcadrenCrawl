@@ -1547,6 +1547,9 @@ static spret_type _do_cast(spell_type spell, int powc,
     case SPELL_SUMMON_HORRIBLE_THINGS:
         return cast_summon_horrible_things(powc, god, fail);
 
+    case SPELL_SUMMON_TENTACLE:
+        return cast_demon_tentacle(&you, powc, god, fail);
+
     case SPELL_MALIGN_GATEWAY:
         return cast_malign_gateway(&you, powc, god, fail);
 
