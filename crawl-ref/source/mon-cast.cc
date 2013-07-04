@@ -624,6 +624,7 @@ bolt mons_spell_beam(monster* mons, spell_type spell_cast, int power,
 
     case SPELL_AGONY:
         beam.flavour    = BEAM_PAIN;
+        beam.ench_power = mons->hit_dice * 6;
         beam.is_beam    = true;
         break;
 
@@ -927,7 +928,7 @@ bolt mons_spell_beam(monster* mons, spell_type spell_cast, int power,
     case SPELL_GHOSTLY_FIREBALL:
         beam.colour   = CYAN;
         beam.name     = "ghostly fireball";
-        beam.damage   = dice_def(3, 7 + power / 15);
+        beam.damage   = dice_def(3, 7 + power / 13);
         beam.hit      = 40;
         beam.flavour  = BEAM_GHOSTLY_FLAME;
         beam.is_explosion = true;

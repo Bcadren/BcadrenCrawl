@@ -2859,20 +2859,35 @@ void move_solo_tentacle(monster* tentacle)
         }
         else if (tentacle->type == MONS_SNAPLASHER_VINE)
         {
-            for (adjacent_iterator ai(tentacle->pos()); ai; ++ai)
+            // Don't shift our victim if they're already next to a tree
+            // (To avoid shaking players back and forth constantly)
+            bool near_tree = false;
+            for (adjacent_iterator ai(constrictee->pos()); ai; ++ai)
             {
-                if (adjacent(*ai, constrictee->pos())
-                    && constrictee->is_habitable(*ai)
-                    && !actor_at(*ai))
+                if (feat_is_tree(grd(*ai)))
                 {
-                    for (adjacent_iterator ai2(*ai); ai2; ++ai2)
+                    near_tree = true;
+                    break;
+                }
+            }
+
+            if (!near_tree)
+            {
+                for (adjacent_iterator ai(tentacle->pos()); ai; ++ai)
+                {
+                    if (adjacent(*ai, constrictee->pos())
+                        && constrictee->is_habitable(*ai)
+                        && !actor_at(*ai))
                     {
-                        if (feat_is_tree(grd(*ai2)))
+                        for (adjacent_iterator ai2(*ai); ai2; ++ai2)
                         {
-                            pull_constrictee = true;
-                            shift_constrictee = true;
-                            shift_pos = *ai;
-                            break;
+                            if (feat_is_tree(grd(*ai2)))
+                            {
+                                pull_constrictee = true;
+                                shift_constrictee = true;
+                                shift_pos = *ai;
+                                break;
+                            }
                         }
                     }
                 }
@@ -4211,6 +4226,21 @@ bool mon_special_ability(monster* mons, bolt & beem)
         }
     }
     break;
+
+    case MONS_THORN_LOTUS:
+        if (x_chance_in_y(2, 5))
+        {
+            setup_mons_cast(mons, beem, SPELL_THORN_VOLLEY);
+
+            fire_tracer(mons, beem);
+            if (mons_should_fire(beem))
+            {
+                make_mons_stop_fleeing(mons);
+                _mons_cast_abil(mons, beem, SPELL_THORN_VOLLEY);
+                used = true;
+            }
+        }
+        break;
 
     default:
         break;
