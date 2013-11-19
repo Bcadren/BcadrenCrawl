@@ -3317,6 +3317,45 @@ struct spell_desc
 },
 
 {
+    SPELL_ORB_OF_ELECTRICITY, "Orb of electricity",
+     SPTYP_CONJURATION | SPTYP_AIR,
+     SPFLAG_DIR_OR_TARGET,
+     6,
+     200,
+     8, 8,
+     0,
+     NULL,
+     true,
+     false
+},
+
+{
+    SPELL_MAJOR_DESTRUCTION, "Major destruction",
+     SPTYP_CONJURATION,
+     SPFLAG_DIR_OR_TARGET,
+     7,
+     200,
+     7, 7,
+     0,
+     NULL,
+     true,
+     false
+},
+
+{
+    SPELL_GREATER_SERVANT, "Greater servant",
+     SPTYP_SUMMONING,
+     SPFLAG_BATTLE,
+     7,
+     200,
+     -1, -1,
+     0,
+     NULL,
+     false,
+     false
+},
+
+{
     SPELL_NO_SPELL, "nonexistent spell",
      0,
      SPFLAG_TESTING,

@@ -2248,6 +2248,16 @@
        SPELL_NO_SPELL
       }
     },
+    {  MST_ASTERION,
+      {
+       SPELL_MAJOR_DESTRUCTION,
+       SPELL_NO_SPELL,
+       SPELL_NO_SPELL,
+       SPELL_GREATER_SERVANT,
+       SPELL_NO_SPELL,
+       SPELL_NO_SPELL
+      }
+    },
 
     {  MST_IGNIS,
       {

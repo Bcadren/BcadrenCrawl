@@ -3111,6 +3111,8 @@ static const summons_desc summonsdata[] =
     { SPELL_SUMMON_DEMON,               3, 2 },
     { SPELL_DEMONIC_HORDE,              8, 5 },
     { SPELL_SUMMON_GREATER_DEMON,       3, 2 },
+    // Only affects the monster version
+    { SPELL_GREATER_SERVANT,            2, 2 },
     // General monsters
     { SPELL_SUMMON_ELEMENTAL,           3, 2 },
     { SPELL_SUMMON_UGLY_THING,          3, 2 },

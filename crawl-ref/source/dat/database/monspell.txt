@@ -193,6 +193,14 @@ Haste Plants cast
 
 @The_monster@ empowers the plants around itself!
 %%%%
+Major Destruction cast
+
+@The_monster@ conjures a destructive force in the name of @possessive_God@!
+%%%%
+Greater Servant cast
+
+@The_monster@ calls upon @possessive_God@ to grant an ally!
+%%%%
 Druid's Call cast
 
 @The_monster@ calls out to the beasts of the land!

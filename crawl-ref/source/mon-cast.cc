@@ -285,6 +285,19 @@ bolt mons_spell_beam(monster* mons, spell_type spell_cast, int power,
     if (spell_cast == SPELL_DRACONIAN_BREATH)
         real_spell = _draco_type_to_breath(drac_type);
 
+    if (spell_cast == SPELL_MAJOR_DESTRUCTION)
+    {
+        switch (random2(7))
+        {
+        case 0: real_spell = SPELL_BOLT_OF_FIRE;       break;
+        case 1: real_spell = SPELL_FIREBALL;           break;
+        case 2: real_spell = SPELL_LIGHTNING_BOLT;     break;
+        case 3: real_spell = SPELL_STICKY_FLAME;       break;
+        case 4: real_spell = SPELL_IRON_SHOT;          break;
+        case 5: real_spell = SPELL_BOLT_OF_DRAINING;   break;
+        case 6: real_spell = SPELL_ORB_OF_ELECTRICITY; break;
+        }
+    }
     beam.glyph = dchar_glyph(DCHAR_FIRED_ZAP); // default
     beam.thrower = KILL_MON_MISSILE;
     beam.origin_spell = real_spell;
@@ -511,6 +524,17 @@ bolt mons_spell_beam(monster* mons, spell_type spell_cast, int power,
         beam.flavour  = BEAM_ELECTRICITY;
         beam.hit      = 16 + power / 40;
         beam.is_beam  = true;
+        break;
+
+    case SPELL_ORB_OF_ELECTRICITY:
+        beam.name          = "orb of electricity";
+        beam.damage        = dice_def(3, 7 + power / 10);
+        beam.colour        = LIGHTCYAN;
+        beam.flavour       = BEAM_ELECTRICITY;
+        beam.hit           = 40;
+        beam.foe_ratio     = 80;
+        beam.ex_size       = 2;
+        beam.is_explosion  = true;
         break;
 
     case SPELL_INVISIBILITY:
@@ -1161,6 +1185,7 @@ bool setup_mons_cast(monster* mons, bolt &pbolt, spell_type spell_cast,
     case SPELL_WIND_BLAST:
     case SPELL_SUMMON_VERMIN:
     case SPELL_TORNADO:
+    case SPELL_GREATER_SERVANT:
         return true;
     default:
         if (check_validity)
@@ -4984,7 +5009,29 @@ void mons_cast(monster* mons, bolt &pbolt, spell_type spell_cast,
         _do_high_level_summon(mons, monsterNearby, spell_cast,
                               _pick_vermin, one_chance_in(4) ? 3 : 2 , god);
         return;
+
+    case SPELL_GREATER_SERVANT:
+    {
+        if (_mons_abjured(mons, monsterNearby))
+            return;
+
+        duration = min(2 + mons->hit_dice / 10, 6);
+
+        const monster_type mon = random_choose(MONS_EXECUTIONER,
+                                               MONS_GREEN_DEATH,
+                                               MONS_BLIZZARD_DEMON, MONS_BALRUG,
+                                               MONS_CACODEMON, -1);
+        monster* serv = create_monster(mgen_data(mon, SAME_ATTITUDE(mons), mons,
+                                                 duration, spell_cast,
+                                                 mons->pos(), mons->foe, 0,
+                                                 god));
+        if (serv)
+            summoned_monster(serv, mons, SPELL_GREATER_SERVANT);
+        return;
     }
+    }
+
+
 
     // If a monster just came into view and immediately cast a spell,
     // we need to refresh the screen before drawing the beam.
