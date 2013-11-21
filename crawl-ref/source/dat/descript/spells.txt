@@ -500,6 +500,10 @@ fire besides appearance. Both the direct hit and residual flame does damage to
 living beings and heals the undead. The energy tends to coalesce into spectral
 undead creatures on its own.
 %%%%
+Greater Servant spell
+
+<Greater Servant of Makhleb ability>
+%%%%
 Haste Other spell
 
 This spell allows the caster to speed up all actions of a nearby ally.
@@ -660,6 +664,10 @@ Magic Dart spell
 
 This spell hurls a small bolt of magical energy. It never misses.
 %%%%
+Major Destruction spell
+
+<Major Destruction ability>
+%%%%
 Major Healing spell
 
 This spell heals a large amount of damage to the caster's body.
@@ -786,6 +794,11 @@ stabilize, and a nascent orb won't do the full damage it is capable of.
 It is said that most copies of this spell suffer from a scribal error that
 makes the orbs unstable beyond a short range. Certain individuals may have
 access to spellbooks without this flaw, so beware!
+%%%%
+Orb of Electricity spell
+
+This spell conjures a massive orb of electricity which instantly homes
+towards a pointed at target and explodes doing tremendous damage.
 %%%%
 Ozocubu's Armour spell
 
