@@ -1787,17 +1787,6 @@
       }
     },
 
-    {  MST_FRANCES,
-      {
-       SPELL_THROW_ICICLE,
-       SPELL_SUMMON_DEMON,
-       SPELL_HASTE,
-       SPELL_IRON_SHOT,
-       SPELL_SUMMON_DEMON,
-       SPELL_HASTE
-      }
-    },
-
     {  MST_THRASHING_HORROR,
       {
        SPELL_NO_SPELL,

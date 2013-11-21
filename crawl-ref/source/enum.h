@@ -2604,7 +2604,7 @@ enum monster_type                      // menv[].type
     MONS_AGNES,
     MONS_MAUD,
     MONS_LOUISE,
-    MONS_FRANCES,
+    MONS_ASTERION,
     MONS_RUPERT,
     MONS_WIGLAF,
     MONS_XTAHUA,
@@ -2770,7 +2770,6 @@ enum monster_type                      // menv[].type
     MONS_FORMICID_DRONE,
     MONS_FORMICID_VENOM_MAGE,
     MONS_RAIJU,
-    MONS_ASTERION,
 #if TAG_MAJOR_VERSION == 34
     MONS_DRAGON,                // genus
 #endif

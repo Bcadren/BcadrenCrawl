@@ -148,10 +148,6 @@ NAME:   uniq_eustachio
 DEPTH:  D:4-10, Orc:1-2
 : place_unique(_G, "Eustachio")
 
-NAME:   uniq_frances
-DEPTH:  Depths, Elf:2-, Swamp:2-, Snake:2-, Shoals:2-, Spider:2-, Vaults, Crypt, Forest, Blade, Tomb
-: place_unique(_G, "Frances")
-
 NAME:   uniq_frederick
 DEPTH:  Depths:3-, Vaults:2-, Crypt, Forest, Blade, Tomb
 : place_unique(_G, "Frederick")

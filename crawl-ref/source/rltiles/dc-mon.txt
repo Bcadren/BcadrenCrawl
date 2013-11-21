@@ -458,7 +458,6 @@ donald MONS_DONALD
 edmund MONS_EDMUND
 erica MONS_ERICA
 eustachio MONS_EUSTACHIO
-frances MONS_FRANCES
 %rim 0
 frederick MONS_FREDERICK
 %rim 1

@@ -3466,7 +3466,6 @@ static gender_type _mons_class_gender(monster_type mc)
         case MONS_AGNES:
         case MONS_MAUD:
         case MONS_LOUISE:
-        case MONS_FRANCES:
         case MONS_MARGERY:
         case MONS_EROLCHA:
         case MONS_ERICA:

@@ -109,7 +109,7 @@ function base_monster_setup(e)
            Prince Ribbit")
   e.kmons("I = Erica / Erolcha / Eustachio / Gastronok / Grum band / Harold /\
            Joseph / Josephine band / Maurice / Psyche / Sonja / Urug")
-  e.kmons("J = Agnes / Aizul / Azrael band / Donald / Frances / Kirke band /\
+  e.kmons("J = Agnes / Aizul / Azrael band / Donald / Asterion / Kirke band /\
            Maud / Nergalle / Nessos / Ilsuiw band / Arachne /\
            Polyphemus / Rupert / Saint Roka band / Snorg / Wiglaf")
   e.kmons("K = Louise / Nikola / Norris / Frederick / Boris / Margery band /\
@@ -508,7 +508,7 @@ function coven_setup(e)
         deep elf demonologist / deep elf high priest / nonbase draconian w:20 /\
         sphinx / lich / ancient lich w:3 / wizard / ogre mage / vampire mage /\
         naga mage / greater naga / base draconian w:20")
-  e.kmons("9 = Frederick / Margery band / Boris / Norris / Frances")
+  e.kmons("9 = Frederick / Margery band / Boris / Norris / Asterion")
   e.kfeat("v = green_crystal_wall")
   e.colour("v = green")
   e.tile("v = wall_emerald")

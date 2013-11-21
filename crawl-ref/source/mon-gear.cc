@@ -637,7 +637,6 @@ static item_make_species_type _give_weapon(monster* mon, int level,
 
     case MONS_DANCING_WEAPON:   // give_level may have been adjusted above
     case MONS_SPECTRAL_WEAPON:  // Necessary for placement by mons spec
-    case MONS_FRANCES:
     case MONS_HAROLD:
     case MONS_LOUISE:
     case MONS_SKELETAL_WARRIOR:
@@ -2392,7 +2391,6 @@ static void _give_armour(monster* mon, int level, bool spectral_orcs)
         level = MAKE_GOOD_ITEM;
         // fall-through
     case MONS_AGNES:
-    case MONS_FRANCES:
     case MONS_NECROMANCER:
     case MONS_VAMPIRE_MAGE:
     case MONS_PIKEL:
