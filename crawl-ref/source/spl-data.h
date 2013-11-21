@@ -3317,7 +3317,7 @@ struct spell_desc
 },
 
 {
-    SPELL_ORB_OF_ELECTRICITY, "Orb of electricity",
+    SPELL_ORB_OF_ELECTRICITY, "Orb of Electricity",
      SPTYP_CONJURATION | SPTYP_AIR,
      SPFLAG_DIR_OR_TARGET,
      6,
@@ -3330,7 +3330,7 @@ struct spell_desc
 },
 
 {
-    SPELL_MAJOR_DESTRUCTION, "Major destruction",
+    SPELL_MAJOR_DESTRUCTION, "Major Destruction",
      SPTYP_CONJURATION,
      SPFLAG_DIR_OR_TARGET,
      7,
@@ -3343,7 +3343,7 @@ struct spell_desc
 },
 
 {
-    SPELL_GREATER_SERVANT, "Greater servant",
+    SPELL_GREATER_SERVANT, "Greater Servant",
      SPTYP_SUMMONING,
      SPFLAG_BATTLE,
      7,
