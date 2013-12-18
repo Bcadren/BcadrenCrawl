@@ -3807,6 +3807,7 @@ string get_ghost_description(const monster_info &mi, bool concise)
     case SP_MUMMY:
     case SP_GHOUL:
     case SP_FORMICID:
+    case SP_VINE_STALKER:
         str += 10;
         break;
 
