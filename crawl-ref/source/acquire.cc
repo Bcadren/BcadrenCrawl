@@ -714,7 +714,10 @@ static int _acquirement_wand_subtype()
         {
         case WAND_HEAL_WOUNDS:
             if (you.mutation[MUT_NO_DEVICE_HEAL])
-                w = 0; break;
+            {
+                w = 0;
+                break;
+            }
         case WAND_HASTING:          // each 17.9%, group unknown each 26.3%
             w = 25; break;
         case WAND_TELEPORTATION:    // each 10.7%, group unknown each 17.6%
