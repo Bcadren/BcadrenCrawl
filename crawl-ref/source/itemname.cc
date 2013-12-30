@@ -3214,6 +3214,7 @@ bool is_useless_item(const item_def &item, bool temp)
             return true;
 
         if (you.mutation[MUT_NO_DEVICE_HEAL]
+            && item_type_known(item)
             && item.sub_type == WAND_HEAL_WOUNDS)
             return true;
 
