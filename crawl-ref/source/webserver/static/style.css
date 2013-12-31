@@ -169,7 +169,6 @@ body {
     padding: 5px;
     border: 1px solid #626262;
 
-    overflow-x: hidden;
     z-index: 3000;
 }
 
@@ -198,6 +197,9 @@ body {
     width: 100%;
     max-height: 200px;
     overflow-y: auto;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+    word-wrap: break-word;
 }
 
 #chat_history {
