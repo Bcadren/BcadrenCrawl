@@ -2826,6 +2826,7 @@ enum monster_type                      // menv[].type
     MONS_DRAGON,                // genus
     MONS_SNAKE,                 // genus
 #endif
+    MONS_VINE_STALKER,
 
     NUM_MONSTERS,               // used for polymorph
 
