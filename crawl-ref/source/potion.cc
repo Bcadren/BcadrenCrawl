@@ -83,7 +83,7 @@ bool potion_effect(potion_type pot_eff, int pow, item_def *potion, bool was_know
 
         if (you.mutation[MUT_NO_DEVICE_HEAL]
             && potion && was_known
-            && you.duration[DUR_CONF] == 0 
+            && you.duration[DUR_CONF] == 0
             && you.duration[DUR_POISONING] == 0
             && you.rotting == 0
             && you.disease == 0)
@@ -92,10 +92,8 @@ bool potion_effect(potion_type pot_eff, int pow, item_def *potion, bool was_know
             return false;
         }
 
-        if (!you.mutation[MUT_NO_DEVICE_HEAL]) 
-        {
+        if (!you.mutation[MUT_NO_DEVICE_HEAL])
             inc_hp((5 + random2(7)) / factor);
-        }
 
         mpr("You feel better.");
 
@@ -448,9 +446,7 @@ bool potion_effect(potion_type pot_eff, int pow, item_def *potion, bool was_know
         {
             you.attribute[ATTR_XP_DRAIN] = max(0, you.attribute[ATTR_XP_DRAIN] / 2 - 25);
             if (!you.attribute[ATTR_XP_DRAIN])
-            {
                 mprf(MSGCH_RECOVERY, "Your life force feels restored.");
-            }
         }
 
         // Give a message if no message otherwise.
