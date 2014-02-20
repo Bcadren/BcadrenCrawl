@@ -3401,7 +3401,14 @@ void summoned_monster(const monster *mons, const actor *caster,
 
     const summons_desc *desc = summonsindex[spell];
 
-    const int max_this_time = desc->type_cap;
+    int max_this_time = desc->type_cap;
+
+    // Cap large abominations and tentacled monstrosities separately
+    if (spell == SPELL_SUMMON_HORRIBLE_THINGS)
+    {
+        max_this_time = (mons->type == MONS_ABOMINATION_LARGE ? max_this_time * 3 / 4
+                                                              : max_this_time * 1 / 4);
+    }
 
     monster* oldest_summon = 0;
     int oldest_duration = 0;
@@ -3417,6 +3424,10 @@ void summoned_monster(const monster *mons, const actor *caster,
         const bool summoned = mi->is_summoned(&duration, &stype);
         if (summoned && stype == spell && caster->mid == mi->summoner)
         {
+            // Count large abominations and tentacled monstrosities separately
+            if (spell == SPELL_SUMMON_HORRIBLE_THINGS && mi->type != mons->type)
+                continue;
+
             count++;
 
             // If this summon is the oldest (well, the closest to expiry)
