@@ -3422,7 +3422,8 @@ void summoned_monster(const monster *mons, const actor *caster,
         int duration = 0;
         int stype    = 0;
         const bool summoned = mi->is_summoned(&duration, &stype);
-        if (summoned && stype == spell && caster->mid == mi->summoner)
+        if (summoned && stype == spell && caster->mid == mi->summoner
+            && mons_aligned(caster, *mi))
         {
             // Count large abominations and tentacled monstrosities separately
             if (spell == SPELL_SUMMON_HORRIBLE_THINGS && mi->type != mons->type)
@@ -3463,8 +3464,11 @@ int count_summons(const actor *summoner, spell_type spell)
 
         int stype    = 0;
         const bool summoned = mi->is_summoned(NULL, &stype);
-        if (summoned && stype == spell && summoner->mid == mi->summoner)
+        if (summoned && stype == spell && summoner->mid == mi->summoner
+            && mons_aligned(summoner, *mi))
+        {
             count++;
+        }
     }
 
     return count;
