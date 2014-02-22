@@ -1691,8 +1691,8 @@ static spret_type _do_cast(spell_type spell, int powc,
     case SPELL_ABJURATION:
         return cast_abjuration(powc, beam.target, fail);
 
-    case SPELL_MASS_ABJURATION:
-        return cast_mass_abjuration(powc, fail);
+    case SPELL_AURA_OF_ABJURATION:
+        return cast_aura_of_abjuration(powc, fail);
 
     // XXX: I don't think any call to healing goes through here. --rla
     case SPELL_MINOR_HEALING:
