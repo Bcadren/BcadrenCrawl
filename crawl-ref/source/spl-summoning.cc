@@ -3458,7 +3458,6 @@ static const summons_desc summonsdata[] =
     { SPELL_SUMMON_UGLY_THING,          3, 2 },
     { SPELL_SUMMON_HORRIBLE_THINGS,     8, 8 },
     { SPELL_SHADOW_CREATURES,           4, 2 },
-    { SPELL_SUMMON_DRAGON,              2, 8 },
     { SPELL_SUMMON_LIGHTNING_SPIRE,     1, 2 },
     { SPELL_SUMMON_GUARDIAN_GOLEM,      1, 2 },
     // Monster spells
@@ -3481,6 +3480,7 @@ static const summons_desc summonsdata[] =
     { SPELL_SUMMON_VERMIN,              5, 2 },
     { SPELL_FORCEFUL_INVITATION,        3, 1 },
     { SPELL_PLANEREND,                  8, 1 },
+    { SPELL_SUMMON_DRAGON,              4, 8 },
     // Rod specials
     { SPELL_SUMMON_SWARM,              99, 2 },
     { SPELL_NO_SPELL,                   0, 0 }
