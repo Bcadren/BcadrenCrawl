@@ -139,7 +139,6 @@ summon_hydra SUMMON_HYDRA
 summon_ice_beast SUMMON_ICE_BEAST
 summon_shadow_creatures SUMMON_SHADOW_CREATURES
 summon_small_mammal SUMMON_SMALL_MAMMAL
-summon_ugly_thing SUMMON_UGLY_THING
 
 %sdir gui/spells/translocation
 apportation APPORTATION
