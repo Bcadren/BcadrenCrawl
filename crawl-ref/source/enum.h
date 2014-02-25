@@ -2966,6 +2966,7 @@ enum monster_type                      // menv[].type
     MONS_VASHNIA,
 #endif
     MONS_GUARDIAN_GOLEM,
+    MONS_SPELLFORGED_SERVITOR,
 
     NUM_MONSTERS,               // used for polymorph
 
@@ -3899,6 +3900,7 @@ enum spell_type
     SPELL_SUMMON_GUARDIAN_GOLEM,
     SPELL_RANDOM_BOLT,
     SPELL_DRAGON_CALL,
+    SPELL_SPELLFORGED_SERVITOR,
     NUM_SPELLS
 };
 
