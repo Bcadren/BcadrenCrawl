@@ -1169,3 +1169,25 @@ aff_type targetter_explosive_bolt::is_affected(coord_def loc)
 
     return on_path ? AFF_TRACER : AFF_NO;
 }
+
+targetter_list::targetter_list(vector<coord_def> target_list, coord_def center)
+{
+    targets = target_list;
+    origin = center;
+}
+
+aff_type targetter_list::is_affected(coord_def loc)
+{
+    for (unsigned int i = 0; i < targets.size(); ++i)
+    {
+        if (targets[i] == loc)
+            return AFF_YES;
+    }
+
+    return AFF_NO;
+}
+
+bool targetter_list::valid_aim(coord_def a)
+{
+    return true;
+}
