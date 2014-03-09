@@ -145,10 +145,12 @@ struct species_skill_aptitude
 // a discount with about 75%.
 static int _spec_skills[NUM_SPECIES][NUM_SKILLS];
 
-int skill_points_to_level(skill_type sk, unsigned int points, int scale)
+int skill_points_to_level(skill_type sk, int points, int scale)
 {
+    if (points < 0)
+        return 0;
     int level = 0;
-    while (level <= 27 && skill_exp_needed(level + 1, sk) < points)
+    while (level <= 27 && (int) skill_exp_needed(level + 1, sk) < points)
     {
         ++level;
     }
@@ -752,9 +754,7 @@ int transfer_skill_points(skill_type fsk, skill_type tsk, int skp_max,
 {
     ASSERT(!is_invalid_skill(fsk) && !is_invalid_skill(tsk));
 
-    const int penalty = 90; // 10% XP penalty
     int total_skp_lost   = 0; // skill points lost in fsk.
-    int total_skp_gained = 0; // skill points gained in tsk.
     int fsk_level = you.skills[fsk];
     int tsk_level = you.skills[tsk];
     int fsk_points = you.skill_points[fsk];

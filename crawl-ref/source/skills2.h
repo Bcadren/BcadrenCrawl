@@ -33,7 +33,7 @@ struct skill_state
     void restore_training();
 };
 
-int skill_points_to_level(skill_type sk, unsigned int points, int scale);
+int skill_points_to_level(skill_type sk, int points, int scale);
 int get_skill_progress(skill_type sk, int level, int points, int scale);
 int get_skill_progress(skill_type sk, int scale);
 int get_skill_percentage(const skill_type x);
