@@ -671,46 +671,6 @@ int elemental_preference(spell_type spell, int scale)
     return preference;
 }
 
-/*
- * Compare skill levels
- *
- * It compares the level of 2 skills, and breaks ties by using skill order.
- *
- * @param sk1 First skill.
- * @param sk2 Second skill.
- * @return Whether first skill is higher than second skill.
- */
-static bool _compare_skills(skill_type sk1, skill_type sk2)
-{
-    if (is_invalid_skill(sk1))
-        return false;
-    else if (is_invalid_skill(sk2))
-        return true;
-    else
-        return you.skill(sk1, 10, true) > you.skill(sk2, 10, true)
-               || you.skill(sk1, 10, true) == you.skill(sk2, 10, true)
-                  && you.skill_order[sk1] < you.skill_order[sk2];
-}
-
-bool is_antitrained(skill_type sk)
-{
-    skill_type opposite = get_opposite(sk);
-    if (opposite == SK_NONE || you.skills[sk] >= 27)
-        return false;
-
-    return _compare_skills(opposite, sk) && you.skills[opposite];
-}
-
-bool antitrain_other(skill_type sk, bool show_zero)
-{
-    skill_type opposite = get_opposite(sk);
-    if (opposite == SK_NONE)
-        return false;
-
-    return (you.skills[opposite] > 0 || show_zero) && you.skills[sk] > 0
-           && you.skills[opposite] < 27 && _compare_skills(sk, opposite);
-}
-
 void dump_skills(string &text)
 {
     for (uint8_t i = 0; i < NUM_SKILLS; i++)
