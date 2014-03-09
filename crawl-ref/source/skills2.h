@@ -33,6 +33,7 @@ struct skill_state
     void restore_training();
 };
 
+int skill_points_to_level(skill_type sk, unsigned int points, int scale);
 int get_skill_progress(skill_type sk, int level, int points, int scale);
 int get_skill_progress(skill_type sk, int scale);
 int get_skill_percentage(const skill_type x);
@@ -68,10 +69,8 @@ float species_apt_factor(skill_type sk, species_type sp = you.species);
 unsigned int skill_exp_needed(int lev, skill_type sk,
                               species_type sp = you.species);
 
-float crosstrain_bonus(skill_type sk);
-bool crosstrain_other(skill_type sk, bool show_zero);
-bool is_antitrained(skill_type sk);
-bool antitrain_other(skill_type sk, bool show_zero);
+skill_type get_opposite(skill_type sk);
+vector<skill_type> get_crosstrain_skills(skill_type sk);
 
 int elemental_preference(spell_type spell, int scale = 1);
 

@@ -5998,7 +5998,6 @@ void player::init_skills()
     training.init(0);
     can_train.reset();
     skill_points.init(0);
-    ct_skill_points.init(0);
     skill_order.init(MAX_SKILL_ORDER);
     exercises.clear();
     exercises_all.clear();
@@ -6391,6 +6390,7 @@ int player::shield_tohit_penalty(bool random_factor, int scale) const
 
 int player::skill(skill_type sk, int scale, bool real) const
 {
+    const int crosstrain_discount = 5;
     // wizard racechange, or upgraded old save
     if (is_useless_skill(sk))
         return 0;
@@ -6398,6 +6398,25 @@ int player::skill(skill_type sk, int scale, bool real) const
     int level = skills[sk] * scale + get_skill_progress(sk, scale);
     if (real)
         return level;
+
+    int crosstrain_points = 0;
+    vector<skill_type> crosstrain = get_crosstrain_skills(sk);
+    vector<skill_type>::iterator crosstrain_itr = crosstrain.begin();
+    for (; crosstrain_itr != crosstrain.end(); crosstrain_itr++)
+    {
+        skill_type other_skill = *crosstrain_itr;
+        crosstrain_points += skill_points[other_skill];
+    }
+
+    skill_type opposite = get_opposite(sk);
+    if (opposite != SK_NONE)
+    {
+        crosstrain_points -= skill_points[opposite];
+    }
+    crosstrain_points /= crosstrain_discount;
+    int effective_points = you.skill_points[sk] + crosstrain_points;
+    level = skill_points_to_level(sk, effective_points, scale);
+
     if (duration[DUR_HEROISM] && sk <= SK_LAST_MUNDANE)
         level = min(level + 5 * scale, 27 * scale);
     if (penance[GOD_ASHENZARI])

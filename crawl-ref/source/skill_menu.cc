@@ -297,10 +297,6 @@ COLORS SkillMenuEntry::get_colour() const
             return LIGHTGREEN;
         return you.train[m_sk] ? LIGHTGREEN : GREEN;
     }
-    else if (crosstrain_bonus(m_sk) > 1 && is_set(SKMF_APTITUDE))
-        return GREEN;
-    else if (is_antitrained(m_sk) && is_set(SKMF_APTITUDE))
-        return RED;
     else if (you.train[m_sk] == 2)
         return WHITE;
     else
@@ -334,13 +330,9 @@ void SkillMenuEntry::set_aptitude()
 
     const bool manual = skill_has_manual(m_sk);
     const int apt = species_apt(m_sk, you.species);
-    const bool show_all = skm.get_state(SKM_SHOW) == SKM_SHOW_ALL;
 
     // Crosstraining + manuals aptitude bonus.
-    int ct_bonus = manual ? 4 : 0;
-
-    for (int ct_mult = crosstrain_bonus(m_sk); ct_mult > 1; ct_mult /= 2)
-        ct_bonus += 4;
+    int manual_bonus = manual ? 4 : 0;
 
     if (apt != 0)
         text += make_stringf("%+d", apt);
@@ -349,34 +341,16 @@ void SkillMenuEntry::set_aptitude()
 
     text += "</white>";
 
-    if (antitrain_other(m_sk, show_all))
-    {
-        skm.set_flag(SKMF_ANTITRAIN);
-        text += "<red>*</red>";
-    }
-    else if (crosstrain_other(m_sk, show_all))
-    {
-        skm.set_flag(SKMF_CROSSTRAIN);
-        text += "<green>*</green>";
-    }
-    else
-        text += " ";
-
-    if (is_antitrained(m_sk))
-    {
-        skm.set_flag(SKMF_ANTITRAIN);
-        text += make_stringf("<red>%d</red>", ct_bonus - 4);
-    }
-    else if (ct_bonus)
+    if (manual_bonus)
     {
         skm.set_flag(SKMF_CROSSTRAIN);
         text += manual ? "<lightgreen>" : "<green>";
 
         // Only room for two characters.
-        if (ct_bonus < 10)
-            text += make_stringf("+%d", ct_bonus);
+        if (manual_bonus < 10)
+            text += make_stringf("+%d", manual_bonus);
         else
-            text += make_stringf("%d", ct_bonus);
+            text += make_stringf("%d", manual_bonus);
 
         text += manual ? "</lightgreen>" : "</green>";
     }
@@ -553,9 +527,7 @@ string SkillMenuSwitch::get_help()
     case SKM_LEVEL_ENHANCED:
         if (skm.is_set(SKMF_ENHANCED))
         {
-            return make_stringf("Skills enhanced by the power of %s are in "
-                                "<blue>blue</blue>. ",
-                                god_name(you.religion).c_str());
+            return make_stringf("Enhanced skills are in <blue>blue</blue>. ");
         }
         else
         {

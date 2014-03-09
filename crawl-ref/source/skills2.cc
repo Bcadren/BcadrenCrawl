@@ -145,6 +145,18 @@ struct species_skill_aptitude
 // a discount with about 75%.
 static int _spec_skills[NUM_SPECIES][NUM_SKILLS];
 
+int skill_points_to_level(skill_type sk, unsigned int points, int scale)
+{
+    int level = 0;
+    while (level <= 27 && skill_exp_needed(level + 1, sk) < points)
+    {
+        ++level;
+    }
+    int progress = get_skill_progress(sk, level, points, scale);
+    level *= scale;
+    return level + progress;
+}
+
 int get_skill_progress(skill_type sk, int level, int points, int scale)
 {
     if (level >= 27)
@@ -594,7 +606,7 @@ float species_apt_factor(skill_type sk, species_type sp)
     return _apt_to_factor(species_apt(sk, sp));
 }
 
-static vector<skill_type> _get_crosstrain_skills(skill_type sk)
+vector<skill_type> get_crosstrain_skills(skill_type sk)
 {
     vector<skill_type> ret;
 
@@ -627,41 +639,7 @@ static vector<skill_type> _get_crosstrain_skills(skill_type sk)
     }
 }
 
-// This threshold is in tenths of a skill point.
-#define CROSSTRAIN_THRESHOLD 1
-
-float crosstrain_bonus(skill_type sk)
-{
-    int bonus = 1;
-
-    vector<skill_type> crosstrain_skills = _get_crosstrain_skills(sk);
-
-    for (unsigned int i = 0; i < crosstrain_skills.size(); ++i)
-        if (you.skill(crosstrain_skills[i], 10, true)
-            >= you.skill(sk, 10, true) + CROSSTRAIN_THRESHOLD)
-        {
-            bonus *= 2;
-        }
-
-    return bonus;
-}
-
-bool crosstrain_other(skill_type sk, bool show_zero)
-{
-    vector<skill_type> crosstrain_skills = _get_crosstrain_skills(sk);
-
-    for (unsigned int i = 0; i < crosstrain_skills.size(); ++i)
-        if (you.skill(crosstrain_skills[i], 10, true)
-            <= you.skill(sk, 10, true) - CROSSTRAIN_THRESHOLD
-           && (you.skills[crosstrain_skills[i]] > 0 || show_zero))
-        {
-            return true;
-        }
-
-    return false;
-}
-
-static skill_type _get_opposite(skill_type sk)
+skill_type get_opposite(skill_type sk)
 {
     switch (sk)
     {
@@ -675,7 +653,7 @@ static skill_type _get_opposite(skill_type sk)
 
 static int _skill_elemental_preference(skill_type sk, int scale)
 {
-    const skill_type sk2 = _get_opposite(sk);
+    const skill_type sk2 = get_opposite(sk);
     if (sk2 == SK_NONE)
         return 0;
     return you.skill(sk, scale) - you.skill(sk2, scale);
@@ -714,7 +692,7 @@ static bool _compare_skills(skill_type sk1, skill_type sk2)
 
 bool is_antitrained(skill_type sk)
 {
-    skill_type opposite = _get_opposite(sk);
+    skill_type opposite = get_opposite(sk);
     if (opposite == SK_NONE || you.skills[sk] >= 27)
         return false;
 
@@ -723,7 +701,7 @@ bool is_antitrained(skill_type sk)
 
 bool antitrain_other(skill_type sk, bool show_zero)
 {
-    skill_type opposite = _get_opposite(sk);
+    skill_type opposite = get_opposite(sk);
     if (opposite == SK_NONE)
         return false;
 
@@ -781,66 +759,6 @@ int transfer_skill_points(skill_type fsk, skill_type tsk, int skp_max,
     int tsk_level = you.skills[tsk];
     int fsk_points = you.skill_points[fsk];
     int tsk_points = you.skill_points[tsk];
-    int fsk_ct_points = you.ct_skill_points[fsk];
-    int tsk_ct_points = you.ct_skill_points[tsk];
-
-    if (!simu && you.ct_skill_points[fsk] > 0)
-        dprf("ct_skill_points[%s]: %d", skill_name(fsk), you.ct_skill_points[fsk]);
-
-    // We need to transfer by small steps and update skill levels each time
-    // so that cross/anti-training are handled properly.
-    while (total_skp_lost < skp_max
-           && (simu || total_skp_lost < (int)you.transfer_skill_points))
-    {
-        int skp_lost = min(20, skp_max - total_skp_lost);
-        int skp_gained = skp_lost * penalty / 100;
-
-        float ct_bonus = crosstrain_bonus(tsk);
-        if (ct_bonus > 1 && fsk != tsk)
-        {
-            skp_gained *= ct_bonus;
-            you.ct_skill_points[tsk] += (1 - 1 / ct_bonus) * skp_gained;
-        }
-        else if (is_antitrained(tsk))
-            skp_gained /= ANTITRAIN_PENALTY;
-
-        ASSERT(you.skill_points[fsk] > you.ct_skill_points[fsk]);
-
-        int ct_penalty = skp_lost * you.ct_skill_points[fsk]
-                          / (you.skill_points[fsk] - you.ct_skill_points[fsk]);
-        ct_penalty = min<int>(ct_penalty, you.ct_skill_points[fsk]);
-        you.ct_skill_points[fsk] -= ct_penalty;
-        skp_lost += ct_penalty;
-
-        if (!simu)
-        {
-            skp_lost = min<int>(skp_lost, you.transfer_skill_points
-                                          - total_skp_lost);
-        }
-
-        total_skp_lost += skp_lost;
-        change_skill_points(fsk, -skp_lost, false);
-
-        // If reducing fighting would reduce your maxHP to 0 or below,
-        // we cancel the last step and end the transfer.
-        if (fsk == SK_FIGHTING && get_real_hp(false, true) <= 0)
-        {
-            change_skill_points(fsk, skp_lost, false);
-            total_skp_lost -= skp_lost;
-            if (!simu)
-                you.transfer_skill_points = total_skp_lost;
-            break;
-        }
-
-        total_skp_gained += skp_gained;
-
-        if (fsk != tsk)
-        {
-            change_skill_points(tsk, skp_gained, false);
-            if (you.skills[tsk] == 27)
-                break;
-        }
-    }
 
     int new_level = you.skill(tsk, 10, !boost);
     // Restore the level
@@ -851,8 +769,6 @@ int transfer_skill_points(skill_type fsk, skill_type tsk, int skp_max,
     {
         you.skill_points[fsk] = fsk_points;
         you.skill_points[tsk] = tsk_points;
-        you.ct_skill_points[fsk] = fsk_ct_points;
-        you.ct_skill_points[tsk] = tsk_ct_points;
     }
     else
     {
@@ -866,8 +782,6 @@ int transfer_skill_points(skill_type fsk, skill_type tsk, int skp_max,
 
         dprf("skill %s lost %d points", skill_name(fsk), total_skp_lost);
         dprf("skill %s gained %d points", skill_name(tsk), total_skp_gained);
-        if (you.ct_skill_points[fsk] > 0)
-            dprf("ct_skill_points[%s]: %d", skill_name(fsk), you.ct_skill_points[fsk]);
 
         if (you.transfer_skill_points == 0 || you.skills[tsk] == 27)
             ashenzari_end_transfer(true);
@@ -884,7 +798,6 @@ void skill_state::save()
     train              = you.train;
     training           = you.training;
     skill_points       = you.skill_points;
-    ct_skill_points    = you.ct_skill_points;
     skill_cost_level   = you.skill_cost_level;
     skill_order        = you.skill_order;
     auto_training      = you.auto_training;
@@ -902,7 +815,6 @@ void skill_state::restore_levels()
 {
     you.skills                      = skills;
     you.skill_points                = skill_points;
-    you.ct_skill_points             = ct_skill_points;
     you.skill_cost_level            = skill_cost_level;
     you.skill_order                 = skill_order;
     you.exp_available               = exp_available;
