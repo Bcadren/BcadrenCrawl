@@ -69,7 +69,6 @@ float species_apt_factor(skill_type sk, species_type sp = you.species);
 unsigned int skill_exp_needed(int lev, skill_type sk,
                               species_type sp = you.species);
 
-skill_type get_opposite(skill_type sk);
 vector<skill_type> get_crosstrain_skills(skill_type sk);
 
 int elemental_preference(spell_type spell, int scale = 1);

@@ -6408,11 +6408,6 @@ int player::skill(skill_type sk, int scale, bool real) const
         crosstrain_points += skill_points[other_skill];
     }
 
-    skill_type opposite = get_opposite(sk);
-    if (opposite != SK_NONE)
-    {
-        crosstrain_points -= skill_points[opposite];
-    }
     crosstrain_points /= crosstrain_discount;
     int effective_points = you.skill_points[sk] + crosstrain_points;
     level = skill_points_to_level(sk, effective_points, scale);

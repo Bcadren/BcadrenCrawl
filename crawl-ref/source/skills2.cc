@@ -641,36 +641,6 @@ vector<skill_type> get_crosstrain_skills(skill_type sk)
     }
 }
 
-skill_type get_opposite(skill_type sk)
-{
-    switch (sk)
-    {
-    case SK_FIRE_MAGIC  : return SK_ICE_MAGIC;   break;
-    case SK_ICE_MAGIC   : return SK_FIRE_MAGIC;  break;
-    case SK_AIR_MAGIC   : return SK_EARTH_MAGIC; break;
-    case SK_EARTH_MAGIC : return SK_AIR_MAGIC;   break;
-    default: return SK_NONE;
-    }
-}
-
-static int _skill_elemental_preference(skill_type sk, int scale)
-{
-    const skill_type sk2 = get_opposite(sk);
-    if (sk2 == SK_NONE)
-        return 0;
-    return you.skill(sk, scale) - you.skill(sk2, scale);
-}
-
-int elemental_preference(spell_type spell, int scale)
-{
-    skill_set skill_list;
-    spell_skills(spell, skill_list);
-    int preference = 0;
-    for (skill_set_iter it = skill_list.begin(); it != skill_list.end(); ++it)
-        preference += _skill_elemental_preference(*it, scale);
-    return preference;
-}
-
 void dump_skills(string &text)
 {
     for (uint8_t i = 0; i < NUM_SKILLS; i++)
