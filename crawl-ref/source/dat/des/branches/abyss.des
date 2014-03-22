@@ -195,7 +195,7 @@ COLOUR:  " : white w:5 / none
 TILE:    " : floor_limestone w:5 / floor_nerves
 SUBST:   " = .
 MONS:    plant, bush
-SHUFFLE: ABCDEFHIJKLMNOP
+SHUFFLE: ABCDEFHIJKLMNOPQ
 KFEAT:   A = altar_makhleb
 KFEAT:   B = altar_xom
 KFEAT:   C = altar_zin
@@ -211,17 +211,18 @@ KFEAT:   M = altar_elyvilon
 KFEAT:   N = altar_fedhas
 KFEAT:   O = altar_cheibriados
 KFEAT:   P = altar_ashenzari
+KFEAT:   Q = altar_dithmenos
 MAP
 ''''''...............
-''ccccccccccccccc....
-''G'c"""""""""""ctt..
-''''c"A"B"C"D"E"ctt..
-''G'c"""""""""""cttt.
-''''+"P"F"H"I"J"ctt..
-''G'c"""""""""""ct...
-''''c"K"L"M"N"O"ct..t
-''G'c"""""""""""ct...
-''ccccccccccccccct...
+''ccccccccccccccccc..
+''G'c"""""""""""""c..
+''''c""A"B"C"D"E""c..
+''G'c"""""""""""""ct.
+''''+"Q"P"F"H"I"J"c..
+''G'c"""""""""""""c..
+''''c""K"L"M"N"O""c.t
+''G'c"""""""""""""c..
+''ccccccccccccccccc..
 .......t......ttt....
 ENDMAP
 
@@ -257,7 +258,7 @@ MONS:   crimson imp w:12 / white imp / shadow imp / iron imp
 MONS:   kobold demonologist, deep elf summoner / orc sorcerer w:7
 MONS:   worker ant w:40 / goliath beetle w:20 / vampire mosquito
 KMONS:  8 = demonic crawler
-KMONS:  9 = spiny worm / emperor scorpion w:7
+KMONS:  9 = emperor scorpion
 KMONS:  D = place:D:1 perm_ench:shapeshifter w:30 / \
             small abomination w:15 / ugly thing w:15 / chaos spawn
 KMONS:  E = very ugly thing
@@ -669,7 +670,7 @@ NAME:    hangedman_illusive_loot
 TAGS:    patrolling
 WEIGHT:  5
 MONS:    rakshasa, guardian serpent / great orb of eyes
-ITEM:    potion of might / potion of speed / potion of heal wounds w:12 / \
+ITEM:    potion of might / potion of haste / potion of heal wounds w:12 / \
          wand of lightning / wand of draining / wand of slowing w:5 / \
          wand of confusion w:5 / wand of fire w:1 / wand of cold w:1 / \
          ring mail good_item / chain mail good_item w:12 / shield / \
@@ -1325,15 +1326,12 @@ KMONS:   12 = great orb of eyes perm_ench:shapeshifter
 KMONS:   34 = guardian serpent perm_ench:shapeshifter
 # Note: if anything in these two item sets becomes useful for more then a tiny
 # fraction of characters finding the abyssal rune, remove or replace them.
-KITEM:   24d = scroll of curse weapon w:5 q:1 / \
-         scroll of random uselessness q:1 / sultana q:1 w:5 / \
-         club w:5 / stone q:1 / \
-         mundane dart q:1 / needle q:1 ego:confusion / mundane animal skin / \
-         gold q:1
+KITEM:   24d = scroll of random uselessness w:15 q:1 / sultana q:1 w:5 / \
+         club w:5 / stone q:1 / mundane dart q:1 / needle q:1 ego:confusion / \
+         mundane animal skin / gold q:1
 KITEM:   13e = rod of striking w:2 / wand of slowing / wand of magic darts / \
-         wand of flame w:5 / wand of frost w:5 / lamp of fire w:2 / \
-         plain deck w:2 / whip not_cursed w:2 / \
-         hat not_cursed mundane race:none w:5
+         wand of flame w:5 / wand of frost w:5 / plain deck w:2 / \
+         whip not_cursed w:2 / hat not_cursed mundane w:5
 KITEM:   f = abyssal rune of zot mimic, abyssal rune of zot mimic
 KITEM:   g = abyssal rune of zot mimic, abyssal rune of zot
 SHUFFLE: 14 / 23
@@ -1467,7 +1465,7 @@ ENDMAP
 ####
 NAME: nicolae_abyss_rune_more_like_crabyss
 TAGS: abyss_rune unrand transparent
-SHUFFLE: O1/01/Pw
+SHUFFLE: O1/O1/Pw
 KITEM: OP = abyssal rune of Zot
 KMONS: O = apocalypse crab / nothing
 KMONS: 1P = apocalypse crab
@@ -1805,7 +1803,7 @@ NAME:   evilmike_abyss_exit_16
 TAGS:   abyss_exit
 NSUBST: . = 1:O / *:.
 SUBST:  c = cbx, . = .....12
-MONS:   slime creature, pulsating lump / giant amoeba
+MONS:   slime creature, pulsating lump / brown ooze
 : init_abyss_exit(_G, "O")
 MAP
 c+c+c+c+c+c
@@ -1971,7 +1969,7 @@ KMONS:   0 = air elemental
 KMONS:   A = shadow wraith
 KMONS:   B = unseen horror
 KMONS:   C = giant leech
-KMONS:   D = spiny worm
+KMONS:   D = brain worm
 KMONS:   E = elephant
 KMONS:   F = catoblepas / dire elephant
 NSUBST:  J = 1/2, K = 5/6, L = 9/0, M = C/D

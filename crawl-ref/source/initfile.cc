@@ -200,18 +200,26 @@ weapon_type str_to_weapon(const string &str)
 {
     if (str == "shortsword" || str == "short sword")
         return WPN_SHORT_SWORD;
+    else if (str == "cutlass")
+        return WPN_CUTLASS;
     else if (str == "falchion")
         return WPN_FALCHION;
+    else if (str == "longsword" || str == "long sword")
+        return WPN_LONG_SWORD;
     else if (str == "quarterstaff" || str == "staff")
         return WPN_QUARTERSTAFF;
     else if (str == "mace")
         return WPN_MACE;
+    else if (str == "flail")
+        return WPN_FLAIL;
     else if (str == "spear")
         return WPN_SPEAR;
     else if (str == "trident")
         return WPN_TRIDENT;
-    else if (str == "hand axe" || str == "handaxe" || str == "axe")
+    else if (str == "hand axe" || str == "handaxe")
         return WPN_HAND_AXE;
+    else if (str == "war axe" || str == "waraxe")
+        return WPN_WAR_AXE;
     else if (str == "unarmed" || str == "claws")
         return WPN_UNARMED;
     else if (str == "sling")
@@ -241,18 +249,26 @@ static string _weapon_to_str(int weapon)
     {
     case WPN_SHORT_SWORD:
         return "short sword";
+    case WPN_CUTLASS:
+        return "cutlass";
     case WPN_FALCHION:
         return "falchion";
+    case WPN_LONG_SWORD:
+        return "long sword";
     case WPN_QUARTERSTAFF:
         return "quarterstaff";
     case WPN_MACE:
         return "mace";
+    case WPN_FLAIL:
+        return "flail";
     case WPN_SPEAR:
         return "spear";
     case WPN_TRIDENT:
         return "trident";
     case WPN_HAND_AXE:
         return "hand axe";
+    case WPN_WAR_AXE:
+        return "war axe";
     case WPN_UNARMED:
         return "claws";
     case WPN_SLING:
@@ -731,7 +747,6 @@ void game_options::reset_options()
 
     additional_macro_files.clear();
 
-    seed = 0;
 #ifdef DGL_SIMPLE_MESSAGING
     messaging = true;
 #endif
@@ -785,7 +800,7 @@ void game_options::reset_options()
     auto_switch             = false;
     suppress_startup_errors = false;
 
-    show_inventory_weights = true;
+    show_inventory_weights = MB_MAYBE;
     clean_map              = false;
     show_uncursed          = true;
     easy_open              = true;
@@ -814,9 +829,6 @@ void game_options::reset_options()
     note_dgl_messages      = true;
     note_hp_percent        = 5;
 
-    // [ds] Grumble grumble.
-    auto_list              = true;
-
     clear_messages         = false;
 #ifdef TOUCH_UI
     show_more              = false;
@@ -841,7 +853,8 @@ void game_options::reset_options()
 
     travel_stair_cost      = 500;
 
-    arena_delay            = 600;
+    view_delay             = DEFAULT_VIEW_DELAY;
+
     arena_dump_msgs        = false;
     arena_dump_msgs_all    = false;
     arena_list_eq          = false;
@@ -971,28 +984,30 @@ void game_options::reset_options()
 
     // minimap colours
     tile_player_col       = str_to_tile_colour("white");
-    tile_monster_col      = str_to_tile_colour("red");
-    tile_neutral_col      = str_to_tile_colour("red");
-    tile_peaceful_col     = str_to_tile_colour("lightred");
-    tile_friendly_col     = str_to_tile_colour("lightred");
-    tile_plant_col        = str_to_tile_colour("darkgreen");
-    tile_item_col         = str_to_tile_colour("green");
+    tile_monster_col      = str_to_tile_colour("#660000");
+    tile_neutral_col      = str_to_tile_colour("#660000");
+    tile_peaceful_col     = str_to_tile_colour("#664400");
+    tile_friendly_col     = str_to_tile_colour("#664400");
+    tile_plant_col        = str_to_tile_colour("#446633");
+    tile_item_col         = str_to_tile_colour("#005544");
     tile_unseen_col       = str_to_tile_colour("black");
-    tile_floor_col        = str_to_tile_colour("lightgrey");
-    tile_wall_col         = str_to_tile_colour("darkgrey");
-    tile_mapped_floor_col = str_to_tile_colour("lightblue");
-    tile_mapped_wall_col  = str_to_tile_colour("blue");
-    tile_door_col         = str_to_tile_colour("brown");
-    tile_downstairs_col   = str_to_tile_colour("magenta");
-    tile_upstairs_col     = str_to_tile_colour("blue");
-    tile_branchstairs_col = str_to_tile_colour("magenta");
-    tile_feature_col      = str_to_tile_colour("cyan");
-    tile_trap_col         = str_to_tile_colour("yellow");
-    tile_water_col        = str_to_tile_colour("grey");
-    tile_lava_col         = str_to_tile_colour("grey");
-    tile_excluded_col     = str_to_tile_colour("darkcyan");
-    tile_excl_centre_col  = str_to_tile_colour("darkblue");
-    tile_window_col       = str_to_tile_colour("yellow");
+    tile_floor_col        = str_to_tile_colour("#333333");
+    tile_wall_col         = str_to_tile_colour("#666666");
+    tile_mapped_floor_col = str_to_tile_colour("#222266");
+    tile_mapped_wall_col  = str_to_tile_colour("#444499");
+    tile_door_col         = str_to_tile_colour("#775544");
+    tile_downstairs_col   = str_to_tile_colour("#ff00ff");
+    tile_upstairs_col     = str_to_tile_colour("cyan");
+    tile_branchstairs_col = str_to_tile_colour("#ff7788");
+    tile_portal_col       = str_to_tile_colour("#ffdd00");
+    tile_feature_col      = str_to_tile_colour("#997700");
+    tile_trap_col         = str_to_tile_colour("#aa6644");
+    tile_water_col        = str_to_tile_colour("#114455");
+    tile_deep_water_col   = str_to_tile_colour("#001122");
+    tile_lava_col         = str_to_tile_colour("#552211");
+    tile_excluded_col     = str_to_tile_colour("#552266");
+    tile_excl_centre_col  = str_to_tile_colour("#552266");
+    tile_window_col       = str_to_tile_colour("#558855");
 #endif
 
 #ifdef USE_TILE_LOCAL
@@ -1002,6 +1017,12 @@ void game_options::reset_options()
     tile_font_msg_file   = MONOSPACED_FONT;
     tile_font_tip_file   = MONOSPACED_FONT;
     tile_font_lbl_file   = PROPORTIONAL_FONT;
+#endif
+#ifdef USE_TILE_WEB
+    tile_font_crt_family  = "monospace";
+    tile_font_stat_family = "monospace";
+    tile_font_msg_family  = "monospace";
+    tile_font_lbl_family  = "monospace";
 #endif
 
 #ifdef USE_TILE
@@ -1625,6 +1646,7 @@ game_options::game_options()
     if (GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SENGLANGUAGE, ln, sizeof(ln)))
         set_lang(ln);
 #endif
+    seed = 0;
     reset_options();
 }
 
@@ -2404,7 +2426,6 @@ void game_options::read_option_line(const string &str, bool runscript)
 #ifndef DGAMELAUNCH
     else BOOL_OPTION(restart_after_game);
 #endif
-    else BOOL_OPTION(show_inventory_weights);
     else BOOL_OPTION(auto_switch);
     else BOOL_OPTION(suppress_startup_errors);
     else BOOL_OPTION(clean_map);
@@ -2595,6 +2616,15 @@ void game_options::read_option_line(const string &str, bool runscript)
         else
             report_error("Unknown show_god_gift value: %s\n", field.c_str());
     }
+    else if (key == "show_inventory_weights")
+    {
+        if (field == "yes" || field == "true")
+            show_inventory_weights = MB_TRUE;
+        else if (field == "no" || field == "false")
+            show_inventory_weights = MB_FALSE;
+        else
+            show_inventory_weights = MB_MAYBE;
+    }
     else if (key == "fire_order")
         set_fire_order(field, plus_equal, caret_equal);
 #if !defined(DGAMELAUNCH) || defined(DGL_REMEMBER_NAME)
@@ -2627,7 +2657,6 @@ void game_options::read_option_line(const string &str, bool runscript)
         macro_dir = field;
 #endif
 #endif
-    else BOOL_OPTION(auto_list);
     else if (key == "default_target")
     {
         default_target = _read_bool(field, default_target);
@@ -3455,12 +3484,16 @@ void game_options::read_option_line(const string &str, bool runscript)
         tile_upstairs_col = str_to_tile_colour(field);
     else if (key == "tile_branchstairs_col")
         tile_branchstairs_col = str_to_tile_colour(field);
+    else if (key == "tile_portal_col")
+        tile_portal_col = str_to_tile_colour(field);
     else if (key == "tile_feature_col")
         tile_feature_col = str_to_tile_colour(field);
     else if (key == "tile_trap_col")
         tile_trap_col = str_to_tile_colour(field);
     else if (key == "tile_water_col")
         tile_water_col = str_to_tile_colour(field);
+    else if (key == "tile_deep_water_col")
+        tile_deep_water_col = str_to_tile_colour(field);
     else if (key == "tile_lava_col")
         tile_lava_col = str_to_tile_colour(field);
     else if (key == "tile_excluded_col")
@@ -3469,7 +3502,6 @@ void game_options::read_option_line(const string &str, bool runscript)
         tile_excl_centre_col = str_to_tile_colour(field);
     else if (key == "tile_window_col")
         tile_window_col = str_to_tile_colour(field);
-#endif
 #ifdef USE_TILE_LOCAL
     else if (key == "tile_font_crt_file")
         tile_font_crt_file = field;
@@ -3482,13 +3514,21 @@ void game_options::read_option_line(const string &str, bool runscript)
     else if (key == "tile_font_lbl_file")
         tile_font_lbl_file = field;
 #endif
-#ifdef USE_TILE
+#ifdef USE_TILE_WEB
+    else if (key == "tile_font_crt_family")
+        tile_font_crt_family = field;
+    else if (key == "tile_font_msg_family")
+        tile_font_msg_family = field;
+    else if (key == "tile_font_stat_family")
+        tile_font_stat_family = field;
+    else if (key == "tile_font_lbl_family")
+        tile_font_lbl_family = field;
+#endif
     else INT_OPTION(tile_font_crt_size, 0, INT_MAX);
     else INT_OPTION(tile_font_msg_size, 0, INT_MAX);
     else INT_OPTION(tile_font_stat_size, 0, INT_MAX);
     else INT_OPTION(tile_font_tip_size, 0, INT_MAX);
     else INT_OPTION(tile_font_lbl_size, 0, INT_MAX);
-#endif
 #ifdef USE_TILE_LOCAL
 #ifdef USE_FT
     else BOOL_OPTION(tile_font_ft_light);
@@ -3511,7 +3551,6 @@ void game_options::read_option_line(const string &str, bool runscript)
             tile_use_small_layout = MB_MAYBE;
     }
 #endif
-#ifdef USE_TILE
     else INT_OPTION(tile_cell_pixels, 1, INT_MAX);
     else BOOL_OPTION(tile_filter_scaling);
     else INT_OPTION(tile_map_pixels, 0, INT_MAX);
@@ -3527,7 +3566,6 @@ void game_options::read_option_line(const string &str, bool runscript)
     else LIST_OPTION(tile_layout_priority);
     else if (key == "tile_tag_pref")
         tile_tag_pref = _str_to_tag_pref(field.c_str());
-#endif
 #ifdef USE_TILE_WEB
     else BOOL_OPTION(tile_realtime_anim);
     else if (key == "tile_display_mode")
@@ -3538,6 +3576,7 @@ void game_options::read_option_line(const string &str, bool runscript)
     else BOOL_OPTION(tile_level_map_hide_messages);
     else BOOL_OPTION(tile_level_map_hide_sidebar);
 #endif
+#endif // USE_TILE
 
     else if (key == "bindkey")
         _bindkey(field);
@@ -3550,7 +3589,7 @@ void game_options::read_option_line(const string &str, bool runscript)
         else
             constants.insert(field);
     }
-    else INT_OPTION(arena_delay, 0, INT_MAX);
+    else INT_OPTION(view_delay, 0, INT_MAX);
     else BOOL_OPTION(arena_dump_msgs);
     else BOOL_OPTION(arena_dump_msgs_all);
     else BOOL_OPTION(arena_list_eq);
@@ -4193,9 +4232,11 @@ static void _write_minimap_colours()
     _write_vcolour("tile_downstairs_col", Options.tile_downstairs_col);
     _write_vcolour("tile_upstairs_col", Options.tile_upstairs_col);
     _write_vcolour("tile_branchstairs_col", Options.tile_branchstairs_col);
+    _write_vcolour("tile_portal_col", Options.tile_portal_col);
     _write_vcolour("tile_feature_col", Options.tile_feature_col);
     _write_vcolour("tile_trap_col", Options.tile_trap_col);
     _write_vcolour("tile_water_col", Options.tile_water_col);
+    _write_vcolour("tile_deep_water_col", Options.tile_deep_water_col);
     _write_vcolour("tile_lava_col", Options.tile_lava_col);
     _write_vcolour("tile_excluded_col", Options.tile_excluded_col);
     _write_vcolour("tile_excl_centre_col", Options.tile_excl_centre_col);
@@ -4230,6 +4271,14 @@ void game_options::write_webtiles_options(const string& name)
     tiles.json_write_bool("tile_level_map_hide_sidebar",
             Options.tile_level_map_hide_sidebar);
 
+    tiles.json_write_string("tile_font_crt_family",
+            Options.tile_font_crt_family);
+    tiles.json_write_string("tile_font_stat_family",
+            Options.tile_font_stat_family);
+    tiles.json_write_string("tile_font_msg_family",
+            Options.tile_font_msg_family);
+    tiles.json_write_string("tile_font_lbl_family",
+            Options.tile_font_lbl_family);
     tiles.json_write_int("tile_font_crt_size", Options.tile_font_crt_size);
     tiles.json_write_int("tile_font_stat_size", Options.tile_font_stat_size);
     tiles.json_write_int("tile_font_msg_size", Options.tile_font_msg_size);

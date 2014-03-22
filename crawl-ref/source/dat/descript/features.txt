@@ -88,17 +88,15 @@ A dried-up fountain that has seen better days.
 %%%%
 A fountain of clear blue water
 
-Press ‘q’ to drink from this fountain. Not that it would have any effect,
-though...
+A decorative fountain, flowing with clear water.
 %%%%
 A fountain of blood
 
-Press ‘q’ to drink from this fountain, if you absolutely wish to.
+A decorative fountain, spurting with foul-looking blood.
 %%%%
 A fountain of sparkling water
 
-Press ‘q’ to drink from this magic fountain. Expect magical effects, as long as
-it's still magic.
+A decorative fountain, flowing with brightly sparkling water.
 %%%%
 A gate leading back out of here
 
@@ -136,6 +134,8 @@ deepest level houses the infamous Orb of Zot. Both the Orb and this Realm have
 a fearsome and questionable reputation, but one piece of information seems to
 be certain: The monsters inhabiting this area and protecting the Orb are strong
 and strange — some of them encountered nowhere but here.
+
+The gate requires the power of three runes of Zot in order to open.
 %%%%
 A gateway back into the Dungeon
 
@@ -231,7 +231,7 @@ will ground.
 %%%%
 A needle trap
 
-It is damn sure the needles from this trap are doused in something nasty.
+A mechanical contraption that shoots poisoned needles.
 %%%%
 A net trap
 
@@ -412,11 +412,6 @@ A staircase to the Orcish Mines
 An entrance to the mines of the orcs, filled with their gold, but treacherous
 and easy to get trapped in.
 %%%%
-A staircase to the Enchanted Forest
-
-On the other end of these stairs lies the wooded home of spriggans, tengu,
-fauns, and all manner of terrifying hexes.
-%%%%
 A staircase to the Shoals
 
 Here be the Shoals: exotic underground beaches, salty spray and creatures that
@@ -442,8 +437,10 @@ the vilest necromancy.
 %%%%
 A gate to the Vaults
 
-These stairs lead down into the Vaults, said to be home to great treasures.
-They are sprinkled with spots of blood.
+This gate leads into the Vaults, said to be home to great treasures. It is
+sprinkled with spots of blood.
+
+The gate requires the power of a rune of Zot in order to open.
 %%%%
 A stone staircase leading down
 
@@ -525,8 +522,8 @@ This shop has been abandoned.
 An alarm trap
 
 While this trap does no damage by itself, its loud sound may bring someone to
-do damage to you. Of course, you have the option to do damage to those someones
-yourself.
+do damage to you. In addition to the noise it creates, it will apply an
+enchantment making monsters all over the level aware of your location.
 %%%%
 An ancient bone altar of Kikubaaqudgha
 

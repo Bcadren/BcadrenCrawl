@@ -152,6 +152,10 @@ void crash_signal_handler(int sig_num)
         console_shutdown();
 #endif
 
+#ifdef USE_TILE_WEB
+    tiles.shutdown();
+#endif
+
 #ifdef WATCHDOG
     /* Infinite loop protection.
 
@@ -177,10 +181,6 @@ void crash_signal_handler(int sig_num)
 #endif
 
     do_crash_dump();
-
-#ifdef USE_TILE_WEB
-    tiles.shutdown();
-#endif
 
     // Now crash for real.
     signal(sig_num, SIG_DFL);

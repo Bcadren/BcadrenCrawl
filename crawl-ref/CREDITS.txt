@@ -89,14 +89,15 @@
     Lothar Dierkes
     Mike Drinen
     Kieron Dunbar
+    John "Elwin" Edwards
     elliott
     Micha Elsner
     Carl-Oscar Erneholm
     Christopher Evenstar
+    Nicholas Feinberg
     Brett Foster
     Kyle Fox
     Chris Galardi
-    gammafunk
     Ben Goetter
     Ed Gonzalez
     Rob Grant
@@ -169,7 +170,6 @@
     Will Rogers
     David Rose
     Risto Saarelma
-    Sage
     Sebastian Salman
     Brett Scarborough
     Roman Sêk
@@ -178,6 +178,7 @@
     Sigurd
     Edgar Simo
     Alex Smith
+    Keanan Smith
     Solf
     Michael Spang
     Jan 'heftig' Steffens
@@ -190,7 +191,6 @@
     Chris Terenzi
     Jared 'Twinge' Tinney
     Matt Titus
-    wheals
     Steven Wheeler
     Thomas Willem
     Evan Williams
@@ -210,6 +210,7 @@ The Dungeon Crawl Stone Soup development team is:
     Matthew Cline
     Florian Diebold
     Michael Gagno
+    gammafunk
     Brendan Hickey
     Pete Hurst
     Eino Keskitalo
@@ -219,6 +220,7 @@ The Dungeon Crawl Stone Soup development team is:
     Raphaël Langella
     Nat Lanza
     Jesse Luehrs
+    Shmuale Mark
     Steve Melenchuk
     Neil Middleton
     Neil Moore
@@ -227,6 +229,7 @@ The Dungeon Crawl Stone Soup development team is:
     Charles Otto
     Aaron Pixton
     David Ploog
+    Sage
     Jason Van
     Chris West
     Samuel Wilson

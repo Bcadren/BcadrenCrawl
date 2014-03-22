@@ -238,7 +238,7 @@ static vector<string> _randart_propnames(const item_def& item,
         { "rF",     ARTP_FIRE,                  1 },
         { "rC",     ARTP_COLD,                  1 },
         { "rN",     ARTP_NEGATIVE_ENERGY,       1 },
-        { "MR",     ARTP_MAGIC,                 2 }, // handled specially
+        { "MR",     ARTP_MAGIC,                 1 },
 
         // Quantitative attributes
         { "HP",     ARTP_HP,                    0 },
@@ -348,8 +348,7 @@ static vector<string> _randart_propnames(const item_def& item,
                     work << "+";
                 else if (propanns[i].prop == ARTP_METABOLISM && val < 0)
                     work << "-";
-                else if (propanns[i].prop == ARTP_STEALTH
-                         || propanns[i].prop == ARTP_MAGIC)
+                else if (propanns[i].prop == ARTP_STEALTH)
                 {
                     if (val > 50)
                         work << "++";
@@ -767,11 +766,6 @@ static string _corrosion_resistance_string(const item_def &item)
         return "\nBeing made of crystal renders it very resistant to acidic "
                "corrosion.";
     }
-    else if (get_equip_race(item) == ISFLAG_DWARVEN)
-    {
-        return "\nBeing of dwarven fabrication renders it very resistant to "
-               "acidic corrosion.";
-    }
     else if (ench >= 3 && item_ident(item, ISFLAG_KNOW_PLUSES))
         return make_stringf(format, "resistant");
     else if (ench >= 2 && item_ident(item, ISFLAG_KNOW_PLUSES))
@@ -916,8 +910,7 @@ static string _describe_weapon(const item_def &item, bool verbose)
                 "life of those it strikes.";
             break;
         case SPWPN_SPEED:
-            description += "Attacks with this weapon are significantly faster, "
-                "but cause slightly less damage.";
+            description += "Attacks with this weapon are significantly faster.";
             break;
         case SPWPN_VORPAL:
             if (is_range_weapon(item))
@@ -1019,28 +1012,6 @@ static string _describe_weapon(const item_def &item, bool verbose)
             description += "\nIt is too large for you to wield.";
     }
 
-    if (verbose)
-    {
-        if (is_demonic(item) && !launcher)
-            description += "\nDemonspawn deal slightly more damage with it.";
-        else if (get_equip_race(item) != ISFLAG_NO_RACE)
-        {
-            iflags_t race = get_equip_race(item);
-
-            if (race == ISFLAG_DWARVEN)
-            {
-                description += "\nIt is well-crafted and durable. Dwarves "
-                               "deal slightly more damage with it.";
-            }
-
-            if (race == ISFLAG_ORCISH)
-                description += "\nOrcs deal slightly more damage with it.";
-
-            if (race == ISFLAG_ELVEN)
-                description += "\nElves are slightly more accurate with it.";
-        }
-    }
-
     if (!is_artefact(item))
     {
         if (item_ident(item, ISFLAG_KNOW_PLUSES)
@@ -1076,32 +1047,6 @@ static string _describe_ammo(const item_def &item)
     string description;
 
     description.reserve(64);
-
-    if (item.sub_type == MI_THROWING_NET)
-    {
-        if (item.plus > 1 || item.plus < 0)
-        {
-            string how;
-
-            if (item.plus > 1)
-                how = "brand-new";
-            else if (item.plus < 0)
-            {
-                if (item.plus > -3)
-                    how = "a little worn";
-                else if (item.plus > -5)
-                    how = "slightly damaged";
-                else if (item.plus > -7)
-                    how = "damaged";
-                else
-                    how = "heavily frayed";
-            }
-
-            description += "\n\nIt looks ";
-            description += how;
-            description += ".";
-        }
-    }
 
     const bool can_launch = has_launcher(item);
     const bool can_throw  = is_throwable(&you, item, true);
@@ -1371,32 +1316,6 @@ static string _describe_armour(const item_def &item, bool verbose)
         if (!item_ident(item, ISFLAG_KNOW_PROPERTIES) && item_type_known(item))
             description += "\nThis armour may have some hidden properties.";
     }
-    else if (get_equip_race(item) != ISFLAG_NO_RACE)
-    {
-        // Randart armour can't be racial.
-        description += "\n";
-
-        iflags_t race = get_equip_race(item);
-
-        if (race == ISFLAG_DWARVEN)
-            description += "\nIt is well-crafted and durable.";
-        else if (race == ISFLAG_ELVEN)
-        {
-            if (get_item_slot(item) == EQ_BODY_ARMOUR)
-            description += "\nIt is well-crafted and unobstructive";
-            else
-                description += "\nIt is well-crafted and lightweight";
-            if (item.sub_type == ARM_CLOAK || item.sub_type == ARM_BOOTS)
-                description += ", and helps its wearer avoid being noticed";
-            description += ".";
-        }
-
-        description += "\nIt fits ";
-        description += (race == ISFLAG_DWARVEN) ? "dwarves" :
-                       (race == ISFLAG_ELVEN)   ? "elves"
-                                                : "orcs";
-        description += " well.";
-    }
 
     if (!is_artefact(item))
     {
@@ -1562,6 +1481,9 @@ static string _describe_deck(const item_def &item)
 
     if (_check_buggy_deck(item, description))
         return "";
+
+    if (item_type_known(item))
+        description += deck_contents(item.sub_type) + "\n";
 
     const vector<card_type> drawn_cards = get_drawn_cards(item);
     if (!drawn_cards.empty())
@@ -2050,7 +1972,7 @@ string get_item_description(const item_def &item, bool verbose,
     case OBJ_MISCELLANY:
         if (is_deck(item))
             description << _describe_deck(item);
-        if (is_elemental_evoker(item))
+        if (is_xp_evoker(item))
         {
             description << "\nOnce released, the spirits within this device "
                            "will dissipate, leaving it inert, though new ones "
@@ -2250,8 +2172,7 @@ void get_item_desc(const item_def &item, describe_info &inf)
     // Don't use verbose descriptions if the item contains spells,
     // so we can actually output these spells if space is scarce.
     const bool verbose = !item.has_spells();
-    inf.body << get_item_description(item, verbose, false,
-                                     crawl_state.game_is_hints_tutorial());
+    inf.body << get_item_description(item, verbose, false, true);
 }
 
 // Returns true if spells can be shown to player.
@@ -2814,7 +2735,7 @@ static int _get_spell_description(const spell_type spell,
     if (const int limit = summons_limit(spell))
     {
         description += "You can sustain at most " + number_in_words(limit)
-                       + " creatures summoned by this spell.\n";
+                       + " creature" + (limit > 1 ? "s" : "") + " summoned by this spell.\n";
     }
 
     const bool rod = item && item->base_type == OBJ_RODS;
@@ -3329,8 +3250,6 @@ static string _monster_stat_description(const monster_info& mi)
 {
     ostringstream result;
 
-    // Don't leak or duplicate resistance information for ghost demon
-    // monsters, except for (very) ugly things.
     resists_t resist = mi.resists();
 
     const mon_resist_flags resists[] =
@@ -3444,10 +3363,16 @@ static string _monster_stat_description(const monster_info& mi)
         result << uppercase_first(pronoun) << " is outlined in light.\n";
     if (mons_class_flag(mi.type, M_GLOWS_RADIATION))
         result << uppercase_first(pronoun) << " is glowing with mutagenic radiation.\n";
+    if (mons_class_flag(mi.type, M_SHADOW))
+        result << uppercase_first(pronoun) << " is wreathed in shadows.\n";
 
     // Seeing/sensing invisible.
-    if (mons_class_flag(mi.type, M_SEE_INVIS))
+    if (mons_class_flag(mi.type, M_SEE_INVIS)
+            || ((mons_is_pghost(mi.type) || mi.type == MONS_PANDEMONIUM_LORD)
+                && mi.u.ghost.can_sinv))
+    {
         result << uppercase_first(pronoun) << " can see invisible.\n";
+    }
     else if (mons_class_flag(mi.type, M_SENSE_INVIS))
         result << uppercase_first(pronoun) << " can sense the presence of invisible creatures.\n";
 
@@ -4235,8 +4160,7 @@ static string _religion_help(god_type god)
     case GOD_NEMELEX_XOBEH:
         result += "You can pray to sacrifice all items on your square. "
                   "Inscribe items with !p, !* or =p to avoid sacrificing "
-                  "them accidentally. See the detailed description to "
-                  "sacrifice only some kinds of items.";
+                  "them accidentally.";
         break;
 
     case GOD_FEDHAS:
@@ -4460,17 +4384,13 @@ static void _detailed_god_description(god_type which_god)
     textcolor(LIGHTGREY);
     cprintf("\n");
 
-    string broken;
-    if (which_god != GOD_NEMELEX_XOBEH)
+    string broken = get_god_powers(which_god);
+    if (!broken.empty())
     {
-        broken = get_god_powers(which_god);
-        if (!broken.empty())
-        {
-            linebreak_string(broken, width);
-            display_tagged_block(broken);
-            cprintf("\n");
-            cprintf("\n");
-        }
+        linebreak_string(broken, width);
+        display_tagged_block(broken);
+        cprintf("\n");
+        cprintf("\n");
     }
 
     if (which_god != GOD_XOM)
@@ -4519,43 +4439,9 @@ static void _detailed_god_description(god_type which_god)
                          "item), or with <w>!D</w> (causes item to be ignored "
                          "in sacrifices)."
                          "\n\n"
-                         "Nemelex Xobeh gifts various types of decks of cards. "
-                         "Each deck type comes in three power levels: plain, "
-                         "ornate, legendary. The latter contain very powerful "
-                         "card effects, potentially hazardous. High piety and "
-                         "Evocations skill help here, as the power of Nemelex's "
-                         "abilities is governed by Evocations instead of "
-                         "Invocations. The type of the deck gifts strongly "
-                         "depends on the dominating item class sacrificed. "
-                         "Press a letter now to toggle a class:\n";
-
-                for (int i = 0; i < NUM_NEMELEX_GIFT_TYPES; ++i)
-                {
-                    const bool active = you.nemelex_sacrificing[i];
-                    string desc = "";
-                    switch (i)
-                    {
-                    case NEM_GIFT_ESCAPE:
-                        desc = "decks of Escape      -- armour";
-                        break;
-                    case NEM_GIFT_DESTRUCTION:
-                        desc = "decks of Destruction -- weapons and ammunition";
-                        break;
-                    case NEM_GIFT_SUMMONING:
-                        desc = "decks of Summoning   -- corpses, chunks, blood";
-                        break;
-                    case NEM_GIFT_WONDERS:
-                        desc = "decks of Wonders     -- Other items: food, potions, "
-                                                    "scrolls, wands, jewellery, books, "
-                                                    "miscellaneous items";
-                        break;
-                    }
-                    broken += make_stringf(" <white>%c</white> %s%s%s\n",
-                                           'a' + (char) i,
-                                           active ? "+ " : "- <darkgrey>",
-                                           desc.c_str(),
-                                           active ? "" : "</darkgrey>");
-                }
+                         "The power of Nemelex Xobeh's abilities and of the "
+                         "cards' effects is governed by Evocations skill "
+                         "instead of Invocations.";
             }
         break;
         case GOD_ASHENZARI:
@@ -4588,14 +4474,7 @@ static void _detailed_god_description(god_type which_god)
     mouse_control mc(MOUSE_MODE_MORE);
 
     const int keyin = getchm();
-    if (you_worship(GOD_NEMELEX_XOBEH)
-        && keyin >= 'a' && keyin < 'a' + (char) NUM_NEMELEX_GIFT_TYPES)
-    {
-        const int num = keyin - 'a';
-        you.nemelex_sacrificing.set(num, !you.nemelex_sacrificing[num]);
-        _detailed_god_description(which_god);
-    }
-    else if (keyin == '!' || keyin == CK_MOUSE_CMD || keyin == '^')
+    if (keyin == '!' || keyin == CK_MOUSE_CMD || keyin == '^')
         describe_god(which_god, true);
 }
 

@@ -651,7 +651,7 @@ void handle_behaviour(monster* mon)
                 && !(mon->friendly()
                      && mon->foe == MHITYOU
                      && mon->is_travelling()
-                     && mon->travel_target == MTRAV_PLAYER))
+                     && mon->travel_target == MTRAV_FOE))
             {
                 // If their foe is marked, the monster always knows exactly
                 // where they are.
@@ -704,9 +704,7 @@ void handle_behaviour(monster* mon)
                     // our target, even if this monster cannot (we'll assume
                     // the player passes along this information to allies)
                     else if (!foepos.origin() && you.see_cell(foepos))
-                    {
-                        mon->target = foepos;
-                    }
+                        try_pathfind(mon);
                     else
                     {
                         new_foe = MHITYOU;
@@ -850,16 +848,7 @@ void handle_behaviour(monster* mon)
                 // (or wasn't even attempted) and we need to set our target
                 // the traditional way.
 
-                // Sometimes, your friends will wander a bit.
-                if (isFriendly && !mons_is_avatar(mon->type)
-                    && one_chance_in(8))
-                {
-                    set_random_target(mon);
-                    mon->foe = MHITNOT;
-                    new_beh  = BEH_WANDER;
-                }
-                else
-                    mon->target = PLAYER_POS;
+                mon->target = PLAYER_POS;
             }
             else
             {
@@ -870,7 +859,7 @@ void handle_behaviour(monster* mon)
                 if (mons_class_flag(mon->type, M_MAINTAIN_RANGE)
                     && !mon->berserk_or_insane()
                     && !(mons_is_avatar(mon->type)
-                         && mon->foe == owner->mindex()))
+                         && owner && mon->foe == owner->mindex()))
                 {
                     _set_firing_pos(mon, mon->target);
                 }
@@ -884,7 +873,14 @@ void handle_behaviour(monster* mon)
                     else
                         _set_firing_pos(mon, target->pos());
                 }
-
+                // Hold position if we've reached our ideal range
+                else if (mon->type == MONS_SPELLFORGED_SERVITOR
+                         && (mon->pos() - target->pos()).abs()
+                         <= dist_range(mon->props["ideal_range"].get_int())
+                         && !one_chance_in(8))
+                {
+                    mon->firing_pos = mon->pos();
+                }
             }
 
             break;

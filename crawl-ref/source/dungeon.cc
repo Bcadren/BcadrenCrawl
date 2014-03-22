@@ -781,6 +781,7 @@ static bool _is_upwards_exit_stair(const coord_def &c)
     case DNGN_EXIT_HELL:
 #if TAG_MAJOR_VERSION == 34
     case DNGN_RETURN_FROM_DWARF:
+    case DNGN_RETURN_FROM_FOREST:
 #endif
     case DNGN_RETURN_FROM_ORC:
     case DNGN_RETURN_FROM_LAIR:
@@ -796,7 +797,6 @@ static bool _is_upwards_exit_stair(const coord_def &c)
     case DNGN_RETURN_FROM_SWAMP:
     case DNGN_RETURN_FROM_SHOALS:
     case DNGN_RETURN_FROM_SPIDER:
-    case DNGN_RETURN_FROM_FOREST:
     case DNGN_EXIT_PANDEMONIUM:
     case DNGN_TRANSIT_PANDEMONIUM:
     case DNGN_EXIT_ABYSS:
@@ -827,6 +827,7 @@ static bool _is_exit_stair(const coord_def &c)
     case DNGN_EXIT_HELL:
 #if TAG_MAJOR_VERSION == 34
     case DNGN_RETURN_FROM_DWARF:
+    case DNGN_RETURN_FROM_FOREST:
 #endif
     case DNGN_RETURN_FROM_ORC:
     case DNGN_RETURN_FROM_LAIR:
@@ -842,7 +843,6 @@ static bool _is_exit_stair(const coord_def &c)
     case DNGN_RETURN_FROM_SWAMP:
     case DNGN_RETURN_FROM_SHOALS:
     case DNGN_RETURN_FROM_SPIDER:
-    case DNGN_RETURN_FROM_FOREST:
     case DNGN_EXIT_PANDEMONIUM:
     case DNGN_TRANSIT_PANDEMONIUM:
     case DNGN_EXIT_ABYSS:
@@ -2373,9 +2373,6 @@ static void _post_vault_build()
             depth -= 3;
         } while (depth > 0);
     }
-
-    if (player_in_branch(BRANCH_FOREST))
-        _add_plant_clumps(2);
 }
 
 static void _build_dungeon_level(dungeon_feature_type dest_stairs_type)
@@ -3562,7 +3559,16 @@ static void _place_branch_entrances(bool use_vaults)
                     continue;
             }
 
-            // Otherwise place a single stair feature
+            // Otherwise place a single stair feature.
+            // Try to use designated locations for entrances if possible.
+            const coord_def portal_pos = find_portal_place(NULL, false);
+            if (!portal_pos.origin())
+            {
+                env.grid(portal_pos) = b->entry_stairs;
+                env.level_map_mask(portal_pos) |= MMT_VAULT;
+                continue;
+            }
+
             const coord_def stair_pos = _place_specific_feature(b->entry_stairs);
             // Don't allow subsequent vaults to overwrite the branch stair
             env.level_map_mask(stair_pos) |= MMT_VAULT;
@@ -3881,7 +3887,7 @@ static bool _map_feat_is_on_edge(const vault_placement &place,
     if (!place.map.in_map(c - place.pos))
         return false;
 
-    for (adjacent_iterator ai(c); ai; ++ai)
+    for (orth_adjacent_iterator ai(c); ai; ++ai)
         if (!place.map.in_map(*ai - place.pos))
             return true;
 
@@ -3934,7 +3940,7 @@ static void _fixup_after_vault()
     env.markers.activate_all();
 
     // Force teleport to place the player somewhere sane.
-    you_teleport_now(false, false);
+    you_teleport_now(false);
 
     setup_environment_effects();
 }
@@ -4224,8 +4230,10 @@ static const vault_placement *_build_vault_impl(const map_def *vault,
     if (!make_no_exits)
     {
         const bool spotty = player_in_branch(BRANCH_ORC)
-                            || player_in_branch(BRANCH_SLIME)
-                            || player_in_branch(BRANCH_FOREST);
+#if TAG_MAJOR_VERSION == 34
+                            || player_in_branch(BRANCH_FOREST)
+#endif
+                            || player_in_branch(BRANCH_SLIME);
         place.connect(spotty);
     }
 
@@ -4513,8 +4521,8 @@ retry:
                                  true, where)
          : spec.corpselike() ? _dgn_item_corpse(spec, where)
          : items(spec.allow_uniques, base_type,
-                  spec.sub_type, true, level, spec.race, 0,
-                  spec.ego, -1, spec.level == ISPEC_MUNDANE));
+                 spec.sub_type, true, level, 0, 0, spec.ego, -1,
+                 spec.level == ISPEC_MUNDANE));
 
     if (item_made != NON_ITEM && item_made != -1)
     {
@@ -4579,15 +4587,6 @@ static void _dgn_give_mon_spec_items(mons_spec &mspec,
             mon->inv[i] = NON_ITEM;
         }
 
-    item_make_species_type racial = MAKE_ITEM_RANDOM_RACE;
-
-    if (mons_genus(type) == MONS_ORC)
-        racial = MAKE_ITEM_ORCISH;
-    else if (mons_genus(type) == MONS_DWARF)
-        racial = MAKE_ITEM_DWARVEN;
-    else if (mons_genus(type) == MONS_ELF)
-        racial = MAKE_ITEM_ELVEN;
-
     item_list &list = mspec.items;
 
     const int size = list.size();
@@ -4606,22 +4605,6 @@ static void _dgn_give_mon_spec_items(mons_spec &mspec,
             spec.allow_uniques = 0;
             if (spec.ego == 0)
                 spec.ego = SP_FORBID_EGO;
-        }
-
-        // Gives orcs and elves appropriate racial gear, unless
-        // otherwise specified.
-        if (spec.race == MAKE_ITEM_RANDOM_RACE)
-        {
-            // But don't automatically give elves elven boots or
-            // elven cloaks, or the same for dwarves.
-            if ((racial != MAKE_ITEM_ELVEN
-                    && racial != MAKE_ITEM_DWARVEN)
-                || spec.base_type != OBJ_ARMOUR
-                || (spec.sub_type != ARM_CLOAK
-                    && spec.sub_type != ARM_BOOTS))
-            {
-                spec.race = racial;
-            }
         }
 
         int item_level = mspec.place.absdepth();
@@ -4651,7 +4634,7 @@ static void _dgn_give_mon_spec_items(mons_spec &mspec,
                                _dgn_item_corpse(spec, mon->pos())
                                : items(spec.allow_uniques, spec.base_type,
                                        spec.sub_type, true, item_level,
-                                       spec.race, 0, spec.ego, -1,
+                                       0, 0, spec.ego, -1,
                                        spec.level == ISPEC_MUNDANE));
 
         if (item_made != NON_ITEM && item_made != -1)
@@ -5519,7 +5502,7 @@ static void _place_spec_shop(const coord_def& where,
 
     int plojy = 5 + random2avg(12, 3);
     if (representative)
-        plojy = env.shop[i].type == SHOP_WAND ? NUM_WANDS : 16;
+        plojy = env.shop[i].type == SHOP_EVOKABLES ? NUM_WANDS : 16;
 
     if (spec->use_all && !spec->items.empty())
     {
@@ -5570,6 +5553,10 @@ static void _place_spec_shop(const coord_def& where,
         // general stores (see item_in_shop() below)   (GDL)
         while (true)
         {
+            const object_class_type basetype =
+                (representative && env.shop[i].type == SHOP_EVOKABLES)
+                ? OBJ_WANDS
+                : _item_in_shop(env.shop[i].type);
             const int subtype = representative? j : OBJ_RANDOM;
 
             if (!spec->items.empty() && !spec->use_all)
@@ -5581,9 +5568,8 @@ static void _place_spec_shop(const coord_def& where,
                 orb = dgn_place_item(spec->items.get_item(j), stock_loc, item_level);
             else
             {
-                orb = items(1, _item_in_shop(env.shop[i].type), subtype, true,
-                             one_chance_in(4) ? MAKE_GOOD_ITEM : item_level,
-                             MAKE_ITEM_RANDOM_RACE);
+                orb = items(1, basetype, subtype, true,
+                            one_chance_in(4) ? MAKE_GOOD_ITEM : item_level);
             }
 
             // Try for a better selection.
@@ -5666,8 +5652,10 @@ static object_class_type _item_in_shop(shop_type shop_type)
     case SHOP_JEWELLERY:
         return OBJ_JEWELLERY;
 
-    case SHOP_WAND:
-        return OBJ_WANDS;
+    case SHOP_EVOKABLES:
+        if (one_chance_in(10))
+            return OBJ_RODS;
+        return coinflip() ? OBJ_WANDS : OBJ_MISCELLANY;
 
     case SHOP_BOOK:
         return OBJ_BOOKS;
@@ -5681,11 +5669,8 @@ static object_class_type _item_in_shop(shop_type shop_type)
     case SHOP_SCROLL:
         return OBJ_SCROLLS;
 
-    case SHOP_MISCELLANY:
-        return OBJ_MISCELLANY;
-
     default:
-        die("unknown shop type");
+        die("unknown shop type %d", shop_type);
     }
 
     return OBJ_RANDOM;
@@ -5703,10 +5688,12 @@ static bool _spotty_seed_ok(const coord_def& p)
 static bool _feat_is_wall_floor_liquid(dungeon_feature_type feat)
 {
     return feat_is_water(feat)
+#if TAG_MAJOR_VERSION == 34
+           || player_in_branch(BRANCH_FOREST) && feat == DNGN_TREE
+#endif
            || feat_is_lava(feat)
            || feat_is_wall(feat)
-           || feat == DNGN_FLOOR
-           || player_in_branch(BRANCH_FOREST) && feat == DNGN_TREE;
+           || feat == DNGN_FLOOR;
 }
 
 // Connect vault exit "from" to dungeon floor by growing a spotty chamber.
@@ -6087,7 +6074,7 @@ coord_def dgn_find_nearby_stair(dungeon_feature_type stair_to_find,
             const int dist = (xpos-basex)*(xpos-basex)
                              + (ypos-basey)*(ypos-basey);
 
-            if (grd[xpos][ypos] == stair_to_find
+            if (orig_terrain(coord_def(xpos, ypos)) == stair_to_find
                 && !feature_mimic_at(coord_def(xpos, ypos)))
             {
                 found++;
@@ -6131,7 +6118,7 @@ coord_def dgn_find_nearby_stair(dungeon_feature_type stair_to_find,
             const int ypos  = (basey + ydiff + GYM) % GYM;
 
             bool good_stair;
-            const int looking_at = grd[xpos][ypos];
+            const int looking_at = orig_terrain(coord_def(xpos, ypos));
 
             if (stair_to_find <= DNGN_ESCAPE_HATCH_DOWN)
             {

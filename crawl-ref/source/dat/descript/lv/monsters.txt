@@ -187,11 +187,6 @@ adder
 
 Izplatīta pazemes čūska. Troglodītiska rāpuļa suga, kas bieži sastopama pazemē.
 %%%%
-agate snail
-
-Milzīgs un pretīgs gliemezis zaļpelēkā čaulā, kurā, tiekot nobiedēts, tas
-noslēpjas.
-%%%%
 anaconda
 
 Ļoti liela čūska, kas gan pa zemi, gan ūdenī pārvietojas ar pārsteidzošu
@@ -254,10 +249,6 @@ Milzīga māla statuja, kas pārdabiskiem līdzekļiem tikusi atdzīvināta.
 deep elf knight
 
 Kaujās rūdīts dzīļu elfu karotājs.
-%%%%
-deep dwarf berserker
-
-Negants un asinskārs pazemes rūķis, kas alkst cīņas neprāta.
 %%%%
 Executioner
 

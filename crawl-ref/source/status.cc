@@ -78,8 +78,6 @@ static duration_def duration_data[] =
       WHITE, "Pray", "jelly paralyse", "You are paralysing nearby jellies." },
     { DUR_RESISTANCE, true,
       LIGHTBLUE, "Resist", "resistant", "You resist elements." },
-    { DUR_SLAYING, false,
-      0, "", "deadly", "" },
     { DUR_SLIMIFY, true,
       GREEN, "Slime", "slimy", "" },
     { DUR_SLEEP, false,
@@ -161,6 +159,14 @@ static duration_def duration_data[] =
       RED, "Sap", "sap magic", "Casting spells hinders your spell success." },
     { DUR_PORTAL_PROJECTILE, false,
       LIGHTBLUE, "PProj", "portal projectile", "You are teleporting projectiles to their destination." },
+    { DUR_FORESTED, false,
+      YELLOW, "Forest", "", "" },
+    { DUR_DRAGON_CALL, false,
+      WHITE, "Dragoncall", "dragon's call", "You are beckoning forth a horde of dragons." },
+    { DUR_DRAGON_CALL_COOLDOWN, false,
+      RED, "Dragoncall", "", "" },
+    { DUR_ABJURATION_AURA, false,
+      BLUE, "Abj", "aura of abjuration", "You are abjuring all hostile summons around you." },
 };
 
 static int duration_index[NUM_DURATIONS];
@@ -198,9 +204,9 @@ static void _reset_status_info(status_info* inf)
 
 static int _bad_ench_colour(int lvl, int orange, int red)
 {
-    if (lvl > red)
+    if (lvl >= red)
         return RED;
-    else if (lvl > orange)
+    else if (lvl >= orange)
         return LIGHTRED;
 
     return YELLOW;
@@ -442,7 +448,7 @@ bool fill_status_info(int status, status_info* inf)
         break;
 
     case DUR_POWERED_BY_DEATH:
-        if (handle_pbd_corpses(false) > 0)
+        if (handle_pbd_corpses() > 0)
         {
             inf->light_colour = LIGHTMAGENTA;
             inf->light_text   = "Regen+";
@@ -743,8 +749,12 @@ static void _describe_glow(status_info* inf)
     {
         inf->light_colour = DARKGREY;
         if (cont > 1)
-            inf->light_colour = _bad_ench_colour(cont, 2, 3);
-        if (cont > 1 || you.species != SP_DJINNI)
+            inf->light_colour = _bad_ench_colour(cont, 3, 4);
+        if (cont > 1
+#if TAG_MAJOR_VERSION == 34
+                || you.species != SP_DJINNI
+#endif
+                )
             inf->light_text = "Contam";
     }
 
@@ -820,15 +830,16 @@ static void _describe_regen(status_info* inf)
 
 static void _describe_poison(status_info* inf)
 {
-    int pois = you.duration[DUR_POISONING];
+    int pois_perc = (get_player_poisoning() >= you.hp ? 100
+                       : (you.hp - poison_survival()) * 100 / you.hp);
     inf->light_colour = (player_res_poison(false) >= 3
-                         ? DARKGREY : _bad_ench_colour(pois, 5, 10));
+                         ? DARKGREY : _bad_ench_colour(pois_perc, 35, 100));
     inf->light_text   = "Pois";
     const string adj =
-         (pois > 10) ? "extremely" :
-         (pois > 5)  ? "very" :
-         (pois > 3)  ? "quite"
-                     : "mildly";
+         (pois_perc >= 100) ? "lethally" :
+         (pois_perc > 65)   ? "seriously" :
+         (pois_perc > 35)   ? "quite"
+                            : "mildly";
     inf->short_text   = adj + " poisoned";
     inf->long_text    = "You are " + inf->short_text + ".";
 }
@@ -896,7 +907,7 @@ static void _describe_rotting(status_info* inf)
 {
     if (you.rotting)
     {
-        inf->light_colour = _bad_ench_colour(you.rotting, 4, 8);
+        inf->light_colour = _bad_ench_colour(you.rotting, 5, 9);
         inf->light_text   = "Rot";
     }
 

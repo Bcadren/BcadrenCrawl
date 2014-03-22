@@ -4513,7 +4513,6 @@ item_spec &item_spec::operator = (const item_spec &other)
         ego = other.ego;
         allow_uniques = other.allow_uniques;
         level = other.level;
-        race = other.race;
         item_special = other.item_special;
         qty = other.qty;
         acquirement_source = other.acquirement_source;
@@ -5090,21 +5089,6 @@ item_spec item_list::parse_single_spec(string s)
     }
 
     string ego_str  = strip_tag_prefix(s, "ego:");
-    string race_str = strip_tag_prefix(s, "race:");
-
-    if (race_str == "elven")
-        result.race = MAKE_ITEM_ELVEN;
-    else if (race_str == "dwarven")
-        result.race = MAKE_ITEM_DWARVEN;
-    else if (race_str == "orcish")
-        result.race = MAKE_ITEM_ORCISH;
-    else if (race_str == "none" || race_str == "no_race")
-        result.race = MAKE_ITEM_NO_RACE;
-    else if (!race_str.empty())
-    {
-        error = make_stringf("Bad race: %s", race_str.c_str());
-        return result;
-    }
 
     string id_str = strip_tag_prefix(s, "ident:");
     if (id_str == "all")
@@ -5883,7 +5867,7 @@ feature_spec keyed_mapspec::parse_shop(string s, int weight, int mimic,
         err = make_stringf("too many semi-colons for '%s' spec", orig.c_str());
 
     item_list items;
-    if (parts.size() == 2)
+    if (err.empty() && parts.size() == 2)
     {
         string item_list = parts[1];
         vector<string> str_items = split_string("|", item_list);

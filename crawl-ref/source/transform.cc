@@ -694,9 +694,11 @@ static bool _transformation_is_safe(transformation_type which_trans,
         if (cloud != EMPTY_CLOUD && is_damaging_cloud(env.cloud[cloud].type, false))
             return false;
     }
+#if TAG_MAJOR_VERSION == 34
 
     if (which_trans == TRAN_ICE_BEAST && you.species == SP_DJINNI)
         return false; // melting is fatal...
+#endif
 
     if (!feat_dangerous_for_form(which_trans, feat))
         return true;
@@ -1244,6 +1246,13 @@ bool transform(int pow, transformation_type which_trans, bool involuntary,
     return true;
 }
 
+/**
+ * End the player's transformation and return them to their normal
+ * form.
+ * @param skip_wielding  If true, don't swap the player's weapon back.
+ * @param skip_move      If true, skip any move that was in progress before
+ *                       the transformation ended.
+ */
 void untransform(bool skip_wielding, bool skip_move)
 {
     const flight_type old_flight = you.flight_mode();
@@ -1448,11 +1457,12 @@ void untransform(bool skip_wielding, bool skip_move)
 
     if (hp_downscale != 10 && you.hp != you.hp_max)
     {
-        you.hp = you.hp * 10 / hp_downscale;
-        if (you.hp < 1)
-            you.hp = 1;
-        else if (you.hp > you.hp_max)
-            you.hp = you.hp_max;
+        int hp = you.hp * 10 / hp_downscale;
+        if (hp < 1)
+            hp = 1;
+        else if (hp > you.hp_max)
+            hp = you.hp_max;
+        set_hp(hp);
     }
     calc_hp();
 

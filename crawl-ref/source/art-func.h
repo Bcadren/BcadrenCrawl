@@ -36,6 +36,7 @@
 #include "spl-miscast.h"   // For Staff of Wucad Mu and Scythe of Curses miscasts
 #include "spl-summoning.h" // For Zonguldrok animating dead
 #include "terrain.h"       // For storm bow
+#include "throw.h"         // For silver damage
 
 /*******************
  * Helper functions.
@@ -459,6 +460,7 @@ static void _wucad_miscast(actor* victim, int power,int fail)
 static bool _WUCAD_MU_evoke(item_def *item, int* pract, bool* did_work,
                             bool* unevokable)
 {
+#if TAG_MAJOR_VERSION == 34
     if (you.species == SP_DJINNI)
     {
         mpr("The staff is unable to affect your essence.");
@@ -466,6 +468,7 @@ static bool _WUCAD_MU_evoke(item_def *item, int* pract, bool* did_work,
         return true;
     }
 
+#endif
     if (you.magic_points == you.max_magic_points)
     {
         mpr("Your reserves of magic are full.");
@@ -750,6 +753,17 @@ static void _BRILLIANCE_unequip(item_def *item, bool *show_msgs)
 }
 
 ///////////////////////////////////////////////////
+static void _SHADOWS_equip(item_def *item, bool *show_msgs, bool unmeld)
+{
+    invalidate_agrid(true);
+}
+
+static void _SHADOWS_unequip(item_def *item, bool *show_msgs)
+{
+    invalidate_agrid(true);
+}
+
+///////////////////////////////////////////////////
 static void _DEVASTATOR_equip(item_def *item, bool *show_msgs, bool unmeld)
 {
     _equip_mpr(show_msgs, "Time to lay down the shillelagh law.");
@@ -901,6 +915,7 @@ static void _ELEMENTAL_STAFF_melee_effects(item_def* item, actor* attacker,
                                         actor* defender, bool mondied, int dam)
 {
     int evoc = attacker->skill(SK_EVOCATIONS, 27);
+    beam_type flavour = BEAM_NONE;
 
     if (mondied || !(x_chance_in_y(evoc, 729) || x_chance_in_y(evoc, 729)))
         return;
@@ -914,16 +929,19 @@ static void _ELEMENTAL_STAFF_melee_effects(item_def* item, actor* attacker,
         d = resist_adjust_damage(defender, BEAM_FIRE,
                                  defender->res_fire(), d);
         verb = "burn";
+        flavour = BEAM_FIRE;
         break;
     case 1:
         d = resist_adjust_damage(defender, BEAM_COLD,
                                  defender->res_cold(), d);
         verb = "freeze";
+        flavour = BEAM_COLD;
         break;
     case 2:
         d = resist_adjust_damage(defender, BEAM_ELECTRICITY,
                                  defender->res_elec(), d);
         verb = "electrocute";
+        flavour = BEAM_ELECTRICITY;
         break;
     case 3:
         d = defender->apply_ac(d);
@@ -939,6 +957,8 @@ static void _ELEMENTAL_STAFF_melee_effects(item_def* item, actor* attacker,
          attacker->is_player() ? verb : pluralise(verb).c_str(),
          defender->name(DESC_THE).c_str());
     defender->hurt(attacker, d);
+    if (defender->alive() && flavour != BEAM_NONE)
+        defender->expose_to_element(flavour, 2);
 }
 
 ///////////////////////////////////////////////////
@@ -969,9 +989,7 @@ static void _SPELLBINDER_melee_effects(item_def* weapon, actor* attacker,
 {
     // Only cause miscasts if the target has magic to disrupt.
     if ((defender->is_player()
-         || (defender->as_monster()->can_use_spells()
-             && !defender->as_monster()->is_priest()
-             && !mons_class_flag(defender->type, M_FAKE_SPELLS)))
+         || mons_antimagic_affected(defender->as_monster()))
         && !mondied)
     {
         int school = SPTYP_NONE;
@@ -1001,6 +1019,57 @@ static void _SPELLBINDER_melee_effects(item_def* weapon, actor* attacker,
                           random2(9),
                           random2(70), "the demon whip \"Spellbinder\"",
                           NH_NEVER);
+        }
+    }
+}
+
+///////////////////////////////////////////////////
+
+static void _ORDER_melee_effects(item_def* item, actor* attacker,
+                                         actor* defender, bool mondied, int dam)
+{
+    if (!mondied)
+    {
+        int tempdam = dam;
+        bolt tempbeam;
+        string msg = "";
+        silver_damages_victim(tempbeam, defender, tempdam, msg);
+        if (tempdam > dam)
+        {
+            tempdam -= dam;
+            if (you.can_see(defender))
+                mpr(msg.c_str());
+            defender->hurt(attacker, tempdam);
+        }
+    }
+}
+
+///////////////////////////////////////////////////
+
+static void _FIRESTARTER_equip(item_def *item, bool *show_msgs, bool unmeld)
+{
+    _equip_mpr(show_msgs, "You are filled with an inner flame.");
+}
+
+static void _FIRESTARTER_unequip(item_def *item, bool *show_msgs)
+{
+    _equip_mpr(show_msgs, "Your inner flame fades away.");
+}
+
+static void _FIRESTARTER_melee_effects(item_def* weapon, actor* attacker,
+                                   actor* defender, bool mondied, int dam)
+{
+    if (dam)
+    {
+        if (defender->is_monster()
+            && !mondied
+            && !defender->as_monster()->has_ench(ENCH_INNER_FLAME))
+        {
+            mprf("%s is filled with an inner flame.",
+                 defender->name(DESC_THE).c_str());
+            defender->as_monster()->add_ench(
+                mon_enchant(ENCH_INNER_FLAME, 0, attacker,
+                            (3 + random2(dam)) * BASELINE_DELAY));
         }
     }
 }

@@ -151,6 +151,8 @@ bool monster::add_ench(const mon_enchant &ench)
     if (new_enchantment)
         add_enchantment_effect(ench);
 
+    if (ench.ench == ENCH_CHARM)
+        this->align_avatars(true);
     return true;
 }
 
@@ -313,6 +315,14 @@ void monster::add_enchantment_effect(const mon_enchant &ench, bool quiet)
         }
         break;
     }
+
+    case ENCH_INVIS:
+        if (testbits(flags, MF_WAS_IN_VIEW))
+        {
+            went_unseen_this_turn = true;
+            unseen_pos = pos();
+        }
+        break;
 
     default:
         break;
@@ -574,7 +584,12 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
 
     case ENCH_CHARM:
         if (!quiet)
-            simple_monster_message(this, " is no longer charmed.");
+        {
+            if (props.exists("charmed_demon"))
+                simple_monster_message(this, " breaks free of your control!");
+            else
+                simple_monster_message(this, " is no longer charmed.");
+        }
 
         if (you.can_see(this))
         {
@@ -590,6 +605,13 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
             patrol_point.reset();
         }
         mons_att_changed(this);
+
+        // If a greater demon is breaking free, give the player time to respond
+        if (props.exists("charmed_demon"))
+        {
+            speed_increment -= speed;
+            props.erase("charmed_demon");
+        }
 
         // Reevaluate behaviour.
         behaviour_event(this, ME_EVAL);
@@ -634,7 +656,7 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
         int net = get_trapping_net(pos());
         if (net != NON_ITEM)
         {
-            remove_item_stationary(mitm[net]);
+            free_stationary_net(net);
 
             if (!quiet)
                 simple_monster_message(this, " breaks free.");
@@ -882,13 +904,7 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
         break;
 
     case ENCH_SIREN_SONG:
-        props.erase("song_count");
-        break;
-
-    case ENCH_BUILDING_CHARGE:
-        if (!quiet && you.can_see(this))
-            mprf("%s electrical charge dissipates.", name(DESC_ITS).c_str());
-        number = 0;
+        props.erase("siren_call");
         break;
 
     case ENCH_POISON_VULN:
@@ -1052,7 +1068,7 @@ void monster::timeout_enchantments(int levels)
         case ENCH_ROUSED: case ENCH_BREATH_WEAPON: case ENCH_DEATHS_DOOR:
         case ENCH_WRETCHED: case ENCH_SCREAMED:
         case ENCH_BLIND: case ENCH_WORD_OF_RECALL: case ENCH_INJURY_BOND:
-        case ENCH_FLAYED: case ENCH_BARBS: case ENCH_BUILDING_CHARGE:
+        case ENCH_FLAYED: case ENCH_BARBS:
         case ENCH_AGILE: case ENCH_FROZEN: case ENCH_EPHEMERAL_INFUSION:
         case ENCH_BLACK_MARK: case ENCH_SAP_MAGIC:
             lose_ench_levels(i->second, levels);
@@ -1067,6 +1083,7 @@ void monster::timeout_enchantments(int levels)
         case ENCH_BERSERK:
         case ENCH_INNER_FLAME:
         case ENCH_ROLLING:
+        case ENCH_SIREN_SONG:
             del_ench(i->first);
             break;
 
@@ -1597,6 +1614,8 @@ void monster::apply_enchantment(const mon_enchant &me)
             {
                 if (type == MONS_PILLAR_OF_SALT)
                     mprf("%s crumbles away.", name(DESC_THE, false).c_str());
+                else if (type == MONS_BLOCK_OF_ICE)
+                    mprf("%s melts away.", name(DESC_THE, false).c_str());
                 else
                 {
                     mprf("A nearby %s withers and dies.",
@@ -1725,6 +1744,7 @@ void monster::apply_enchantment(const mon_enchant &me)
 
             // Severed tentacles immediately become "hostile" to everyone (or insane)
             attitude = ATT_NEUTRAL;
+            mons_att_changed(this);
             behaviour_event(this, ME_ALERT);
         }
     }
@@ -1749,6 +1769,7 @@ void monster::apply_enchantment(const mon_enchant &me)
             }
 
             attitude = ATT_HOSTILE;
+            mons_att_changed(this);
             behaviour_event(this, ME_ALERT, &you);
         }
     }
@@ -1839,7 +1860,7 @@ void monster::apply_enchantment(const mon_enchant &me)
         if (is_chaotic())
         {
             bolt beam;
-            beam.flavour = BEAM_LIGHT;
+            beam.flavour = BEAM_HOLY_LIGHT;
             int dam = roll_dice(2, 4) - 1;
 
             int newdam = mons_adjust_flavoured(this, beam, dam, false);
@@ -1853,7 +1874,7 @@ void monster::apply_enchantment(const mon_enchant &me)
             }
 
             dprf("Zin's Corona damage: %d", dam);
-            hurt(me.agent(), dam, BEAM_LIGHT);
+            hurt(me.agent(), dam, BEAM_HOLY_LIGHT);
         }
 
         decay_enchantment(en, true);
@@ -1889,8 +1910,11 @@ void monster::apply_enchantment(const mon_enchant &me)
 
     case ENCH_INJURY_BOND:
         // It's hard to absorb someone else's injuries when you're dead
-        if (!me.agent() || !me.agent()->alive())
+        if (!me.agent() || !me.agent()->alive()
+            || me.agent()->mindex() == ANON_FRIENDLY_MONSTER)
+        {
             del_ench(ENCH_INJURY_BOND, true, false);
+        }
         else
             decay_enchantment(en);
         break;
@@ -1996,22 +2020,6 @@ void monster::apply_enchantment(const mon_enchant &me)
         if (!see_cell_no_trans(you.pos()))
             decay_enchantment(en);
 
-        break;
-
-    case ENCH_BUILDING_CHARGE:
-        ASSERT(type == MONS_SHOCK_SERPENT);
-
-        if (decay_enchantment(en))
-            break;
-
-        // Announcing at 4, since it is about to increment and hit its cap of
-        // 5 and this prevents this message from being spammed
-        if (number == 4)
-        {
-            simple_monster_message(this, " bristles with a violent electric nimbus!",
-                                   MSGCH_MONSTER_ENCHANT);
-        }
-        number = min((int)number + 1, 5);
         break;
 
     case ENCH_GRAND_AVATAR:
@@ -2166,9 +2174,13 @@ static const char *enchant_names[] =
     "awaken vines", "control_winds", "wind_aided", "summon_capped",
     "toxic_radiance", "grasping_roots_source", "grasping_roots",
     "iood_charged", "fire_vuln", "tornado_cooldown", "siren_song",
-    "barbs", "building_charge", "poison_vuln", "icemail", "agile",
+    "barbs",
+#if TAG_MAJOR_VERSION == 34
+    "building_charge",
+#endif
+    "poison_vuln", "icemail", "agile",
     "frozen", "ephemeral_infusion", "black_mark", "grand_avatar",
-    "sap magic", "shroud", "buggy",
+    "sap magic", "shroud", "phantom_mirror", "buggy",
 };
 
 static const char *_mons_enchantment_name(enchant_type ench)

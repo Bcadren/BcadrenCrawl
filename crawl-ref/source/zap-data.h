@@ -635,8 +635,8 @@ struct zap_info
     ZAP_BREATHE_ACID,
     "acid",
     50,
-    new dicedef_calculator<3, 3, 1, 3>,
-    new tohit_calculator<5, 1, 6>,
+    new dicedef_calculator<3, 4, 1, 3>,
+    new tohit_calculator<7, 1, 6>,
     YELLOW,
     false,
     BEAM_ACID,
@@ -759,6 +759,7 @@ struct zap_info
     4
 },
 
+#if TAG_MAJOR_VERSION == 34
 {                           // ench_power controls radius
     ZAP_ICE_STORM,
     "great blast of cold",
@@ -774,6 +775,7 @@ struct zap_info
     true,
     9 // XXX: Should a storm be louder?
 },
+#endif
 
 {
     ZAP_CORONA,
@@ -1137,6 +1139,22 @@ struct zap_info
     GREEN,
     false,
     BEAM_CRYSTAL,
+    DCHAR_FIRED_ZAP,
+    true,
+    true,
+    false,
+    6
+},
+
+{
+    ZAP_QUICKSILVER_BOLT,
+    "bolt of dispelling energy",
+    200,
+    new calcdice_calculator<6, 15, 2, 3>,
+    new tohit_calculator<10, 1, 25>,
+    BLUE,
+    false,
+    BEAM_MMISSILE,
     DCHAR_FIRED_ZAP,
     true,
     true,

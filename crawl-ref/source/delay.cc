@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "ability.h"
+#include "areas.h"
 #include "artefact.h"
 #include "clua.h"
 #include "command.h"
@@ -1495,6 +1496,36 @@ static bool _should_stop_activity(const delay_queue_item &item,
            || Options.activity_interrupts[item.type][ai];
 }
 
+static string _abyss_monster_creation_message(const monster* mon)
+{
+    if (mon->type == MONS_DEATH_COB)
+    {
+        return coinflip() ? " appears in a burst of microwaves!"
+                          : " pops from nullspace!";
+    }
+
+    return make_stringf(
+        random_choose_weighted(
+            17, " appears in a shower of translocational energy.",
+            34, " appears in a shower of sparks.",
+            45, " materialises.",
+            13, " emerges from chaos.",
+            26, " emerges from the beyond.",
+            33, " assembles %s!",
+             9, " erupts from nowhere!",
+            18, " bursts from nowhere!",
+             7, " is cast out of space!",
+            14, " is cast out of reality!",
+             5, " coalesces out of pure chaos.",
+            10, " coalesces out of seething chaos.",
+             2, " punctures the fabric of time!",
+             7, " punctures the fabric of the universe.",
+             3, " manifests%2$s!%1$.0s",
+             0),
+        mon->pronoun(PRONOUN_REFLEXIVE).c_str(),
+        silenced(you.pos()) ? "" : " with a bang");
+}
+
 static inline bool _monster_warning(activity_interrupt_type ai,
                                     const activity_interrupt_data &at,
                                     delay_type atype,
@@ -1579,12 +1610,40 @@ static inline bool _monster_warning(activity_interrupt_type ai,
         }
         else if (at.context == SC_NONSWIMMER_SURFACES_FROM_DEEP)
             text += " emerges from the water.";
+        else if (at.context == SC_UPSTAIRS)
+            text += " comes up the stairs.";
+        else if (at.context == SC_DOWNSTAIRS)
+            text += " comes down the stairs.";
+        else if (at.context == SC_GATE)
+            text += " comes through the gate.";
+        else if (at.context == SC_ABYSS)
+            text += _abyss_monster_creation_message(mon);
+        else if (at.context == SC_THROWN_IN)
+            text += " is thrown into view!";
         else
             text += " comes into view.";
 
         ash_id_monster_equipment(const_cast<monster* >(mon));
         bool ash_id = mon->props.exists("ash_id") && mon->props["ash_id"];
-        string ash_warning;
+        bool zin_id = false;
+        string god_warning;
+
+        if (you_worship(GOD_ZIN)
+            && mon->is_shapeshifter()
+            && !(mon->flags & MF_KNOWN_SHIFTER))
+        {
+            ASSERT(!ash_id);
+            zin_id = true;
+            (const_cast<monster *>(mon))->props["zin_id"] = true;
+            discover_shifter(const_cast<monster *>(mon));
+            god_warning = "Zin warns you: "
+                          + uppercase_first(mon->pronoun(PRONOUN_SUBJECTIVE))
+                          + " is a foul ";
+            if (mon->has_ench(ENCH_GLOWING_SHAPESHIFTER))
+                god_warning += "glowing ";
+            god_warning += "shapeshifter.";
+        }
+
 
         monster_info mi(mon);
 
@@ -1596,9 +1655,9 @@ static inline bool _monster_warning(activity_interrupt_type ai,
         if (!mweap.empty())
         {
             if (ash_id)
-                ash_warning = "Ashenzari warns you:";
+                god_warning = "Ashenzari warns you:";
 
-            (ash_id ? ash_warning : text) +=
+            (ash_id ? god_warning : text) +=
                 " " + uppercase_first(mon->pronoun(PRONOUN_SUBJECTIVE)) + " is"
                 + mweap + ".";
         }
@@ -1608,8 +1667,12 @@ static inline bool _monster_warning(activity_interrupt_type ai,
         else
         {
             mprf(MSGCH_WARN, "%s", text.c_str());
-            if (ash_id)
-                mprf(MSGCH_GOD, "%s", ash_warning.c_str());
+            if (ash_id || zin_id)
+                mprf(MSGCH_GOD, "%s", god_warning.c_str());
+#ifndef USE_TILE_LOCAL
+            if (zin_id)
+                update_monster_pane();
+#endif
         }
         const_cast<monster* >(mon)->seen_context = SC_JUST_SEEN;
     }
@@ -1689,7 +1752,11 @@ bool interrupt_activity(activity_interrupt_type ai,
     const delay_queue_item &item = you.delay_queue.front();
 
     if (ai == AI_FULL_HP)
-        mprf("%s restored.", you.species == SP_DJINNI ? "EP" : "HP");
+        mprf("%s restored.",
+#if TAG_MAJOR_VERSION == 34
+                you.species == SP_DJINNI ? "EP" :
+#endif
+                "HP");
     else if (ai == AI_FULL_MP)
         mpr("Magic restored.");
 

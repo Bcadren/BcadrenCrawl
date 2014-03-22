@@ -37,8 +37,8 @@ KMONS:  e = vampire / yaktaur / w:5 frost giant / w:5 fire giant /\
 KMONS:  i = titan
   : end
 KMONS:  P = plant
-KMONS:  h = generate_awake human / generate_awake elf / generate_awake gnome
-: dgn.delayed_decay(_G, 'h', 'elf chunk / q:2 human chunk / q:2 gnome chunk')
+KMONS:  h = generate_awake human / generate_awake elf / generate_awake halfling
+: dgn.delayed_decay(_G, 'h', 'elf chunk / q:2 human chunk / q:2 halfling chunk')
 KFEAT:  = = floor
 FTILE:  =E79 = floor_grass
 COLOUR: =E7 = green
@@ -66,7 +66,8 @@ KFEAT:  B = food shop name:Stan type:Special suffix:Sausages count:10 ; \
             q:5 sausage
 KFEAT:  C = distillery shop type:Miraculous suffix:Elixirs count:10 \
             greed:50 ; potion of confusion
-: kfeat("D = armour shop name:The_Legendary_" .. crawl.make_name() .. " \
+: local smithy = string.gsub(crawl.make_name(), " ", "_")
+: kfeat("D = armour shop name:The_Legendary_" .. smithy .. " \
 :        type:Legendary suffix:Smithy count:10 greed:40 ;\
 :        damaged plate armour ego:none | damaged chain mail ego:none |\
 :        damaged long sword ego:none | damaged shield ego:none |\
@@ -168,7 +169,7 @@ KFEAT:  ~ = closed_door
 SUBST: * = *:35 -:1
 KITEM: - = animal skin
 : dgn.delayed_decay_extra(_G, '*', 'human skeleton / yak skeleton /\
-:                            elf skeleton / gnome skeleton /\
+:                            elf skeleton / halfling skeleton /\
 :                            elephant skeleton / sheep skeleton /\
 :                            manticore skeleton', 'animal skin')
 KFEAT:  8 = granite_statue / orcish_idol / w:5 altar_trog /\
@@ -278,12 +279,12 @@ SUBST:   _ = _8
 SUBST:   2 = 2.
 SUBST:   3 = 3.
 NSUBST:  . = 5:% / *:.
-KITEM:   % = w:12 animal skin / race:orcish hammer / race:orcish hand axe /\
+KITEM:   % = w:12 animal skin / hammer / hand axe /\
              sausage / slice of pizza / nothing
 KFEAT:   8 = orcish_idol / w:5 floor
 KFEAT:   _ = altar_beogh / w:15 floor
-KITEM:   $ = race:orcish battleaxe / nothing, race:orcish plate armour /\
-             nothing, meat ration, q:2 sausage / nothing, gold, any, any
+KITEM:   $ = battleaxe / nothing, plate armour / nothing, \
+             meat ration, q:2 sausage / nothing, gold, any, any
 MARKER:  # = lua:fog_machine { cloud_type = "flame", \
                  pow_min = 10, pow_max = 10, delay = 10, \
                  size = 1, walk_dist = 0, start_clouds = 1, excl_rad = 0 }

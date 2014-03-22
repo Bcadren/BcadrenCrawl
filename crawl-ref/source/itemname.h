@@ -81,8 +81,6 @@ enum
 
 bool is_vowel(const ucs_t chr);
 
-const char* racial_description_string(const item_def& item, bool terse = false);
-
 void check_item_knowledge(bool unknown_items = false);
 void display_runes();
 
@@ -136,4 +134,6 @@ string base_type_string(const item_def &item, bool known = true);
 string sub_type_string(const item_def &item, bool known = true);
 
 string ego_type_string(const item_def &item, bool terse = false);
+
+const char* potion_type_name(int potiontype);  //used in xom.cc
 #endif

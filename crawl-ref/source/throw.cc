@@ -601,7 +601,8 @@ static bool _poison_hit_victim(bolt& beam, actor* victim, int dmg)
     if (dmg > 0 || beam.ench_power == AUTOMATIC_HIT
                    && x_chance_in_y(90 - 3 * victim->armour_class(), 100))
     {
-        levels = 1 + random2(3);
+        levels = 1 + roll_dice(2, 9)
+                 + random2avg(div_rand_round(beam.damage.num * beam.damage.size, 3), 2);
     }
 
     if (levels <= 0)
@@ -623,8 +624,8 @@ static bool _item_penetrates_victim(const bolt &beam, int &used)
     return true;
 }
 
-static bool _silver_damages_victim(bolt &beam, actor* victim, int &dmg,
-                                   string &dmg_msg)
+bool silver_damages_victim(bolt &beam, actor* victim, int &dmg,
+                           string &dmg_msg)
 {
     int mutated = 0;
 
@@ -681,39 +682,16 @@ static bool _dispersal_hit_victim(bolt& beam, actor* victim, int dmg)
 
     coord_def pos, pos2;
 
-    int tries = 0;
-    do
-    {
-        if (!random_near_space(victim->pos(), pos, false, true, false,
-                               no_sanct))
-        {
-            return false;
-        }
-    }
-    while (!victim->is_habitable(pos) && tries++ < 100);
-
-    if (!victim->is_habitable(pos))
+    if (!random_near_space(victim, victim->pos(), pos, false, no_sanct))
         return false;
 
-    tries = 0;
-    do
-        if (!random_near_space(victim->pos(), pos2, false, true, false,
-                               no_sanct))
-        {
-            return false;
-        }
-    while (!victim->is_habitable(pos2) && tries++ < 100);
-
-    if (!victim->is_habitable(pos2))
+    if (!random_near_space(victim, victim->pos(), pos2, false, no_sanct))
         return false;
 
     // Pick the square further away from the agent.
     const coord_def from = agent->pos();
-    if (in_bounds(pos2) && distance2(pos2, from) > distance2(pos, from))
+    if (distance2(pos2, from) > distance2(pos, from))
         pos = pos2;
-
-    if (pos == victim->pos())
-        return false;
 
     const coord_def oldpos = victim->pos();
     victim->clear_clinging();
@@ -1210,7 +1188,7 @@ static bool _setup_missile_beam(const actor *agent, bolt &beam, item_def &item,
     ASSERT(beam.flavour == BEAM_MISSILE || !is_artefact(item));
 
     if (silver)
-        beam.damage_funcs.push_back(_silver_damages_victim);
+        beam.damage_funcs.push_back(silver_damages_victim);
     if (poisoned)
         beam.hit_funcs.push_back(_poison_hit_victim);
     if (penetrating)
@@ -1300,8 +1278,7 @@ static bool _setup_missile_beam(const actor *agent, bolt &beam, item_def &item,
 
             const string short_name =
                 item.name(DESC_BASENAME, true, false, false, false,
-                          ISFLAG_IDENT_MASK | ISFLAG_COSMETIC_MASK
-                          | ISFLAG_RACIAL_MASK);
+                          ISFLAG_IDENT_MASK | ISFLAG_COSMETIC_MASK);
 
             expl->name = replace_all(expl->name, item.name(DESC_PLAIN),
                                      short_name);
@@ -1428,7 +1405,6 @@ bool throw_it(bolt &pbolt, int throw_2, bool teleport, int acc_bonus,
     bool returning   = false;    // Item can return to pack.
     bool did_return  = false;    // Returning item actually does return to pack.
     int slayDam      = 0;
-    bool speed_brand = false;
 
     if (you.confused())
     {
@@ -1670,13 +1646,6 @@ bool throw_it(bolt &pbolt, int throw_2, bool teleport, int acc_bonus,
                         baseHit, baseDam,
                         item_base_dam, lnch_base_dam);
 
-        // elves with elven bows
-        if (get_equip_race(*you.weapon()) == ISFLAG_ELVEN
-            && player_genus(GENPC_ELVEN))
-        {
-            baseHit++;
-        }
-
         // Lower accuracy if held in a net.
         if (you.attribute[ATTR_HELD])
             baseHit = baseHit / 2 - 1;
@@ -1803,15 +1772,12 @@ bool throw_it(bolt &pbolt, int throw_2, bool teleport, int acc_bonus,
 
         if (_elemental_missile_beam(bow_brand, ammo_brand))
             dice_mult = dice_mult * 140 / 100;
-
-        if (get_weapon_brand(launcher) == SPWPN_SPEED)
-            speed_brand = true;
     }
 
     // check for returning ammo from launchers
     if (returning && projected == LRET_LAUNCHED)
     {
-        if (!x_chance_in_y(1, 1 + skill_bump(range_skill(*you.weapon()))))
+        if (!one_chance_in(1 + skill_bump(range_skill(*you.weapon()))))
             did_return = true;
     }
 
@@ -1820,7 +1786,7 @@ bool throw_it(bolt &pbolt, int throw_2, bool teleport, int acc_bonus,
     {
         returning = returning && !teleport;
 
-        if (returning && !x_chance_in_y(1, 1 + skill_bump(SK_THROWING)))
+        if (returning && !one_chance_in(1 + skill_bump(SK_THROWING)))
             did_return = true;
 
         baseHit = 0;
@@ -1830,13 +1796,6 @@ bool throw_it(bolt &pbolt, int throw_2, bool teleport, int acc_bonus,
             || wepType == MI_DART || wepType == MI_JAVELIN
             || wepType == MI_TOMAHAWK)
         {
-            // Elves with elven weapons.
-            if (get_equip_race(item) == ISFLAG_ELVEN
-                && player_genus(GENPC_ELVEN))
-            {
-                baseHit++;
-            }
-
             // Give an appropriate 'tohit':
             // * large rocks, stones and throwing nets are 0
             // * javelins are +1
@@ -1968,15 +1927,15 @@ bool throw_it(bolt &pbolt, int throw_2, bool teleport, int acc_bonus,
         pbolt.damage.size += ammoDamBonus + lnchDamBonus;
     }
 
-    if (speed_brand)
-        pbolt.damage.size = div_rand_round(pbolt.damage.size * 9, 10);
-
     // Add in bonus (only from Portal Projectile for now).
     if (acc_bonus != DEBUG_COOKIE)
         pbolt.hit += acc_bonus;
 
     if (you.inaccuracy())
         pbolt.hit -= 5;
+
+    if (you.duration[DUR_WEAK])
+        pbolt.damage.size = (div_rand_round(pbolt.damage.size * 3, 4));
 
     scale_dice(pbolt.damage);
 
@@ -2114,7 +2073,6 @@ bool mons_throw(monster* mons, bolt &beam, int msl, bool teleport)
     string ammo_name;
 
     bool returning = false;
-    bool speed_brand = false;
 
     int baseHit = 0, baseDam = 0;       // from thrown or ammo
     int ammoHitBonus = 0, ammoDamBonus = 0;     // from thrown or ammo
@@ -2175,18 +2133,9 @@ bool mons_throw(monster* mons, bolt &beam, int msl, bool teleport)
     // FIXME: ammo enchantment
     ammoHitBonus = ammoDamBonus = min(3, div_rand_round(mons->hit_dice , 3));
 
-    // Archers get a boost from their melee attack.
-    if (mons->is_archer())
-    {
-        const mon_attack_def attk = mons_attack_spec(mons, 0);
-        if (attk.type == AT_SHOOT)
-        {
-            if (projected == LRET_THROWN)
-                ammoHitBonus += random2avg(attk.damage, 2);
-            else
-                ammoDamBonus += random2avg(attk.damage, 2);
-        }
-    }
+    // Archers get an accuracy boost with thrown weapons
+    if (mons->is_archer() && projected == LRET_THROWN)
+        ammoHitBonus += random2avg(mons->hit_dice * 4 / 3, 2);
 
     if (projected == LRET_THROWN)
     {
@@ -2280,13 +2229,6 @@ bool mons_throw(monster* mons, bolt &beam, int msl, bool teleport)
         if (wepType == MI_NEEDLE)
             beam.ench_power = AUTOMATIC_HIT;
 
-        // elf with elven launcher
-        if (get_equip_race(mitm[weapon]) == ISFLAG_ELVEN
-            && mons_genus(mons->type) == MONS_ELF)
-        {
-            beam.hit++;
-        }
-
         // Vorpal brand increases damage dice size.
         if (bow_brand == SPWPN_VORPAL)
             diceMult = diceMult * 120 / 100;
@@ -2301,10 +2243,9 @@ bool mons_throw(monster* mons, bolt &beam, int msl, bool teleport)
         {
             if (bow_brand == SPWPN_SPEED)
             {
-                // Speed crossbows take 50% less time to use than
+                // Speed crossbows take 33% less time to use than
                 // ordinary crossbows.
-                speed_delta = div_rand_round(throw_energy * 2, 5);
-                speed_brand = true;
+                speed_delta = div_rand_round(throw_energy, 5);
             }
             else
             {
@@ -2315,10 +2256,9 @@ bool mons_throw(monster* mons, bolt &beam, int msl, bool teleport)
         }
         else if (bow_brand == SPWPN_SPEED)
         {
-            // Speed bows take 50% less time to use than
+            // Speed bows take 33% less time to use than
             // ordinary bows.
-            speed_delta = div_rand_round(throw_energy, 2);
-            speed_brand = true;
+            speed_delta = div_rand_round(throw_energy, 3);
         }
 
         // Portal projectile is independent of weapon speed
@@ -2440,9 +2380,6 @@ bool mons_throw(monster* mons, bolt &beam, int msl, bool teleport)
 
     if (mons->has_ench(ENCH_WIND_AIDED))
         beam.hit = beam.hit * 125 / 100;
-
-    if (speed_brand)
-        beam.damage.size = div_rand_round(beam.damage.size * 9, 10);
 
     scale_dice(beam.damage);
 

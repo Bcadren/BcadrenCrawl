@@ -466,7 +466,7 @@ struct spell_desc
 },
 
 {
-    SPELL_MASS_ABJURATION, "Mass Abjuration",
+    SPELL_AURA_OF_ABJURATION, "Aura of Abjuration",
      SPTYP_SUMMONING,
      SPFLAG_AREA | SPFLAG_NEUTRAL | SPFLAG_ESCAPE,
      6,
@@ -478,6 +478,7 @@ struct spell_desc
      false
 },
 
+#if TAG_MAJOR_VERSION == 34
 {
     SPELL_SUMMON_SCORPIONS, "Summon Scorpions",
      SPTYP_SUMMONING | SPTYP_POISON,
@@ -490,6 +491,7 @@ struct spell_desc
      false,
      false
 },
+#endif
 
 {
     SPELL_BOLT_OF_DRAINING, "Bolt of Draining",
@@ -849,7 +851,7 @@ struct spell_desc
      SPTYP_ICE | SPTYP_SUMMONING,
      SPFLAG_BATTLE,
      4,
-     200,
+     100,
      -1, -1,
      0,
      NULL,
@@ -1070,6 +1072,7 @@ struct spell_desc
      false
 },
 
+#if TAG_MAJOR_VERSION == 34
 {
     SPELL_DEMONIC_HORDE, "Demonic Horde",
      SPTYP_SUMMONING,
@@ -1082,6 +1085,7 @@ struct spell_desc
      false,
      false
 },
+#endif
 
 {
     SPELL_SUMMON_GREATER_DEMON, "Summon Greater Demon",
@@ -1451,19 +1455,6 @@ struct spell_desc
 },
 
 {
-    SPELL_ICE_STORM, "Ice Storm",
-     SPTYP_CONJURATION | SPTYP_ICE,
-     SPFLAG_DIR_OR_TARGET | SPFLAG_AREA,
-     9,
-     200,
-     6, 6,
-     0,
-     NULL,
-     true,
-     false
-},
-
-{
     SPELL_AIRSTRIKE, "Airstrike",
      SPTYP_AIR,
      SPFLAG_TARGET | SPFLAG_NOT_SELF | SPFLAG_BATTLE,
@@ -1572,7 +1563,7 @@ struct spell_desc
      SPTYP_SUMMONING,
      SPFLAG_NONE,
      3,
-     200,
+     100,
      -1, -1,
      0,
      NULL,
@@ -1884,9 +1875,9 @@ struct spell_desc
 },
 
 {
-    SPELL_SUMMON_UGLY_THING, "Summon Ugly Thing",
+    SPELL_MONSTROUS_MENAGERIE, "Monstrous Menagerie",
      SPTYP_SUMMONING,
-     SPFLAG_CHAOTIC,
+     SPFLAG_NONE,
      6,
      200,
      -1, -1,
@@ -1913,7 +1904,7 @@ struct spell_desc
     SPELL_FULMINANT_PRISM, "Fulminant Prism",
      SPTYP_CONJURATION | SPTYP_HEXES,
      SPFLAG_GRID | SPFLAG_AREA | SPFLAG_NOT_SELF,
-     5,
+     4,
      200,
      5, 5,
      0,
@@ -2003,6 +1994,7 @@ struct spell_desc
      false
 },
 
+#if TAG_MAJOR_VERSION == 34
 {
     SPELL_FAKE_RAKSHASA_SUMMON, "Rakshasa Summon",
      SPTYP_SUMMONING,
@@ -2015,6 +2007,7 @@ struct spell_desc
      false,
      false
 },
+#endif
 
 {
     SPELL_NOXIOUS_CLOUD, "Noxious Cloud",
@@ -2123,9 +2116,9 @@ struct spell_desc
 {
     SPELL_QUICKSILVER_BOLT, "Quicksilver Bolt",
      SPTYP_CONJURATION,
-     SPFLAG_DIR_OR_TARGET | SPFLAG_MONSTER,
+     SPFLAG_DIR_OR_TARGET,
      5,
-     0,
+     200,
      8, 8,
      0,
      NULL,
@@ -2578,6 +2571,7 @@ struct spell_desc
      true
 },
 
+#if TAG_MAJOR_VERSION == 34
 {
     SPELL_SUNRAY, "Sunray",
      SPTYP_CONJURATION,
@@ -2590,6 +2584,7 @@ struct spell_desc
      true,
      false
 },
+#endif
 
 {
     SPELL_AWAKEN_FOREST, "Awaken Forest",
@@ -2907,7 +2902,7 @@ struct spell_desc
     SPELL_BATTLESPHERE, "Iskenderun's Battlesphere",
       SPTYP_CONJURATION | SPTYP_CHARMS,
       SPFLAG_NONE,
-      4,
+      5,
       100,
       -1, -1,
       0,
@@ -2966,7 +2961,7 @@ struct spell_desc
      6, 6,
      0,
      NULL,
-     true,
+     false,
      false
 },
 
@@ -3264,7 +3259,7 @@ struct spell_desc
 {
     SPELL_SUMMON_VERMIN, "Summon Vermin",
      SPTYP_SUMMONING,
-     SPFLAG_MONSTER,
+     SPFLAG_MONSTER | SPFLAG_UNHOLY,
      5,
      0,
      -1, -1,
@@ -3561,6 +3556,45 @@ struct spell_desc
 },
 
 {
+    SPELL_SUMMON_FOREST, "Summon Forest",
+     SPTYP_SUMMONING | SPTYP_TRANSLOCATION,
+     SPFLAG_NONE,
+     5,
+     200,
+     -1, -1,
+     0,
+     NULL,
+     false,
+     false
+},
+
+{
+    SPELL_SUMMON_LIGHTNING_SPIRE, "Summon Lightning Spire",
+     SPTYP_SUMMONING | SPTYP_AIR,
+     SPFLAG_GRID | SPFLAG_NOT_SELF | SPFLAG_NEUTRAL,
+     4,
+     100,
+     2, 2,
+     0,
+     NULL,
+     false,
+     false
+},
+
+{
+    SPELL_SUMMON_GUARDIAN_GOLEM, "Summon Guardian Golem",
+     SPTYP_SUMMONING | SPTYP_HEXES,
+     SPFLAG_NONE,
+     4,
+     100,
+     -1, -1,
+     0,
+     NULL,
+     false,
+     false,
+},
+
+{
     SPELL_SHADOW_SHARD, "Shadow Shard",
      SPTYP_CONJURATION,
      SPFLAG_DIR_OR_TARGET | SPFLAG_MONSTER,
@@ -3570,7 +3604,7 @@ struct spell_desc
      0,
      NULL,
      true,
-     false
+     false,
 },
 
 {
@@ -3597,6 +3631,123 @@ struct spell_desc
      NULL,
      true,
      false
+},
+
+{
+    SPELL_RANDOM_BOLT, "Random Bolt",
+    SPTYP_CONJURATION,
+    SPFLAG_DIR_OR_TARGET,
+    5,
+    200,
+    6, 6,
+    0,
+    NULL,
+    true,
+    false
+},
+
+{
+    SPELL_GLACIATE, "Glaciate",
+     SPTYP_CONJURATION | SPTYP_ICE,
+     SPFLAG_DIR_OR_TARGET | SPFLAG_AREA | SPFLAG_NOT_SELF,
+     9,
+     200,
+     3, LOS_RADIUS,
+     0,
+     NULL,
+     false,
+     false
+},
+
+{
+    SPELL_CLOUD_CONE, "Cloud Cone",
+     SPTYP_CONJURATION | SPTYP_AIR,
+     SPFLAG_GRID | SPFLAG_NOT_SELF,
+     6,
+     100,
+     3, LOS_RADIUS,
+     0,
+     NULL,
+     false,
+     false
+},
+
+{
+    SPELL_WEAVE_SHADOWS, "Weave Shadows",
+     SPTYP_SUMMONING,
+     SPFLAG_NONE,
+     5,
+     0,
+     -1, -1,
+     0,
+     NULL,
+     false,
+     false
+},
+
+{
+    SPELL_DRAGON_CALL, "Dragon's Call",
+     SPTYP_SUMMONING,
+     SPFLAG_NONE,
+     9,
+     200,
+     -1, -1,
+     0,
+     NULL,
+     false,
+     false
+},
+
+{
+    SPELL_SPELLFORGED_SERVITOR, "Spellforged Servitor",
+     SPTYP_CONJURATION | SPTYP_SUMMONING,
+     SPFLAG_NONE,
+     7,
+     200,
+     -1, -1,
+     0,
+     NULL,
+     false,
+     false
+},
+
+{
+    SPELL_FORCEFUL_DISMISSAL, "Forceful Dismissal",
+     SPTYP_SUMMONING,
+     SPFLAG_AREA,
+     6,
+     200,
+     -1, -1,
+     0,
+     NULL,
+     false,
+     false
+},
+
+{
+    SPELL_SUMMON_MANA_VIPER, "Summon Mana Viper",
+     SPTYP_SUMMONING | SPTYP_HEXES,
+     SPFLAG_NONE,
+     5,
+     100,
+     -1, -1,
+     0,
+     NULL,
+     false,
+     false
+},
+
+{
+    SPELL_PHANTOM_MIRROR, "Phantom Mirror",
+     SPTYP_CHARMS | SPTYP_HEXES,
+     SPFLAG_HELPFUL,
+     5,
+     200,
+     -1, -1,
+     0,
+     NULL,
+     false,
+     false,
 },
 
 {

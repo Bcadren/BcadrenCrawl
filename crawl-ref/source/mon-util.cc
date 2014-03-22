@@ -197,8 +197,7 @@ void init_mon_name_cache()
         // breaks ?/M rakshasa.
         if (Mon_Name_Cache.count(name))
         {
-            if (mon == MONS_RAKSHASA_FAKE || mon == MONS_MARA_FAKE
-                || mon == MONS_PLAYER_SHADOW
+            if (mon == MONS_PLAYER_SHADOW
                 || mon != MONS_SERPENT_OF_HELL
                    && mons_species(mon) == MONS_SERPENT_OF_HELL)
             {
@@ -778,7 +777,8 @@ bool mons_is_object(monster_type mc)
            // unloading seeds helps the species
            || mc == MONS_GIANT_SPORE
            || mc == MONS_LURKING_HORROR
-           || mc == MONS_DANCING_WEAPON;
+           || mc == MONS_DANCING_WEAPON
+           || mc == MONS_LIGHTNING_SPIRE;
 }
 
 bool mons_has_blood(monster_type mc)
@@ -858,13 +858,6 @@ bool mons_is_native_in_branch(const monster* mons,
     case BRANCH_SPIDER:
         return mons_genus(mons->type) == MONS_SPIDER;
 
-    case BRANCH_FOREST:
-        return mons_genus(mons->type) == MONS_SPRIGGAN
-               || mons_genus(mons->type) == MONS_TENGU
-               || mons_genus(mons->type) == MONS_FAUN
-               || mons_genus(mons->type) == MONS_SATYR
-               || mons_genus(mons->type) == MONS_DRYAD;
-
     case BRANCH_BLADE:
         return mons->type == MONS_DANCING_WEAPON;
 
@@ -904,13 +897,7 @@ bool mons_is_poisoner(const monster* mon)
         return true;
 
     if (mon->has_attack_flavour(AF_POISON)
-        || mon->has_attack_flavour(AF_POISON_NASTY)
-        || mon->has_attack_flavour(AF_POISON_MEDIUM)
-        || mon->has_attack_flavour(AF_POISON_STRONG)
-        || mon->has_attack_flavour(AF_POISON_STR)
-        || mon->has_attack_flavour(AF_POISON_INT)
-        || mon->has_attack_flavour(AF_POISON_DEX)
-        || mon->has_attack_flavour(AF_POISON_STAT))
+        || mon->has_attack_flavour(AF_POISON_STRONG))
     {
         return true;
     }
@@ -1166,7 +1153,8 @@ bool mons_is_demon(monster_type mc)
 
     // Not every demonic monster is a demon (hell hog, hell hound, etc.)
     if (mons_class_holiness(mc) == MH_DEMONIC
-        && (isadigit(show_char) || show_char == '&'))
+        && (isadigit(show_char) || show_char == '&'
+            || mons_species(mc) == MONS_RAKSHASA))
     {
         return true;
     }
@@ -1385,7 +1373,8 @@ bool mons_is_ghost_demon(monster_type mc)
             || mc == MONS_PLAYER_ILLUSION
             || mons_class_is_animated_weapon(mc)
             || mc == MONS_PANDEMONIUM_LORD
-            || mons_class_is_chimeric(mc);
+            || mons_class_is_chimeric(mc)
+            || mc == MONS_SPELLFORGED_SERVITOR;
 }
 
 bool mons_is_pghost(monster_type mc)
@@ -1478,14 +1467,7 @@ bool mons_class_can_display_wounds(monster_type mc)
     if (mons_class_is_zombified(mc) && mc != MONS_SPECTRAL_THING)
         return false;
 
-    switch (mc)
-    {
-    case MONS_RAKSHASA:
-    case MONS_RAKSHASA_FAKE:
-        return false;
-    default:
-        return true;
-    }
+    return true;
 }
 
 bool mons_can_display_wounds(const monster* mon)
@@ -1818,14 +1800,7 @@ mon_attack_def mons_attack_spec(const monster* mon, int attk_number)
         attk.flavour = RANDOM_ELEMENT(flavours);
     }
 
-    if (attk.flavour == AF_POISON_STAT)
-    {
-        attack_flavour flavours[] =
-            {AF_POISON_STR, AF_POISON_INT, AF_POISON_DEX};
-
-        attk.flavour = RANDOM_ELEMENT(flavours);
-    }
-    else if (attk.flavour == AF_DRAIN_STAT)
+    if (attk.flavour == AF_DRAIN_STAT)
     {
         attack_flavour flavours[] =
             {AF_DRAIN_STR, AF_DRAIN_INT, AF_DRAIN_DEX};
@@ -2077,7 +2052,7 @@ int exper_value(const monster* mon, bool real)
             case SPELL_HELLFIRE_BURST:
             case SPELL_HELLFIRE:
             case SPELL_SYMBOL_OF_TORMENT:
-            case SPELL_ICE_STORM:
+            case SPELL_GLACIATE:
             case SPELL_FIRE_STORM:
             case SPELL_SHATTER:
             case SPELL_CHAIN_LIGHTNING:
@@ -2654,6 +2629,16 @@ void define_monster(monster* mons)
         mons->set_ghost(ghost);
     }
 
+    case MONS_SPELLFORGED_SERVITOR:
+    {
+        ghost_demon ghost;
+        ghost.init_spellforged_servitor();
+        mons->set_ghost(ghost);
+        mons->ghost_demon_init();
+        mons->props["custom_spells"].get_bool() = true;
+        break;
+    }
+
     default:
         break;
     }
@@ -2954,7 +2939,9 @@ static habitat_type _mons_class_habitat(monster_type mc,
 
 habitat_type mons_habitat(const monster* mon, bool real_amphibious)
 {
-    return _mons_class_habitat(mons_base_type(mon), real_amphibious);
+    return _mons_class_habitat(fixup_zombie_type(mon->type,
+                                                 mons_base_type(mon)),
+                               real_amphibious);
 }
 
 habitat_type mons_class_primary_habitat(monster_type mc)
@@ -3152,18 +3139,18 @@ bool mons_is_batty(const monster* m)
 
 bool mons_looks_stabbable(const monster* m)
 {
-    const unchivalric_attack_type uat = is_unchivalric_attack(&you, m);
+    const stab_type st = find_stab_type(&you, m);
     return !m->friendly()
-           && (uat == UCAT_PARALYSED || uat == UCAT_SLEEPING);
+           && (st == STAB_PARALYSED || st == STAB_SLEEPING);
 }
 
 bool mons_looks_distracted(const monster* m)
 {
-    const unchivalric_attack_type uat = is_unchivalric_attack(&you, m);
+    const stab_type st = find_stab_type(&you, m);
     return !m->friendly()
-           && uat != UCAT_NO_ATTACK
-           && uat != UCAT_PARALYSED
-           && uat != UCAT_SLEEPING;
+           && st != STAB_NO_STAB
+           && st != STAB_PARALYSED
+           && st != STAB_SLEEPING;
 }
 
 void mons_start_fleeing_from_sanctuary(monster* mons)
@@ -3658,10 +3645,7 @@ static gender_type _mons_class_gender(monster_type mc)
     {
         gender = GENDER_FEMALE;
     }
-    // Mara's fakes aren't unique, but should still be classified as
-    // male.
-    else if (mc == MONS_MARA_FAKE
-             || mc == MONS_HELLBINDER
+    else if (mc == MONS_HELLBINDER
              || mc == MONS_CLOUD_MAGE)
     {
         gender = GENDER_MALE;
@@ -3780,10 +3764,10 @@ bool monster_shover(const monster* m)
         return false;
 
     // Efreet and fire elementals are disqualified because they leave behind
-    // clouds of flame. Rotting devils are disqualified because they trail
+    // clouds of flame. Curse toes are disqualified because they trail
     // clouds of miasma.
     if (mons_genus(m->type) == MONS_EFREET || m->type == MONS_FIRE_ELEMENTAL
-        || m->type == MONS_ROTTING_DEVIL || m->type == MONS_CURSE_TOE)
+        || m->type == MONS_CURSE_TOE)
     {
         return false;
     }
@@ -3857,8 +3841,8 @@ bool monster_senior(const monster* m1, const monster* m2, bool fleeing)
     // push past monsters too stupid to use stairs (so that e.g. non-zombified
     // or spectral zombified undead can push past non-spectral zombified
     // undead).
-    if (m1->holiness() == m2->holiness() && mons_can_use_stairs(m1)
-        && !mons_can_use_stairs(m2))
+    if (m1->holiness() == m2->holiness() && mons_class_can_use_stairs(m1->type)
+        && !mons_class_can_use_stairs(m2->type))
     {
         return true;
     }
@@ -3943,8 +3927,14 @@ static bool _mons_can_pass_door(const monster* mon, const coord_def& pos)
 }
 
 bool mons_can_traverse(const monster* mon, const coord_def& p,
-                       bool checktraps)
+                       bool only_in_sight, bool checktraps)
 {
+    // Friendly summons should avoid pathing out of the player's sight
+    // (especially as attempting this may make them ignore valid, but longer
+    // paths).
+    if (only_in_sight && !you.see_cell_no_trans(p))
+        return false;
+
     if ((grd(p) == DNGN_CLOSED_DOOR
         || grd(p) == DNGN_SEALED_DOOR)
             && _mons_can_pass_door(mon, p))
@@ -4527,7 +4517,7 @@ mon_body_shape get_mon_shape(const monster_type mc)
     case 'r': // rodents
         return MON_SHAPE_QUADRUPED;
     case 's': // arachnids and centipedes/cockroaches
-        if (mc == MONS_GIANT_CENTIPEDE || mc == MONS_DEMONIC_CRAWLER)
+        if (mc == MONS_DEMONIC_CRAWLER)
             return MON_SHAPE_CENTIPEDE;
         else if (mc == MONS_GIANT_COCKROACH)
             return MON_SHAPE_INSECT;
@@ -4757,18 +4747,6 @@ bool monster_nearby()
         if (monster_at(*ri))
             return true;
     return false;
-}
-
-int count_mara_fakes()
-{
-    int count = 0;
-    for (monster_iterator mi; mi; ++mi)
-    {
-        if (mi->type == MONS_MARA_FAKE)
-            count++;
-    }
-
-    return count;
 }
 
 actor *actor_by_mid(mid_t m)
@@ -5078,7 +5056,8 @@ bool mons_is_beast(monster_type mc)
     {
         return false;
     }
-    else if (mons_genus(mc) == MONS_DRAGON
+    else if ((mons_genus(mc) == MONS_DRAGON
+              && mc != MONS_SWAMP_DRAGON)
              || mons_genus(mc) == MONS_UGLY_THING
              || mc == MONS_ICE_BEAST
              || mc == MONS_SKY_BEAST
@@ -5094,4 +5073,17 @@ bool mons_is_avatar(monster_type mc)
 {
     return mc == MONS_SPECTRAL_WEAPON || mc == MONS_BATTLESPHERE
         || mc == MONS_GRAND_AVATAR;
+}
+
+bool mons_is_player_shadow(const monster* mon)
+{
+    return mon->type == MONS_PLAYER_SHADOW
+           && mon->mname.empty();
+}
+
+bool mons_antimagic_affected(const monster* mons)
+{
+    return mons->can_use_spells()
+           && !mons->is_priest()
+           && !mons_class_flag(mons->type, M_FAKE_SPELLS);
 }

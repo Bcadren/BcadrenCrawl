@@ -86,6 +86,8 @@ monster::monster()
     constricting = 0;
 
     clear_constricted();
+    went_unseen_this_turn = false;
+    unseen_pos = coord_def(0, 0);
 };
 
 // Empty destructor to keep unique_ptr happy with incomplete ghost_demon type.
@@ -136,6 +138,8 @@ void monster::reset()
     shield_blocks   = 0;
     foe_memory      = 0;
     god             = GOD_NO_GOD;
+    went_unseen_this_turn = false;
+    unseen_pos = coord_def(0, 0);
 
     mons_remove_from_grid(this);
     target.reset();
@@ -351,9 +355,6 @@ size_type monster::body_size(size_part_type /* psize */, bool /* base */) const
 int monster::body_weight(bool /*base*/) const
 {
     monster_type mc = mons_base_type(this);
-
-    if (mc == MONS_RAKSHASA_FAKE || mc == MONS_MARA_FAKE)
-        return 0;
 
     int weight = mons_weight(mc);
 
@@ -1579,20 +1580,6 @@ static int _ego_damage_bonus(item_def &item)
     }
 }
 
-static bool _item_race_matches_monster(const item_def &item, monster* mons)
-{
-    if (get_equip_race(item) == ISFLAG_ELVEN)
-        return mons_genus(mons->type) == MONS_ELF;
-
-    if (get_equip_race(item) == ISFLAG_DWARVEN)
-        return mons_genus(mons->type) == MONS_DWARF;
-
-    if (get_equip_race(item) == ISFLAG_ORCISH)
-        return mons_genus(mons->type) == MONS_ORC;
-
-    return false;
-}
-
 bool monster::pickup_melee_weapon(item_def &item, int near)
 {
     // Draconian monks are masters of unarmed combat.
@@ -1667,12 +1654,6 @@ bool monster::pickup_melee_weapon(item_def &item, int near)
                 // for dual wielding monsters.
                 int oldval = item_value(*weap, true);
                 int newval = item_value(item, true);
-
-                // Vastly prefer matching racial type.
-                if (_item_race_matches_monster(*weap, this))
-                    oldval *= 2;
-                if (_item_race_matches_monster(item, this))
-                    newval *= 2;
 
                 if (newval > oldval)
                     new_wpn_better = true;
@@ -1960,22 +1941,13 @@ bool monster::pickup_armour(item_def &item, int near, bool force)
 
             if (value_old == value_new)
             {
-                // Prefer matching racial type.
-                if (_item_race_matches_monster(*existing_armour, this))
-                    value_old++;
-                if (_item_race_matches_monster(item, this))
-                    value_new++;
-
-                if (value_old == value_new)
-                {
-                    // If items are of the same value, use shopping
-                    // value as a further crude estimate.
-                    value_old = item_value(*existing_armour, true);
-                    value_new = item_value(item, true);
-                }
-                if (value_old >= value_new)
-                    return false;
+                // If items are of the same value, use shopping
+                // value as a further crude estimate.
+                value_old = item_value(*existing_armour, true);
+                value_new = item_value(item, true);
             }
+            if (value_old >= value_new)
+                return false;
         }
 
         if (!drop_item(mslot, near))
@@ -3535,7 +3507,7 @@ bool monster::is_holy(bool check_spells) const
 
 bool monster::is_unholy(bool check_spells) const
 {
-    if (type == MONS_SILVER_STATUE || type == MONS_DEMONSPAWN)
+    if (type == MONS_SILVER_STATUE || mons_is_demonspawn(type))
         return true;
 
     if (holiness() == MH_DEMONIC)
@@ -3624,6 +3596,7 @@ bool monster::is_known_chaotic() const
         || type == MONS_WRETCHED_STAR
         || type == MONS_KILLER_KLOWN // For their random attacks.
         || type == MONS_TIAMAT       // For her colour-changing.
+        || mons_is_demonspawn(type)  // Like player demonspawn
         || mons_class_is_chimeric(type))
     {
         return true;
@@ -3922,7 +3895,7 @@ int monster::res_holy_energy(const actor *attacker) const
     if (is_holy()
         || is_good_god(god)
         || neutral()
-        || is_unchivalric_attack(attacker, this)
+        || find_stab_type(attacker, this) != STAB_NO_STAB
         || is_good_god(you.religion) && is_follower(this))
     {
         return 1;
@@ -3998,6 +3971,7 @@ int monster::res_petrify(bool temp) const
     if (type == MONS_STONE_GOLEM
         || type == MONS_CATOBLEPAS
         || type == MONS_EARTH_ELEMENTAL
+        || type == MONS_LIGHTNING_SPIRE
         || mons_is_statue(type))
     {
         return 1;
@@ -4060,7 +4034,7 @@ int monster::res_magic() const
         u = hit_dice * -u * 4 / 3;
 
     // Resistance from artefact properties.
-    u += scan_artefacts(ARTP_MAGIC);
+    u += 40 * scan_artefacts(ARTP_MAGIC);
 
     // Ego equipment resistance.
     const int armour    = inv[MSLOT_ARMOUR];
@@ -4136,15 +4110,15 @@ bool monster::poison(actor *agent, int amount, bool force)
         return false;
 
     // Scale poison down for monsters.
-    if (!(amount /= 2))
-        amount = 1;
+    amount = 1 + amount / 7;
 
     return poison_monster(this, agent, amount, force);
 }
 
 int monster::skill(skill_type sk, int scale, bool real) const
 {
-    if (mons_intel(this) < I_NORMAL)
+    // Let spectral weapons have necromancy skill for pain brand.
+    if (mons_intel(this) < I_NORMAL && !mons_is_avatar(this->type))
         return 0;
 
     int hd = scale * hit_dice;
@@ -4192,7 +4166,7 @@ void monster::blink(bool)
     monster_blink(this);
 }
 
-void monster::teleport(bool now, bool, bool)
+void monster::teleport(bool now, bool)
 {
     monster_teleport(this, now, false);
 }
@@ -4220,7 +4194,7 @@ bool monster::drain_exp(actor *agent, bool quiet, int pow)
 
     if (alive())
     {
-        if (x_chance_in_y(1, 5))
+        if (one_chance_in(5))
         {
             if (hit_dice > 1)
                 hit_dice--;
@@ -5460,6 +5434,10 @@ void monster::lose_energy(energy_use_type et, int div, int mult)
     if ((et == EUT_MOVE || et == EUT_SWIM) && has_ench(ENCH_FROZEN))
         energy_loss += 4;
 
+    // Randomize interval between servitor spellcasts
+    if ((et == EUT_SPELL && type == MONS_SPELLFORGED_SERVITOR))
+        energy_loss += random2(16);
+
     // Randomize movement cost slightly, to make it less predictable,
     // and make pillar-dancing not entirely safe.
     // No randomization for allies following you to avoid traffic jam
@@ -5509,7 +5487,7 @@ bool monster::can_drink_potion(potion_type ptype) const
             return mons_species() == MONS_VAMPIRE;
         case POT_BERSERK_RAGE:
             return can_go_berserk();
-        case POT_SPEED:
+        case POT_HASTE:
         case POT_MIGHT:
         case POT_AGILITY:
         case POT_INVISIBILITY:
@@ -5544,7 +5522,7 @@ bool monster::should_drink_potion(potion_type ptype) const
         // this implies !berserk()
         return !has_ench(ENCH_MIGHT) && !has_ench(ENCH_HASTE)
                && needs_berserk();
-    case POT_SPEED:
+    case POT_HASTE:
         return !has_ench(ENCH_HASTE);
     case POT_MIGHT:
         return !has_ench(ENCH_MIGHT) && foe_distance() <= 2;
@@ -5608,7 +5586,7 @@ item_type_id_state_type monster::drink_potion_effect(potion_type pot_eff)
             ident = ID_KNOWN_TYPE;
         break;
 
-    case POT_SPEED:
+    case POT_HASTE:
         if (enchant_monster_with_flavour(this, this, BEAM_HASTE))
             ident = ID_KNOWN_TYPE;
         break;
@@ -5735,7 +5713,11 @@ void monster::react_to_damage(const actor *oppressor, int damage,
     // Don't discharge on small amounts of damage (this helps avoid
     // continuously shocking when poisoned or sticky flamed)
     if (type == MONS_SHOCK_SERPENT && damage > 4)
-        (new shock_serpent_discharge_fineff(this))->schedule();
+    {
+        int pow = div_rand_round(min(damage, hit_points + damage), 9);
+        if (pow)
+            (new shock_serpent_discharge_fineff(this, pos(), pow))->schedule();
+    }
 
     // The royal jelly objects to taking damage and will SULK. :-)
     if (type == MONS_ROYAL_JELLY)
@@ -5885,6 +5867,24 @@ void monster::react_to_damage(const actor *oppressor, int damage,
                 add_ench(ENCH_AGILE);
                 simple_monster_message(this, " suddenly seems more agile.");
                 break;
+        }
+    }
+    else if (type == MONS_RAKSHASA && !has_ench(ENCH_PHANTOM_MIRROR)
+             && hit_points < max_hit_points / 2
+             && hit_points - damage > 0)
+    {
+        if (!props.exists("emergency_clone"))
+        {
+            // Using SPELL_NO_SPELL to prevent overwriting normal clones
+            cast_phantom_mirror(this, this, 50, SPELL_NO_SPELL);
+            cast_phantom_mirror(this, this, 50, SPELL_NO_SPELL);
+            if (you.can_see(this))
+            {
+                mprf(MSGCH_MONSTER_SPELL,
+                     "The injured %s weaves a defensive illusion!",
+                     name(DESC_PLAIN).c_str());
+            }
+            props["emergency_clone"].get_bool() = true;
         }
     }
 }
@@ -6310,4 +6310,66 @@ int monster::aug_amount() const
 int monster::spell_hd(spell_type spell) const
 {
     return hit_dice + 2 * aug_amount();
+}
+
+void monster::align_avatars(bool force_friendly)
+{
+    mon_attitude_type new_att = (force_friendly ? ATT_FRIENDLY
+                                   : this->attitude);
+
+    // Neutral monsters don't need avatars, and in same cases would attack their
+    // own avatars if they had them.
+    if (new_att == ATT_NEUTRAL || new_att == ATT_STRICT_NEUTRAL
+        || new_att == ATT_GOOD_NEUTRAL)
+    {
+        this->remove_avatars();
+        return;
+    }
+
+    monster* avatar = find_spectral_weapon(this);
+    if (avatar)
+    {
+        avatar->attitude = new_att;
+        reset_spectral_weapon(avatar);
+    }
+
+    avatar = find_battlesphere(this);
+    if (avatar)
+    {
+        avatar->attitude = new_att;
+        reset_battlesphere(avatar);
+    }
+
+    actor* gavatar = this->get_ench(ENCH_GRAND_AVATAR).agent();
+    if (!gavatar)
+        return;
+    avatar = gavatar->as_monster();
+    monster *owner = monster_by_mid(avatar->summoner);
+    if (avatar->summoner == this->mid)
+    {
+        avatar->attitude = new_att;
+        grand_avatar_reset(avatar);
+    }
+    else if (!owner || !mons_aligned(this, owner))
+        this->del_ench(ENCH_GRAND_AVATAR);
+}
+
+void monster::remove_avatars()
+{
+    monster* avatar = find_spectral_weapon(this);
+    if (avatar)
+        end_spectral_weapon(avatar, false, false);
+
+    avatar = find_battlesphere(this);
+    if (avatar)
+        end_battlesphere(avatar, false);
+
+    actor* gavatar = this->get_ench(ENCH_GRAND_AVATAR).agent();
+    if (!gavatar)
+        return;
+    avatar = gavatar->as_monster();
+    if (avatar->summoner == this->mid)
+        end_grand_avatar(avatar, false);
+    else
+        this->del_ench(ENCH_GRAND_AVATAR);
 }

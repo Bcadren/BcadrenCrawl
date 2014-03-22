@@ -72,7 +72,6 @@
 #include "viewchar.h"
 #include "xom.h"
 
-static bool _invisible_to_player(const item_def& item);
 static void _autoinscribe_item(item_def& item);
 static void _autoinscribe_floor_items();
 static void _autoinscribe_inventory();
@@ -617,40 +616,21 @@ void lose_item_stack(const coord_def& where)
     igrd(where) = NON_ITEM;
 }
 
-static bool _invisible_to_player(const item_def& item)
-{
-    return strstr(item.inscription.c_str(), "=k") != 0;
-}
-
-static int _count_nonsquelched_items(int obj)
+static int _count_items(int obj)
 {
     int result = 0;
 
     for (stack_iterator si(obj); si; ++si)
-        if (!_invisible_to_player(*si))
-            ++result;
+        ++result;
 
     return result;
 }
 
 // Fill items with the items on a square.
-// Squelched items (marked with =k) are ignored, unless
-// the square contains *only* squelched items, in which case they
-// are included. If force_squelch is true, squelched items are
-// never displayed.
-void item_list_on_square(vector<const item_def*>& items, int obj,
-                         bool force_squelch)
+void item_list_on_square(vector<const item_def*>& items, int obj)
 {
-    const bool have_nonsquelched = (force_squelch
-                                    || _count_nonsquelched_items(obj));
-
-    // Loop through the items.
     for (stack_iterator si(obj); si; ++si)
-    {
-        // Add them to the items list if they qualify.
-        if (!have_nonsquelched || !_invisible_to_player(*si))
-            items.push_back(& (*si));
-    }
+        items.push_back(& (*si));
 }
 
 bool need_to_autopickup()
@@ -735,7 +715,7 @@ void item_check(bool verbose)
 
     vector<const item_def*> items;
 
-    item_list_on_square(items, you.visible_igrd(you.pos()), true);
+    item_list_on_square(items, you.visible_igrd(you.pos()));
 
     if (items.empty())
     {
@@ -768,17 +748,22 @@ void item_check(bool verbose)
 
         string out_string = "Items here: ";
         int cur_state = -1;
+        string colour = "";
         for (unsigned int i = 0; i < item_chars.size(); ++i)
         {
             const int specialness = 10 - (item_chars[i] % 0x100);
             if (specialness != cur_state)
             {
+                if (!colour.empty())
+                    out_string += "</" + colour + ">";
                 switch (specialness)
                 {
-                case 2: out_string += "<yellow>";   break; // artefact
-                case 1: out_string += "<white>";    break; // glowing/runed
-                case 0: out_string += "<darkgrey>"; break; // mundane
+                case 2: colour = "yellow";   break; // artefact
+                case 1: colour = "white";    break; // glowing/runed
+                case 0: colour = "darkgrey"; break; // mundane
                 }
+                if (!colour.empty())
+                    out_string += "<" + colour + ">";
                 cur_state = specialness;
             }
 
@@ -789,6 +774,8 @@ void item_check(bool verbose)
                 out_string += ' ';
             }
         }
+        if (!colour.empty())
+            out_string += "</" + colour + ">";
         mpr_nojoin(MSGCH_FLOOR_ITEMS, out_string);
         done_init_line = true;
     }
@@ -872,7 +859,7 @@ void pickup_menu(int item_link)
     int n_tried_pickup = 0;
 
     vector<const item_def*> items;
-    item_list_on_square(items, item_link, false);
+    item_list_on_square(items, item_link);
 
 #ifdef TOUCH_UI
     string prompt = "Pick up what? (<Enter> or tap header to pick up)";
@@ -1250,7 +1237,7 @@ void pickup(bool partial_quantity)
     int keyin = 'x';
 
     int o = you.visible_igrd(you.pos());
-    const int num_nonsquelched = _count_nonsquelched_items(o);
+    const int num_items = _count_items(o);
 
     // Store last_pickup in case we need to restore it.
     // Then clear it to fill with items picked up.
@@ -1262,16 +1249,12 @@ void pickup(bool partial_quantity)
     else if (you.form == TRAN_ICE_BEAST && grd(you.pos()) == DNGN_DEEP_WATER)
         mpr("You can't reach the bottom while floating on water.");
     else if (mitm[o].link == NON_ITEM)      // just one item?
-    {
-        // Deliberately allowing the player to pick up
-        // a killed item here.
         pickup_single_item(o, partial_quantity ? 0 : mitm[o].quantity);
-    }
     else if (Options.pickup_menu
              || Options.pickup_menu_limit
-                && num_nonsquelched >= (Options.pickup_menu_limit < 0
-                                        ? Options.item_stack_summary_minimum
-                                        : Options.pickup_menu_limit))
+                && num_items >= (Options.pickup_menu_limit < 0
+                                 ? Options.item_stack_summary_minimum
+                                 : Options.pickup_menu_limit))
     {
         pickup_menu(o);
     }
@@ -1284,12 +1267,6 @@ void pickup(bool partial_quantity)
         {
             // Must save this because pickup can destroy the item.
             next = mitm[o].link;
-
-            if (num_nonsquelched && _invisible_to_player(mitm[o]))
-            {
-                o = next;
-                continue;
-            }
 
             if (keyin != 'a')
             {
@@ -1557,6 +1534,7 @@ void note_inscribe_item(item_def &item)
     _origin_freeze(item, you.pos());
     _check_note_item(item);
 }
+#if TAG_MAJOR_VERSION == 34
 
 static void _fish(item_def &item, short quant = 0)
 {
@@ -1567,6 +1545,7 @@ static void _fish(item_def &item, short quant = 0)
     mprf("You fish the %s out of the water.", item.name(DESC_PLAIN).c_str());
     you.time_taken += 5;
 }
+#endif
 
 // Returns quantity of items moved into player's inventory and -1 if
 // the player's inventory is full.
@@ -1597,7 +1576,9 @@ int move_item_to_player(int obj, int quant_got, bool quiet,
     // Gold has no mass, so we handle it first.
     if (it.base_type == OBJ_GOLD)
     {
+#if TAG_MAJOR_VERSION == 34
         _fish(it);
+#endif
         _got_gold(it, quant_got, quiet);
         dec_mitm_item_quantity(obj, quant_got);
 
@@ -1615,7 +1596,9 @@ int move_item_to_player(int obj, int quant_got, bool quiet,
 
         if (!quiet)
         {
+#if TAG_MAJOR_VERSION == 34
             _fish(it);
+#endif
             flash_view_delay(rune_colour(it.plus), 300);
             mprf("You pick up the %s rune and feel its power.",
                  rune_type_name(it.plus));
@@ -1720,8 +1703,10 @@ int move_item_to_player(int obj, int quant_got, bool quiet,
             {
                 if (!quiet && partial_pickup)
                     mpr("You can only carry some of what is here.");
+#if TAG_MAJOR_VERSION == 34
                 if (!quiet)
                     _fish(it, quant_got);
+#endif
 
                 _check_note_item(it);
 
@@ -1765,8 +1750,10 @@ int move_item_to_player(int obj, int quant_got, bool quiet,
 
     if (!quiet && partial_pickup)
         mpr("You can only carry some of what is here.");
+#if TAG_MAJOR_VERSION == 34
     if (!quiet)
         _fish(it, quant_got);
+#endif
 
     int freeslot = find_free_slot(it);
     ASSERT_RANGE(freeslot, 0, ENDOFPACK);
@@ -2514,7 +2501,10 @@ static int _autopickup_subtype(const item_def &item)
     case OBJ_MISCELLANY:
         return (item.sub_type == MISC_RUNE_OF_ZOT) ? item.sub_type : max_type;
     case OBJ_BOOKS:
-        return (item.sub_type == BOOK_MANUAL) ? item.sub_type : max_type;
+        if (item.sub_type == BOOK_MANUAL || item_type_known(item))
+            return item.sub_type;
+        else
+            return max_type;
     case OBJ_RODS:
     case OBJ_GOLD:
         return max_type;
@@ -2890,6 +2880,8 @@ static void _do_autopickup()
             clear_item_pickup_flags(mitm[o]);
 
             const int result = move_item_to_player(o, num_to_take);
+            if (mitm[o].base_type == OBJ_FOOD && mitm[o].sub_type == FOOD_CHUNK)
+                mitm[o].flags |= ISFLAG_DROPPED;
 
             if (result == 0 || result == -1)
             {
@@ -3211,18 +3203,20 @@ bool item_def::is_mundane() const
     return false;
 }
 
-// Does the item causes autoexplore to visit it. It excludes ?RC for Ash,
-// disabled items for Nemelex and items already visited (dropped flag).
+// Does the item cause autoexplore to visit it?
+// Excludes visited items (dropped flag) and ?RC for Ash.
 bool item_def::is_greedy_sacrificeable() const
 {
     if (!god_likes_items(you.religion, true))
         return false;
 
-    if (you_worship(GOD_NEMELEX_XOBEH)
-        && !check_nemelex_sacrificing_item_type(*this)
-        || flags & (ISFLAG_DROPPED | ISFLAG_THROWN)
+    if (flags & (ISFLAG_DROPPED | ISFLAG_THROWN)
         || item_needs_autopickup(*this)
-        || item_is_stationary(*this))
+        || item_is_stationary(*this)
+        || this->inscription.find("!p") != string::npos
+        || this->inscription.find("=p") != string::npos
+        || this->inscription.find("!*") != string::npos
+        || this->inscription.find("!D") != string::npos)
     {
         return false;
     }
@@ -3659,7 +3653,7 @@ bool get_item_by_name(item_def *item, char* specs,
         {
             item->plus = 50;
         }
-        else if (!item_is_rune(*item) && !is_deck(*item) && !is_elemental_evoker(*item))
+        else if (!item_is_rune(*item) && !is_deck(*item) && !is_xp_evoker(*item))
             item->plus2 = 50;
         break;
 
@@ -3771,7 +3765,7 @@ item_info get_item_info(const item_def& item)
     ii.flags = item.flags & (0
             | ISFLAG_IDENT_MASK | ISFLAG_BLESSED_WEAPON | ISFLAG_SEEN_CURSED
             | ISFLAG_ARTEFACT_MASK | ISFLAG_DROPPED | ISFLAG_THROWN
-            | ISFLAG_COSMETIC_MASK | ISFLAG_RACIAL_MASK);
+            | ISFLAG_COSMETIC_MASK);
 
     if (in_inventory(item))
     {
@@ -4104,6 +4098,10 @@ void corrode_item(item_def &item, actor *holder)
     if (is_artefact(item))
         return;
 
+    // Only weapons and armour can be corroded.
+    if (item.base_type != OBJ_ARMOUR && item.base_type != OBJ_WEAPONS)
+        return;
+
     // Anti-corrosion items protect against 90% of corrosion.
     if (holder && holder->res_corr() && !one_chance_in(10))
     {
@@ -4116,25 +4114,11 @@ void corrode_item(item_def &item, actor *holder)
     if (how_rusty < -5)
         return;
 
-    // determine possibility of resistance by object type {dlb}:
-    switch (item.base_type)
+    // Corrosion-resistant items.
+    if (item.base_type == OBJ_ARMOUR
+        && item.sub_type == ARM_CRYSTAL_PLATE_ARMOUR
+        && !one_chance_in(5))
     {
-    case OBJ_ARMOUR:
-        if ((item.sub_type == ARM_CRYSTAL_PLATE_ARMOUR
-             || get_equip_race(item) == ISFLAG_DWARVEN)
-            && !one_chance_in(5))
-        {
-            return;
-        }
-        break;
-
-    case OBJ_WEAPONS:
-        if (get_equip_race(item) == ISFLAG_DWARVEN && !one_chance_in(5))
-            return;
-        break;
-
-    default:
-        // Other items can't corrode.
         return;
     }
 

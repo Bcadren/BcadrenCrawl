@@ -186,10 +186,6 @@ Delayed Fireball spell
 在成功施放该法术后，施法者就可以在之后的任何一个时间瞬发一颗火球。
 如果你学会了这道法术，你就能不花额外法术位就可以记忆火球术了。
 %%%%
-Demonic Horde spell
-
-这道法术召唤一小群小恶魔来与施法者的敌人作战（有时候也会闹内讧！）。
-%%%%
 Dig spell
 
 这道法术能从未成形的岩石中挖出一条路。
@@ -283,11 +279,6 @@ Ice Form spell
 
 这道法术暂时将施法者的身体变成一尊冰雕。冰雕的质量足够轻，可以浮在水面上。
 %%%%
-Ice Storm spell
-
-这道法术射出一阵极寒之风，夹杂着冰雹和碎冰吹向目标区域，
-造成部分无视抗力的寒冷伤害。
-%%%%
 Ignite Poison spell
 
 这道法术尝试将附近的所有毒素变成液体火焰，以此来从内部灼烧中毒的生物。
@@ -351,11 +342,6 @@ Malign Gateway spell
 该通道本身可以给自身提供能量，但幸运的是过一段时间它就会自动消失。
 没有人知道到底是什么卑怯的异界生物会将它们的触手伸到这个世界来，
 但有一点是确认无疑的——绝对没有人会想和它近距离接触。
-%%%%
-Mass Abjuration spell
-
-这道法术会尝试将视野内的所有敌对召唤物赶回它们原来存在的地方，
-或者至少是减短它们在施法者身边驻留的时间。
 %%%%
 Mass Confusion spell
 
@@ -605,10 +591,6 @@ Summon Ice Beast spell
 
 这道法术召唤出一只冰之怪兽来协助施法者。
 %%%%
-Summon Scorpions spell
-
-这道法术召唤出一只或多只蝎子（其中有些也许并不会服从施法者的命令）。
-%%%%
 Summon Small Mammal spell
 
 这道法术召唤出一只或两只小动物来帮助施法者。
@@ -616,10 +598,6 @@ Summon Small Mammal spell
 Summon Swarm spell
 
 这道法术能召唤出瘟疫虫群。
-%%%%
-Summon Ugly Thing spell
-
-这道法术召唤出一个奇异的变异怪物来帮助施法者。
 %%%%
 Sure Blade spell
 

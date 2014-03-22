@@ -150,7 +150,7 @@ DEPTH:  D:8-14
 : food_weight(_G, 8)
 WEIGHT: 15
 TAGS:   uniq_second_food extra chance_second_food no_monster_gen patrolling
-MONS:   spider / brain worm w:5 / goliath beetle / giant centipede
+MONS:   spider / brain worm w:5 / goliath beetle / worker ant
 MONS:   yellow wasp w:7 / boring beetle / soldier ant w:13 / giant slug
 ITEM:   cheese q:3 no_mimic / beef jerky q:3 no_mimic / lemon q:3 no_mimic
 ITEM:   potion of porridge no_mimic, honeycomb q:6 no_mimic
@@ -201,7 +201,8 @@ KMONS:    D = big kobold
 KMONS:    E = big kobold ; nothing
 KMONS:    F = plant
 KITEM:    C = cheese q:4 no_mimic
-KITEM:    E = falchion ego:flaming ident:type / short sword ego:flaming
+KITEM:    E = falchion ego:flaming ident:type / \
+              short sword ego:flaming ident:type
 KITEM:    H = meat ration q:2 no_mimic
 KITEM:    I = cutlass
 KFEAT:    EF = shallow_water
@@ -248,7 +249,8 @@ NAME:   hangedman_tell_no_tales
 DEPTH:  D:9-14
 : food_weight(_G, 9)
 WEIGHT: 10
-TAGS:   uniq_second_food extra chance_second_food no_monster_gen no_item_gen patrolling
+TAGS:   uniq_second_food extra chance_second_food
+TAGS:   no_monster_gen no_item_gen patrolling
 MONS:   spriggan skeleton / centaur skeleton
 MONS:   troll skeleton / hungry ghost
 MONS:   shadow imp
@@ -259,7 +261,7 @@ KMONS:  A = vapour w:4 / trapdoor spider w:6 / unseen horror / nothing w:2
 : end
 ITEM:  sultana q:1 no_mimic / grape w:8 q:1 no_mimic
 ITEM:  sultana mimic q:1 w:8 / grape mimic w:8 q:1
-ITEM:  honeycomb q:2, bread ration q:3
+ITEM:  honeycomb q:2 no_mimic, bread ration q:3 no_mimic
 : if crawl.coinflip() then
 :     dgn.delayed_decay(_G, 'h', 'spriggan skeleton')
 : else
@@ -289,7 +291,7 @@ DEPTH:   D:10-14
 WEIGHT:  10
 TAGS:    uniq_second_food extra chance_second_food patrolling no_rotate no_vmirror
 # Branch representatives working together to cook some soup:
-# D, Orc, Elf, Swamp, Shoals, Vaults, Crypt, Hells, Zot.
+# D, Orc, Elf, Swamp, Shoals, Vaults, Crypt, Hells.
 KMONS:   A = kobold
 KMONS:   B = orc
 KMONS:   C = deep elf fighter
@@ -324,14 +326,14 @@ MAP
 ENDMAP
 
 # 22.0k/29.5k/0
-# A couple of tengu have staked out a little piece of the dungeon.
+# A tengu has staked out a little piece of the dungeon.
 NAME:   grunt_tengu_nest
-DEPTH:  D:9-14
-: food_weight(_G, 9)
+DEPTH:  D:10-14
+: food_weight(_G, 10)
 WEIGHT: 15
 TAGS:   uniq_second_food extra chance_second_food no_monster_gen patrolling
-MONS:   tengu ; war axe | scimitar | long sword, plant
-NSUBST: 2 : 3:2 / *:.
+MONS:   tengu warrior / tengu conjurer, raven, plant
+NSUBST: 3 : 3:3 / *:.
 ITEM:   bread ration no_mimic / snozzcumber q:3 no_mimic / \
         orange q:4 w:5 no_mimic / orange q:5 w:5 no_mimic / \
         banana q:4 w:5 no_mimic / banana q:5 w:5 no_mimic / \
@@ -340,10 +342,10 @@ ITEM:   bread ration no_mimic / snozzcumber q:3 no_mimic / \
         choko q:7 no_mimic / rambutan q:7 no_mimic / lychee q:7 no_mimic
 MAP
  xx+xx
-xx2.2xx
-x22222x
-x22222x
-xd1t1dx
+xx3.3xx
+x33333x
+x33133x
+xd2t2dx
 xxdddxx
  xxxxx
 ENDMAP
@@ -396,10 +398,9 @@ DEPTH:  D:8-14
 WEIGHT: 10
 TAGS:   uniq_second_food extra chance_second_food no_monster_gen no_trap_gen \
         patrolling
-MONS:   deep elf fighter ; cutlass race:elven | falchion race:elven / \
-        human hd:5 ; short sword | cutlass / \
-        deep dwarf ; hand axe race:dwarven / \
-        orc warrior ; dagger race:orcish / \
+MONS:   deep elf fighter ; cutlass | falchion / \
+        human ; short sword | cutlass / \
+        orc warrior ; dagger / \
         spriggan ; dagger
 ITEM:   slice of pizza q:8 no_mimic, bread ration q:2 no_mimic
 MARKER: O = lua:fog_machine { cloud_type = "flame", pow_min = 10, \
@@ -424,7 +425,7 @@ DEPTH:  D:7-14
 WEIGHT: 15
 TAGS:   uniq_second_food extra chance_second_food no_monster_gen no_trap_gen \
         patrolling
-MONS:   rat, grey rat, green rat, orange rat
+MONS:   rat, rat / green rat w:5, green rat, orange rat
 ITEM:   cheese q:3 no_mimic
 : if you.absdepth() < 11 then
 NSUBST: 4 = 1:4 / *:3
@@ -453,7 +454,7 @@ DEPTH:  D:7-14
 WEIGHT: 15
 TAGS:   uniq_second_food extra chance_second_food no_monster_gen no_trap_gen \
         patrolling
-MONS:   human hd:5 ; animal skin . hand axe
+MONS:   human ; animal skin . hand axe
 {{
   local sheep_weight = 14 - you.absdepth()
   if sheep_weight <= 0 then

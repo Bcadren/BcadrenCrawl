@@ -164,12 +164,14 @@ int check_your_resists(int hurted, beam_type flavour, string source,
         break;
 
     case BEAM_HELLFIRE:
+#if TAG_MAJOR_VERSION == 34
         if (you.species == SP_DJINNI)
         {
             hurted = 0;
             if (doEffects)
                 mpr("You resist completely.");
         }
+#endif
         // Inconsistency: no penalty for rF-, unlike monsters.  That's
         // probably good, and monsters should be changed.
         break;
@@ -198,7 +200,10 @@ int check_your_resists(int hurted, beam_type flavour, string source,
     case BEAM_POISON:
         if (doEffects)
         {
-            resist = poison_player(coinflip() ? 2 : 1, source, kaux) ? 0 : 1;
+            int pois = div_rand_round(beam->damage.num * beam->damage.size, 3);
+            pois = 3 + random_range(pois * 2 / 3, pois * 4 / 3);
+
+            resist = poison_player(pois, source, kaux) ? 0 : 1;
 
             hurted = resist_adjust_damage(&you, flavour, resist,
                                           hurted, true);
@@ -221,9 +226,10 @@ int check_your_resists(int hurted, beam_type flavour, string source,
 
         if (doEffects)
         {
-            int poison_amount = 2 + random2(3);
-            poison_amount += (resist ? 0 : 2);
-            poison_player(poison_amount, source, kaux, true);
+            int pois = div_rand_round(beam->damage.num * beam->damage.size, 3);
+            pois = 3 + random_range(pois * 2 / 3, pois * 4 / 3);
+
+            poison_player((resist ? pois / 2 : pois), source, kaux, true);
         }
 
         hurted = resist_adjust_damage(&you, flavour, resist, hurted);
@@ -335,17 +341,6 @@ int check_your_resists(int hurted, beam_type flavour, string source,
         }
         break;
     }
-
-    case BEAM_LIGHT:
-        if (you.species == SP_VAMPIRE)
-            hurted += hurted / 2;
-
-        if (hurted > original && doEffects)
-        {
-            mpr("The light scorches you terribly!");
-            xom_is_stimulated(200);
-        }
-        break;
 
     case BEAM_AIR:
     {
@@ -524,6 +519,13 @@ static bool _expose_invent_to_element(beam_type flavour, int strength)
             // These stack with conservation; they're supposed to be good.
             if (target_class == OBJ_SCROLLS
                 && you.mutation[MUT_CONSERVE_SCROLLS]
+                && !one_chance_in(10))
+            {
+                continue;
+            }
+
+            if (target_class == OBJ_SCROLLS
+                && player_equip_unrand(UNRAND_FIRESTARTER)
                 && !one_chance_in(10))
             {
                 continue;
@@ -1035,7 +1037,8 @@ void ouch(int dam, int death_source, kill_method_type death_type,
         dam = div_rand_round(dam * (10 - min(degree, 5)), 10);
     }
 
-    if (dam != INSTANT_DEATH && you.species == SP_DEEP_DWARF)
+    if (you.species == SP_DEEP_DWARF && dam != INSTANT_DEATH
+                                     && death_type != KILLED_BY_POISON)
     {
         // Deep Dwarves get to shave any hp loss.
         int shave = 1 + random2(2 + random2(1 + you.experience_level / 3));
@@ -1120,7 +1123,8 @@ void ouch(int dam, int death_source, kill_method_type death_type,
         if (you.hp > 0 && dam > 0)
         {
             if (Options.hp_warning
-                && you.hp <= (you.hp_max * Options.hp_warning) / 100)
+                && you.hp <= (you.hp_max * Options.hp_warning) / 100
+                && (death_type != KILLED_BY_POISON || poison_is_lethal()))
             {
                 mprf(MSGCH_DANGER, "* * * LOW HITPOINT WARNING * * *");
                 dungeon_events.fire_event(DET_HP_WARNING);
@@ -1192,11 +1196,8 @@ void ouch(int dam, int death_source, kill_method_type death_type,
             death_type = KILLED_BY_XOM;
     }
     // Xom may still try to save your life.
-    else if (xom_saves_your_life(dam, death_source, death_type, aux,
-                                 see_source))
-    {
+    else if (xom_saves_your_life(death_type, aux))
         return;
-    }
 
 #if defined(WIZARD) || defined(DEBUG)
     if (!non_death && crawl_state.disables[DIS_DEATH])

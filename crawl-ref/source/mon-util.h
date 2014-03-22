@@ -440,6 +440,7 @@ bool mons_class_can_pass(monster_type mc, const dungeon_feature_type grid);
 bool mons_can_open_door(const monster* mon, const coord_def& pos);
 bool mons_can_eat_door(const monster* mon, const coord_def& pos);
 bool mons_can_traverse(const monster* mon, const coord_def& pos,
+                       bool only_in_sight = false,
                        bool checktraps = true);
 
 mon_inv_type equip_slot_to_mslot(equipment_type eq);
@@ -450,7 +451,6 @@ bool mons_is_immotile(const monster* mons);
 
 int get_dist_to_nearest_monster();
 bool monster_nearby();
-int count_mara_fakes();
 actor *actor_by_mid(mid_t m);
 monster *monster_by_mid(mid_t m);
 bool mons_is_tentacle_head(monster_type mc);
@@ -475,6 +475,9 @@ bool mons_foe_is_marked(const monster* mons);
 vector<monster* > get_on_level_followers();
 
 bool mons_stores_tracking_data(const monster* mons);
+
+bool mons_is_player_shadow(const monster* mon);
+bool mons_antimagic_affected(const monster* mons);
 
 void reset_all_monsters();
 void debug_mondata();

@@ -707,7 +707,7 @@ void wizard_set_abyss()
     char buf[80];
     mprf(MSGCH_PROMPT, "Enter values for X, Y, Z (space separated) or return: ");
     if (!cancellable_get_line_autohist(buf, sizeof buf))
-        abyss_teleport(true);
+        abyss_teleport();
 
     uint32_t x = 0, y = 0, z = 0;
     sscanf(buf, "%d %d %d", &x, &y, &z);
@@ -871,6 +871,11 @@ static const char* dur_names[] =
     "sap magic",
     "magic sapped",
     "portal projectile",
+    "forested",
+    "dragon call",
+    "dragon call cooldown",
+    "aura of abjuration",
+    "mesmerisation immunity",
 };
 
 void wizard_edit_durations(void)
@@ -1001,9 +1006,13 @@ static void debug_uptick_xl(int newxl, bool train)
     level_change(NON_MONSTER, NULL, true);
 }
 
+/**
+ * Set the player's XL to a new value.
+ * @param newxl  The new experience level.
+ */
 static void debug_downtick_xl(int newxl)
 {
-    you.hp = you.hp_max;
+    set_hp(you.hp_max);
     you.hp_max_perm += 1000; // boost maxhp so we don't die if heavily rotted
     you.experience = exp_needed(newxl);
     level_change();
@@ -1020,7 +1029,7 @@ static void debug_downtick_xl(int newxl)
         calc_hp();
     }
 
-    you.hp       = max(1, you.hp);
+    set_hp(max(1, you.hp));
 }
 
 void wizard_set_xl()

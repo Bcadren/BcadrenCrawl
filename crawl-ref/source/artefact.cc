@@ -933,7 +933,7 @@ static void _get_randart_properties(const item_def &item,
         && one_chance_in(4 + power_level)
         && (aclass != OBJ_JEWELLERY || atype != RING_PROTECTION_FROM_MAGIC))
     {
-        proprt[ARTP_MAGIC] = 35 + random2(65);
+        proprt[ARTP_MAGIC] = one_chance_in(3) ? 2 : 1;
         power_level++;
     }
 
@@ -1076,12 +1076,6 @@ static void _get_randart_properties(const item_def &item,
     }
 
     if (one_chance_in(10)
-        && (aclass != OBJ_ARMOUR
-            || atype != ARM_CLOAK
-            || get_equip_race(item) != ISFLAG_ELVEN)
-        && (aclass != OBJ_ARMOUR
-            || atype != ARM_BOOTS
-            || get_equip_race(item) != ISFLAG_ELVEN)
         && get_armour_ego_type(item) != SPARM_STEALTH)
     {
         power_level++;
@@ -2035,8 +2029,6 @@ bool make_item_unrandart(item_def &item, int unrand_index)
         _make_faerie_armour(item);
     else if (unrand_index == UNRAND_OCTOPUS_KING_RING)
         _make_octoring(item);
-    else if (unrand_index == UNRAND_ARGA)
-        set_equip_race(item, ISFLAG_DWARVEN);
     else if (unrand_index == UNRAND_WOE && you.species != SP_FELID
              && !you.could_wield(item, true, true))
     {

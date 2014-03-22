@@ -398,13 +398,6 @@ crossed the stream of Okeanos and had killed Orthos and the oxherd Eurytion out
 in the gloomy meadow beyond fabulous Okeanos.”
     -Hesiod, _Theogony_, circa 700 BCE.
 %%%%
-Ice Storm spell
-
-“Neither Deluge Nor Ice Storm Nor The Black Silence Of The Netherhells Shall
-Stay These Messengers About Their Sacred Business. Do Not Ask Us About
-Sabre-Tooth Tigers, Tar Pits, Big Green Things With Teeth Or The Goddess Czol.”
-    -Anghammarad, “Going Postal”, Terry Pratchett.
-%%%%
 Ilsuiw
 
 “We have lingered in the chambers of the sea
@@ -481,6 +474,16 @@ Murray
 
 “Look behind you! A three-headed monkey!”
     -Guybrush Threepwood, _The Secret of Monkey Island_
+%%%%
+Natasha
+
+“It dooth appéere that there is in Cats as in all other kindes of beasts, a
+certaine reason and language wherby they vnderstand one another. But as touching
+this Grimmalkin: I take rather to be an Hagat or a VVitch then a Cat. For
+witches haue gone often in that likenes, And therof hath come the prouerb as
+trew as common, that a Cat hath nine liues, that is to say, a witch may take on
+her a Cats body nine times.”
+    -William Baldwin, “Beware the Cat”, 1584
 %%%%
 Nikola
 
@@ -622,16 +625,6 @@ imagination is a mirror, imparting vividness to all ideas, without the power of
 selecting or controlling them; then pray that your grieves may slumber, and the
 brotherhood of remorse not break their chain.”
     -Nathaniel Hawthorne, “The Haunted Mind”. 1835.
-%%%%
-agate snail
-
-“Snail, snail, slug-slow,
- To me thy four horns show;
- If thou dost not show me thy four,
- I will throw thee out of the door,
- For the crow in the gutter,
- To eat for bread and butter.”
-    -Silesian rhyme, _Notes and Queries_, Number 69. 1851.
 %%%%
 alligator
 
@@ -1322,14 +1315,6 @@ ghoul
  And because it is my heart.’”
     -Stephen Crane, _The Black Riders and Other Lines_. 1895.
 %%%%
-giant centipede
-
-“Traffickers in the Black Meat, flesh of the giant black centipede—sometimes
-attaining a length of six feet—found in a lane of black rocks and iridescent,
-brown lagoons, exhibit paralyzed crustaceans in camouflage pockets of the Plaza
-visible only to the Meat Eaters.”
-    -William S. Burroughs, _Naked Lunch_. 1959.
-%%%%
 giant club
 
 “Therewith the gyant buckled him to fight,
@@ -1588,12 +1573,6 @@ ice dragon hide
 
 <steam dragon hide>
 %%%%
-ignis
-
-“When Alexander the Great addressed him with greetings, and asked if he wanted
-anything, Diogenes replied “Yes, stand a little out of my sunshine..””
-    -Plutarch, _Alexander_. 75.
-%%%%
 iguana
 
 “Once on a time when Brahmadatta was reigning in Benares, the Bodhisatta was
@@ -1850,7 +1829,7 @@ microbat
 %%%%
 molten gargoyle
 
-<metal gargoyle>
+<war gargoyle>
 %%%%
 morningstar
 
@@ -2347,14 +2326,6 @@ rotten bat
 
 <bat>
 %%%%
-rotting devil
-
-“The slow adagio begins;
- The winding-sheets are ravelled out
- That swathe the minds of men, the sins
- That wrap their rotting souls about.“
-    -John Davidson, ”A Ballad of Heaven". Late 19th cent.
-%%%%
 salamander
 
 “As for example: the Salamander made in fashion of a Lizard, marked with spots
@@ -2786,16 +2757,6 @@ spectral thing
 “On the hungry craving wind
  My Spectre follows thee behind.”
     -William Blake, “Broken Love”. ca. 1800.
-%%%%
-spiny worm
-
-“No sooner had I reached the place than I began to vomit, during which there
-came from my stomach a hairy worm about a quarter of a cubit in length: the
-hairs were long, and the worm was very ugly, speckled of divers colours, green,
-black, and red. They kept and showed it to the doctor, who said he had never
-seen anything of the sort before...”
-    -Benvenuto Cellini, _Autobiography_. 1563.
-     trans. John Addington Symonds, 1187.
 %%%%
 spriggan assassin
 

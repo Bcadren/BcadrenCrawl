@@ -70,7 +70,7 @@ The contents of this text are:
                 mlist_allow_alternate_layout, mlist_targeting,
                 menu_colour, message_colour, force_more_message,
                 msg_condense_repeats, msg_condense_short, show_travel_trail,
-                monster_list_colour
+                monster_list_colour, view_delay
 3-j     Missiles.
                 fire_items_start, fire_order
 3-k     Message Channels.
@@ -98,8 +98,10 @@ The contents of this text are:
                 tile_window_height, tile_map_pixels, tile_cell_pixels,
                 tile_force_overlay, tile_font_crt_file, tile_font_stat_file,
                 tile_font_msg_file, tile_font_tip_file, tile_font_lbl_file,
-                tile_font_crt_size, tile_font_stat_size, tile_font_msg_size,
-                tile_font_tip_size, tile_font_lbl_size, tile_font_ft_light,
+                tile_font_crt_family, tile_font_stat_family,
+                tile_font_msg_family, tile_font_lbl_family, tile_font_crt_size,
+                tile_font_stat_size, tile_font_msg_size, tile_font_tip_size,
+                tile_font_lbl_size, tile_font_ft_light,
                 tile_show_minihealthbar, tile_show_minimagicbar,
                 tile_show_demon_tier, tile_water_anim, tile_misc_anim,
                 tile_realtime_anim, tile_layout_priority, tile_display_mode,
@@ -309,15 +311,15 @@ remember_name = true
         initial name prompt - hitting Enter at the name prompt will
         simply reuse your old name if remember_name is set.
 
-weapon = (short sword | falchion | quarterstaff | hand axe | spear | mace
-          | trident | unarmed | random | viable)
+weapon = (short sword | falchion | quarterstaff |...| unarmed | random | viable)
         Specifying the weapon option allows you to bypass the weapon
-        selection screen. Tridents and falchions are restricted to only
-        fighters and gladiators, quarterstaves are restricted to gladiators,
-        and unarmed is restricted to races with claws. The standard weapon
-        prompt will be shown if an illegal choice for the selected
-        background is specified. The "viable" option makes a random choice
-        from among the "good" weapons for the chosen character.
+        selection screen. Tridents, flails, cutlasses, long swords, and war
+        axes are restricted to fighters and gladiators only, quarterstaves
+        are restricted to gladiators, and unarmed is restricted to races
+        with claws. The standard weapon prompt will be shown if an illegal
+        choice for the selected background is specified. The "viable" option
+        makes a random choice from among the "good" weapons for the chosen
+        character.
 
 species = (Human |...| Vampire | random | viable)
         The usual abbreviations (Hu, HE, etc.) work. Because species and
@@ -326,7 +328,7 @@ species = (Human |...| Vampire | random | viable)
         option is also set.
 
 background = (Fighter |...| Wanderer | random | viable)
-        Here again the abbreviations (Fi, Wz, Pr, etc.) can be used. The same
+        Here again the abbreviations (Fi, Wz, AK, etc.) can be used. The same
         caveat applies to "viable": it is only really meaningful if the
         species option is also set.
 
@@ -985,14 +987,6 @@ auto_exclude += <monster name>, <monster name>, ...
 3-h     Command Enhancements.
 -----------------------------
 
-auto_list = true
-        When set (the default), the appropriate inventory items are
-        automatically listed for commands like eat and read. This is
-        like immediately hitting '?', and can be confusing to beginners
-        because they won't get to see the prompts. This option does not
-        apply to spell casting... Conjurers would probably find that
-        really annoying.
-
 auto_switch = false
         If you've got a melee weapon in slot a and a ranged weapon in
         slot b (or the opposite), this option will allow you to
@@ -1327,9 +1321,12 @@ small_more = false
         small_more = true, it is just the bottom left character if
         clear_messages is not set.
 
-show_inventory_weights = true
+show_inventory_weights = sometimes|true|false
         When this is set to true, inventory listings will mention the
-        weight of each item.
+        weight of each item.  When set to "sometimes" (the default), or
+        indeed any value other than true/false/yes/no, the menus for
+        picking up and dropping items will list item weights, but other
+        inventory menus will not.
         Note: This option doesn't currently work for Tiles unless you use
               tile_menu_icons = false.
 
@@ -1554,6 +1551,10 @@ monster_list_colour -= <key>
          attack will appear in the "evil colour" (magenta by default)
          regardless of this option.
 
+view_delay = 600
+        Controls the speed of animations from, e.g., ranged and magical
+        attacks and invocations with visual effects.
+
 3-j     Missiles.
 -----------------
 
@@ -1733,28 +1734,30 @@ tile_menu_icons = true
         If you would rather have the plain menus set this option to false.
 
 tile_player_col       = white
-tile_monster_col      = red
-tile_neutral_col      = red
-tile_peaceful_col     = lightred
-tile_friendly_col     = lightred
-tile_plant_col        = darkgreen
-tile_item_col         = green
+tile_monster_col      = #660000
+tile_neutral_col      = #660000
+tile_peaceful_col     = #664400
+tile_friendly_col     = #664400
+tile_plant_col        = #446633
+tile_item_col         = #005544
 tile_unseen_col       = black
-tile_floor_col        = lightgrey
-tile_mapped_floor_col = lightblue
-tile_wall_col         = darkgrey
-tile_mapped_wall_col  = blue
-tile_door_col         = brown
-tile_downstairs_col   = magenta
-tile_upstairs_col     = blue
-tile_branchstairs_col = magenta
-tile_feature_col      = cyan
-tile_trap_col         = yellow
-tile_water_col        = grey
-tile_lava_col         = grey
-tile_excluded_col     = darkcyan
-tile_excl_centre_col  = darkblue
-tile_window_col       = yellow
+tile_floor_col        = #333333
+tile_wall_col         = #666666
+tile_mapped_floor_col = #222266
+tile_mapped_wall_col  = #444499
+tile_door_col         = #775544
+tile_downstairs_col   = #ff00ff
+tile_upstairs_col     = cyan
+tile_branchstairs_col = #ff7788
+tile_portal_col       = #ffdd00
+tile_feature_col      = #997700
+tile_trap_col         = #aa6644
+tile_water_col        = #114455
+tile_deep_water_col   = #001122
+tile_lava_col         = #552211
+tile_excluded_col     = #552266
+tile_excl_centre_col  = #552266
+tile_window_col       = #558855
 
 These options allow configuring the colours used for the minimap of the dungeon
 level. Using RGB hex codes is also allowed, such as #00ff00 for green.
@@ -1775,10 +1778,12 @@ level. Using RGB hex codes is also allowed, such as #00ff00 for green.
    tile_downstairs_col   - colour of downstairs
    tile_upstairs_col     - colour of upstairs, including branch exits
    tile_branchstairs_col - colour of branch entrances
-   tile_feature_col      - colour of any non-stair feature
-                           (altar, shop, portal, fountain, ...)
+   tile_portal_col       - colour of any portal
+   tile_feature_col      - colour of any non-stair, non-portal feature
+                           (altar, shop, fountain, ...)
    tile_trap_col         - colour of known traps of any type
-   tile_water_col        - colour of both shallow and deep water
+   tile_water_col        - colour of shallow water
+   tile_deep_water_col   - colour of deep water
    tile_lava_col         - colour of lava
    tile_excluded_col     - colour of squares excluded for autotravel
                            (will only override tile_floor_col colour)
@@ -1855,15 +1860,23 @@ tile_font_stat_file = VeraMono.ttf
 tile_font_msg_file  = VeraMono.ttf
 tile_font_tip_file  = VeraMono.ttf
 tile_font_lbl_file  = Vera.ttf
-        Fonts used in various sections of the screen. If you want to use
-        another font, you'll have to place the corresponding *.ttf file into
-        the dat/tiles/ folder.
+        Fonts used in various sections of the screen for local tiles. For
+        WebTiles use tile_font_*_family instead. If you want to use another
+        font, you'll have to place the corresponding *.ttf file into the
+        dat/tiles/ folder.
         Screen regions are as follows:
             crt  - non-map screens (menus, message history, etc.)
             stat - stat area (hit points, AC, etc.)
             msg  - message area
             tip  - tooltips (mouseover information)
             lbl  - item/monster names in inventory/main map
+
+tile_font_crt_family  = monospace
+tile_font_stat_family = monospace
+tile_font_msg_family  = monospace
+tile_font_lbl_family  = monospace
+        Fonts used in various sections of the screen for WebTiles. For local
+        tiles use tile_font_*_file instead.
 
 tile_font_crt_size  = 15
 tile_font_stat_size = 16

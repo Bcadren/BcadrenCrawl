@@ -106,12 +106,6 @@ static int _make_mimic_item(object_class_type type)
             set_equip_desc(item, ISFLAG_GLOWING);
         else if (prop < 80)
             set_equip_desc(item, ISFLAG_RUNED);
-        else if (prop < 85)
-            set_equip_race(item, ISFLAG_ORCISH);
-        else if (prop < 90)
-            set_equip_race(item, ISFLAG_DWARVEN);
-        else if (prop < 95)
-            set_equip_race(item, ISFLAG_ELVEN);
         break;
 
     case OBJ_ARMOUR:
@@ -125,16 +119,10 @@ static int _make_mimic_item(object_class_type type)
             make_item_randart(item);
         else if (prop < 40)
             set_equip_desc(item, ISFLAG_GLOWING);
-        else if (prop < 60)
+        else if (prop < 65)
             set_equip_desc(item, ISFLAG_RUNED);
-        else if (prop < 80)
-            set_equip_desc(item, ISFLAG_EMBROIDERED_SHINY);
-        else if (prop < 85)
-            set_equip_race(item, ISFLAG_ORCISH);
         else if (prop < 90)
-            set_equip_race(item, ISFLAG_DWARVEN);
-        else if (prop < 95)
-            set_equip_race(item, ISFLAG_ELVEN);
+            set_equip_desc(item, ISFLAG_EMBROIDERED_SHINY);
         break;
 
     case OBJ_SCROLLS:
@@ -211,9 +199,9 @@ void wizard_create_spec_monster_name()
         return;
     }
 
-    monster_type type = static_cast<monster_type>(mspec.type);
-    if (mons_class_is_zombified(type))
-        type = mspec.monbase;
+    monster_type type =
+        fixup_zombie_type(static_cast<monster_type>(mspec.type),
+                          mspec.monbase);
 
     coord_def place = find_newmons_square(type, you.pos());
     if (!in_bounds(place))

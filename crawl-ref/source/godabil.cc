@@ -511,8 +511,8 @@ static int _zin_check_recite_to_single_monster(const monster *mon,
     if ((ce == CE_ROT || ce == CE_MUTAGEN) && !mon->is_chaotic())
         eligibility[RECITE_IMPURE]++;
 
-    // Death drakes and rotting devils get a bump to uncleanliness.
-    if (mon->type == MONS_ROTTING_DEVIL || mon->type == MONS_DEATH_DRAKE)
+    // Death drakes and necrophage get a bump to uncleanliness.
+    if (mon->type == MONS_NECROPHAGE || mon->type == MONS_DEATH_DRAKE)
         eligibility[RECITE_IMPURE]++;
 
     // Sanity check: if a monster is 'really' natural, don't consider it impure.
@@ -886,11 +886,8 @@ bool zin_recite_to_single_monster(const coord_def& where,
             {
                 if (one_chance_in(3))
                     effect = ZIN_BLIND;
-                else if (mon->can_use_spells() && !mon->is_priest()
-                         && !mons_class_flag(mon->type, M_FAKE_SPELLS))
-                {
+                else if (mons_antimagic_affected(mon))
                     effect = ZIN_ANTIMAGIC;
-                }
                 else
                     effect = ZIN_SILVER_CORONA;
             }
@@ -1334,7 +1331,7 @@ bool zin_sanctuary()
 
 #ifndef USE_TILE_LOCAL
     // Allow extra time for the flash to linger.
-    delay(1000);
+    scaled_delay(1000);
 #endif
 
     // Pets stop attacking and converge on you.
@@ -1717,8 +1714,10 @@ void yred_make_enslaved_soul(monster* mon, bool force_hostile)
     // If the monster's held in a net, get it out.
     mons_clear_trapping_net(mon);
 
-    // Drop the monster's holy equipment, and keep wielding the rest.
+    // Drop the monster's holy equipment, and keep wielding the rest.  Also
+    // remove any of its active avatars.
     monster_drop_things(mon, false, is_holy_item);
+    mon->remove_avatars();
 
     const monster orig = *mon;
 
@@ -2198,7 +2197,7 @@ bool fedhas_sunlight()
     coord_def temp = grid2view(base);
     cgotoxy(temp.x, temp.y, GOTO_DNGN);
 #endif
-    delay(200);
+    scaled_delay(200);
 
     if (revealed_count)
     {
@@ -2585,7 +2584,7 @@ bool fedhas_plant_ring_from_fruit()
             tiles.add_overlay(adjacent[j], TILE_INDICATOR + j);
         viewwindow(false);
 #endif
-        delay(200);
+        scaled_delay(200);
     }
 
     _decrease_amount(collected_fruit, created_count);
@@ -3252,7 +3251,7 @@ void cheibriados_time_step(int pow) // pow is the number of turns to skip
     update_level(pow * 10);
 
 #ifndef USE_TILE_LOCAL
-    delay(1000);
+    scaled_delay(1000);
 #endif
 
     monster* mon;
@@ -3424,7 +3423,7 @@ bool dithmenos_shadow_step()
     ASSERT(you.umbra_radius2() > -1);
     const int range = isqrt_ceil(you.umbra_radius2());
 
-    targetter_jump tgt(&you, range, false, true);
+    targetter_jump tgt(&you, you.umbra_radius2(), false, true);
     direction_chooser_args args;
     args.hitfunc = &tgt;
     args.restricts = DIR_JUMP;
@@ -3509,8 +3508,12 @@ bool dithmenos_shadow_step()
 
 static bool _dithmenos_shadow_acts()
 {
-    if (!you_worship(GOD_DITHMENOS) || you.piety < piety_breakpoint(3))
+    if (!you_worship(GOD_DITHMENOS)
+        || you.piety < piety_breakpoint(3)
+        || player_under_penance())
+    {
         return false;
+    }
 
     // 10% chance at 4* piety; 50% chance at 200 piety.
     const int range = MAX_PIETY - piety_breakpoint(3);
@@ -3594,10 +3597,11 @@ monster* shadow_monster(bool equip)
                     | MF_WAS_IN_VIEW | MF_HARD_RESET
                     | MF_ACTUAL_SPELLS;
     mon->hit_points = you.hp;
-    mon->hit_dice   = min(1,
-                          you.skill_rdiv(wpn_index != NON_ITEM
-                                         ? weapon_skill(mitm[wpn_index])
-                                         : SK_UNARMED_COMBAT, 10, 20));
+    mon->hit_dice   = min(27, max(1,
+                                  you.skill_rdiv(wpn_index != NON_ITEM
+                                                 ? weapon_skill(mitm[wpn_index])
+                                                 : SK_UNARMED_COMBAT, 10, 20)
+                                  + you.skill_rdiv(SK_FIGHTING, 10, 20)));
     mon->set_position(you.pos());
     mon->mid        = MID_PLAYER;
     mon->inv[MSLOT_WEAPON]  = wpn_index;
@@ -3634,7 +3638,6 @@ void dithmenos_shadow_melee(actor* target)
     mon->target     = target->pos();
     mon->foe        = target->mindex();
 
-    mprf("%s attacks!", mon->name(DESC_THE).c_str());
     fight_melee(mon, target);
 
     shadow_monster_reset(mon);
@@ -3658,7 +3661,6 @@ void dithmenos_shadow_throw(coord_def target)
 
         bolt beem;
         beem.target = target;
-        mprf("%s attacks!", mon->name(DESC_THE).c_str());
         setup_monster_throw_beam(mon, beem);
         beem.item = &mitm[mon->inv[MSLOT_MISSILE]];
         mons_throw(mon, beem, mon->inv[MSLOT_MISSILE]);

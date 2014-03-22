@@ -45,6 +45,7 @@
 #include "output.h"
 #include "player.h"
 #include "random.h"
+#include "religion.h"
 #include "showsymb.h"
 #include "state.h"
 #include "stuff.h"
@@ -305,12 +306,13 @@ void update_monsters_in_view()
         }
 
         bool warning = false;
-        string warning_msg = "Ashenzari warns you:";
+        string warning_msg = you_worship(GOD_ZIN) ? "Zin warns you:"
+                                                  : "Ashenzari warns you:";
         warning_msg += " ";
         for (unsigned int i = 0; i < size; ++i)
         {
             const monster* mon = monsters[i];
-            if (!mon->props.exists("ash_id"))
+            if (!mon->props.exists("ash_id") && !mon->props.exists("zin_id"))
                 continue;
 
             monster_info mi(mon);
@@ -332,12 +334,28 @@ void update_monsters_in_view()
             warning_msg += uppercase_first(monname);
 
             warning_msg += " is";
-            warning_msg += get_monster_equipment_desc(mi, DESC_IDENTIFIED,
-                                                      DESC_NONE);
+            if (you_worship(GOD_ZIN))
+            {
+                warning_msg += " a foul ";
+                if (mon->has_ench(ENCH_GLOWING_SHAPESHIFTER))
+                    warning_msg += "glowing ";
+                warning_msg += "shapeshifter";
+            }
+            else
+            {
+                warning_msg += get_monster_equipment_desc(mi, DESC_IDENTIFIED,
+                                                          DESC_NONE);
+            }
             warning_msg += ".";
         }
         if (warning)
+        {
             mprf(MSGCH_GOD, "%s", warning_msg.c_str());
+#ifndef USE_TILE_LOCAL
+            if (you_worship(GOD_ZIN))
+                update_monster_pane();
+#endif
+        }
     }
 
     // Xom thinks it's hilarious the way the player picks up an ever
@@ -740,14 +758,7 @@ void flash_view(colour_t colour, targetter *where)
 void flash_view_delay(colour_t colour, int flash_delay, targetter *where)
 {
     flash_view(colour, where);
-    // Scale delay to match change in arena_delay.
-    if (crawl_state.game_is_arena())
-    {
-        flash_delay *= Options.arena_delay;
-        flash_delay /= 600;
-    }
-
-    delay(flash_delay);
+    scaled_delay(flash_delay);
     flash_view(0);
 }
 

@@ -21,7 +21,7 @@ function wad_woods_setup(e, uniq, weight, mist, delaynum, sizenum, spreadnum)
     if you.branch() == "Forest" then
         e.mons("spriggan w:4 / w:4 spriggan rider / w:2 spriggan druid"
                 .. " / w:3 spriggan air mage / w:3 spriggan berserker")
-        e.mons("wind drake / w:5 dryad / w:2 ancient bear / w:1 shambling mangrove")
+        e.mons("wind drake / w:5 dryad / w:1 shambling mangrove")
         e.ftile(".t+%*|q01234567COGTU = floor_lair")
     else
         if you.branch() == "Lair" then
@@ -82,7 +82,7 @@ ENDMAP
 #
 NAME:    david_lair_generic
 TAGS:    lair_entry
-MONS:    crocodile / sheep, agate snail / elephant slug / nothing
+MONS:    crocodile / sheep, giant slug / elephant slug / nothing
 MONS:    nothing / yak / weight:2 death yak, plant / fungus / w:20 nothing
 MONS:    elephant
 SHUFFLE: 12
@@ -127,7 +127,7 @@ ENDMAP
 NAME:    dpeg_lair_monsters
 TAGS:    lair_entry
 ORIENT:  float
-MONS:    w:50 nothing / w:30 giant slug / w:30 agate snail
+MONS:    w:60 nothing / w:30 giant slug
 MONS:    w:100 nothing / w:40 yak / sheep / death yak
 MONS:    w:100 nothing / w:20 iguana / w:20 crocodile /\
          komodo dragon / basilisk w:5
@@ -209,7 +209,7 @@ NAME:   minmay_lair_entry_grove
 TAGS:   lair_entry
 ORIENT: float
 MONS:   plant / bush w:2 / fungus w:2
-MONS:   crocodile / basilisk w:5 / agate snail w:5 / giant slug w:5
+MONS:   crocodile / basilisk w:5 / giant slug
 MONS:   yak
 MONS:   sheep
 MONS:   rat w:2 / porcupine / green rat / quokka w:1
@@ -321,7 +321,7 @@ NAME:   erik_lair_orcish_takeover
 TAGS:   lair_entry
 ORIENT: float
 MONS:   orc
-MONS:   warg / agate snail
+MONS:   warg
 MONS:   orc warrior / warg
 MONS:   orc priest / orc wizard / plant
 KFEAT:  O = enter_lair
@@ -426,7 +426,7 @@ NAME:    lemuel_ratsnest
 ORIENT:  northeast
 DEPTH:   D:5-8, Lair
 SHUFFLE: 23, 34
-MONS:    rat, grey rat, green rat, orange rat
+MONS:    rat, rat / green rat w:5, green rat, orange rat
 ITEM:    cheese w:100 / apple / orange / pear / apricot / choko
 SUBST:   d = d$..., e = d$
 : if you.branch() == "Lair" then
@@ -471,7 +471,7 @@ DEPTH:   Lair:3-7
 SUBST:   % = %%%%%$$$**|
 MONS:    patrolling necromancer / necromancer
 SHUFFLE: 23
-MONS:    giant slug zombie / agate snail zombie / \
+MONS:    giant slug zombie / \
          elephant slug zombie w:2 / nothing
 MONS:    crocodile zombie / basilisk zombie / \
          komodo dragon zombie w:4 / nothing
@@ -755,9 +755,9 @@ NAME:   minmay_lair_venomous_thicket
 TAGS:   ruin_lair
 DEPTH:  Lair
 ORIENT: north
-MONS:   black mamba / spiny frog / wolf spider / spiny worm
+MONS:   black mamba / spiny frog / wolf spider
 MONS:   basilisk / komodo dragon / yellow wasp
-MONS:   giant mite / giant centipede
+MONS:   giant mite / adder
 MONS:   plant / fungus w:2 / bush w:1, bush
 SUBST:  4 = 444. 5:2, . = ...4 5:2
 SUBST:  1 = 1., 2 = 2., 3 = 3.
@@ -1586,7 +1586,7 @@ NAME:   kennysheep_rathole
 TAGS:   no_monster_gen
 DEPTH:  Lair
 ORIENT: float
-MONS:   green rat band, orange rat, grey rat / green rat / rat
+MONS:   green rat band, orange rat, green rat / rat
 KMONS:  P = plant / fungus w:2
 KITEM:  d = cheese / slice of pizza / sausage / bread ration
 NSUBST: W = 1:1 / 2:P / 2:2 / 2:3 / 2:d
@@ -1607,7 +1607,7 @@ NAME:   kennysheep_abandoned_house
 TAGS:   ruin
 DEPTH:  Lair
 ORIENT: float
-MONS:   green rat / rat, orange rat, grey rat / rat
+MONS:   green rat / rat, orange rat, rat
 KITEM:  d = cheese / slice of pizza / sausage / bread ration
 SUBST:  d = d123..., 2 = 2.
 NSUBST: 1 = *:1
@@ -1680,7 +1680,7 @@ ENDMAP
 # an altar to chei, and a few followers
 NAME:  kennysheep_slug_temple
 DEPTH: Lair
-MONS:  giant slug / agate snail / elephant slug w:2 / nothing
+MONS:  giant slug / elephant slug w:2 / nothing
 KFEAT: a = altar_cheibriados
 MAP
  @
@@ -1697,6 +1697,238 @@ xxx.xxbbbbbbWbbx.xxxx
    xxxxxxxxxxx.xx
   @.......1...xx
    xxxxxxxxxxxx
+ENDMAP
+
+## A den of bears.
+NAME:   gammafunk_lair_bear_cave
+DEPTH:  Lair:1-7
+ORIENT: float
+TAGS:   patrolling no_monster_gen
+MONS:   grizzly bear / polar bear
+KFEAT:  " = W
+KMONS:  " = giant goldfish / shark / electric eel
+KITEM:  % = strawberry / grape / lychee / choko / rambutan / apple / pear \
+            / orange / w:1 meat ration
+SUBST:  % = %., * = *:40 |, B = 1., E = tE
+CLEAR:  E
+MAP
+EEEEEEEEEEEEEEEEEEEEEEEEE
+EtttttxxtttxxxxxxttxxtttE
+EttxxxxxxxxxxxxxxxxxxxxxE
+Etxxxxxxxxxxx..xxxxxxxxtE
+Etxxxxx"Wxx......x.xxxttE
+Exxx%...1.....x....xxxxtE
+Exxx%B.1...xxxxx.....xxtE
+Exxxx%%%*xxxxxxxxxxx..xtE
+Etxxx*xxxxxxxtxxxxxxx...@
+Etxxxxxxxxxxtttttttxxx..@
+EttxxxxxttttttttttttttttE
+EEEEEEEEEEEEEEEEEEEEEEEEE
+ENDMAP
+
+## A hidden river runs under a mountain, feeding into an enchanted lake.
+NAME:   gammafunk_lair_enchanted_lake
+DEPTH:  Lair:3-7
+ORIENT: north
+TAGS:   no_pool_fixup no_rotate patrolling
+SUBST:  1 = 1:30 ., 2 = 2:30 W, 3 = 3:30 W, 4 = 4w, R = tx, * = *|
+NSUBST: 0 = 2:9 / *:0
+MONS:   plant / bush / toadstool
+KMONS:  2 = plant / toadstool
+KMONS:  3 = w:1 giant goldfish / w:1 shark / plant / toadstool
+KMONS:  4 = w:5 giant goldfish / shark / electric eel
+KFEAT:  23 = W
+KFEAT:  4 = w
+KMONS:  5 =  lindwurm / dire elephant / catoblepas
+KMASK:  Ww = no_monster_gen
+FTILE:  _|*5 = floor_pebble_brown
+SUBST:  E = tE
+CLEAR:  E
+MAP
+EtccccccccccccccccccccccctE
+Etc*_WWWWWw4xxwWW4xxx4w4ctE
+Etc*5_WWxWWxxwWWwWWxxwwwctE
+Etc*5_wxxWWxWWWxxwwWWwWWctE
+Etc*_wwxxxWWW4xxxx4wWWWWctE
+EtccccccccccccccccccccW3xtE
+EtxxxxxxxxxxxxxxxxxxxxxWxtE
+EttttxRRRRRRRRRRRRRRtttWttE
+Ettttt.2W2WWtt3Wtwww3WWwttE
+Ettt...2WwwwWwWwWwwwWwwwttE
+Ett1..2Wwww3wWwwwWWWwwwtttE
+Ett1..Wwwwwttwwttt33tttttE
+Ett1..WwwwwttttttttttttttE
+Ett1..2WwwwwW222ttttttttE
+Ett.....Wwwww22...ttttttE
+Ettt.....2WwwwW2....ttttE
+Ettt..0....WwwWW....tttttE
+Ettt1.....WWwwWW..0..1tttE
+Etttt1...WWWwwwWW....1tttE
+Etttt....WWwwwwWW..0..1ttE
+Ettttt.0.WWwwwwWW....1tttE
+ Etttt1...WWwwWWW..0.1tttE
+  Etttt...WWWWWW....ttttE
+  Ettttt...WWWW....1ttttE
+   Etttt1.........1tttEE
+    Etttt........tttttE
+     EEEE...@@...EEEEE
+ENDMAP
+
+####
+
+NAME: nicolae_quartered_pool_little
+DEPTH: Lair, D
+TAGS: transparent extra decor allow_dup luniq_qpool
+SHUFFLE: Aa, Bb, Cc, Dd, Ee, Ff, Gg, Hh, Ii, Jj, Kk, Ll, Mm, Nn, Oo, Pp, Qq
+SUBST: abcdefghijklmnopq = ., ABCDEFGHIJKLMNOPQ = W, 7 = t
+MAP
+    777777
+   7qolLOQ7
+  7pnkiIKNP7
+ 7pmjhfFHJMP7
+7qnjgedDEGJNQ7
+7okhecbBCEHKO7
+7lifdbaABDFIL7
+7LIFDBAabdfil7
+7OKHECBbcehko7
+7QNJGEDdegjnq7
+ 7PMJHFfhjmp7
+  7PNKIiknp7
+   7QOLloq7
+    777777
+ENDMAP
+
+NAME: nicolae_quartered_pool_medium
+DEPTH: Lair, D
+TAGS: transparent extra decor allow_dup luniq_qpool
+SHUFFLE: Aa, Bb, Cc, Dd, Ee, Ff, Gg, Hh, Ii, Jj, Kk, Ll, Mm
+SHUFFLE: Nn, Oo, Pp, Qq, Rr, Ss, Tt, Uu
+SUBST: abcdefghijklmnopqrstu = ., ABCDEFGHIJKLMNOPQRSTU = W, 7 = t
+MAP
+      7777
+    77spPS77
+   7urolLORU7
+  7tqnkiIKNQT7
+ 7uqmjhfFHJMQU7
+ 7rnjgedDEGJNR7
+7sokhecbBCEHKOS7
+7plifdbaABDFILP7
+7PLIFDBAabdfilp7
+7SOKHECBbcehkos7
+ 7RNJGEDdegjnr7
+ 7UQMJHFfhjmqu7
+  7TQNKIiknqt7
+   7UROLloru7
+    77SPps77
+      7777
+ENDMAP
+
+NAME: nicolae_quartered_pool_super
+DEPTH: Lair, D
+TAGS: transparent extra decor allow_dup luniq_qpool
+SHUFFLE: Aa, Bb, Cc, Dd, Ee, Ff, Gg, Hh, Ii, Jj, Kk, Ll, Mm
+SHUFFLE: Nn, Oo, Pp, Qq, Rr, Ss, Tt, Uu, Vv, Ww, Xx, Yy, Zz
+SHUFFLE: 12, 34, 56
+SUBST: abcdefghijklmnopqrstuvwxyz135 = ., ABCDEFGHIJKLMNOPQRSTUVWXYZ246 = W
+SUBST: 7 = t
+MAP
+      777777
+    771xtTX277
+   75zwspPSWZ67
+  73yvrolLORVY47
+ 75yuqnkiIKNQUY67
+ 7zvqmjhfFHJMQVZ7
+71wrnjgedDEGJNRW27
+7xsokhecbBCEHKOSX7
+7tplifdbaABDFILPT7
+7TPLIFDBAabdfilpt7
+7XSOKHECBbcehkosx7
+72WRNJGEDdegjnrw17
+ 7ZVQMJHFfhjmqvz7
+ 76YUQNKIiknquy57
+  74YVROLlorvy37
+   76ZWSPpswz57
+    772XTtx177
+      777777
+ENDMAP
+
+NAME: nicolae_lair_firefly_meadow
+DEPTH: Lair
+TAGS: transparent
+MONS: giant firefly
+NSUBST: . = 5:1
+MAP
+ .......
+.........
+.........
+.........
+.........
+.........
+.........
+.........
+ .......
+ENDMAP
+
+NAME: nicolae_lair_grove_arrangements
+DEPTH: Lair
+TAGS: allow_dup transparent decor extra luniq
+SHUFFLE: abcdefghi/''''T''''/T'''''''T/T'''T'''T/T'T'''T'T/T'T'T'T'T/\
+         TTT'''TTT/'T'T'T'T'/T'T''''T'/'T'TTT'T'/'T'''''T'/TTTT'TTTT/\
+         T'TTTTT'T/TT'TTT'TT/'''TTT'''/T'TT'TTTT/TT'T'T'TT/TT'''''TT/\
+         TT''T''TT/TT''TT'T'/T''''T'T'
+SUBST: abcdefghiT = ttttt., ' = ., _ = ._
+CLEAR: _
+MAP
+__________________
+_................_
+_..aa...bb...cc.._
+_.aaaa.bbbb.cccc._
+_.aaaa.bbbb.cccc._
+_..aa...bb...cc.._
+_................_
+_..dd...ee...ff.._
+_.dddd.eeee.ffff._
+_.dddd.eeee.ffff._
+_..dd...ee...ff.._
+_................_
+_..gg...hh...ii.._
+_.gggg.hhhh.iiii._
+_.gggg.hhhh.iiii._
+_..gg...hh...ii.._
+_................_
+__________________
+ENDMAP
+
+NAME: nicolae_lair_yak_garden
+DEPTH: Lair:6-
+TAGS: no_monster_gen no_item_gen no_trap_gen
+SUBST: P = P.
+NSUBST: D = 1:D / *:.
+KITEM: f = apple / orange / apricot / nothing
+KMONS: Y = yak
+KMONS: D = death yak
+KMONS: C = catoblepas
+KMONS: P = plant
+KMONS: k = giant goldfish
+KFEAT: k = w
+MAP
+        .@@@.
+      .........
+    tt...P.P....tt
+   tttttPPPPPPPtttt.
+  .ttDfPP.Y....tDtt...
+ .PPttP..P.P.PP.ftP...
+ .P....PPP...PPP.PP..@
+..PP..PPPwwwC.P..PPP.@
+......Y.wkwwww.Y.ttP.@
+.@.PP..Pwwwwkw...fttt.
+ @..P..PP.wwwPP.ttttt
+  @.PP.PPP..PP..PPttt
+  ...Ptt.P.PPPPPP....
+  ...ttfDttPP.......
+    .tttttt......@
+     ..tt.......
+        .....
 ENDMAP
 
 ###############################################################################
@@ -1769,7 +2001,7 @@ PLACE:   Lair:$
 TAGS:    no_pool_fixup no_wall_fixup no_monster_gen no_rotate
 ORIENT:  southeast
 MONS:    hydra / fire drake / dire elephant
-MONS:    red devil / rotting devil w:15 / orange demon w:15 / hell hound w:5
+MONS:    red devil / blue devil w:15 / orange demon w:15 / hell hound w:5
 MONS:    hellwing, sun demon, sixfirhy, smoke demon, hell beast
 KMONS:   8 = wizard
 # add no_pickup whenever that works; loot is too easily missed
@@ -1821,8 +2053,8 @@ PLACE:   Lair:$
 TAGS:    no_wall_fixup no_monster_gen no_rotate
 ORIENT:  southeast
 MONS:    plant
-MONS:    elephant slug / agate snail, worm, brain worm
-MONS:    spiny worm / giant leech w:8, lindwurm, fire dragon
+MONS:    elephant slug / giant slug, worm, brain worm
+MONS:    giant leech, lindwurm, fire dragon
 KMONS:   8 = giant firefly
 SHUFFLE: ABC
 SUBST:   P = 11.
@@ -2113,7 +2345,7 @@ KMONS:   0 = blink frog
 KMONS:   A = spiny frog
 KMONS:   B = black mamba
 KMONS:   C = elephant slug
-KMONS:   D = agate snail
+KMONS:   D = orange rat band
 KMONS:   E = boring beetle
 KMONS:   F = boulder beetle
 KMONS:   G = sheep
@@ -2224,7 +2456,7 @@ ENDMAP
 NAME:    hangedman_lair_tendril_chambers
 PLACE:   Lair:$
 ORIENT:  float
-MONS:    worker ant w:16 / adder w:14 / giant centipede / green rat w:2
+MONS:    worker ant w:16 / adder w:24 / green rat w:2
 MONS:    water moccasin / spider w:6, yellow wasp / wyvern w:6
 MONS:    spiny frog, black mamba, red wasp / redback w:5, wolf spider
 KMONS:   8 = guardian serpent

@@ -111,8 +111,7 @@ static void _create_monster_hide(const item_def corpse)
         die("an unknown hide drop");
     }
 
-    int o = items(0, OBJ_ARMOUR, type, true, 0, MAKE_ITEM_NO_RACE, 0, 0, -1,
-                  true);
+    int o = items(0, OBJ_ARMOUR, type, true, 0, 0, 0, 0, -1, true);
     if (o == NON_ITEM)
         return;
     item_def& item = mitm[o];
@@ -620,7 +619,9 @@ bool maybe_coagulate_blood_potions_inv(item_def &blood)
 
             ASSERT(props2.exists("timer"));
             CrawlVector &timer2 = props2["timer"].get_vector();
-            if (!dec_inv_item_quantity(blood.link, coag_count + rot_count))
+            // Don't recalculate burden here, since we will add the same
+            // same number of potions back in.
+            if (!dec_inv_item_quantity(blood.link, coag_count + rot_count, true))
                 _compare_blood_quantity(blood, timer.size());
 
             // Update timer -> push(pop).
@@ -1307,6 +1308,15 @@ bool scramble(void)
     return you.burden < (max_carry / 2) + random2(max_carry / 2);
 }
 
+/**
+ * Make the player go berserk!
+ * @param intentional If true, this was initiated by the player, and additional
+ *                    messages can be printed if we can't berserk.
+ * @param potion      If true, this was caused by the player quaffing !berserk;
+ *                    and we get the same additional messages as when
+ *                    intentional is true.
+ * @returns           True if we went berserk, false otherwise.
+ */
 bool go_berserk(bool intentional, bool potion)
 {
     ASSERT(!crawl_state.game_is_arena());
@@ -1363,7 +1373,7 @@ bool go_berserk(bool intentional, bool potion)
     you.increase_duration(DUR_BERSERK, berserk_duration);
 
     calc_hp();
-    you.hp = you.hp * 3 / 2;
+    set_hp(you.hp * 3 / 2);
 
     deflate_hp(you.hp_max, false);
 
@@ -1414,7 +1424,7 @@ static bool _mons_has_path_to_player(const monster* mon, bool want_move = false)
 
     // If the monster is awake and knows a path towards the player
     // (even though the player cannot know this) treat it as unsafe.
-    if (mon->travel_target == MTRAV_PLAYER)
+    if (mon->travel_target == MTRAV_FOE)
         return true;
 
     if (mon->travel_target == MTRAV_KNOWN_UNREACHABLE)
@@ -1592,6 +1602,14 @@ bool i_feel_safe(bool announce, bool want_move, bool just_monsters,
         // so presence of monsters won't matter -- until it starts shrinking...
         if (is_sanctuary(you.pos()) && env.sanctuary_time >= 5)
             return true;
+
+        if (poison_is_lethal())
+        {
+            if (announce)
+                mprf(MSGCH_WARN, "There is a lethal amount of poison in your body!");
+
+            return false;
+        }
     }
 
     // Monster check.
@@ -1637,13 +1655,12 @@ static const char *shop_types[] =
     "antique armour",
     "antiques",
     "jewellery",
-    "wand",
+    "gadget",
     "book",
     "food",
     "distillery",
     "scroll",
     "general",
-    "gadget"
 };
 
 int str_to_shoptype(const string &s)
@@ -1953,7 +1970,7 @@ void timeout_terrain_changes(int duration, bool force)
 void bring_to_safety()
 {
     if (player_in_branch(BRANCH_ABYSS))
-        return abyss_teleport(true);
+        return abyss_teleport();
 
     if (crawl_state.game_is_zotdef() && !orb_position().origin())
     {
@@ -2246,22 +2263,17 @@ bool bad_attack(const monster *mon, string& adj, string& suffix,
             monster_info mi(mon, MILEV_NAME);
             if (!mi.is(MB_NAME_UNQUALIFIED))
                 adj += "the ";
-
-            would_cause_penance = true;
         }
         else
-        {
             adj = "your ";
-            if (is_good_god(you.religion)
-                || you_worship(GOD_FEDHAS) && fedhas_protects(mon))
-            {
-                would_cause_penance = true;
-            }
-        }
+
+        if (god_hates_attacking_friend(you.religion, mon))
+            would_cause_penance = true;
+
         return true;
     }
 
-    if (is_unchivalric_attack(&you, mon)
+    if (find_stab_type(&you, mon) != STAB_NO_STAB
         && you_worship(GOD_SHINING_ONE)
         && !tso_unchivalric_attack_safe_monster(mon))
     {

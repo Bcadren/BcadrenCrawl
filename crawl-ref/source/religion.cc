@@ -300,7 +300,7 @@ const char* god_gain_power_messages[NUM_GODS][MAX_GOD_ABILITIES] =
       "corrupt the fabric of space",
       "gate yourself to the Abyss" },
     // Beogh
-    { "Beogh supports the use of orcish gear.",
+    { "Beogh aids your use of armour.",
       "smite your foes",
       "gain orcish followers",
       "recall your orcish followers",
@@ -424,7 +424,7 @@ const char* god_lose_power_messages[NUM_GODS][MAX_GOD_ABILITIES] =
       "corrupt the fabric of space",
       "gate yourself to the Abyss" },
     // Beogh
-    { "Beogh no longer supports the use of orcish gear.",
+    { "Beogh no longer aids your use of armour.",
       "smite your foes",
       "gain orcish followers",
       "recall your orcish followers",
@@ -996,6 +996,19 @@ string get_god_dislikes(god_type which_god, bool /*verbose*/)
     return text;
 }
 
+bool active_penance(god_type god)
+{
+    // Ashenzari's penance isn't active; Nemelex's penance is only active
+    // when the penance counter is above 100; good gods only have active
+    // wrath when they hate your current god.
+    return player_under_penance(god)
+           && !is_unavailable_god(god)
+           && god != GOD_ASHENZARI
+           && (god != GOD_NEMELEX_XOBEH || you.penance[god] > 100)
+           && (god == you.religion && !is_good_god(god)
+               || god_hates_your_god(god, you.religion));
+}
+
 void dec_penance(god_type god, int val)
 {
     if (val <= 0 || you.penance[god] <= 0)
@@ -1093,12 +1106,8 @@ void dec_penance(god_type god, int val)
     int i = GOD_NO_GOD;
     for (; i < NUM_GODS; ++i)
     {
-        if (player_under_penance((god_type) i)
-            && (i != GOD_NEMELEX_XOBEH || you.penance[i] > 100)
-            && (i != GOD_ASHENZARI))
-        {
+        if (active_penance((god_type) i))
             break;
-        }
     }
 
     if (i != NUM_GODS)
@@ -1134,7 +1143,7 @@ void set_penance_xp_timeout()
     you.attribute[ATTR_GOD_WRATH_XP] +=
         max(div_rand_round(exp_needed(you.experience_level + 1)
                           - exp_needed(you.experience_level),
-                          100),
+                          200),
             1);
 }
 
@@ -1366,97 +1375,6 @@ static bool _need_missile_gift(bool forced)
            && you.skills[sk] /* no skill boosts */ >= 8;
 }
 
-void get_pure_deck_weights(int weights[])
-{
-    weights[NEM_GIFT_ESCAPE]      = you.sacrifice_value[OBJ_ARMOUR] + 1;
-    weights[NEM_GIFT_DESTRUCTION] = you.sacrifice_value[OBJ_WEAPONS]
-                                    + you.sacrifice_value[OBJ_STAVES]
-                                    + you.sacrifice_value[OBJ_RODS]
-                                    + you.sacrifice_value[OBJ_MISSILES] + 1;
-    weights[NEM_GIFT_SUMMONING]   = you.sacrifice_value[OBJ_CORPSES] / 2;
-    weights[NEM_GIFT_WONDERS]     = (you.sacrifice_value[OBJ_POTIONS]
-                                     + you.sacrifice_value[OBJ_SCROLLS]
-                                     + you.sacrifice_value[OBJ_WANDS]
-                                     + you.sacrifice_value[OBJ_FOOD]
-                                     + you.sacrifice_value[OBJ_MISCELLANY]
-                                     + you.sacrifice_value[OBJ_JEWELLERY]
-                                     + you.sacrifice_value[OBJ_BOOKS]) / 2;
- }
-
-static void _update_sacrifice_weights(int which)
-{
-    switch (which)
-    {
-    case NEM_GIFT_ESCAPE:
-        you.sacrifice_value[OBJ_ARMOUR] /= 5;
-        you.sacrifice_value[OBJ_ARMOUR] *= 4;
-        break;
-    case NEM_GIFT_DESTRUCTION:
-        you.sacrifice_value[OBJ_WEAPONS]  /= 5;
-        you.sacrifice_value[OBJ_STAVES]   /= 5;
-        you.sacrifice_value[OBJ_RODS]     /= 5;
-        you.sacrifice_value[OBJ_MISSILES] /= 5;
-        you.sacrifice_value[OBJ_WEAPONS]  *= 4;
-        you.sacrifice_value[OBJ_STAVES]   *= 4;
-        you.sacrifice_value[OBJ_RODS]     *= 4;
-        you.sacrifice_value[OBJ_MISSILES] *= 4;
-        break;
-    case NEM_GIFT_SUMMONING:
-        you.sacrifice_value[OBJ_CORPSES] /= 5;
-        you.sacrifice_value[OBJ_CORPSES] *= 4;
-        break;
-    case NEM_GIFT_WONDERS:
-        you.sacrifice_value[OBJ_POTIONS] /= 5;
-        you.sacrifice_value[OBJ_SCROLLS] /= 5;
-        you.sacrifice_value[OBJ_WANDS]   /= 5;
-        you.sacrifice_value[OBJ_FOOD]    /= 5;
-        you.sacrifice_value[OBJ_POTIONS] *= 4;
-        you.sacrifice_value[OBJ_SCROLLS] *= 4;
-        you.sacrifice_value[OBJ_WANDS]   *= 4;
-        you.sacrifice_value[OBJ_FOOD]    *= 4;
-        you.sacrifice_value[OBJ_MISCELLANY] /= 5;
-        you.sacrifice_value[OBJ_JEWELLERY]  /= 5;
-        you.sacrifice_value[OBJ_BOOKS]      /= 5;
-        you.sacrifice_value[OBJ_MISCELLANY] *= 4;
-        you.sacrifice_value[OBJ_JEWELLERY]  *= 4;
-        you.sacrifice_value[OBJ_BOOKS]      *= 4;
-        break;
-    }
-}
-
-#if defined(DEBUG_GIFTS) || defined(DEBUG_CARDS)
-static void _show_pure_deck_chances()
-{
-    int weights[4];
-
-    get_pure_deck_weights(weights);
-
-    float total = 0;
-    for (int i = 0; i < NUM_NEMELEX_GIFT_TYPES; ++i)
-        total += (float) weights[i];
-
-    mprf(MSGCH_DIAGNOSTICS, "Pure cards chances: "
-         "escape %0.2f%%, destruction %0.2f%%, "
-         "summoning %0.2f%%, wonders %0.2f%%",
-         (float)weights[0] / total * 100.0,
-         (float)weights[1] / total * 100.0,
-         (float)weights[2] / total * 100.0,
-         (float)weights[3] / total * 100.0);
-}
-#endif
-
-static misc_item_type _gift_type_to_deck(int gift)
-{
-    switch (gift)
-    {
-    case NEM_GIFT_ESCAPE:      return MISC_DECK_OF_ESCAPE;
-    case NEM_GIFT_DESTRUCTION: return MISC_DECK_OF_DESTRUCTION;
-    case NEM_GIFT_SUMMONING:   return MISC_DECK_OF_SUMMONING;
-    case NEM_GIFT_WONDERS:     return MISC_DECK_OF_WONDERS;
-    }
-    die("invalid gift card type");
-}
-
 static bool _give_nemelex_gift(bool forced = false)
 {
     // But only if you're not flying over deep water.
@@ -1473,26 +1391,20 @@ static bool _give_nemelex_gift(bool forced = false)
         || one_chance_in(3) && x_chance_in_y(you.piety + 1, MAX_PIETY)
            && !you.attribute[ATTR_CARD_COUNTDOWN])
     {
-        misc_item_type gift_type;
+        misc_item_type gift_type = random_choose_weighted(
+                                       4, MISC_DECK_OF_DESTRUCTION,
+                                       3, MISC_DECK_OF_SUMMONING,
+                                       2, MISC_DECK_OF_ESCAPE,
+                                       1, MISC_DECK_OF_WONDERS,
+                                       0);
 
-        // Make a pure deck.
-        int weights[4];
-        get_pure_deck_weights(weights);
-        const int choice = choose_random_weighted(weights, weights+4);
-        gift_type = _gift_type_to_deck(choice);
-#if defined(DEBUG_GIFTS) || defined(DEBUG_CARDS)
-        _show_pure_deck_chances();
-#endif
         int thing_created = items(1, OBJ_MISCELLANY, gift_type,
-                                   true, 1, MAKE_ITEM_RANDOM_RACE,
-                                   0, 0, GOD_NEMELEX_XOBEH);
+                                  true, 1, 0, 0, 0, GOD_NEMELEX_XOBEH);
 
         move_item_to_grid(&thing_created, you.pos(), true);
 
         if (thing_created != NON_ITEM)
         {
-            _update_sacrifice_weights(choice);
-
             // Piety|Common  | Rare  |Legendary
             // --------------------------------
             //     0:  95.00%,  5.00%,  0.00%
@@ -1698,6 +1610,9 @@ static bool _blessing_balms(monster* mon)
     if (mon->del_ench(ENCH_FATIGUE, true))
         success = true;
 
+    if (mon->del_ench(ENCH_WRETCHED, true))
+        success = true;
+
     return success;
 }
 
@@ -1848,6 +1763,7 @@ bool bless_follower(monster* follower,
 {
     int chance = (force ? coinflip() : random2(20));
     string result;
+    bool blessed = false;
 
     // If a follower was specified, and it's suitable, pick it.
     // Otherwise, pick a random follower.
@@ -1899,7 +1815,7 @@ bool bless_follower(monster* follower,
         if (_beogh_blessing_priesthood(follower))
         {
             result = "priesthood";
-            goto blessing_done;
+            blessed = true;
         }
         else if (force)
             mpr("Couldn't promote monster to priesthood.");
@@ -1908,7 +1824,7 @@ bool bless_follower(monster* follower,
     // Enchant a monster's weapon or armour/shield by one point, or at
     // least uncurse it, if possible (10% chance).
     // This will happen if the above blessing attempts are unsuccessful.
-    if (chance <= 1)
+    if (chance <= 1 && !blessed)
     {
         if (coinflip())
         {
@@ -1916,7 +1832,7 @@ bool bless_follower(monster* follower,
             {
                 result = "extra attack power";
                 give_monster_proper_name(follower);
-                goto blessing_done;
+                blessed = true;
             }
             else if (force)
                 mpr("Couldn't enchant monster's weapon.");
@@ -1927,7 +1843,7 @@ bool bless_follower(monster* follower,
             {
                 result = "extra defence";
                 give_monster_proper_name(follower);
-                goto blessing_done;
+                blessed = true;
             }
             else if (force)
                 mpr("Couldn't enchant monster's armour.");
@@ -1936,77 +1852,78 @@ bool bless_follower(monster* follower,
 
     // These effects happen if no other blessing was chosen (90%),
     // or if the above attempts were all unsuccessful.
-    switch (god)
+    if (!blessed)
     {
-        case GOD_SHINING_ONE:
+        switch (god)
         {
-            // Extend a monster's stay if it's abjurable, or extend charm
-            // duration. If neither is possible, deliberately fall through.
-            bool more_time = _tso_blessing_extend_stay(follower);
-            bool friendliness = false;
-
-            if (!more_time || coinflip())
-                friendliness = _tso_blessing_friendliness(follower);
-
-            result = "";
-
-            if (friendliness)
+            case GOD_SHINING_ONE:
             {
-                result += "friendliness";
+                // Extend a monster's stay if it's abjurable, or extend charm
+                // duration. If neither is possible, deliberately fall through.
+                bool more_time = _tso_blessing_extend_stay(follower);
+                bool friendliness = false;
+
+                if (!more_time || coinflip())
+                    friendliness = _tso_blessing_friendliness(follower);
+
+                result = "";
+
+                if (friendliness)
+                {
+                    result += "friendliness";
+                    if (more_time)
+                        result += " and ";
+                }
+
                 if (more_time)
-                    result += " and ";
+                    result += "more time in this world";
+
+                if (more_time || friendliness)
+                    break;
+
+                if (force)
+                    mpr("Couldn't increase monster's friendliness or time.");
             }
 
-            if (more_time)
-                result += "more time in this world";
-
-            if (more_time || friendliness)
-                break;
-
-            if (force)
-                mpr("Couldn't increase monster's friendliness or time.");
-        }
-
-        // Deliberate fallthrough for the healing effects.
-        case GOD_BEOGH:
-        {
-            // Remove harmful ailments from a monster, or heal it, if
-            // possible.
-            if (coinflip())
+            // Deliberate fallthrough for the healing effects.
+            case GOD_BEOGH:
             {
-                if (_blessing_balms(follower))
+                // Remove harmful ailments from a monster, or heal it, if
+                // possible.
+                if (coinflip())
                 {
-                    result = "divine balms";
-                    goto blessing_done;
+                    if (_blessing_balms(follower))
+                    {
+                        result = "divine balms";
+                        break;
+                    }
+                    else if (force)
+                        mpr("Couldn't apply balms.");
+                }
+
+                bool healing = _blessing_healing(follower);
+
+                if ((!healing || coinflip())
+                        && _blessing_healing(follower))
+                {
+                    healing = true;
+                }
+
+                if (healing)
+                {
+                    result += "healing";
+                    break;
                 }
                 else if (force)
-                    mpr("Couldn't apply balms.");
+                    mpr("Couldn't heal monster.");
+
+                return false;
             }
 
-            bool healing = _blessing_healing(follower);
-
-            if (!healing || coinflip())
-            {
-                if (_blessing_healing(follower))
-                    healing = true;
-            }
-
-            if (healing)
-            {
-                result += "healing";
+            default:
                 break;
-            }
-            else if (force)
-                mpr("Couldn't heal monster.");
-
-            return false;
         }
-
-        default:
-            break;
     }
-
-blessing_done:
 
     string whom = "";
     if (!follower)
@@ -2343,8 +2260,7 @@ bool do_god_gift(bool forced)
                 else
                 {
                     int thing_created = items(1, OBJ_BOOKS, gift, true, 1,
-                                              MAKE_ITEM_RANDOM_RACE,
-                                              0, 0, you.religion);
+                                              0, 0, 0, you.religion);
                     // Replace a Kiku gift by a custom-random book.
                     if (you_worship(GOD_KIKUBAAQUDGHA))
                     {
@@ -2602,7 +2518,10 @@ string adjust_abil_message(const char *pmsg, bool allow_upgrades)
 {
     if (brdepth[BRANCH_ABYSS] == -1 && strstr(pmsg, "Abyss"))
         return "";
-    if ((you.species == SP_FORMICID || you.species == SP_DJINNI
+    if ((you.species == SP_FORMICID
+#if TAG_MAJOR_VERSION == 34
+                || you.species == SP_DJINNI
+#endif
          || you.species == SP_MUMMY || you.species == SP_GHOUL)
         && strstr(pmsg, "berserk"))
     {
@@ -3545,8 +3464,11 @@ bool player_can_join_god(god_type which_god)
 
     // Dithmenos hates fiery species.
     if (which_god == GOD_DITHMENOS
-        && (you.species == SP_DJINNI
-            || you.species == SP_LAVA_ORC))
+        && (
+#if TAG_MAJOR_VERSION == 34
+            you.species == SP_DJINNI ||
+#endif
+            you.species == SP_LAVA_ORC))
     {
         return false;
     }
@@ -3836,12 +3758,14 @@ void god_pitch(god_type which_god)
     {
         simple_god_message(" says: Your evil deeds will not go unpunished!",
                            GOD_ELYVILON);
+        set_penance_xp_timeout();
     }
     if (old_god != GOD_SHINING_ONE && you.penance[GOD_SHINING_ONE]
         && god_hates_your_god(GOD_SHINING_ONE, you.religion))
     {
         simple_god_message(" says: You will pay for your evil ways, mortal!",
                            GOD_SHINING_ONE);
+        set_penance_xp_timeout();
     }
     if (old_god != GOD_ZIN && you.penance[GOD_ZIN]
         && god_hates_your_god(GOD_ZIN, you.religion))
@@ -3849,6 +3773,7 @@ void god_pitch(god_type which_god)
         simple_god_message(make_stringf(" says: You will suffer for embracing such %s!",
                                         is_chaotic_god(you.religion) ? "chaos" : "evil").c_str(),
                            GOD_ZIN);
+        set_penance_xp_timeout();
     }
 
     // Note that you.worshipped[] has already been incremented.
@@ -4046,6 +3971,26 @@ bool god_loathes_spell(spell_type spell, god_type god)
     return false;
 }
 
+bool god_hates_ability(ability_type ability, god_type god)
+{
+    switch (ability)
+    {
+        case ABIL_SPIT_POISON:
+        case ABIL_BREATHE_POISON:
+        case ABIL_BREATHE_MEPHITIC:
+            return god == GOD_SHINING_ONE;
+        case ABIL_BREATHE_FIRE:
+        case ABIL_BREATHE_STICKY_FLAME:
+        case ABIL_BREATHE_STEAM:
+        case ABIL_DELAYED_FIREBALL:
+        case ABIL_HELLFIRE:
+            return god == GOD_DITHMENOS;
+        default:
+            break;
+    }
+    return false;
+}
+
 bool god_can_protect_from_harm(god_type god)
 {
     switch (god)
@@ -4107,31 +4052,14 @@ void handle_god_time(int time_delta)
         // First count the number of gods to whom we owe penance.
         for (int i = GOD_NO_GOD; i < NUM_GODS; ++i)
         {
-            // Nemelex penance is special: it's only "active"
-            // when penance > 100, else it's passive.
-            // Ash wrath is not impacted by time.
-            if (player_under_penance((god_type) i)
-                && (i != GOD_NEMELEX_XOBEH || you.penance[i] > 100)
-                && (i != GOD_ASHENZARI))
-            {
+            if (active_penance((god_type) i))
                 angry_gods.push_back((god_type) i);
-            }
         }
-        shuffle_array(angry_gods);
-        int tries = 10;
-        while (tries-- > 0)
+        if (x_chance_in_y(angry_gods.size(), 20))
         {
-            // Now roll to see whether we get retribution and from which god.
-            const unsigned int which_penance = random2(10);
-            if (which_penance < angry_gods.size())
-            {
-                // If this *fails*, we rolled a god who doesn't exist or whose
-                // wrath doesn't occur this way, so try again.
-                if (!divine_retribution(angry_gods[which_penance]))
-                    continue;
-            }
-            else
-                break;
+            // This should be guaranteed; otherwise the god wouldn't have
+            // appeared in the angry_gods list.
+            ASSERT(divine_retribution(angry_gods[random2(angry_gods.size())]));
         }
         you.attribute[ATTR_GOD_WRATH_COUNT]--;
     }
@@ -4389,6 +4317,7 @@ bool tso_unchivalric_attack_safe_monster(const monster* mon)
 {
     const mon_holy_type holiness = mon->holiness();
     return mons_intel(mon) < I_NORMAL
+           || mons_is_object(mon->mons_species())
            || mon->undead_or_demonic()
            || mon->is_shapeshifter() && (mon->flags & MF_KNOWN_SHIFTER)
            || !mon->is_holy() && holiness != MH_NATURAL;

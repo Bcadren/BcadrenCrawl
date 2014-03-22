@@ -47,6 +47,7 @@
 #include "mgen_data.h"
 #include "misc.h"
 #include "mon-abil.h"
+#include "mon-act.h"
 #include "mon-behv.h"
 #include "mon-death.h"
 #include "mon-place.h"
@@ -424,9 +425,9 @@ int place_monster_corpse(const monster* mons, bool silent,
     }
 
     if (corpse_class == MONS_NO_MONSTER
-        || (!force && !vault_forced && coinflip())
-        || (mons_corpse_effect(corpse_class) == CE_MUTAGEN
-           && !one_chance_in(3)))
+        || (!force && !vault_forced
+            && !one_chance_in(mons_corpse_effect(corpse_class) == CE_MUTAGEN
+                              ? 6 : 2)))
     {
         return -1;
     }
@@ -1112,11 +1113,11 @@ static void _setup_lightning_explosion(bolt & beam, const monster& origin)
 {
     _setup_base_explosion(beam, origin);
     beam.flavour   = BEAM_ELECTRICITY;
-    beam.damage    = dice_def(3, 20);
+    beam.damage    = dice_def(3, 5 + origin.hit_dice * 5 / 4);
     beam.name      = "blast of lightning";
     beam.noise_msg = "You hear a clap of thunder!";
     beam.colour    = LIGHTCYAN;
-    beam.ex_size   = coinflip() ? 3 : 2;
+    beam.ex_size   = x_chance_in_y(origin.hit_dice, 24) ? 3 : 2;
 }
 
 static void _setup_prism_explosion(bolt& beam, const monster& origin)
@@ -1526,7 +1527,46 @@ static void _make_spectral_thing(monster* mons, bool quiet)
     }
 }
 
+static void _druid_final_boon(const monster* mons)
+{
+    vector<monster*> beasts;
+    for (monster_near_iterator mi(mons); mi; ++mi)
+    {
+        if (mons_is_beast(mons_base_type(*mi)) && mons_aligned(mons, *mi))
+            beasts.push_back(*mi);
+    }
 
+    if (!beasts.size())
+        return;
+
+    if (you.can_see(mons))
+    {
+        mprf(MSGCH_MONSTER_SPELL, "With its final breath, %s offers up its power "
+                                  "to the beasts of the wild!",
+                                  mons->name(DESC_THE).c_str());
+    }
+
+    shuffle_array(beasts);
+    int num = min((int)beasts.size(), random_range(mons->hit_dice / 3,
+                                                   mons->hit_dice / 2 + 1));
+
+    // Healing and empowering done in two separate loops for tidier messages
+    for (int i = 0; i < num; ++i)
+    {
+        if (beasts[i]->heal(roll_dice(3, mons->hit_dice)) && you.can_see(beasts[i]))
+        {
+            mprf("%s %s healed.", beasts[i]->name(DESC_THE).c_str(),
+                                  beasts[i]->conj_verb("are").c_str());
+        }
+    }
+
+    for (int i = 0; i < num; ++i)
+    {
+        simple_monster_message(beasts[i], " seems to grow more fierce.");
+        beasts[i]->add_ench(mon_enchant(ENCH_BATTLE_FRENZY, 1, mons,
+                                        random_range(120, 200)));
+    }
+}
 
 static bool _mons_reaped(actor *killer, monster* victim);
 
@@ -1678,8 +1718,7 @@ int monster_die(monster* mons, killer_type killer,
         && !invalid_monster_index(killer_index)
         && ((menv[killer_index].type == MONS_SPECTRAL_WEAPON
              && menv[killer_index].summoner == MID_PLAYER)
-            || (menv[killer_index].mid == MID_PLAYER
-                && menv[killer_index].mname.empty())))
+            || mons_is_player_shadow(&menv[killer_index])))
     {
         killer = (killer == KILL_MON_MISSILE) ? KILL_YOU_MISSILE
                                               : KILL_YOU;
@@ -1865,6 +1904,17 @@ int monster_die(monster* mons, killer_type killer,
                                    MSGCH_MONSTER_DAMAGE, MDAM_DEAD);
         }
         silent = true;
+    }
+    else if (mons->type == MONS_DROWNED_SOUL)
+    {
+        // Suppress death message if 'killed' by touching something
+        if (mons->hit_points == -1000)
+            silent = true;
+    }
+    else if (mons->type == MONS_SPRIGGAN_DRUID && !silent && !was_banished
+             && !wizard)
+    {
+        _druid_final_boon(mons);
     }
 
     const bool death_message = !silent && !did_death_message
@@ -2084,9 +2134,10 @@ int monster_die(monster* mons, killer_type killer,
                     die("bad kill-on-healing god!");
                 }
 
+#if TAG_MAJOR_VERSION == 34
                 if (you.species == SP_DJINNI)
                     hp_heal = max(hp_heal, mp_heal * 2), mp_heal = 0;
-
+#endif
                 if (hp_heal && you.hp < you.hp_max
                     && !you.duration[DUR_DEATHS_DOOR])
                 {
@@ -2254,14 +2305,14 @@ int monster_die(monster* mons, killer_type killer,
                         notice |= did_god_conduct(DID_LIVING_KILLED_BY_SERVANT,
                                                   mons->hit_dice);
 
+                        // TSO hates natural evil and unholy beings.
                         if (mons->is_unholy())
                         {
                             notice |= did_god_conduct(
                                           DID_NATURAL_UNHOLY_KILLED_BY_SERVANT,
                                           mons->hit_dice);
                         }
-
-                        if (mons->is_evil())
+                        else if (mons->is_evil())
                         {
                             notice |= did_god_conduct(
                                           DID_NATURAL_EVIL_KILLED_BY_SERVANT,
@@ -2493,6 +2544,8 @@ int monster_die(monster* mons, killer_type killer,
     else if ((mons_is_natasha(mons) || mons_genus(mons->type) == MONS_FELID)
              && !in_transit && mons_felid_can_revive(mons))
     {
+        drop_items = false;
+
         // Like Boris, but her vault can't come back
         if (mons_is_natasha(mons))
             you.unique_creatures.set(MONS_NATASHA, false);
@@ -2693,12 +2746,9 @@ int monster_die(monster* mons, killer_type killer,
         arena_monster_died(mons, killer, killer_index, silent, corpse);
 
     // Monsters haloes should be removed when they die.
-    if (mons->holiness() == MH_HOLY)
-        invalidate_agrid();
-    // Likewise silence and umbras
-    if (mons->type == MONS_SILENT_SPECTRE
-        || mons->type == MONS_PROFANE_SERVITOR
-        || mons->type == MONS_LOST_SOUL)
+    if (mons->halo_radius2()
+        || mons->umbra_radius2()
+        || mons->silence_radius2())
     {
         invalidate_agrid();
     }
@@ -2888,16 +2938,6 @@ static bool _valid_morph(monster* mons, monster_type new_mclass)
         return false;
     }
 
-    // [ds] Non-base draconians are much more trouble than their HD
-    // suggests.
-    if (mons_genus(new_mclass) == MONS_DRACONIAN
-        && new_mclass != MONS_DRACONIAN
-        && !player_in_branch(BRANCH_ZOT)
-        && !one_chance_in(10))
-    {
-        return false;
-    }
-
     // Various inappropriate polymorph targets.
     if (mons_class_holiness(new_mclass) != mons_class_holiness(old_mclass)
         || mons_class_flag(new_mclass, M_UNFINISHED)  // no unfinished monsters
@@ -2967,7 +3007,6 @@ static bool _jiyva_slime_target(monster_type targetc)
               || targetc == MONS_JELLY
               || targetc == MONS_BROWN_OOZE
               || targetc == MONS_SLIME_CREATURE
-              || targetc == MONS_GIANT_AMOEBA
               || targetc == MONS_ACID_BLOB
               || targetc == MONS_AZURE_JELLY);
 }
@@ -3437,12 +3476,7 @@ void slimify_monster(monster* mon, bool hostile)
     else if (x >= 5 && x < 7)
         target = MONS_BROWN_OOZE;
     else if (x >= 7 && x <= 11)
-    {
-        if (coinflip())
-            target = MONS_SLIME_CREATURE;
-        else
-            target = MONS_GIANT_AMOEBA;
-    }
+        target = MONS_SLIME_CREATURE;
     else
     {
         if (coinflip())
@@ -3515,8 +3549,17 @@ bool swap_places(monster* mons, const coord_def &loc)
 
     if (monster_at(loc))
     {
-        mpr("Something prevents you from swapping places.");
-        return false;
+        if (mons->type == MONS_WANDERING_MUSHROOM
+            && monster_at(loc)->type == MONS_TOADSTOOL)
+        {
+            monster_swaps_places(mons, loc - mons->pos());
+            return true;
+        }
+        else
+        {
+            mpr("Something prevents you from swapping places.");
+            return false;
+        }
     }
 
     mpr("You swap places.");
@@ -3572,6 +3615,13 @@ bool swap_check(monster* mons, coord_def &loc, bool quiet)
 
     // First try: move monster onto your position.
     bool swap = !monster_at(loc) && monster_habitable_grid(mons, grd(loc));
+
+    if (monster_at(loc)
+        && monster_at(loc)->type == MONS_TOADSTOOL
+        && mons->type == MONS_WANDERING_MUSHROOM)
+    {
+        swap = monster_habitable_grid(mons, grd(loc));
+    }
 
     // Choose an appropriate habitat square at random around the target.
     if (!swap)
@@ -4627,7 +4677,7 @@ void mons_clear_trapping_net(monster* mon)
 
     const int net = get_trapping_net(mon->pos());
     if (net != NON_ITEM)
-        remove_item_stationary(mitm[net]);
+        free_stationary_net(net);
 
     mon->del_ench(ENCH_HELD, true);
 }
@@ -4648,6 +4698,8 @@ string summoned_poof_msg(const monster* mons, bool plural)
     switch (summon_type)
     {
     case SPELL_SHADOW_CREATURES:
+    case SPELL_WEAVE_SHADOWS:
+    case MON_SUMM_SCROLL:
         msg      = "dissolve%s into shadows";
         no_chaos = true;
         break;
@@ -4669,7 +4721,6 @@ string summoned_poof_msg(const monster* mons, bool plural)
     case SPELL_CALL_LOST_SOUL:
         msg = "fades away";
         break;
-
     }
 
     if (valid_mon)
@@ -4695,6 +4746,9 @@ string summoned_poof_msg(const monster* mons, bool plural)
 
         if (mons->type == MONS_DROWNED_SOUL)
             msg = "returns to the deep";
+
+        if (mons->has_ench(ENCH_PHANTOM_MIRROR))
+            msg = "shimmers and vanishes";
     }
 
     // Conjugate.
@@ -4814,6 +4868,7 @@ void mons_att_changed(monster* mon)
     {
         remove_companion(mon);
     }
+    mon->align_avatars();
 }
 
 void debuff_monster(monster* mon)

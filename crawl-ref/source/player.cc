@@ -478,7 +478,8 @@ void move_player_to_grid(const coord_def& p, bool stepped, bool allow_shift)
 
     // Better not be an unsubmerged monster either.
     ASSERT(!monster_at(p) || monster_at(p)->submerged()
-           || fedhas_passthrough(monster_at(p)));
+           || fedhas_passthrough(monster_at(p))
+           || mons_is_player_shadow(monster_at(p)));
 
     // Move the player to new location.
     you.moveto(p, true);
@@ -590,9 +591,6 @@ bool is_player_same_genus(const monster_type mon, bool transform)
     // Genus would include necrophage and rotting hulk.
     if (you.species == SP_GHOUL)
         return mons_species(mon) == MONS_GHOUL;
-
-    if (you.species == SP_MERFOLK && mons_genus(mon) == MONS_MERMAID)
-        return true;
 
     // Note that these are currently considered to be the same genus:
     // * humans, demigods, and demonspawn
@@ -728,8 +726,10 @@ bool you_can_wear(int eq, bool special_armour)
         // These species cannot wear boots.
         if (you.species == SP_TROLL
             || you.species == SP_SPRIGGAN
-            || you.species == SP_OGRE
-            || you.species == SP_DJINNI)
+#if TAG_MAJOR_VERSION == 34
+            || you.species == SP_DJINNI
+#endif
+            || you.species == SP_OGRE)
         {
             return false;
         }
@@ -790,7 +790,9 @@ bool player_has_feet(bool temp)
     if (you.species == SP_NAGA
         || you.species == SP_FELID
         || you.species == SP_OCTOPODE
+#if TAG_MAJOR_VERSION == 34
         || you.species == SP_DJINNI
+#endif
         || you.fishtail && temp)
     {
         return false;
@@ -1296,7 +1298,7 @@ static int _player_bonus_regen()
     // corpses.  If and only if the duration of the effect is
     // still active.
     if (you.duration[DUR_POWERED_BY_DEATH])
-        rr += handle_pbd_corpses(false) * 100;
+        rr += handle_pbd_corpses() * 100;
 
     return rr;
 }
@@ -1347,6 +1349,7 @@ int player_regen()
         else if (you.hunger_state >= HS_FULL)
             rr += 10; // Bonus regeneration for full vampires.
     }
+#if TAG_MAJOR_VERSION == 34
 
     // Compared to other races, a starting djinni would have regen of 4 (hp)
     // plus 17 (mp).  So let's compensate them early; they can stand getting
@@ -1354,6 +1357,7 @@ int player_regen()
     if (you.species == SP_DJINNI)
         if (you.hp_max < 100)
             rr += (100 - you.hp_max) / 6;
+#endif
 
     // Slow heal mutation.
     if (player_mutation_level(MUT_SLOW_HEALING) > 0)
@@ -1517,9 +1521,11 @@ int player_likes_chunks(bool permanently)
 // If temp is set to false, temporary sources or resistance won't be counted.
 int player_res_fire(bool calc_unid, bool temp, bool items)
 {
+#if TAG_MAJOR_VERSION == 34
     if (you.species == SP_DJINNI)
         return 4; // full immunity
 
+#endif
     int rf = 0;
 
     if (items)
@@ -1722,10 +1728,11 @@ int player_res_cold(bool calc_unid, bool temp, bool items)
             rc++;
     }
 
+#if TAG_MAJOR_VERSION == 34
     // species:
     if (you.species == SP_DJINNI)
         rc--;
-
+#endif
     // mutations:
     rc += player_mutation_level(MUT_COLD_RESISTANCE, temp);
     rc -= player_mutation_level(MUT_COLD_VULNERABILITY, temp);
@@ -1914,10 +1921,6 @@ int player_res_poison(bool calc_unid, bool temp, bool items)
     if (you.species == SP_VAMPIRE && you.hunger_state < HS_SATIATED)
         rp++;
 
-    // Formicids are vulnerable, but can make up for it with 2 rPois sources.
-    if (you.species == SP_FORMICID && form_keeps_mutations())
-        rp--;
-
     if (temp)
     {
         // potions/cards:
@@ -1958,24 +1961,6 @@ int player_res_poison(bool calc_unid, bool temp, bool items)
     }
 
     return rp;
-}
-
-static int _maybe_reduce_poison(int amount)
-{
-    int rp = player_res_poison(true, true, true);
-
-    if (rp <= 0)
-        return amount;
-
-    int reduction = binomial_generator(amount, 90);
-    int new_amount = amount - reduction;
-
-    if (amount != new_amount)
-        dprf("Poison reduced (%d -> %d)", amount, new_amount);
-    else
-        dprf("Poison not reduced (%d)", amount);
-
-    return new_amount;
 }
 
 int player_res_sticky_flame(bool calc_unid, bool temp, bool items)
@@ -2258,8 +2243,6 @@ int player_movement_speed(bool ignore_burden)
         mv = 7;
     else if (you.form == TRAN_PORCUPINE || you.form == TRAN_WISP)
         mv = 8;
-    else if (you.form == TRAN_JELLY)
-        mv = 11;
     else if (you.fishtail)
         mv = 6;
 
@@ -2398,47 +2381,28 @@ int player_mutation_level(mutation_type mut, bool temp)
     return _mut_level(mut, temp ? MUTACT_PARTIAL : MUTACT_INACTIVE);
 }
 
-static int _player_armour_racial_bonus(const item_def& item)
+static int _player_armour_beogh_bonus(const item_def& item)
 {
     if (item.base_type != OBJ_ARMOUR)
         return 0;
 
-    int racial_bonus = 0;
-    const iflags_t armour_race = get_equip_race(item);
-    const iflags_t racial_type = get_species_race(you.species);
+    int bonus = 0;
 
-    // Dwarven armour is universally good -- bwr
-    if (armour_race == ISFLAG_DWARVEN)
-        racial_bonus += 4;
-
-    if (racial_type && armour_race == racial_type)
+    if (you_worship(GOD_BEOGH) && !player_under_penance())
     {
-        // Elven armour is light, but still gives one level to elves.
-        // Orcish and Dwarven armour are worth +2 to the correct
-        // species, plus the plus that anyone gets with dwarven armour.
-        // -- bwr
-        if (racial_type == ISFLAG_ELVEN)
-            racial_bonus += 2;
+        if (you.piety >= piety_breakpoint(5))
+            bonus = 10;
+        else if (you.piety >= piety_breakpoint(4))
+            bonus = 8;
+        else if (you.piety >= piety_breakpoint(2))
+            bonus = 6;
+        else if (you.piety >= piety_breakpoint(0))
+            bonus = 4;
         else
-            racial_bonus += 4;
-
-        // an additional bonus for Beogh worshippers
-        if (you_worship(GOD_BEOGH) && !player_under_penance())
-        {
-            if (you.piety >= piety_breakpoint(5))
-                racial_bonus += racial_bonus * 9 / 4;
-            else if (you.piety >= piety_breakpoint(4))
-                racial_bonus += racial_bonus * 7 / 4;
-            else if (you.piety >= piety_breakpoint(2))
-                racial_bonus += racial_bonus * 5 / 4;
-            else if (you.piety >= piety_breakpoint(0))
-                racial_bonus += racial_bonus * 3 / 4;
-            else
-                racial_bonus += racial_bonus / 4;
-        }
+            bonus = 2;
     }
 
-    return racial_bonus;
+    return bonus;
 }
 
 bool is_effectively_light_armour(const item_def *item)
@@ -2479,6 +2443,14 @@ static int _player_evasion_size_factor()
     // XXX: you.body_size() implementations are incomplete, fix.
     const size_type size = you.body_size(PSIZE_BODY);
     return 2 * (SIZE_MEDIUM - size);
+}
+
+// Determines racial shield penalties (formicids get a bonus compared to
+// other medium-sized races)
+static int _player_shield_racial_factor()
+{
+    return max(1, 5 + (you.species == SP_FORMICID ? -2 // Same as trolls/centaurs/etc.
+                                                  : _player_evasion_size_factor()));
 }
 
 // The total EV penalty to the player for all their worn armour items
@@ -2648,28 +2620,6 @@ int player_evasion(ev_ignore_type evit)
     return unscale_round_up(final_evasion, scale);
 }
 
-static int _player_body_armour_racial_spellcasting_bonus(const int scale)
-{
-    const item_def *body_armour = you.slot_item(EQ_BODY_ARMOUR, false);
-    if (!body_armour)
-        return 0;
-
-    const iflags_t armour_race = get_equip_race(*body_armour);
-    const iflags_t player_race = get_species_race(you.species);
-
-    int armour_racial_spellcasting_bonus = 0;
-    if (armour_race & ISFLAG_ELVEN)
-        armour_racial_spellcasting_bonus += 25;
-
-    if (armour_race & ISFLAG_DWARVEN)
-        armour_racial_spellcasting_bonus -= 15;
-
-    if (armour_race & player_race)
-        armour_racial_spellcasting_bonus += 15;
-
-    return armour_racial_spellcasting_bonus * scale;
-}
-
 // Returns the spellcasting penalty (increase in spell failure) for the
 // player's worn body armour and shield.
 int player_armour_shield_spell_penalty()
@@ -2677,8 +2627,7 @@ int player_armour_shield_spell_penalty()
     const int scale = 100;
 
     const int body_armour_penalty =
-        max(25 * you.adjusted_body_armour_penalty(scale)
-            - _player_body_armour_racial_spellcasting_bonus(scale), 0);
+        max(25 * you.adjusted_body_armour_penalty(scale), 0);
 
     const int total_penalty = body_armour_penalty
                  + 25 * you.adjusted_shield_penalty(scale)
@@ -2689,8 +2638,8 @@ int player_armour_shield_spell_penalty()
 
 int player_wizardry(void)
 {
-    return (you.wearing(EQ_RINGS, RING_WIZARDRY)
-            + you.wearing(EQ_STAFF, STAFF_WIZARDRY));
+    return you.wearing(EQ_RINGS, RING_WIZARDRY)
+           + you.wearing(EQ_STAFF, STAFF_WIZARDRY);
 }
 
 int player_shield_class(void)
@@ -2708,12 +2657,12 @@ int player_shield_class(void)
                         * (item.sub_type - ARM_LARGE_SHIELD);
         int base_shield = property(item, PARM_AC) * 2 + size_factor;
 
-        int racial_bonus = _player_armour_racial_bonus(item);
+        int beogh_bonus = _player_armour_beogh_bonus(item);
 
         // bonus applied only to base, see above for effect:
         shield += base_shield * 50;
         shield += base_shield * you.skill(SK_SHIELDS, 5) / 2;
-        shield += base_shield * racial_bonus * 10 / 6;
+        shield += base_shield * beogh_bonus * 10 / 6;
 
         shield += item.plus * 100;
 
@@ -2980,7 +2929,7 @@ void gain_exp(unsigned int exp_gained, unsigned int* actual_gain)
     you.attribute[ATTR_EVOL_XP] += exp_gained;
     for (int i = GOD_NO_GOD; i < NUM_GODS; ++i)
     {
-        if (player_under_penance((god_type) i))
+        if (active_penance((god_type) i))
         {
             you.attribute[ATTR_GOD_WRATH_XP] -= exp_gained;
             while (you.attribute[ATTR_GOD_WRATH_XP] < 0)
@@ -3053,7 +3002,7 @@ void gain_exp(unsigned int exp_gained, unsigned int* actual_gain)
             _remove_temp_mutations();
     }
 
-    recharge_elemental_evokers(exp_gained);
+    recharge_xp_evokers(exp_gained);
 
     if (you.attribute[ATTR_XP_DRAIN])
     {
@@ -3152,6 +3101,13 @@ static void _felid_extra_life()
     }
 }
 
+/**
+ * Handle the effects from a player's change in XL.
+ * @param aux                     A string describing the cause of the level
+ *                                change.
+ * @param skip_attribute_increase If true and XL has increased, don't process
+ *                                stat gains.
+ */
 void level_change(int source, const char* aux, bool skip_attribute_increase)
 {
     const bool wiz_cmd = crawl_state.prev_cmd == CMD_WIZARD
@@ -3554,14 +3510,20 @@ void level_change(int source, const char* aux, bool skip_attribute_increase)
                     modify_stat(STAT_RANDOM, 1, false, "level gain");
                 break;
 
+#if TAG_MAJOR_VERSION == 34
             case SP_DJINNI:
                 if (!(you.experience_level % 4))
                     modify_stat(STAT_RANDOM, 1, false, "level gain");
                 break;
 
+#endif
             case SP_FORMICID:
                 if (!(you.experience_level % 4))
-                    modify_stat(STAT_STR, 1, false, "level gain");
+                {
+                    modify_stat((coinflip() ? STAT_STR
+                                            : STAT_INT), 1, false,
+                                "level gain");
+                }
                 break;
 
             case SP_GARGOYLE:
@@ -3675,9 +3637,9 @@ void level_change(int source, const char* aux, bool skip_attribute_increase)
         calc_hp();
         calc_mp();
 
-        you.hp = old_hp * you.hp_max / old_maxhp;
-        you.magic_points = old_maxmp > 0 ?
-          old_mp * you.max_magic_points / old_maxmp : you.max_magic_points;
+        set_hp(old_hp * you.hp_max / old_maxhp);
+        set_mp(old_maxmp > 0 ? old_mp * you.max_magic_points / old_maxmp
+               : you.max_magic_points);
 
         // Get "real" values for note-taking, i.e. ignore Berserk,
         // transformations or equipped items.
@@ -3685,19 +3647,17 @@ void level_change(int source, const char* aux, bool skip_attribute_increase)
         const int note_maxmp = get_real_mp(false);
 
         char buf[200];
-        if (you.species != SP_DJINNI)
-        {
-            sprintf(buf, "HP: %d/%d MP: %d/%d",
-                    min(you.hp, note_maxhp), note_maxhp,
-                    min(you.magic_points, note_maxmp), note_maxmp);
-        }
-        else
-        {
+#if TAG_MAJOR_VERSION == 34
+        if (you.species == SP_DJINNI)
             // Djinn don't HP/MP
             sprintf(buf, "EP: %d/%d",
                     min(you.hp, note_maxhp + note_maxmp),
                     note_maxhp + note_maxmp);
-        }
+        else
+#endif
+            sprintf(buf, "HP: %d/%d MP: %d/%d",
+                    min(you.hp, note_maxhp), note_maxhp,
+                    min(you.magic_points, note_maxmp), note_maxmp);
         take_note(Note(NOTE_XP_LEVEL_CHANGE, you.experience_level, 0, buf));
 
         xom_is_stimulated(12);
@@ -3790,7 +3750,9 @@ int check_stealth(void)
         case SP_TROLL:
         case SP_OGRE:
         case SP_CENTAUR:
+#if TAG_MAJOR_VERSION == 34
         case SP_DJINNI:
+#endif
             race_mod = 9;
             break;
         case SP_MINOTAUR:
@@ -3876,7 +3838,6 @@ int check_stealth(void)
         stealth /= 3;
 
     const item_def *arm = you.slot_item(EQ_BODY_ARMOUR, false);
-    const item_def *cloak = you.slot_item(EQ_CLOAK, false);
     const item_def *boots = you.slot_item(EQ_BOOTS, false);
 
     if (arm)
@@ -3893,42 +3854,32 @@ int check_stealth(void)
 
     stealth += you.scan_artefacts(ARTP_STEALTH);
 
-    if (cloak && get_equip_race(*cloak) == ISFLAG_ELVEN)
-        stealth += 20;
-
     if (you.duration[DUR_STEALTH])
         stealth += 80;
 
     if (you.duration[DUR_AGILITY])
         stealth += 50;
 
-    if (you.airborne())
-        stealth += 10;
-
-    else if (you.in_water())
+    if (!you.airborne())
     {
-        // Merfolk can sneak up on monsters underwater -- bwr
-        if (you.fishtail || you.species == SP_OCTOPODE)
-            stealth += 50;
-        else if (!you.can_swim() && !you.extra_balanced())
-            stealth /= 2;       // splashy-splashy
-    }
+        if (you.in_water())
+        {
+            // Merfolk can sneak up on monsters underwater -- bwr
+            if (you.fishtail || you.species == SP_OCTOPODE)
+                stealth += 50;
+            else if (!you.can_swim() && !you.extra_balanced())
+                stealth /= 2;       // splashy-splashy
+        }
 
-    // No stealth bonus from boots if you're airborne or in water
-    else if (boots)
-    {
-        if (get_armour_ego_type(*boots) == SPARM_STEALTH)
+        else if (boots && get_armour_ego_type(*boots) == SPARM_STEALTH)
             stealth += 50;
 
-        if (get_equip_race(*boots) == ISFLAG_ELVEN)
-            stealth += 20;
+        else if (player_mutation_level(MUT_HOOVES) > 0)
+            stealth -= 5 + 5 * player_mutation_level(MUT_HOOVES);
+
+        else if (you.species == SP_FELID && (!you.form || you.form == TRAN_APPENDAGE))
+            stealth += 20;  // paws
     }
-
-    else if (player_mutation_level(MUT_HOOVES) > 0)
-        stealth -= 5 + 5 * player_mutation_level(MUT_HOOVES);
-
-    else if (you.species == SP_FELID && (!you.form || you.form == TRAN_APPENDAGE))
-        stealth += 20;  // paws
 
     // Radiating silence is the negative complement of shouting all the
     // time... a sudden change from background noise to no noise is going
@@ -3957,10 +3908,12 @@ int check_stealth(void)
         stealth = stealth * 2 / 5;
     // On the other hand, shrouding has the reverse effect, if you know
     // how to make use of it:
-    if (you.umbra()
-        && (you_worship(GOD_DITHMENOS) || you_worship(GOD_YREDELEMNUL)))
+    if (you.umbra())
     {
-        stealth = stealth * (you.piety + MAX_PIETY) / MAX_PIETY;
+        if (you_worship(GOD_DITHMENOS) || you_worship(GOD_YREDELEMNUL))
+            stealth = stealth * (you.piety + MAX_PIETY) / MAX_PIETY;
+        else if (player_equip_unrand(UNRAND_SHADOWS))
+            stealth = stealth * 3 / 2;
     }
     // The shifting glow from the Orb, while too unstable to negate invis
     // or affect to-hit, affects stealth even more than regular glow.
@@ -4470,7 +4423,6 @@ int slaying_bonus(weapon_property_type which_affected, bool ranged)
             ret += ranged ? 3 : -1;
     }
 
-    ret += min(you.duration[DUR_SLAYING] / (13 * BASELINE_DELAY), 6);
     ret += 4 * augmentation_amount();
 
     if (you.duration[DUR_SONG_OF_SLAYING])
@@ -4555,6 +4507,20 @@ int player::scan_artefacts(artefact_prop_type which_property,
     return retval;
 }
 
+void calc_hp()
+{
+    int oldhp = you.hp, oldmax = you.hp_max;
+    you.hp_max = get_real_hp(true, false);
+#if TAG_MAJOR_VERSION == 34
+    if (you.species == SP_DJINNI)
+        you.hp_max += get_real_mp(true);
+#endif
+    deflate_hp(you.hp_max, false);
+    if (oldhp != you.hp || oldmax != you.hp_max)
+        dprf("HP changed: %d/%d -> %d/%d", oldhp, oldmax, you.hp, you.hp_max);
+    you.redraw_hit_points = true;
+}
+
 void dec_hp(int hp_loss, bool fatal, const char *aux)
 {
     ASSERT(!crawl_state.game_is_arena());
@@ -4579,6 +4545,21 @@ void dec_hp(int hp_loss, bool fatal, const char *aux)
     you.redraw_hit_points = true;
 }
 
+void calc_mp()
+{
+#if TAG_MAJOR_VERSION == 34
+    if (you.species == SP_DJINNI)
+    {
+        you.magic_points = you.max_magic_points = 0;
+        return calc_hp();
+    }
+#endif
+
+    you.max_magic_points = get_real_mp(true);
+    you.magic_points = min(you.magic_points, you.max_magic_points);
+    you.redraw_magic_points = true;
+}
+
 void flush_mp()
 {
     if (Options.magic_point_warning
@@ -4599,8 +4580,10 @@ void dec_mp(int mp_loss, bool silent)
     if (mp_loss < 1)
         return;
 
+#if TAG_MAJOR_VERSION == 34
     if (you.species == SP_DJINNI)
         return dec_hp(mp_loss * DJ_MP_RATE, false);
+#endif
 
     you.magic_points -= mp_loss;
 
@@ -4611,14 +4594,19 @@ void dec_mp(int mp_loss, bool silent)
 
 void drain_mp(int loss)
 {
-    if (you.species != SP_DJINNI)
-        return dec_mp(loss);
+#if TAG_MAJOR_VERSION == 34
+    if (you.species == SP_DJINNI)
+    {
 
-    if (loss <= 0)
-        return;
+        if (loss <= 0)
+            return;
 
-    you.duration[DUR_ANTIMAGIC] = min(you.duration[DUR_ANTIMAGIC] + loss * 3,
-                                      1000); // so it goes away after one '5'
+        you.duration[DUR_ANTIMAGIC] = min(you.duration[DUR_ANTIMAGIC] + loss * 3,
+                                           1000); // so it goes away after one '5'
+    }
+    else
+#endif
+    return dec_mp(loss);
 }
 
 bool enough_hp(int minimum, bool suppress_msg, bool abort_macros)
@@ -4642,11 +4630,7 @@ bool enough_hp(int minimum, bool suppress_msg, bool abort_macros)
     if (you.hp < minimum + 1)
     {
         if (!suppress_msg)
-        {
-            mpr(you.species != SP_DJINNI ?
-                "You haven't enough vitality at the moment." :
-                "You haven't enough essence at the moment.");
-        }
+            mpr("You haven't enough vitality at the moment.");
 
         if (abort_macros)
         {
@@ -4661,8 +4645,10 @@ bool enough_hp(int minimum, bool suppress_msg, bool abort_macros)
 
 bool enough_mp(int minimum, bool suppress_msg, bool abort_macros)
 {
+#if TAG_MAJOR_VERSION == 34
     if (you.species == SP_DJINNI)
         return enough_hp(minimum * DJ_MP_RATE, suppress_msg);
+#endif
 
     ASSERT(!crawl_state.game_is_arena());
 
@@ -4709,8 +4695,10 @@ void inc_mp(int mp_gain, bool silent)
     if (mp_gain < 1)
         return;
 
+#if TAG_MAJOR_VERSION == 34
     if (you.species == SP_DJINNI)
         return inc_hp(mp_gain * DJ_MP_RATE);
+#endif
 
     bool wasnt_max = (you.magic_points < you.max_magic_points);
 
@@ -5087,16 +5075,17 @@ bool confuse_player(int amount, bool quiet)
     return true;
 }
 
-bool curare_hits_player(int death_source, int amount, string name,
-                        string source_name)
+bool curare_hits_player(int death_source, string name, string source_name)
 {
     ASSERT(!crawl_state.game_is_arena());
 
-    if (player_res_poison() >= 3)
+    if (player_res_poison() >= 3
+        || player_res_poison() > 0 && !one_chance_in(5))
+    {
         return false;
+    }
 
-    if (!poison_player(amount, source_name, name))
-        return false;
+    poison_player(roll_dice(2, 12) + 1, source_name, name);
 
     int hurted = 0;
 
@@ -5113,7 +5102,7 @@ bool curare_hits_player(int death_source, int amount, string name,
         }
     }
 
-    potion_effect(POT_SLOWING, 2 + random2(4 + amount));
+    potion_effect(POT_SLOWING, 2 + random2(6));
 
     return hurted > 0;
 }
@@ -5144,22 +5133,26 @@ bool poison_player(int amount, string source, string source_aux, bool force)
         dprf("Cannot poison, you are immune!");
         return false;
     }
-
-    if (!force && !(amount = _maybe_reduce_poison(amount)))
+    else if (!force && player_res_poison() > 0 && !one_chance_in(10))
         return false;
 
     const int old_value = you.duration[DUR_POISONING];
+    const bool was_fatal = poison_is_lethal();
+
     if (player_res_poison() < 0)
         amount *= 2;
-    you.duration[DUR_POISONING] += amount;
 
-    if (you.duration[DUR_POISONING] > 40)
-        you.duration[DUR_POISONING] = 40;
+    you.duration[DUR_POISONING] += amount * 1000;
 
     if (you.duration[DUR_POISONING] > old_value)
     {
-        mprf(MSGCH_WARN, "You are %spoisoned.",
-             old_value > 0 ? "more " : "");
+        if (poison_is_lethal() && !was_fatal)
+            mprf(MSGCH_DANGER, "You are lethally poisoned!");
+        else
+        {
+            mprf(MSGCH_WARN, "You are %spoisoned.",
+                old_value > 0 ? "more " : "");
+        }
 
         learned_something_new(HINT_YOU_POISON);
     }
@@ -5167,20 +5160,72 @@ bool poison_player(int amount, string source, string source_aux, bool force)
     you.props["poisoner"] = source;
     you.props["poison_aux"] = source_aux;
 
+    // Display the poisoned segment of our health, in case we take no damage
+    you.redraw_hit_points = true;
+
     return amount;
 }
 
-void dec_poison_player()
+int get_player_poisoning()
 {
-    // If Cheibriados has slowed your life processes, there's a
-    // chance that your poison level is simply unaffected and
-    // you aren't hurt by poison.
-    if (GOD_CHEIBRIADOS == you.religion
-        && you.piety >= piety_breakpoint(0)
-        && coinflip())
+    if (player_res_poison() < 3)
     {
-        return;
+        // Approximate the effect of damage shaving by giving the first
+        // 25 points of poison damage for 'free'
+        if (you.species == SP_DEEP_DWARF)
+            return max(0, (you.duration[DUR_POISONING] / 1000) - 25);
+        else
+            return you.duration[DUR_POISONING] / 1000;
     }
+    else
+        return 0;
+}
+
+// The amount of aut needed for poison to end if
+// you.duration[DUR_POISONING] == dur, assuming no Chei/DD shenanigans.
+// This function gives the following behavior:
+// * 1/15 of current poison is removed every 10 aut normally
+// * but speed of poison is capped between 0.025 and 1.000 HP/aut
+static double _poison_dur_to_aut(double dur)
+{
+    // Poison already at minimum speed.
+    if (dur < 15.0 * 250.0)
+        return dur / 25.0;
+    // Poison is not at maximum speed.
+    if (dur < 15.0 * 10000.0)
+        return 150.0 + 10.0 * log(dur / (15.0 * 250.0)) / log(15.0 / 14.0);
+    return 150.0 + (dur - 15.0 * 10000.0) / 1000.0
+                 + 10.0 * log(10000.0 / 250.0) / log(15.0 / 14.0);
+}
+
+// The inverse of the above function, i.e. the amount of poison needed
+// to last for aut time.
+static double _poison_aut_to_dur(double aut)
+{
+    // Amount of time that poison lasts at minimum speed.
+    if (aut < 150.0)
+        return aut * 25.0;
+    // Amount of time that poison exactly at the maximum speed lasts.
+    const double aut_from_max_speed = 150.0 + 10.0 * log(40.0) / log(15.0 / 14.0);
+    if (aut < aut_from_max_speed)
+        return 15.0 * 250.0 * exp(log(15.0 / 14.0) / 10.0 * (aut - 150.0));
+    return 15.0 * 10000.0 + 1000.0 * (aut - aut_from_max_speed);
+}
+
+void handle_player_poison(int delay)
+{
+    const double cur_dur = you.duration[DUR_POISONING];
+    const double cur_aut = _poison_dur_to_aut(cur_dur);
+
+    // If Cheibriados has slowed your life processes, poison affects you less
+    // quickly (you take the same total damage, but spread out over a longer
+    // period of time).
+    const double delay_scaling = (GOD_CHEIBRIADOS == you.religion && you.piety >= piety_breakpoint(0)) ? 2.0 / 3.0 : 1.0;
+
+    const double new_aut = cur_aut - ((double) delay) * delay_scaling;
+    const double new_dur = _poison_aut_to_dur(new_aut);
+
+    const int decrease = you.duration[DUR_POISONING] - (int) new_dur;
 
     // Transforming into a form with no metabolism merely suspends the poison
     // but doesn't let your body get rid of it.
@@ -5192,62 +5237,122 @@ void dec_poison_player()
     }
 
     // Other sources of immunity (Zin, staff of Olgreb) let poison dissipate.
-    if (player_res_poison() >= 3)
-        return reduce_poison_player(1);
+    bool do_dmg = (player_res_poison() >= 3 ? false : true);
 
-    if (x_chance_in_y(you.duration[DUR_POISONING], 5))
+    int dmg = (you.duration[DUR_POISONING] / 1000)
+               - ((you.duration[DUR_POISONING] - decrease) / 1000);
+
+    // Approximate old damage shaving by giving immunity to small amounts
+    // of poison. Stronger poison will do the same damage as for non-DD
+    // until it goes below the threshold, which is a bit weird, but
+    // so is damage shaving.
+    if (you.species == SP_DEEP_DWARF && you.duration[DUR_POISONING] - decrease < 25000)
     {
-        int hurted = 1;
-        msg_channel_type channel = MSGCH_PLAIN;
-        const char *adj = "";
+       dmg = (you.duration[DUR_POISONING] / 1000)
+              - (25000 / 1000);
+       if (dmg < 0)
+           dmg = 0;
+    }
 
-        if (you.duration[DUR_POISONING] > 10
-            && random2(you.duration[DUR_POISONING]) >= 8)
-        {
-            hurted = random2(10) + 5;
-            channel = MSGCH_DANGER;
-            adj = "extremely ";
-        }
-        else if (you.duration[DUR_POISONING] > 5 && coinflip())
-        {
-            hurted = coinflip() ? 3 : 2;
-            channel = MSGCH_WARN;
-            adj = "very ";
-        }
+    msg_channel_type channel = MSGCH_PLAIN;
+    const char *adj = "";
 
+    if (dmg > 6)
+    {
+        channel = MSGCH_DANGER;
+        adj = "extremely ";
+    }
+    else if (dmg > 2)
+    {
+        channel = MSGCH_WARN;
+        adj = "very ";
+    }
+
+    if (do_dmg && dmg > 0)
+    {
         int oldhp = you.hp;
-        ouch(hurted, NON_MONSTER, KILLED_BY_POISON);
+        ouch(dmg, NON_MONSTER, KILLED_BY_POISON);
         if (you.hp < oldhp)
             mprf(channel, "You feel %ssick.", adj);
-
-        if ((you.hp == 1 && one_chance_in(3)) || one_chance_in(8))
-            reduce_poison_player(1);
-
-        if (!you.duration[DUR_POISONING] && you.hp * 12 < you.hp_max)
-            xom_is_stimulated(you.hp == 1 ? 50 : 20);
     }
+
+    // Now decrease the poison in our system
+    reduce_player_poison(decrease);
 }
 
-void reduce_poison_player(int amount)
+void reduce_player_poison(int amount)
 {
     if (amount <= 0)
         return;
 
-    const int old_value = you.duration[DUR_POISONING];
     you.duration[DUR_POISONING] -= amount;
+
+    // Less than 1 point of damage remaining, so just end the poison
+    if (you.duration[DUR_POISONING] < 1000)
+        you.duration[DUR_POISONING] = 0;
 
     if (you.duration[DUR_POISONING] <= 0)
     {
         you.duration[DUR_POISONING] = 0;
         you.props.erase("poisoner");
         you.props.erase("poison_aux");
+        mprf(MSGCH_RECOVERY, "You are no longer poisoned.");
     }
 
-    if (you.duration[DUR_POISONING] < old_value)
+    you.redraw_hit_points = true;
+}
+
+// Takes *current* regeneration rate into account. Might sometimes be
+// incorrect, but hopefully if so then the player is surviving with 1 HP.
+bool poison_is_lethal()
+{
+    if (you.hp <= 0)
+        return get_player_poisoning();
+    if (get_player_poisoning() < you.hp)
+        return false;
+    return !poison_survival();
+}
+
+// Try to predict the minimum value of the player's health in the coming
+// turns given the current poison amount and regen rate.
+int poison_survival()
+{
+    if (!get_player_poisoning() || you.hp <= 0)
+        return you.hp;
+    const int rr = player_regen();
+    const bool chei = (you.religion == GOD_CHEIBRIADOS && you.piety >= piety_breakpoint(0));
+    const bool dd = (you.species == SP_DEEP_DWARF);
+    const int amount = you.duration[DUR_POISONING];
+    // Calculate the poison amount at which regen starts to beat poison.
+    double min_poison_rate = 0.25;
+    if (dd)
+        min_poison_rate = 25.0/15.0;
+    if (chei)
+        min_poison_rate /= 1.5;
+    int regen_beats_poison;
+    if (rr <= (int) (100.0 * min_poison_rate))
+        regen_beats_poison = dd ? 25000 : 0;
+    else
     {
-        mprf(MSGCH_RECOVERY, "You feel %sbetter.",
-             you.duration[DUR_POISONING] > 0 ? "a little " : "");
+        regen_beats_poison = 150 * rr;
+        if (chei)
+            regen_beats_poison = 3 * regen_beats_poison / 2;
     }
+    // HP is already going up, but subtract 1 in case poison happens before
+    // regen
+    if (regen_beats_poison >= amount)
+        return you.hp - 1;
+
+    // Calculate the amount of time until regen starts to beat poison.
+    double poison_duration = _poison_dur_to_aut(amount)
+                             - _poison_dur_to_aut(regen_beats_poison);
+    if (chei)
+        poison_duration *= 1.5;
+
+    return max(0, you.hp - amount / 1000
+                         + regen_beats_poison / 1000
+                         + (int) ((((double) you.hit_points_regeneration)
+                                   - 50.0 + rr * poison_duration / 10.0) / 100.0));
 }
 
 bool miasma_player(string source, string source_aux)
@@ -5263,7 +5368,7 @@ bool miasma_player(string source, string source_aux)
         return false;
     }
 
-    bool success = poison_player(1, source, source_aux);
+    bool success = poison_player(roll_dice(3, 11), source, source_aux);
 
     if (you.hp_max > 4 && coinflip())
     {
@@ -5797,7 +5902,6 @@ void player::init()
     berserk_penalty = 0;
     attribute.init(0);
     quiver.init(ENDOFPACK);
-    sacrifice_value.init(0);
 
     last_timer_effect.init(0);
     next_timer_effect.init(20 * BASELINE_DELAY);
@@ -6072,7 +6176,9 @@ flight_type player::flight_mode() const
         return FL_NONE;
 
     if (duration[DUR_FLIGHT]
+#if TAG_MAJOR_VERSION == 34
         || you.species == SP_DJINNI
+#endif
         || attribute[ATTR_PERM_FLIGHT]
         || form == TRAN_WISP
         // dragon and bat should be FL_WINGED, but we don't want paralysis
@@ -6375,7 +6481,7 @@ int player::adjusted_shield_penalty(int scale) const
 
     const int base_shield_penalty = -property(*shield_l, PARM_EVASION);
     return max(0, (base_shield_penalty * scale - skill(SK_SHIELDS, scale)
-                  / max(1, 5 + _player_evasion_size_factor())));
+                  / _player_shield_racial_factor()));
 }
 
 int player::armour_tohit_penalty(bool random_factor, int scale) const
@@ -6497,11 +6603,11 @@ int player::armour_class() const
 
         const item_def& item   = inv[equip[eq]];
         const int ac_value     = property(item, PARM_AC) * 100;
-        const int racial_bonus = _player_armour_racial_bonus(item);
+        const int beogh_bonus  = _player_armour_beogh_bonus(item);
 
         // [ds] effectively: ac_value * (22 + Arm) / 22, where Arm =
-        // Armour Skill + racial_skill_bonus / 2.
-        AC += ac_value * (440 + skill(SK_ARMOUR, 20) + racial_bonus * 10) / 440;
+        // Armour Skill + beogh_bonus / 2.
+        AC += ac_value * (440 + skill(SK_ARMOUR, 20) + beogh_bonus * 10) / 440;
         AC += item.plus * 100;
 
         // The deformed don't fit into body armour very well.
@@ -6645,8 +6751,6 @@ int player::armour_class() const
           ? 100 + _mut_level(MUT_THIN_METALLIC_SCALES, MUTACT_FULL) * 100 : 0; // +2, +3, +4
     AC += _mut_level(MUT_YELLOW_SCALES, MUTACT_FULL)
           ? 100 + _mut_level(MUT_YELLOW_SCALES, MUTACT_FULL) * 100 : 0;        // +2, +3, +4
-    AC += _mut_level(MUT_EXOSKELETON, MUTACT_FULL)
-          ? sqr(_mut_level(MUT_EXOSKELETON, MUTACT_FULL)) * 100 : 0;           // +1, +4
 
     return AC / 100;
 }
@@ -6804,8 +6908,10 @@ int player::res_fire() const
 
 int player::res_holy_fire() const
 {
+#if TAG_MAJOR_VERSION == 34
     if (species == SP_DJINNI)
         return 3;
+#endif
     return actor::res_holy_fire();
 }
 
@@ -6836,10 +6942,12 @@ int player::res_water_drowning() const
         rw++;
     }
 
+#if TAG_MAJOR_VERSION == 34
     // A fiery lich/hot statue suffers from quenching but not drowning, so
     // neutral resistance sounds ok.
     if (species == SP_DJINNI)
         rw--;
+#endif
 
     return rw;
 }
@@ -6991,17 +7099,16 @@ int player_res_magic(bool calc_unid, bool temp)
     }
 
     // randarts
-    rm += you.scan_artefacts(ARTP_MAGIC, calc_unid);
+    rm += 40 * you.scan_artefacts(ARTP_MAGIC, calc_unid);
 
     // armour
-    rm += 30 * you.wearing_ego(EQ_ALL_ARMOUR, SPARM_MAGIC_RESISTANCE,
-                                     calc_unid);
+    rm += 40 * you.wearing_ego(EQ_ALL_ARMOUR, SPARM_MAGIC_RESISTANCE, calc_unid);
 
     // rings of magic resistance
     rm += 40 * you.wearing(EQ_RINGS, RING_PROTECTION_FROM_MAGIC, calc_unid);
 
     // Mutations
-    rm += 30 * player_mutation_level(MUT_MAGIC_RESISTANCE);
+    rm += 40 * player_mutation_level(MUT_MAGIC_RESISTANCE);
 
     // transformations
     if (you.form == TRAN_LICH && temp)
@@ -7052,15 +7159,21 @@ bool player::cancellable_flight() const
 
 bool player::permanent_flight() const
 {
-    return attribute[ATTR_PERM_FLIGHT] || species == SP_DJINNI;
+    return attribute[ATTR_PERM_FLIGHT]
+#if TAG_MAJOR_VERSION == 34
+        || species == SP_DJINNI
+#endif
+        ;
 }
 
 bool player::racial_permanent_flight() const
 {
     return species == SP_TENGU && experience_level >= 15
+#if TAG_MAJOR_VERSION == 34
+        || species == SP_DJINNI
+#endif
         || species == SP_BLACK_DRACONIAN && experience_level >= 14
-        || species == SP_GARGOYLE && experience_level >= 14
-        || species == SP_DJINNI;
+        || species == SP_GARGOYLE && experience_level >= 14;
 }
 
 bool player::tengu_flight() const
@@ -7107,12 +7220,12 @@ void player::blink(bool allow_partial_control)
     random_blink(allow_partial_control);
 }
 
-void player::teleport(bool now, bool abyss_shift, bool wizard_tele)
+void player::teleport(bool now, bool wizard_tele)
 {
     ASSERT(!crawl_state.game_is_arena());
 
     if (now)
-        you_teleport_now(true, abyss_shift, wizard_tele);
+        you_teleport_now(true, wizard_tele);
     else
         you_teleport();
 }
@@ -7558,8 +7671,10 @@ bool player::visible_to(const actor *looker) const
         return can_see_invisible() || !invisible();
 
     const monster* mon = looker->as_monster();
-    return (mons_sense_invis(mon) && distance2(pos(), mon->pos()) <= dist_range(4))
-            || (!mon->has_ench(ENCH_BLIND) && (!invisible() || mon->can_see_invisible()));
+    return mon->friendly()
+        || (mons_sense_invis(mon) && distance2(pos(), mon->pos()) <= dist_range(4))
+        || (!mon->has_ench(ENCH_BLIND)
+            && (!invisible() || mon->can_see_invisible()));
 }
 
 bool player::backlit(bool check_haloed, bool self_halo) const
@@ -7662,8 +7777,10 @@ bool player::can_bleed(bool allow_tran) const
     }
 
     if (is_lifeless_undead()
-        || holiness() == MH_NONLIVING
-        || you.species == SP_DJINNI)
+#if TAG_MAJOR_VERSION == 34
+        || you.species == SP_DJINNI
+#endif
+        || holiness() == MH_NONLIVING)
     {   // demonspawn and demigods have a mere drop of taint
         return false;
     }
@@ -7948,8 +8065,6 @@ bool player::do_shaft_ability()
     {
         mpr("A shaft appears beneath you!");
         down_stairs(DNGN_TRAP_SHAFT, true);
-        mpr("The earth vibrates loudly upon landing!");
-        fake_noisy(20, pos());
         return true;
     }
     else
@@ -8058,13 +8173,13 @@ void player::sentinel_mark(bool trap)
     if (duration[DUR_SENTINEL_MARK])
     {
         mpr("The mark upon you grows brighter.");
-        increase_duration(DUR_SENTINEL_MARK, random_range(30, 50), 250);
+        increase_duration(DUR_SENTINEL_MARK, random_range(20, 40), 180);
     }
     else
     {
         mprf(MSGCH_WARN, "A sentinel's mark forms upon you.");
-        increase_duration(DUR_SENTINEL_MARK, trap ? random_range(35, 55)
-                                                  : random_range(50, 80),
+        increase_duration(DUR_SENTINEL_MARK, trap ? random_range(25, 40)
+                                                  : random_range(35, 60),
                           250);
     }
 }
@@ -8095,7 +8210,7 @@ bool player::made_nervous_by(const coord_def &p)
 void player::weaken(actor *attacker, int pow)
 {
     if (!duration[DUR_WEAK])
-        mprf(MSGCH_WARN, "You feel yourself grow feeble.");
+        mprf(MSGCH_WARN, "You feel your attacks grow feeble.");
     else
         mprf(MSGCH_WARN, "You feel as though you will be weak longer.");
 
@@ -8195,4 +8310,19 @@ void count_action(caction_type type, int subtype)
     if (!you.action_count.count(pair))
         you.action_count[pair].init(0);
     you.action_count[pair][you.experience_level - 1]++;
+}
+
+/**
+ *   The player's radius of monster detection.
+ *   @returns  the radius in which a player can detect monsters.
+**/
+int player_monster_detect_radius()
+{
+    int radius = player_mutation_level(MUT_ANTENNAE) * 2;
+
+    if (player_equip_unrand(UNRAND_BOOTS_ASSASSIN))
+        radius = max(radius, 4);
+    if (you_worship(GOD_ASHENZARI) && !player_under_penance())
+        radius = max(radius, you.piety / 20);
+    return min(radius, LOS_RADIUS);
 }

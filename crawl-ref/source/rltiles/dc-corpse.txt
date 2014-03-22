@@ -64,7 +64,6 @@ agate_snail CORPSE_AGATE_SNAIL
 %back blood_puddle_red blood_puddle_red1 blood_puddle_red2 blood_puddle_red3 blood_puddle_red4
 rat CORPSE_RAT
 quokka CORPSE_QUOKKA
-grey_rat CORPSE_GREY_RAT
 green_rat CORPSE_GREEN_RAT
 orange_rat CORPSE_ORANGE_RAT
 porcupine CORPSE_PORCUPINE
@@ -72,7 +71,6 @@ porcupine CORPSE_PORCUPINE
 
 ## Spiders and insects ('s')
 %back blood_green blood_green1 blood_green2 blood_green3 blood_green4
-giant_centipede CORPSE_GIANT_CENTIPEDE
 giant_mite CORPSE_GIANT_MITE
 scorpion CORPSE_SCORPION
 emperor_scorpion CORPSE_EMPEROR_SCORPION
@@ -147,13 +145,12 @@ water_moccasin CORPSE_WATER_MOCCASIN
 anaconda CORPSE_ANACONDA
 sea_snake CORPSE_SEA_SNAKE
 shock_serpent CORPSE_SHOCK_SERPENT
-sapper_snake CORPSE_SAPPER_SNAKE
+mana_viper CORPSE_MANA_VIPER
 
 ## Bears ('U')
 black_bear CORPSE_BLACK_BEAR
 grizzly_bear CORPSE_GRIZZLY_BEAR
 polar_bear CORPSE_POLAR_BEAR
-ancient_bear CORPSE_ANCIENT_BEAR
 
 ## Yaks, sheep and elephants ('Y')
 sheep CORPSE_SHEEP
@@ -281,11 +278,6 @@ sphinx CORPSE_SPHINX
 tengu CORPSE_TENGU
 holy/shedu CORPSE_SHEDU
 unique/arachne_staveless CORPSE_ARACHNE
-
-## Jellies ('J')
-%sdir mon/amorphous
-%back blood_green blood_green1 blood_green2 blood_green3 blood_green4
-giant_amoeba CORPSE_GIANT_AMOEBA
 
 ## Kobolds ('K')
 %sdir mon/

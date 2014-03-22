@@ -96,7 +96,6 @@ enum band_type
     BAND_AIR_ELEMENTALS,
     BAND_SPRIGGAN_DRUID,
     BAND_SPRIGGAN_RIDERS,
-    BAND_SPIRIT_WOLVES,
     BAND_PHANTASMAL_WARRIORS,
     BAND_THRASHING_HORRORS,
     BAND_RAIJU,
@@ -118,6 +117,7 @@ enum band_type
     BAND_CORRUPTER,
     BAND_BLACK_SUN,
     BAND_VASHNIA,
+    BAND_RANDOM_SINGLE,
     NUM_BANDS                   // always last
 };
 
@@ -145,6 +145,7 @@ enum mgen_flag_type
     MG_PATROLLING   = 0x10,
     MG_BAND_MINION  = 0x20,
     MG_DONT_COME    = 0x40, // suppress the "comes into view" spam
+    MG_DONT_CAP     = 0x80, // don't automatically apply the summon cap to this monster
 };
 
 #endif

@@ -164,7 +164,11 @@ int list_spells(bool toggle_with_I, bool viewing, bool allow_preselect,
                               | MF_ALWAYS_SHOW_MORE | MF_ALLOW_FORMATTING,
                               text_only);
     string titlestring = make_stringf("%-25.25s", title.c_str());
-    string hungerstring = you.species == SP_DJINNI ? "Glow  " : "Hunger";
+    string hungerstring =
+#if TAG_MAJOR_VERSION == 34
+        you.species == SP_DJINNI ? "Glow  " :
+#endif
+        "Hunger";
 #ifdef USE_TILE_LOCAL
     {
         // [enne] - Hack.  Make title an item so that it's aligned.
@@ -334,6 +338,7 @@ int spell_fail(spell_type spell)
     default: chance += 750; break;
     }
 
+#if TAG_MAJOR_VERSION == 34
     // Only apply this penalty to Dj because other species lose nutrition
     // rather than gaining contamination when casting spells.
     // Also, this penalty gives fairly precise information about contam
@@ -347,6 +352,7 @@ int spell_fail(spell_type spell)
         // forget casting when in orange.
         chance += contam * contam * contam / 5000000000LL;
     }
+#endif
 
     int chance2 = chance;
 
@@ -544,8 +550,6 @@ void inspect_spells()
         return;
     }
 
-    // Maybe we should honour auto_list here, but if you want the
-    // description, you probably want the listing, too.
     list_spells(true, true);
 }
 
@@ -802,6 +806,7 @@ bool cast_a_spell(bool check_range, spell_type spell)
     else
         practise(EX_DID_MISCAST, spell);
 
+#if TAG_MAJOR_VERSION == 34
     // Nasty special cases.
     if (you.species == SP_DJINNI && cast_result == SPRET_SUCCESS
         && (spell == SPELL_BORGNJORS_REVIVIFICATION
@@ -811,6 +816,7 @@ bool cast_a_spell(bool check_range, spell_type spell)
         inc_mp(cost, true);
     }
     else // Redraw MP
+#endif
         flush_mp();
 
     if (!staff_energy && you.is_undead != US_UNDEAD)
@@ -1082,6 +1088,12 @@ static bool _spellcasting_aborted(spell_type spell,
         return true;
     }
 
+    if (spell == SPELL_SUMMON_FOREST && you.duration[DUR_FORESTED])
+    {
+        mpr("This spell is already ongoing.");
+        return true;
+    }
+
     return false;
 }
 
@@ -1089,8 +1101,6 @@ static targetter* _spell_targetter(spell_type spell, int pow, int range)
 {
     switch (spell)
     {
-    case SPELL_ICE_STORM:
-        return new targetter_beam(&you, range, ZAP_ICE_STORM, pow, 2, (pow > 76) ? 3 : 2);
     case SPELL_FIREBALL:
         return new targetter_beam(&you, range, ZAP_FIREBALL, pow, 1, 1);
     case SPELL_HELLFIRE:
@@ -1119,6 +1129,10 @@ static targetter* _spell_targetter(spell_type spell, int pow, int range)
         return new targetter_spray(&you, range, ZAP_DAZZLING_SPRAY);
     case SPELL_EXPLOSIVE_BOLT:
         return new targetter_explosive_bolt(&you, pow, range);
+    case SPELL_GLACIATE:
+        return new targetter_cone(&you, range);
+    case SPELL_CLOUD_CONE:
+        return new targetter_shotgun(&you, range);
     case SPELL_MAGIC_DART:
     case SPELL_FORCE_LANCE:
     case SPELL_SHOCK:
@@ -1150,6 +1164,8 @@ static targetter* _spell_targetter(spell_type spell, int pow, int range)
     case SPELL_DISPEL_UNDEAD:
     case SPELL_CRYSTAL_BOLT:
         return new targetter_beam(&you, range, spell_to_zap(spell), pow, 0, 0);
+    case SPELL_RANDOM_BOLT:
+        return new targetter_beam(&you, range, ZAP_CRYSTAL_BOLT, pow, 0, 0);
     default:
         return 0;
     }
@@ -1544,11 +1560,13 @@ static spret_type _do_cast(spell_type spell, int powc,
         return cast_thunderbolt(&you, powc, target, fail);
 
     case SPELL_DAZZLING_SPRAY:
-        return cast_dazzling_spray(&you, powc, target, fail);
+        return cast_dazzling_spray(powc, target, fail);
 
     case SPELL_CHAIN_OF_CHAOS:
         return cast_chain_spell(SPELL_CHAIN_OF_CHAOS, powc, &you, fail);
 
+    case SPELL_CLOUD_CONE:
+        return cast_cloud_cone(&you, powc, target, fail);
 
     // Summoning spells, and other spells that create new monsters.
     // If a god is making you cast one of these spells, any monsters
@@ -1562,8 +1580,11 @@ static spret_type _do_cast(spell_type spell, int powc,
     case SPELL_STICKS_TO_SNAKES:
         return cast_sticks_to_snakes(powc, god, fail);
 
+#if TAG_MAJOR_VERSION == 34
     case SPELL_SUMMON_SCORPIONS:
-        return cast_summon_scorpions(powc, god, fail);
+        mpr("Sorry, this spell is gone!");
+        return SPRET_ABORT;
+#endif
 
     case SPELL_SUMMON_SWARM:
         return cast_summon_swarm(powc, god, fail);
@@ -1577,14 +1598,20 @@ static spret_type _do_cast(spell_type spell, int powc,
     case SPELL_SUMMON_ICE_BEAST:
         return cast_summon_ice_beast(powc, god, fail);
 
-    case SPELL_SUMMON_UGLY_THING:
-        return cast_summon_ugly_thing(powc, god, fail);
+    case SPELL_MONSTROUS_MENAGERIE:
+        return cast_monstrous_menagerie(&you, powc, god, fail);
 
     case SPELL_SUMMON_DRAGON:
         return cast_summon_dragon(&you, powc, god, fail);
 
+    case SPELL_DRAGON_CALL:
+        return cast_dragon_call(powc, fail);
+
     case SPELL_SUMMON_HYDRA:
         return cast_summon_hydra(&you, powc, god, fail);
+
+    case SPELL_SUMMON_MANA_VIPER:
+        return cast_summon_mana_viper(powc, god, fail);
 
     case SPELL_TUKIMAS_DANCE:
         // Temporarily turns a wielded weapon into a dancing weapon.
@@ -1593,26 +1620,38 @@ static spret_type _do_cast(spell_type spell, int powc,
     case SPELL_CONJURE_BALL_LIGHTNING:
         return cast_conjure_ball_lightning(powc, god, fail);
 
+    case SPELL_SUMMON_LIGHTNING_SPIRE:
+        return cast_summon_lightning_spire(powc, beam.target, god, fail);
+
+    case SPELL_SUMMON_GUARDIAN_GOLEM:
+        return cast_summon_guardian_golem(powc, god, fail);
+
     case SPELL_CALL_IMP:
         return cast_call_imp(powc, god, fail);
 
     case SPELL_SUMMON_DEMON:
         return cast_summon_demon(powc, god, fail);
 
+#if TAG_MAJOR_VERSION == 34
     case SPELL_DEMONIC_HORDE:
-        return cast_demonic_horde(powc, god, fail);
+        mpr("Sorry, this spell is gone!");
+        return SPRET_ABORT;
+#endif
 
     case SPELL_SUMMON_GREATER_DEMON:
         return cast_summon_greater_demon(powc, god, fail);
 
     case SPELL_SHADOW_CREATURES:
-        return cast_shadow_creatures(false, god, fail);
+        return cast_shadow_creatures(spell, god, level_id::current(), fail);
 
     case SPELL_SUMMON_HORRIBLE_THINGS:
         return cast_summon_horrible_things(powc, god, fail);
 
     case SPELL_MALIGN_GATEWAY:
         return cast_malign_gateway(&you, powc, god, fail);
+
+    case SPELL_SUMMON_FOREST:
+        return cast_summon_forest(&you, powc, god, fail);
 
     case SPELL_ANIMATE_SKELETON:
         return cast_animate_skeleton(god, fail);
@@ -1631,6 +1670,12 @@ static spret_type _do_cast(spell_type spell, int powc,
 
     case SPELL_DEATH_CHANNEL:
         return cast_death_channel(powc, god, fail);
+
+    case SPELL_SPELLFORGED_SERVITOR:
+        return cast_spellforged_servitor(powc, god, fail);
+
+    case SPELL_FORCEFUL_DISMISSAL:
+        return cast_forceful_dismissal(powc, fail);
 
     case SPELL_SPECTRAL_WEAPON:
         return cast_spectral_weapon(&you, powc, god, fail);
@@ -1663,8 +1708,15 @@ static spret_type _do_cast(spell_type spell, int powc,
     case SPELL_ABJURATION:
         return cast_abjuration(powc, beam.target, fail);
 
-    case SPELL_MASS_ABJURATION:
-        return cast_mass_abjuration(powc, fail);
+    case SPELL_AURA_OF_ABJURATION:
+        return cast_aura_of_abjuration(powc, fail);
+
+    case SPELL_WEAVE_SHADOWS:
+    {
+        level_id place(BRANCH_DUNGEON,
+                       min(27, max(1, div_rand_round(powc, 3))));
+        return cast_shadow_creatures(spell, god, place, fail);
+    }
 
     // XXX: I don't think any call to healing goes through here. --rla
     case SPELL_MINOR_HEALING:
@@ -1849,6 +1901,9 @@ static spret_type _do_cast(spell_type spell, int powc,
         mpr("This rod is automatically evoked when it strikes in combat.");
         return SPRET_ABORT;
 
+    case SPELL_GLACIATE:
+        return cast_glaciate(&you, powc, target, fail);
+
     default:
         return SPRET_NONE;
     }
@@ -1893,20 +1948,25 @@ static double _get_true_fail_rate(int raw_fail)
     return (double) (1020100 - _tetrahedral_number(300 - target)) / 1020100;
 }
 
-//Computes the chance of getting a miscast effect of a given severity (or
-//higher).
+/**
+ * Compute the chance of getting a miscast effect of a given severity or higher.
+ * @param spell     The spell to be checked.
+ * @param severity  Check the chance of getting a miscast this severe or higher.
+ * @returns         The chance of this kind of miscast.
+ */
 double get_miscast_chance(spell_type spell, int severity)
 {
     int raw_fail = spell_fail(spell);
     int level = spell_difficulty(spell);
     if (severity <= 0)
         return _get_true_fail_rate(raw_fail);
-    double C = 70000.0/(150*level*(10+level));
+    double C = 70000.0 / (150 * level * (10 + level));
     double chance = 0.0;
     int k = severity + 1;
-    while ((C*k) <= raw_fail)
+    while ((C * k) <= raw_fail)
     {
-        chance += _get_true_fail_rate((int)(raw_fail+1-(C*k)))*severity/(k*(k-1));
+        chance += _get_true_fail_rate((int) (raw_fail + 1 - (C * k)))
+            * severity / (k * (k - 1));
         k++;
     }
     return chance;
@@ -1993,7 +2053,7 @@ string spell_noise_string(spell_type spell)
 
     // Big explosions
     case SPELL_FIRE_STORM:  //The storms make medium or big explosions
-    case SPELL_ICE_STORM:
+    case SPELL_GLACIATE:
     case SPELL_LIGHTNING_BOLT:
     case SPELL_CHAIN_LIGHTNING:
     case SPELL_CONJURE_BALL_LIGHTNING:

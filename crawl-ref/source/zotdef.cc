@@ -77,8 +77,6 @@ static bool _is_branch_fitting(branch_type pb, int wavenum)
         return wavenum > 13;                 // 2.8K-
     case BRANCH_CRYPT:
         return wavenum > 15;                 // 3.2K-
-    case BRANCH_FOREST:
-        return wavenum > 20;                 // 4K-
     case BRANCH_SLIME:
         return wavenum > 20 && coinflip();   // 4K-
     case BRANCH_BLADE:
@@ -221,7 +219,7 @@ static void _fire_wave(int power)
 {
     wave_name("FIRE WAVE");
     monster_type firemons[] = {MONS_FIRE_ELEMENTAL, MONS_FIRE_DRAKE, MONS_CRIMSON_IMP,
-        MONS_FIRE_DRAGON, MONS_FIRE_VORTEX ,MONS_FIRE_GIANT, MONS_HELLION,
+        MONS_FIRE_DRAGON, MONS_FIRE_VORTEX, MONS_FIRE_GIANT, MONS_HELLION,
         MONS_MOLTEN_GARGOYLE, MONS_SALAMANDER, MONS_SUN_DEMON,
         MONS_RED_DRACONIAN, MONS_MOTTLED_DRACONIAN, MONS_DRACONIAN_SCORCHER,
         MONS_FLAMING_CORPSE, MONS_MOTTLED_DRAGON, MONS_EFREET,
@@ -263,8 +261,7 @@ static void _gnoll_wave(int power)
 static void _rat_wave(int power)
 {
     wave_name("RAT WAVE");
-    monster_type rats[] = {MONS_RAT, MONS_GREEN_RAT, MONS_GREY_RAT,
-                MONS_ORANGE_RAT, END};
+    monster_type rats[] = {MONS_RAT, MONS_GREEN_RAT, MONS_ORANGE_RAT, END};
     monster_type boss[] = {MONS_ORANGE_RAT, END};
     _zotdef_fill_from_list(rats, 0, power); // full power
     _zotdef_choose_boss(boss, power);
@@ -425,7 +422,7 @@ static void _insect_wave(int power)
                 MONS_BOULDER_BEETLE, MONS_GIANT_MITE, MONS_FIREFLY, MONS_REDBACK,
                 MONS_VAMPIRE_MOSQUITO, MONS_RED_WASP, MONS_SOLDIER_ANT, MONS_QUEEN_ANT,
                 MONS_GIANT_COCKROACH, MONS_BORING_BEETLE, MONS_TRAPDOOR_SPIDER,
-                MONS_SCORPION, MONS_GIANT_CENTIPEDE, END};
+                MONS_SCORPION, END};
     monster_type boss[] = {MONS_GOLIATH_BEETLE, MONS_BOULDER_BEETLE,
                 MONS_QUEEN_ANT, MONS_BORING_BEETLE, MONS_QUEEN_BEE, END};
     _zotdef_fill_from_list(insects, 0, power); // full

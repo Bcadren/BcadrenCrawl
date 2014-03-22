@@ -155,7 +155,7 @@ ENDMAP
 
 NAME:   sprint2_early_5
 TAGS:   sprint2_early no_item_gen no_trap_gen no_pool_fixup
-MONS:   agate snail
+MONS:   giant slug
 KITEM:  $ = gold q:243
 COLOUR: x = magenta
 MAP
@@ -199,7 +199,7 @@ ENDMAP
 
 NAME:   sprint2_early_9
 TAGS:   sprint2_early no_item_gen no_trap_gen no_pool_fixup
-MONS:   giant centipede
+MONS:   worker ant
 KITEM:  $ = gold q:243
 COLOUR: x = magenta
 MAP
@@ -249,7 +249,7 @@ KFEAT:  c = antique weapon shop
 KFEAT:  d = antique armour shop
 KFEAT:  e = distillery shop
 KFEAT:  f = food shop
-KFEAT:  g = wand shop
+KFEAT:  g = gadget shop
 KFEAT:  h = jewellery shop
 KFEAT:  i = scroll shop
 MAP
@@ -519,7 +519,7 @@ TAGS:   sprint2_smallroom_final_cluster no_item_gen no_trap_gen no_monster_gen n
 MARKER: + = lua:restrict_door()
 NSUBST: * = 1:a / 1:b / *:|
 KITEM:  a = scroll of acquirement q:3 / potion of cure mutation q:3 / potion of experience
-KITEM:  b = scroll of acquirement / potion of magic q:9 / potion of speed q:3
+KITEM:  b = scroll of acquirement / potion of magic q:9 / potion of haste q:3
 SUBVAULT: D : sprint2_smallroom
 SUBVAULT: E : sprint2_smallroom
 SUBVAULT: F : sprint2_smallroom
@@ -657,7 +657,7 @@ ENDMAP
 
 NAME:   sprint2_smallroom_14
 TAGS:   sprint2_smallroom no_item_gen no_trap_gen no_monster_gen no_pool_fixup
-MONS:   giant amoeba
+MONS:   slime creature
 KITEM:  $ = gold q:81
 MAP
 11
@@ -722,7 +722,7 @@ KFEAT:  f = any shop
 NSUBST: | = 1:a / 2:b / 1:d / 6:$ / *:|
 KITEM:  $ = gold q:81
 KITEM:  a = scroll of acquirement q:3 / potion of cure mutation q:3 / potion of experience
-KITEM:  b = scroll of acquirement / potion of magic q:9 / potion of speed q:3
+KITEM:  b = scroll of acquirement / potion of magic q:9 / potion of haste q:3
 KITEM:  d = potion of flight q:3
 SUBVAULT: A : sprint2_smallroom
 SUBVAULT: B : sprint2_smallroom
@@ -755,7 +755,7 @@ NSUBST: b = 2:i / 1:b / *:|
 NSUBST: f = 1:a / 2:b / 1:h / 9:$ / *:|
 KITEM:  a = scroll of acquirement q:3 / potion of cure mutation q:3 / potion of experience
 KITEM:  $ = gold q:81
-KITEM:  b = scroll of acquirement / potion of magic q:9 / potion of speed q:3
+KITEM:  b = scroll of acquirement / potion of magic q:9 / potion of haste q:3
 KITEM:  h = potion of flight q:3
 MONS:   Nessos, brown ooze, sixfirhy, Gastronok, orc sorcerer, dire elephant
 SUBST:  . = '.....
@@ -863,7 +863,7 @@ KITEM:  a = scroll of acquirement q:3 / potion of cure mutation q:3 / potion of 
 KFEAT:  e = any shop
 KITEM:  f = potion of flight q:3
 SHUFFLE: 12
-MONS:   golden dragon, storm dragon, rotting devil, iron imp
+MONS:   golden dragon, storm dragon, necrophage, iron imp
 SUBVAULT: A : sprint2_smallroom
 SUBVAULT: B : sprint2_smallroom
 SUBVAULT: C : sprint2_smallroom

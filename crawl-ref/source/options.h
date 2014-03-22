@@ -166,7 +166,7 @@ public:
 
     FixedBitVector<NUM_OBJECT_CLASSES> autopickups; // items to autopickup
     bool        auto_switch;     // switch melee&ranged weapons according to enemy range
-    bool        show_inventory_weights; // show weights in inventory listings
+    maybe_bool  show_inventory_weights; // show weights in inventory listings
     bool        clean_map;       // remove unseen clouds/monsters
     bool        show_uncursed;   // label known uncursed items as "uncursed"
     bool        easy_open;       // open doors with movement
@@ -213,8 +213,6 @@ public:
     int         fire_items_start; // index of first item for fire command
     vector<unsigned> fire_order;  // missile search order for 'f' command
 
-    bool        auto_list;       // automatically jump to appropriate item lists
-
     bool        flush_input[NUM_FLUSH_REASONS]; // when to flush input buff
 
     char_set_type  char_set;
@@ -256,7 +254,8 @@ public:
 
     bool        show_travel_trail;
 
-    int         arena_delay;
+    int         view_delay;
+
     bool        arena_dump_msgs;
     bool        arena_dump_msgs_all;
     bool        arena_list_eq;
@@ -408,14 +407,15 @@ public:
     VColour     tile_downstairs_col;
     VColour     tile_upstairs_col;
     VColour     tile_branchstairs_col;
+    VColour     tile_portal_col;
     VColour     tile_feature_col;
     VColour     tile_trap_col;
     VColour     tile_water_col;
+    VColour     tile_deep_water_col;
     VColour     tile_lava_col;
     VColour     tile_excluded_col;
     VColour     tile_excl_centre_col;
     VColour     tile_window_col;
-#endif
 #ifdef USE_TILE_LOCAL
     // font settings
     string      tile_font_crt_file;
@@ -424,13 +424,17 @@ public:
     string      tile_font_lbl_file;
     string      tile_font_tip_file;
 #endif
-#ifdef USE_TILE
+#ifdef USE_TILE_WEB
+    string      tile_font_crt_family;
+    string      tile_font_msg_family;
+    string      tile_font_stat_family;
+    string      tile_font_lbl_family;
+#endif
     int         tile_font_crt_size;
     int         tile_font_msg_size;
     int         tile_font_stat_size;
     int         tile_font_lbl_size;
     int         tile_font_tip_size;
-#endif
 #ifdef USE_TILE_LOCAL
 #ifdef USE_FT
     bool        tile_font_ft_light;
@@ -441,7 +445,6 @@ public:
     int         tile_window_height;
     maybe_bool  tile_use_small_layout;
 #endif
-#ifdef USE_TILE
     int         tile_cell_pixels;
     bool        tile_filter_scaling;
     int         tile_map_pixels;
@@ -460,13 +463,13 @@ public:
     bool        tile_water_anim;
     bool        tile_misc_anim;
     vector<string> tile_layout_priority;
-#endif
 #ifdef USE_TILE_WEB
     bool        tile_realtime_anim;
     string      tile_display_mode;
     bool        tile_level_map_hide_messages;
     bool        tile_level_map_hide_sidebar;
 #endif
+#endif // USE_TILE
 
     typedef map<string, string> opt_map;
     opt_map     named_options;          // All options not caught above are

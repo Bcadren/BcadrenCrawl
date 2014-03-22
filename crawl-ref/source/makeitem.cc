@@ -933,212 +933,6 @@ static bool _try_make_weapon_artefact(item_def& item, int force_type,
     return false;
 }
 
-static item_status_flag_type _determine_weapon_race(const item_def& item,
-                                                    int item_race)
-{
-    item_status_flag_type rc = ISFLAG_NO_RACE;
-
-    if (item.sub_type > WPN_MAX_RACIAL)
-        return rc;
-
-    switch (item_race)
-    {
-    case MAKE_ITEM_ELVEN:
-        rc = ISFLAG_ELVEN;
-        break;
-
-    case MAKE_ITEM_DWARVEN:
-        rc = ISFLAG_DWARVEN;
-        break;
-
-    case MAKE_ITEM_ORCISH:
-        rc = ISFLAG_ORCISH;
-        break;
-
-    case MAKE_ITEM_RANDOM_RACE:
-        if (coinflip())
-            break;
-
-        switch (item.sub_type)
-        {
-        case WPN_CLUB:
-            if (coinflip())
-                rc = ISFLAG_ORCISH;
-            break;
-
-        case WPN_WHIP:
-            if (one_chance_in(4))
-                rc = ISFLAG_ORCISH;
-            if (one_chance_in(4))
-                rc = ISFLAG_ELVEN;
-            break;
-
-        case WPN_MACE:
-        case WPN_FLAIL:
-        case WPN_GREAT_MACE:
-        case WPN_DIRE_FLAIL:
-            if (one_chance_in(4))
-                rc = ISFLAG_DWARVEN;
-            if (one_chance_in(3))
-                rc = ISFLAG_ORCISH;
-            break;
-
-        case WPN_MORNINGSTAR:
-        case WPN_HAMMER:
-            if (one_chance_in(3))
-                rc = ISFLAG_ORCISH;
-            if (one_chance_in(3))
-                rc = ISFLAG_DWARVEN;
-            break;
-
-        case WPN_EVENINGSTAR:
-            if (one_chance_in(5))
-                rc = ISFLAG_ORCISH;
-            if (one_chance_in(5))
-                rc = ISFLAG_DWARVEN;
-            break;
-
-        case WPN_DAGGER:
-            if (one_chance_in(3))
-                rc = ISFLAG_ORCISH;
-            if (one_chance_in(4))
-                rc = ISFLAG_DWARVEN;
-            if (one_chance_in(4))
-                rc = ISFLAG_ELVEN;
-            break;
-
-        case WPN_SHORT_SWORD:
-        case WPN_CUTLASS:
-            if (one_chance_in(3))
-                rc = ISFLAG_ORCISH;
-            if (one_chance_in(3))
-                rc = ISFLAG_DWARVEN;
-            if (one_chance_in(3))
-                rc = ISFLAG_ELVEN;
-            break;
-
-        case WPN_FALCHION:
-            if (one_chance_in(5))
-                rc = ISFLAG_DWARVEN;
-            if (one_chance_in(3))
-                rc = ISFLAG_ORCISH;
-            if (one_chance_in(3))
-                rc = ISFLAG_ELVEN;
-            break;
-
-        case WPN_LONG_SWORD:
-            if (one_chance_in(6))
-                rc = ISFLAG_DWARVEN;
-            if (one_chance_in(4))
-                rc = ISFLAG_ORCISH;
-            if (coinflip())
-                rc = ISFLAG_ELVEN;
-            break;
-
-        case WPN_GREAT_SWORD:
-            if (one_chance_in(3))
-                rc = ISFLAG_ORCISH;
-            break;
-
-        case WPN_SCIMITAR:
-            if (one_chance_in(5))
-                rc = ISFLAG_ELVEN;
-            if (coinflip())
-                rc = ISFLAG_ORCISH;
-            break;
-
-        case WPN_HAND_AXE:
-        case WPN_WAR_AXE:
-        case WPN_BROAD_AXE:
-        case WPN_BATTLEAXE:
-            if (one_chance_in(3))
-                rc = ISFLAG_ORCISH;
-            if (coinflip())
-                rc = ISFLAG_DWARVEN;
-            break;
-
-        case WPN_SPEAR:
-        case WPN_TRIDENT:
-            if (one_chance_in(4))
-                rc = ISFLAG_ORCISH;
-            if (one_chance_in(4))
-                rc = ISFLAG_ELVEN;
-            break;
-
-        case WPN_HALBERD:
-        case WPN_GLAIVE:
-        case WPN_BARDICHE:
-            if (one_chance_in(5))
-                rc = ISFLAG_ORCISH;
-            break;
-
-        case WPN_EXECUTIONERS_AXE:
-            if (one_chance_in(5))
-                rc = ISFLAG_ORCISH;
-            if (one_chance_in(4))
-                rc = ISFLAG_DWARVEN;
-            break;
-
-        case WPN_QUICK_BLADE:
-            if (one_chance_in(4))
-                rc = ISFLAG_ELVEN;
-            break;
-
-        case WPN_BOW:
-            if (one_chance_in(6))
-                rc = ISFLAG_ORCISH;
-            if (coinflip())
-                rc = ISFLAG_ELVEN;
-            break;
-
-        case WPN_LONGBOW:
-            if (one_chance_in(3))
-                rc = ISFLAG_ELVEN;
-            break;
-
-        case WPN_CROSSBOW:
-            if (one_chance_in(4))
-                rc = ISFLAG_ORCISH;
-            if (one_chance_in(4))
-                rc = ISFLAG_DWARVEN;
-            break;
-
-        case WPN_BLOWGUN:
-            if (one_chance_in(6))
-                rc = ISFLAG_ELVEN;
-            if (one_chance_in(4))
-                rc = ISFLAG_ORCISH;
-            break;
-        }
-        break;
-    }
-    return rc;
-}
-
-static void _weapon_add_racial_modifiers(item_def& item)
-{
-    switch (get_equip_race(item))
-    {
-    case ISFLAG_ORCISH:
-        if (coinflip())
-            item.plus--;
-        if (coinflip())
-            item.plus2++;
-        break;
-
-    case ISFLAG_ELVEN:
-        item.plus += random2(3);
-        break;
-
-    case ISFLAG_DWARVEN:
-        if (coinflip())
-            item.plus++;
-        if (coinflip())
-            item.plus2++;
-        break;
-    }
-}
-
 static brand_type _determine_weapon_brand(const item_def& item, int item_level)
 {
     // Forced ego.
@@ -1610,8 +1404,7 @@ static void _roll_weapon_type(item_def& item, int item_level)
 }
 
 static void _generate_weapon_item(item_def& item, bool allow_uniques,
-                                  int force_type, int item_level,
-                                  int item_race)
+                                  int force_type, int item_level)
 {
     // Determine weapon type.
     if (force_type != OBJ_RANDOM)
@@ -1670,16 +1463,6 @@ static void _generate_weapon_item(item_def& item, bool allow_uniques,
 
     item.plus  = 0;
     item.plus2 = 0;
-
-    set_equip_race(item, _determine_weapon_race(item, item_race));
-
-    // If we allow acquirement-type items to be orcish, then there's a
-    // good chance that we'll just strip them of their ego type at the
-    // bottom of this function. - bwr
-    if (force_good && !forced_ego && get_equip_race(item) == ISFLAG_ORCISH)
-        set_equip_race(item, ISFLAG_NO_RACE);
-
-    _weapon_add_racial_modifiers(item);
 
     if (item_level < 0)
     {
@@ -1744,15 +1527,6 @@ static void _generate_weapon_item(item_def& item, bool allow_uniques,
             item.plus2 -= random2(4);
             set_item_ego_type(item, OBJ_WEAPONS, SPWPN_NORMAL);
         }
-    }
-
-    if (get_equip_race(item) == ISFLAG_ORCISH
-        && !(item_race == MAKE_ITEM_ORCISH && forced_ego))
-    {
-        // No ego at all half the time.
-        const int brand = get_weapon_brand(item);
-        if (brand != SPWPN_NORMAL && !forced_ego && coinflip())
-            set_item_ego_type(item, OBJ_WEAPONS, SPWPN_NORMAL);
     }
 
     // No to-dam enchantment on blowguns.
@@ -1986,7 +1760,7 @@ static void _generate_missile_item(item_def& item, int force_type,
                                    0);
     }
 
-    // No fancy rocks -- break out before we get to racial/special stuff.
+    // No fancy rocks -- break out before we get to special stuff.
     if (item.sub_type == MI_LARGE_ROCK)
     {
         item.quantity = 2 + random2avg(5,2);
@@ -2002,8 +1776,6 @@ static void _generate_missile_item(item_def& item, int force_type,
         item.quantity = 1 + one_chance_in(4); // and only one, rarely two
         return;
     }
-
-    set_equip_race(item, ISFLAG_NO_RACE);
 
     if (!no_brand)
     {
@@ -2081,105 +1853,6 @@ static bool _try_make_armour_artefact(item_def& item, int force_type,
     }
 
     return false;
-}
-
-static item_status_flag_type _determine_armour_race(const item_def& item,
-                                                    int item_race)
-{
-    item_status_flag_type rc = ISFLAG_NO_RACE;
-
-    if (item.sub_type > ARM_MAX_RACIAL)
-        return rc;
-
-    switch (item_race)
-    {
-    case MAKE_ITEM_ELVEN:
-        rc = ISFLAG_ELVEN;
-        break;
-
-    case MAKE_ITEM_DWARVEN:
-        rc = ISFLAG_DWARVEN;
-        break;
-
-    case MAKE_ITEM_ORCISH:
-        rc = ISFLAG_ORCISH;
-        break;
-
-    case MAKE_ITEM_RANDOM_RACE:
-        if (coinflip())
-            break;
-
-        switch (item.sub_type)
-        {
-        case ARM_BUCKLER:
-        case ARM_SHIELD:
-        case ARM_LARGE_SHIELD:
-            if (one_chance_in(4))
-                rc = ISFLAG_ORCISH;
-            if (one_chance_in(4))
-                rc = ISFLAG_ELVEN;
-            if (one_chance_in(3))
-                rc = ISFLAG_DWARVEN;
-            break;
-
-        case ARM_CLOAK:
-            if (one_chance_in(4))
-                rc = ISFLAG_ORCISH;
-            if (one_chance_in(4))
-                rc = ISFLAG_DWARVEN;
-            if (one_chance_in(4))
-                rc = ISFLAG_ELVEN;
-            break;
-
-        case ARM_GLOVES:
-        case ARM_BOOTS:
-            if (one_chance_in(4))
-                rc = ISFLAG_ORCISH;
-            if (one_chance_in(4))
-                rc = ISFLAG_ELVEN;
-            if (one_chance_in(6))
-                rc = ISFLAG_DWARVEN;
-            break;
-
-        case ARM_HAT:
-            if (one_chance_in(6))
-                rc = ISFLAG_ORCISH;
-            if (one_chance_in(6))
-                rc = ISFLAG_ELVEN;
-            break;
-
-        case ARM_HELMET:
-            if (one_chance_in(6))
-                rc = ISFLAG_ORCISH;
-            if (one_chance_in(5))
-                rc = ISFLAG_DWARVEN;
-            break;
-
-        case ARM_ROBE:
-            if (one_chance_in(6))
-                rc = ISFLAG_ORCISH;
-            if (one_chance_in(4))
-                rc = ISFLAG_ELVEN;
-            break;
-
-        case ARM_LEATHER_ARMOUR:
-        case ARM_RING_MAIL:
-        case ARM_SCALE_MAIL:
-        case ARM_CHAIN_MAIL:
-        case ARM_PLATE_ARMOUR:
-            if (item.sub_type <= ARM_CHAIN_MAIL && one_chance_in(6))
-                rc = ISFLAG_ELVEN;
-            if (item.sub_type >= ARM_RING_MAIL && one_chance_in(5))
-                rc = ISFLAG_DWARVEN;
-            if (one_chance_in(5))
-                rc = ISFLAG_ORCISH;
-
-        default:
-            break;
-        }
-    }
-
-    return rc;
 }
 
 static special_armour_type _determine_armour_ego(const item_def& item,
@@ -2382,8 +2055,7 @@ bool is_armour_brand_ok(int type, int brand, bool strict)
 }
 
 static void _generate_armour_item(item_def& item, bool allow_uniques,
-                                  int force_type, int item_level,
-                                  int item_race)
+                                  int force_type, int item_level)
 {
     if (force_type != OBJ_RANDOM)
         item.sub_type = force_type;
@@ -2420,19 +2092,13 @@ static void _generate_armour_item(item_def& item, bool allow_uniques,
         return;
     }
 
-    if (item_race == MAKE_ITEM_RANDOM_RACE && item.sub_type == ARM_BOOTS)
+    if (item.sub_type == ARM_BOOTS)
     {
         if (one_chance_in(8))
             item.sub_type = ARM_NAGA_BARDING;
         else if (one_chance_in(7))
             item.sub_type = ARM_CENTAUR_BARDING;
     }
-
-    set_equip_race(item, _determine_armour_race(item, item_race));
-
-    // Dwarven armour is high-quality.
-    if (get_equip_race(item) == ISFLAG_DWARVEN && coinflip())
-        item.plus++;
 
     const bool force_good = item_level >= MAKE_GIFT_ITEM;
     const bool forced_ego = (item.special > 0);
@@ -2470,12 +2136,7 @@ static void _generate_armour_item(item_def& item, bool allow_uniques,
             item.plus += random2(3);
         }
 
-        if (!no_ego
-            && x_chance_in_y(31 + item_level, 350)
-            && (force_good
-                || forced_ego
-                || get_equip_race(item) != ISFLAG_ORCISH
-                || item.sub_type <= ARM_PLATE_ARMOUR && coinflip()))
+        if (!no_ego && x_chance_in_y(31 + item_level, 350))
         {
             // ...an ego item, in fact.
             set_item_ego_type(item, OBJ_ARMOUR,
@@ -2677,28 +2338,27 @@ static void _generate_potion_item(item_def& item, int force_type,
         do
         {
             // total weight is 10000
-            stype = random_choose_weighted( 2330, POT_CURING,
-                                            1150, POT_HEAL_WOUNDS,
-                                             650, POT_RESTORE_ABILITIES,
-                                             530, POT_POISON,
-                                             530, POT_MIGHT,
-                                             530, POT_AGILITY,
-                                             530, POT_BRILLIANCE,
-                                             500, POT_SPEED,
+            stype = random_choose_weighted( 2350, POT_CURING,
+                                            1160, POT_HEAL_WOUNDS,
+                                             660, POT_RESTORE_ABILITIES,
+                                             535, POT_POISON,
+                                             535, POT_MIGHT,
+                                             535, POT_AGILITY,
+                                             535, POT_BRILLIANCE,
+                                             505, POT_HASTE,
                                              280, POT_INVISIBILITY,
                                              280, POT_FLIGHT,
                                              280, POT_RESISTANCE,
                                              280, POT_MAGIC,
                                              280, POT_BERSERK_RAGE,
-                                             265, POT_MUTATION,
-                                             265, POT_LIGNIFY,
-                                             265, POT_PARALYSIS,
-                                             265, POT_CONFUSION,
+                                             270, POT_MUTATION,
+                                             270, POT_LIGNIFY,
+                                             270, POT_PARALYSIS,
+                                             270, POT_CONFUSION,
                                              230, POT_DEGENERATION,
                                              180, POT_CURE_MUTATION,
                                              125, POT_STRONG_POISON,
                                               90, POT_BENEFICIAL_MUTATION,
-                                              85, POT_BLOOD,
                                               60, POT_PORRIDGE,
                                               10, POT_EXPERIENCE,
                                               10, POT_DECAY,
@@ -2741,13 +2401,13 @@ static void _generate_scroll_item(item_def& item, int force_type,
         int tries = 500;
         do
         {
-            // total weight: 8634 if depth_mod < 4,
-            //               9334 if 4 <= depth_mod < 7,
-            //               9754 if depth_mod >= 7,
+            // total weight: 7824 if depth_mod < 4,
+            //               8524 if 4 <= depth_mod < 7,
+            //               8944 if depth_mod >= 7,
             //               and -1133 in sprint
             item.sub_type = random_choose_weighted(
                 1800, SCR_IDENTIFY,
-                1250, SCR_REMOVE_CURSE,
+                1120, SCR_REMOVE_CURSE,
                  // [Cha] don't generate teleportation scrolls if in sprint
                  802, (crawl_state.game_is_sprint() ? NUM_SCROLLS : SCR_TELEPORTATION),
                  331, SCR_FEAR,
@@ -2765,16 +2425,12 @@ static void _generate_scroll_item(item_def& item, int force_type,
 
                  331, SCR_IMMOLATION,
 
-                 270, SCR_CURSE_WEAPON,
-                 270, SCR_CURSE_ARMOUR,
-                 270, SCR_CURSE_JEWELLERY,
-
                  // Medium-level scrolls.
                  140, (depth_mod < 4 ? NUM_SCROLLS : SCR_ACQUIREMENT),
                  140, (depth_mod < 4 ? NUM_SCROLLS : SCR_ENCHANT_WEAPON_III),
                  140, (depth_mod < 4 ? NUM_SCROLLS : SCR_SUMMONING),
                  140, (depth_mod < 4 ? NUM_SCROLLS : SCR_SILENCE),
-                 140, (depth_mod < 4 ? NUM_SCROLLS : SCR_VULNERABILITY),
+                 270, (depth_mod < 4 ? NUM_SCROLLS : SCR_VULNERABILITY),
 
                  // High-level scrolls.
                  140, (depth_mod < 7 ? NUM_SCROLLS : SCR_BRAND_WEAPON),
@@ -2942,7 +2598,15 @@ static void _generate_staff_item(item_def& item, bool allow_uniques, int force_t
 static void _generate_rod_item(item_def& item, int force_type, int item_level)
 {
     if (force_type == OBJ_RANDOM)
+#if TAG_MAJOR_VERSION == 34
+    {
+        do
+            item.sub_type = random2(NUM_RODS);
+        while (item.sub_type == ROD_WARDING || item.sub_type == ROD_VENOM);
+    }
+#else
         item.sub_type = random2(NUM_RODS);
+#endif
     else
         item.sub_type = force_type;
 
@@ -3111,11 +2775,16 @@ static void _generate_misc_item(item_def& item, int force_type, int force_ego)
 
     // Pick number of beasts in the box
     if (item.sub_type == MISC_BOX_OF_BEASTS)
+    {
         item.plus = random_range(5, 15, 2);
-
+        item.plus2 = 0;
+    }
     // Spider sack charges
     if (item.sub_type == MISC_SACK_OF_SPIDERS)
+    {
         item.plus = random_range(5, 15, 2);
+        item.plus2 = 0;
+    }
 
     if (is_deck(item))
     {
@@ -3139,8 +2808,7 @@ int items(bool allow_uniques,
           int force_type,          // desired SUBTYPE - enum varies by OBJ
           bool dont_place,         // don't randomly place item on level
           int item_level,          // level of the item, can differ from global
-          int item_race,           // weapon / armour racial categories
-                                   // item_race also gives type of rune!
+          int rune_type,           // type of rune
           uint32_t mapmask,
           int force_ego,           // desired ego/brand
           int agent,               // acquirement agent, if not -1
@@ -3192,7 +2860,7 @@ int items(bool allow_uniques,
                                    200, OBJ_WEAPONS,
                                    200, OBJ_POTIONS,
                                    300, OBJ_MISSILES,
-                                   400, OBJ_SCROLLS,
+                                   360, OBJ_SCROLLS,
                                    400, OBJ_GOLD,
                                      0);
 
@@ -3241,7 +2909,7 @@ int items(bool allow_uniques,
     {
     case OBJ_WEAPONS:
         _generate_weapon_item(item, allow_uniques, force_type,
-                              item_level, item_race);
+                              item_level);
         break;
 
     case OBJ_MISSILES:
@@ -3249,8 +2917,7 @@ int items(bool allow_uniques,
         break;
 
     case OBJ_ARMOUR:
-        _generate_armour_item(item, allow_uniques, force_type,
-                              item_level, item_race);
+        _generate_armour_item(item, allow_uniques, force_type, item_level);
         break;
 
     case OBJ_WANDS:
@@ -3636,33 +3303,6 @@ void item_set_appearance(item_def &item)
     }
 }
 
-void maybe_set_item_race(item_def &item, int allowed, int num_rolls)
-{
-    if (!allowed)
-        return;
-
-    while (num_rolls-- > 0)
-    {
-        iflags_t irace = 0;
-        switch (item.base_type)
-        {
-        case OBJ_WEAPONS:
-            irace = _determine_weapon_race(item, MAKE_ITEM_RANDOM_RACE);
-            break;
-        case OBJ_ARMOUR:
-            irace = _determine_armour_race(item, MAKE_ITEM_RANDOM_RACE);
-            break;
-        default:
-            return;
-        }
-        if (!(allowed & irace))
-            continue;
-        dprf("Extra race roll passed!");
-        set_equip_race(item, irace);
-        return;
-    }
-}
-
 #if defined(DEBUG_DIAGNOSTICS) || defined(DEBUG_TESTS)
 static int _test_item_level()
 {
@@ -3708,8 +3348,7 @@ void makeitem_tests()
         _generate_weapon_item(item,
                               coinflip(),
                               coinflip() ? OBJ_RANDOM : random2(NUM_WEAPONS),
-                              level,
-                              MAKE_ITEM_RANDOM_RACE);
+                              level);
     }
 
     mpr("Running generate_armour_item tests.");
@@ -3730,8 +3369,7 @@ void makeitem_tests()
         _generate_armour_item(item,
                               coinflip(),
                               type,
-                              level,
-                              MAKE_ITEM_RANDOM_RACE);
+                              level);
     }
 }
 #endif

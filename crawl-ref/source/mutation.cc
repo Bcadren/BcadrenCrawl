@@ -200,7 +200,6 @@ mutation_activity_type mutation_activity_level(mutation_type mut)
         case MUT_LARGE_BONE_PLATES:
         case MUT_ROUGH_BLACK_SCALES:
         case MUT_RUGGED_BROWN_SCALES:
-        case MUT_EXOSKELETON:
             return MUTACT_PARTIAL;
         case MUT_YELLOW_SCALES:
         case MUT_ICY_BLUE_SCALES:
@@ -522,6 +521,7 @@ string describe_mutations(bool center_title)
             !form_keeps_mutations());
         have_any = true;
         break;
+#if TAG_MAJOR_VERSION == 34
 
     case SP_DJINNI:
         result += "You are immune to all types of fire, even holy and hellish.\n";
@@ -530,6 +530,7 @@ string describe_mutations(bool center_title)
         result += "You have no legs.\n";
         have_any = true;
         break;
+#endif
 
     case SP_LAVA_ORC:
     {
@@ -584,11 +585,7 @@ string describe_mutations(bool center_title)
     case SP_FORMICID:
         result += "Your are under a permanent stasis effect.\n";
         result += "You can dig through walls and to a lower floor.\n";
-        result += "Your four strong arms can wield any weapon, most with a shield.\n";
-        // form_changed_physiology rather than !form_keeps_mutations because
-        // statue and lich form both override this with full immunity.
-        result += _annotate_form_based("You are susceptible to poison.",
-                                       form_changed_physiology());
+        result += "Your four strong arms can wield two-handed weapons with a shield.\n";
         have_any = true;
         break;
 
@@ -1383,18 +1380,17 @@ bool physiology_mutation_conflict(mutation_type mutat)
     if (you.species == SP_FORMICID)
     {
         // Formicids have stasis and so prevent mutations that would do nothing.
-        // Formicids are weak to poison so prevent poison resistance mutation.
         // Antennae provides SInv, so acute vision is pointless.
         if (mutat == MUT_BERSERK
             || mutat == MUT_BLINK
             || mutat == MUT_TELEPORT
             || mutat == MUT_TELEPORT_CONTROL
-            || mutat == MUT_POISON_RESISTANCE
             || mutat == MUT_ACUTE_VISION)
         {
             return true;
         }
     }
+#if TAG_MAJOR_VERSION == 34
 
     // Heat doesn't hurt fire, djinn don't care about hunger.
     if (you.species == SP_DJINNI && (mutat == MUT_HEAT_RESISTANCE
@@ -1405,6 +1401,7 @@ bool physiology_mutation_conflict(mutation_type mutat)
     {
         return true;
     }
+#endif
 
     // Already immune.
     if (you.species == SP_GARGOYLE && mutat == MUT_POISON_RESISTANCE)
@@ -2583,7 +2580,8 @@ void check_demonic_guardian()
 
         monster *guardian = create_monster(mgen_data(mt, BEH_FRIENDLY, &you,
                                                      2, 0, you.pos(),
-                                                     MHITYOU, MG_FORCE_BEH));
+                                                     MHITYOU, MG_FORCE_BEH
+                                                              | MG_AUTOFOE));
 
         if (!guardian)
             return;
@@ -2598,18 +2596,15 @@ void check_demonic_guardian()
     }
 }
 
-void check_antennae_detect()
+/**
+ * Update the map knowledge based on any monster detection sources the player
+ * has.
+ */
+void check_monster_detect()
 {
-    int radius = player_mutation_level(MUT_ANTENNAE) * 2;
-
-    if (player_equip_unrand(UNRAND_BOOTS_ASSASSIN))
-        radius = max(radius, 4);
-    if (you_worship(GOD_ASHENZARI) && !player_under_penance())
-        radius = max(radius, you.piety / 20);
+    int radius = player_monster_detect_radius();
     if (radius <= 0)
         return;
-    radius = min(radius, LOS_RADIUS);
-
     for (radius_iterator ri(you.pos(), radius, C_ROUND); ri; ++ri)
     {
         discover_mimic(*ri, false);
@@ -2665,7 +2660,7 @@ void check_antennae_detect()
     }
 }
 
-int handle_pbd_corpses(bool do_rot)
+int handle_pbd_corpses()
 {
     int corpse_count = 0;
 
@@ -2681,14 +2676,6 @@ int handle_pbd_corpses(bool do_rot)
                 && !j->props.exists("never_hide"))
             {
                 ++corpse_count;
-
-                int chance = player_mutation_level(MUT_POWERED_BY_DEATH)*16;
-                if (do_rot && x_chance_in_y(you.duration[DUR_POWERED_BY_DEATH],
-                                chance))
-                {
-                    j->special -= random2(3);
-                }
-
                 if (corpse_count == 7)
                     break;
             }

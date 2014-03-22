@@ -43,7 +43,7 @@
 #include "traps.h"
 #include "view.h"
 
-int identify(int power, int item_slot, string *pre_msg)
+int identify(int power, int item_slot, bool alreadyknown, string *pre_msg)
 {
     int id_used = 1;
     int identified = 0;
@@ -61,8 +61,30 @@ int identify(int power, int item_slot, string *pre_msg)
                 MT_INVLIST, OSEL_UNIDENT, true, true, false, 0,
                 -1, NULL, OPER_ANY, true);
         }
-        if (prompt_failed(item_slot))
-            return identified;
+
+        if (item_slot == PROMPT_NOTHING)
+        {
+            return identified > 0 ? identified :
+                   alreadyknown   ? 0 : -1;
+        }
+
+        if (item_slot == PROMPT_ABORT)
+        {
+            if (alreadyknown
+                || crawl_state.seen_hups
+                || yesno("Really abort (and waste the scroll)?", false, 0))
+            {
+                canned_msg(MSG_OK);
+                return identified > 0                        ? identified :
+                       alreadyknown || crawl_state.seen_hups ? 0
+                                                             : -1;
+            }
+            else
+            {
+                item_slot = -1;
+                continue;
+            }
+        }
 
         item_def& item(you.inv[item_slot]);
 
@@ -70,13 +92,12 @@ int identify(int power, int item_slot, string *pre_msg)
             && (!is_deck(item) || top_card_is_known(item)))
         {
             mpr("Choose an unidentified item, or Esc to abort.");
-            if (Options.auto_list)
-                more();
+            more();
             item_slot = -1;
             continue;
         }
 
-        if (pre_msg && identified == 0)
+        if (alreadyknown && pre_msg && identified == 0)
             mpr(pre_msg->c_str());
 
         set_ident_type(item, ID_KNOWN_TYPE);
@@ -115,7 +136,7 @@ int identify(int power, int item_slot, string *pre_msg)
             learned_something_new(HINT_INACCURACY);
         }
 
-        if (Options.auto_list && id_used > identified)
+        if (id_used > identified)
             more();
 
         // In case we get to try again.
@@ -403,12 +424,12 @@ void antimagic()
         DUR_TRANSFORMATION, DUR_DEATH_CHANNEL,
         DUR_PHASE_SHIFT, DUR_WEAPON_BRAND, DUR_SILENCE,
         DUR_CONDENSATION_SHIELD, DUR_STONESKIN, DUR_RESISTANCE,
-        DUR_SLAYING, DUR_STEALTH,
-        DUR_MAGIC_SHIELD, DUR_PETRIFIED, DUR_LIQUEFYING, DUR_DARKNESS,
-        DUR_SHROUD_OF_GOLUBRIA, DUR_DISJUNCTION, DUR_SENTINEL_MARK,
-        DUR_ANTIMAGIC /*!*/, DUR_REGENERATION, DUR_TOXIC_RADIANCE,
-        DUR_FIRE_VULN, DUR_POISON_VULN, DUR_SAP_MAGIC, DUR_MAGIC_SAPPED,
-        DUR_PORTAL_PROJECTILE,
+        DUR_STEALTH, DUR_MAGIC_SHIELD, DUR_PETRIFIED, DUR_LIQUEFYING,
+        DUR_DARKNESS, DUR_SHROUD_OF_GOLUBRIA, DUR_DISJUNCTION,
+        DUR_SENTINEL_MARK, DUR_ANTIMAGIC /*!*/, DUR_REGENERATION,
+        DUR_TOXIC_RADIANCE, DUR_FIRE_VULN, DUR_POISON_VULN,
+        DUR_SAP_MAGIC, DUR_MAGIC_SAPPED,
+        DUR_PORTAL_PROJECTILE, DUR_DIMENSION_ANCHOR,
     };
 
     bool need_msg = false;
@@ -641,8 +662,7 @@ static bool _selectively_remove_curse(string *pre_msg)
             || &item == you.weapon() && !is_weapon(item))
         {
             mpr("Choose a cursed equipped item, or Esc to abort.");
-            if (Options.auto_list)
-                more();
+            more();
             continue;
         }
 
@@ -703,7 +723,7 @@ bool remove_curse(bool alreadyknown, string *pre_msg)
     {
         if (pre_msg)
             mprf("%s", pre_msg->c_str());
-        canned_msg(MSG_NOTHING_HAPPENS);
+        mpr("You feel blessed for a moment.");
     }
 
     return success;
@@ -729,23 +749,22 @@ static bool _selectively_curse_item(bool armour, string *pre_msg)
         {
             mprf("Choose an uncursed equipped piece of %s, or Esc to abort.",
                  armour ? "armour" : "jewellery");
-            if (Options.auto_list)
-                more();
+            more();
             continue;
         }
 
         if (pre_msg)
             mprf("%s", pre_msg->c_str());
         do_curse_item(item, false);
+        learned_something_new(HINT_YOU_CURSED);
         return true;
     }
 }
 
-bool curse_item(bool armour, bool alreadyknown, string *pre_msg)
+bool curse_item(bool armour, string *pre_msg)
 {
-    // make sure there's something to curse first
-    int count = 0;
-    int affected = EQ_WEAPON;
+    // Make sure there's something to curse first.
+    bool found = false;
     int min_type, max_type;
     if (armour)
         min_type = EQ_MIN_ARMOUR, max_type = EQ_MAX_ARMOUR;
@@ -754,39 +773,16 @@ bool curse_item(bool armour, bool alreadyknown, string *pre_msg)
     for (int i = min_type; i <= max_type; i++)
     {
         if (you.equip[i] != -1 && !you.inv[you.equip[i]].cursed())
-        {
-            count++;
-            if (one_chance_in(count))
-                affected = i;
-        }
+            found = true;
     }
-
-    if (affected == EQ_WEAPON)
+    if (!found)
     {
-        if (you_worship(GOD_ASHENZARI) && alreadyknown)
-        {
-            mprf(MSGCH_PROMPT, "You aren't wearing any piece of uncursed %s.",
-                 armour ? "armour" : "jewellery");
-        }
-        else
-        {
-            if (pre_msg)
-                mprf("%s", pre_msg->c_str());
-            canned_msg(MSG_NOTHING_HAPPENS);
-        }
-
+        mprf(MSGCH_PROMPT, "You aren't wearing any piece of uncursed %s.",
+             armour ? "armour" : "jewellery");
         return false;
     }
 
-    if (you_worship(GOD_ASHENZARI) && alreadyknown)
-        return _selectively_curse_item(armour, pre_msg);
-
-    if (pre_msg)
-        mprf("%s", pre_msg->c_str());
-    // Make the name before we curse it.
-    do_curse_item(you.inv[you.equip[affected]], false);
-    learned_something_new(HINT_YOU_CURSED);
-    return true;
+    return _selectively_curse_item(armour, pre_msg);
 }
 
 static bool _do_imprison(int pow, const coord_def& where, bool zin)

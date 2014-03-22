@@ -20,7 +20,6 @@ void do_uncurse_item(item_def &item, bool inscribe = true, bool no_ash = false,
 
 // stationary:
 void set_item_stationary(item_def &item);
-void remove_item_stationary(item_def &item);
 bool item_is_stationary(const item_def &item) PURE;
 
 // ident:
@@ -29,12 +28,9 @@ void set_ident_flags(item_def &item, iflags_t flags);
 void unset_ident_flags(item_def &item, iflags_t flags);
 bool fully_identified(const item_def &item) PURE;
 
-// racial item and item descriptions:
-void set_equip_race(item_def &item, iflags_t flags);
-void set_equip_desc(item_def &item, iflags_t flags);
-iflags_t get_equip_race(const item_def &item) PURE;
+// item descriptions:
+void     set_equip_desc(item_def &item, iflags_t flags);
 iflags_t get_equip_desc(const item_def &item) PURE;
-iflags_t get_species_race(species_type sp) IMMUTABLE;
 
 bool  is_helmet(const item_def &item) PURE;
 bool  is_hard_helmet(const item_def &item) PURE;
@@ -133,7 +129,7 @@ bool item_is_orb(const item_def &orb) PURE;
 bool item_is_horn_of_geryon(const item_def &item) PURE;
 bool item_is_spellbook(const item_def &item) PURE;
 
-bool is_elemental_evoker(const item_def &item);
+bool is_xp_evoker(const item_def &item);
 bool evoker_is_charged(const item_def &item);
 
 // ring functions:

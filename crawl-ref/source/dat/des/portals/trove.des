@@ -134,7 +134,7 @@ function trove.get_trove_item(e, value, base_item)
        {base="potion", type="heal wounds", quant=8+d(3)+d(3), weight=potion_weight},
 
        {base="wand", type="hasting", quant=7+d(2), weight=1},
-       {base="potion", type="speed", quant=3+d(3)+d(2), weight=potion_weight},
+       {base="potion", type="haste", quant=3+d(3)+d(2), weight=potion_weight},
        {base="scroll", type="blinking", quant=3+d(3), weight=1},
        {base="scroll", type="teleportation", quant=10+d(3)+d(4), weight=1},
 
@@ -191,7 +191,7 @@ function trove.setup_features(e)
     e.kfeat("< = exit_trove")
 end
 
--- "any scroll good_item" still gets you 'scroll of noise', 'scroll of curse weapon', etc
+-- "any scroll good_item" still gets you 'scroll of noise' etc
 -- so let's limit it to the enchant/recharge scrolls, tloc scrolls, identify scrolls,
 -- mapping scrolls with a low chance of silence, vulnerability or acquirement (lowest)
 function trove.good_scroll (e)
@@ -223,7 +223,7 @@ function trove.weapon_skills (e)
 end
 
 function trove.spell_skills (e)
-  local spell_skills = {"Spellcasting", "Conjurations", "Enchantments", "Summoning", "Necromancy", "Translocation", "Transmutation", "Fire Magic", "Ice Magic", "Air Magic", "Earth Magic", "Poison Magic"}
+  local spell_skills = {"Spellcasting", "Conjurations", "Charms", "Hexes", "Summoning", "Necromancy", "Translocation", "Transmutation", "Fire Magic", "Ice Magic", "Air Magic", "Earth Magic", "Poison Magic"}
   local skill_total = 0
   local nonzero_skills = 0
   for _, skill in ipairs(spell_skills) do
@@ -530,8 +530,8 @@ MONS:    plant col:white / plant col:blue w:6
 MONS:    plant col:white / plant col:cyan w:3 / plant col:blue w:3
 #
 ITEM:    any useful good_item
-ITEM:    any useful jewellery good_item / any useful good_item
-ITEM:    any useful weapon good_item / any useful armour good_item / any useful good_item
+ITEM:    any useful jewellery good_item / any useful good_item w:5
+ITEM:    any useful weapon good_item / any useful armour good_item / any useful good_item w:5
 KFEAT:   w = W
 : trove.setup_features(_G)
 : trove.place_fog(_G, "blue smoke", 30)
@@ -785,28 +785,27 @@ ORIENT: encompass
 TAGS:   no_item_gen no_monster_gen allow_dup no_vmirror no_rotate
 WEIGHT: 2
 COLOUR: x = blue
-COLOUR: = = blue
 NSUBST: " = 1:+ / *:x
 NSUBST: ' = 1:+ / *:x
-# Rock is actually diggable for those people driven mad by hatred.
-MONS:   deep elf summoner
-# 24 items, just because we're feeling generous.
+MONS:   ynoxinul
+# 25 items, just because we're feeling generous.
 ITEM:   any useful good_item w:10 / any
 ITEM:   any useful jewellery good_item / any useful good_item
 ITEM:   acquire weapon / acquire armour / any useful good_item
+ITEM:   wand of disintegration ident:type
 KFEAT:  m = iron_grate
 : trove.setup_features(_G)
 MAP
         mmmmmmmmmm
-        mmm1..1mmm
+        m..1mm1..m
 xxxxxxxxmmmmmmmmmmxxxxxxxx
 x........................x
 x.x'x'xxxxxxxxxxxxxxxxxx.x
 x.'edd+...............<x.x
 x.xdedx.mmmmmmmmmm.xx"xx"x
-x.'ddex.mmm1..1mmm."dedddx
+x.'ddex.m..1mm1..m."dedddx
 x'xxxxx.mmmmmmmmmm.xededfx
-xA................."fffedx
+xA.h..............."fffedx
 xxxxxxxxxxxxxxxxxxxxxxxxxx
 ENDMAP
 
@@ -814,17 +813,19 @@ ENDMAP
 NAME:   trove_treasure_island
 ORIENT: encompass
 TAGS:   no_item_gen no_monster_gen allow_dup no_vmirror no_rotate no_pool_fixup
+# If we're going to negate the results, might as well
+# block the few who don't get free help.
+TAGS:   no_species_mu no_species_vp
 WEIGHT: 2
 COLOUR: x = blue
-COLOUR: o = blue
-COLOUR: = = blue
 KFEAT:  1 = deep_water
-KMONS:  1 = shining eye
-# 21 items, 'cos this one is *nasty*. There are 4 extra potions of cure mutation.
+KMONS:  1 = generate_awake shining eye
+# 21 items, 'cos this one is *nasty*.
+# There are 4 extra potions of cure mutation, anyway.
 ITEM:   any useful good_item / any
 ITEM:   any useful jewellery good_item / any useful good_item
 ITEM:   acquire weapon / acquire armour / any useful good_item
-ITEM:   potion of cure mutation
+ITEM:   potion of cure mutation ident:type
 : trove.setup_features(_G)
 : set_border_fill_type("open_sea")
 MAP
@@ -872,9 +873,9 @@ ITEM:    potion of curing / potion of heal wounds / \
          potion of curing q:2 / potion of heal wounds q:2
 ITEM:    potion of experience / potion of beneficial mutation w:30
 ITEM:    potion of might / potion of resistance / \
-         potion of magic / potion of speed / \
+         potion of magic / potion of haste / \
          potion of might q:2 / potion of resistance q:2 / \
-         potion of magic q:2 / potion of speed q:2
+         potion of magic q:2 / potion of haste q:2
 ITEM:    potion of cure mutation
 SHUFFLE: df
 SHUFFLE: eg
@@ -899,8 +900,10 @@ ORIENT:  encompass
 ITEM:    acquire armour / any useful armour good_item / any armour w:2
 ITEM:    acquire weapon / any useful weapon good_item / any weapon w:2
 ITEM:    acquire jewellery / any useful jewellery good_item / any jewellery w:2
+ITEM:    any useful armour good_item / any useful weapon good_item / \
+         any useful jewellery good_item
 : trove.good_scroll(_G)
-ITEM:   wand of digging
+KITEM:   h = wand of disintegration ident:type, wand of disintegration ident:type
 SHUFFLE: defg
 : trove.setup_features(_G)
 MAP

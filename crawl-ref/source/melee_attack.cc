@@ -153,10 +153,8 @@ melee_attack::melee_attack(actor *attk, actor *defn,
         if (attk_type == AT_WEAP_ONLY)
         {
             int weap = attacker->as_monster()->inv[MSLOT_WEAPON];
-            if (weap == NON_ITEM)
+            if (weap == NON_ITEM || is_range_weapon(mitm[weap]))
                 attk_type = AT_NONE;
-            else if (is_range_weapon(mitm[weap]))
-                attk_type = AT_SHOOT;
             else
                 attk_type = AT_HIT;
         }
@@ -202,7 +200,6 @@ bool melee_attack::handle_phase_attempted()
     // Skip invalid and dummy attacks.
     if (defender && (!adjacent(attack_position, defender->pos())
                      && !jumping_attack && !can_reach())
-        || attk_type == AT_SHOOT
         || attk_type == AT_CONSTRICT
            && (!attacker->can_constrict(defender)
                || attacker->is_monster() && attacker->mid == MID_PLAYER))
@@ -385,7 +382,8 @@ bool melee_attack::handle_phase_attempted()
     }
     else if (attacker->is_monster()
              && mons_class_flag(attacker->type, M_STABBER)
-             && defender && defender->asleep())
+             && defender && defender->asleep()
+             || attacker->type == MONS_DROWNED_SOUL)
     {
         to_hit = AUTOMATIC_HIT;
     }
@@ -490,6 +488,9 @@ void melee_attack::apply_black_mark_effects()
             attacker->heal(random2(damage_done));
         }
 
+        if (!defender->alive())
+            return;
+
         switch(random2(3))
         {
             case 0:
@@ -510,6 +511,9 @@ void melee_attack::apply_black_mark_effects()
 
         if (mon->heal(random2avg(damage_done, 2)))
             simple_monster_message(mon, " is healed.");
+
+        if (!defender->alive())
+            return;
 
         switch(random2(3))
         {
@@ -601,8 +605,11 @@ bool melee_attack::handle_phase_hit()
 
     // check_unrand_effects is safe to call with a dead defender, so always
     // call it, even if the hit effects said to stop.
-    if (check_unrand_effects() || stop_hit)
+    if (stop_hit)
+    {
+        check_unrand_effects();
         return false;
+    }
 
     if (damage_done > 0 || _flavour_triggers_damageless(attk_flavour))
     {
@@ -633,6 +640,9 @@ bool melee_attack::handle_phase_hit()
 
     // Check for weapon brand & inflict that damage too
     apply_damage_brand();
+
+    if (check_unrand_effects())
+        return false;
 
     if (damage_done > 0)
         apply_black_mark_effects();
@@ -1174,7 +1184,9 @@ void melee_attack::adjust_noise()
         // To prevent compiler warnings.
         case AT_NONE:
         case AT_RANDOM:
+#if TAG_MAJOR_VERSION == 34
         case AT_SHOOT:
+#endif
             die("Invalid attack type for noise_factor");
             break;
 
@@ -1637,14 +1649,7 @@ bool melee_attack::player_aux_apply(unarmed_attack_type atk)
         if (damage_brand == SPWPN_ANTIMAGIC && you.mutation[MUT_ANTIMAGIC_BITE]
             && damage_done > 0)
         {
-            bool spell_user = false;
-
-            if (defender->as_monster()->can_use_spells()
-                && !defender->as_monster()->is_priest()
-                && !mons_class_flag(defender->type, M_FAKE_SPELLS))
-            {
-                spell_user = true;
-            }
+            const bool spell_user = mons_antimagic_affected(defender->as_monster());
 
             antimagic_affects_defender(damage_done * 2);
             mprf("You drain %s %s.",
@@ -1826,54 +1831,6 @@ int melee_attack::player_apply_slaying_bonuses(int damage, bool aux)
 
     damage += (damage_plus > -1) ? (random2(1 + damage_plus))
                                  : (-random2(1 - damage_plus));
-    return damage;
-}
-
-// Modifiers dependent on wielding a weapon. Does not include weapon
-// enchantment, which is handled by player_apply_slaying_bonuses.
-int melee_attack::player_apply_weapon_bonuses(int damage)
-{
-    if (weapon && is_weapon(*weapon) && !is_range_weapon(*weapon))
-    {
-        if (get_equip_race(*weapon) == ISFLAG_DWARVEN
-            && you.species == SP_DEEP_DWARF)
-        {
-            damage += random2(3);
-        }
-
-        if (get_equip_race(*weapon) == ISFLAG_ORCISH
-            && player_genus(GENPC_ORCISH))
-        {
-            if (you_worship(GOD_BEOGH) && !player_under_penance())
-            {
-#ifdef DEBUG_DIAGNOSTICS
-                const int orig_damage = damage;
-#endif
-
-                if (you.piety >= piety_breakpoint(2) || coinflip())
-                    damage++;
-
-                damage +=
-                    random2avg(
-                        div_rand_round(
-                            min(static_cast<int>(you.piety), 180), 33), 2);
-
-                dprf(DIAG_COMBAT, "Damage: %d -> %d, Beogh bonus: %d",
-                     orig_damage, damage, damage - orig_damage);
-            }
-
-            if (coinflip())
-                damage++;
-        }
-
-        // Demonspawn get a damage bonus for demonic weapons.
-        if (you.species == SP_DEMONSPAWN && is_demonic(*weapon))
-            damage += random2(3);
-
-        if (get_weapon_brand(*weapon) == SPWPN_SPEED)
-            damage = div_rand_round(damage * 9, 10);
-    }
-
     return damage;
 }
 
@@ -2314,8 +2271,6 @@ void melee_attack::player_weapon_upsets_god()
         {
             did_god_conduct(DID_HASTY, 1);
         }
-        if (get_weapon_brand(*weapon) == SPWPN_FLAMING)
-            did_god_conduct(DID_FIRE, 1);
     }
     else if (weapon
              && weapon->base_type == OBJ_STAVES
@@ -2562,9 +2517,7 @@ void melee_attack::antimagic_affects_defender(int pow)
         drain_mp(amount);
         obvious_effect = true;
     }
-    else if (defender->as_monster()->can_use_spells()
-             && !defender->as_monster()->is_priest()
-             && !mons_class_flag(defender->type, M_FAKE_SPELLS))
+    else if (mons_antimagic_affected(defender->as_monster()))
     {
         int dur = div_rand_round(pow * 8, defender->as_monster()->hit_dice);
         amount = random2(dur + 1);
@@ -2899,20 +2852,6 @@ void melee_attack::chaos_affects_attacker()
         DID_AFFECT();
     }
 
-    // Dump attacker or items under attacker to another level.
-    if (is_valid_shaft_level()
-        && (attacker->will_trigger_shaft()
-            || igrd(attack_position) != NON_ITEM)
-        && one_chance_in(1000))
-    {
-        (void) attacker->do_shaft();
-#ifdef NOTE_DEBUG_CHAOS_EFFECTS
-        take_note(Note(NOTE_MESSAGE, 0, 0,
-                       "CHAOS affects attacker: shaft effect"), true);
-#endif
-        DID_AFFECT();
-    }
-
     // Create a colourful cloud.
     if (weapon && one_chance_in(1000))
     {
@@ -2960,27 +2899,6 @@ void melee_attack::chaos_affects_attacker()
             DID_AFFECT();
         }
     }
-
-    if (attacker->is_player() && !you.form && one_chance_in(500))
-    {
-        // Non-weapon using forms are uncool here: you'd need to run away
-        // instead of continuing the fight.
-        transformation_type form = coinflip() ? TRAN_TREE : TRAN_APPENDAGE;
-        // Waiting it off is boring.
-        if (form == TRAN_TREE && !there_are_monsters_nearby(true, false, false))
-            form = TRAN_APPENDAGE;
-        if (one_chance_in(5))
-            form = coinflip() ? TRAN_STATUE : TRAN_LICH;
-        if (transform(0, form, true))
-        {
-#ifdef NOTE_DEBUG_CHAOS_EFFECTS
-            take_note(Note(NOTE_MESSAGE, 0, 0,
-                           (string("CHAOS affects attacker: transform into ")
-                           + transform_name(form)).c_str()), true);
-#endif
-            DID_AFFECT();
-        }
-    }
 }
 
 void melee_attack::do_miscast()
@@ -3020,9 +2938,7 @@ void melee_attack::do_miscast()
             // Ignore a lot of item flags to make cause as short as possible,
             // so it will (hopefully) fit onto a single line in the death
             // cause screen.
-            cause += wep_name(DESC_YOUR,
-                              ignore_mask
-                              | ISFLAG_COSMETIC_MASK | ISFLAG_RACIAL_MASK);
+            cause += wep_name(DESC_YOUR, ignore_mask | ISFLAG_COSMETIC_MASK);
 
             if (miscast_target == attacker)
                 hand_str = wep_name(DESC_PLAIN, ignore_mask);
@@ -3166,7 +3082,7 @@ brand_type melee_attack::random_chaos_brand()
 attack_flavour melee_attack::random_chaos_attack_flavour()
 {
     attack_flavour flavours[] =
-        {AF_FIRE, AF_COLD, AF_ELEC, AF_POISON_NASTY, AF_VAMPIRIC, AF_DISTORT,
+        {AF_FIRE, AF_COLD, AF_ELEC, AF_POISON, AF_VAMPIRIC, AF_DISTORT,
          AF_CONFUSE, AF_CHAOS};
     return RANDOM_ELEMENT(flavours);
 }
@@ -3215,6 +3131,7 @@ bool melee_attack::apply_damage_brand()
                                     defender->is_icy() ? "melt" : "burn");
         defender->expose_to_element(BEAM_FIRE);
         noise_factor += 400 / max(1, damage_done);
+        attacker->god_conduct(DID_FIRE, 1);
         break;
 
     case SPWPN_FREEZING:
@@ -3284,7 +3201,7 @@ bool melee_attack::apply_damage_brand()
 
             // Weapons of venom do two levels of poisoning to the player,
             // but only one level to monsters.
-            defender->poison(attacker, 2);
+            defender->poison(attacker, 1 + random2(5) + random2(damage_done * 3 / 2));
 
             if (defender->is_player()
                    && old_poison < you.duration[DUR_POISONING]
@@ -3882,18 +3799,6 @@ int melee_attack::calc_to_hit(bool random)
             {
                 mhit += weapon->plus;
                 mhit += property(*weapon, PWPN_HIT);
-
-                if (get_equip_race(*weapon) == ISFLAG_ELVEN
-                    && player_genus(GENPC_ELVEN))
-                {
-                    mhit += (random && coinflip() ? 2 : 1);
-                }
-                else if (get_equip_race(*weapon) == ISFLAG_ORCISH
-                         && you_worship(GOD_BEOGH) && !player_under_penance())
-                {
-                    mhit++;
-                }
-
             }
             else if (weapon->base_type == OBJ_STAVES)
                 mhit += property(*weapon, PWPN_HIT);
@@ -4087,7 +3992,7 @@ int melee_attack::calc_attack_delay(bool random, bool scaled)
 
         int delay = property(*weapon, PWPN_SPEED);
         if (damage_brand == SPWPN_SPEED)
-            delay = (delay + 1) / 2;
+            delay = random ? div_rand_round(2 * delay, 3) : (2 * delay)/3;
         return random ? div_rand_round(10 + delay, 2) : (10 + delay) / 2;
     }
 
@@ -4110,36 +4015,36 @@ void melee_attack::player_stab_check()
         return;
     }
 
-    const unchivalric_attack_type uat = is_unchivalric_attack(&you, defender);
-    stab_attempt = (uat != UCAT_NO_ATTACK);
-    const bool roll_needed = (uat != UCAT_SLEEPING && uat != UCAT_PARALYSED);
+    const stab_type st = find_stab_type(&you, defender);
+    stab_attempt = (st != STAB_NO_STAB);
+    const bool roll_needed = (st != STAB_SLEEPING && st != STAB_PARALYSED);
 
     int roll = 100;
-    if (uat == UCAT_INVISIBLE && !mons_sense_invis(defender->as_monster()))
+    if (st == STAB_INVISIBLE && !mons_sense_invis(defender->as_monster()))
         roll -= 10;
 
-    switch (uat)
+    switch (st)
     {
-    case UCAT_NO_ATTACK:
-    case NUM_UCAT:
+    case STAB_NO_STAB:
+    case NUM_STAB:
         stab_bonus = 0;
         break;
-    case UCAT_SLEEPING:
-    case UCAT_PARALYSED:
+    case STAB_SLEEPING:
+    case STAB_PARALYSED:
         stab_bonus = 1;
         break;
-    case UCAT_HELD_IN_NET:
-    case UCAT_PETRIFYING:
-    case UCAT_PETRIFIED:
+    case STAB_HELD_IN_NET:
+    case STAB_PETRIFYING:
+    case STAB_PETRIFIED:
         stab_bonus = 2;
         break;
-    case UCAT_INVISIBLE:
-    case UCAT_CONFUSED:
-    case UCAT_FLEEING:
-    case UCAT_ALLY:
+    case STAB_INVISIBLE:
+    case STAB_CONFUSED:
+    case STAB_FLEEING:
+    case STAB_ALLY:
         stab_bonus = 4;
         break;
-    case UCAT_DISTRACTED:
+    case STAB_DISTRACTED:
         stab_bonus = 6;
         break;
     }
@@ -4154,7 +4059,7 @@ void melee_attack::player_stab_check()
     }
 
     if (stab_attempt)
-        count_action(CACT_STAB, uat);
+        count_action(CACT_STAB, st);
 }
 
 // TODO: Unify this and player_unarmed_speed (if possible), then unify with
@@ -4174,7 +4079,7 @@ random_var melee_attack::player_weapon_speed()
         if (weapon->base_type == OBJ_WEAPONS
             && damage_brand == SPWPN_SPEED)
         {
-            attack_delay = (attack_delay + constant(1)) / 2;
+            attack_delay = div_rand_round(constant(2) * attack_delay, 3);
         }
     }
 
@@ -4424,47 +4329,46 @@ void melee_attack::announce_hit()
     }
 }
 
-void melee_attack::mons_do_poison()
+// Returns if the target was actually poisoned by this attack
+bool melee_attack::mons_do_poison()
 {
-    if (attk_flavour == AF_POISON_NASTY
-        || one_chance_in(15 + 5 * (attk_flavour == AF_POISON ? 1 : 0))
-        || (damage_done > 1
-            && one_chance_in(attk_flavour == AF_POISON ? 4 : 3)))
+    int amount = 1;
+    bool force = false;
+
+    if (attk_flavour == AF_POISON_STRONG)
     {
-        int amount = 1;
-        bool force = false;
+        amount = random_range(attacker->get_experience_level() * 7 / 2,
+                              attacker->get_experience_level() * 11 / 2);
 
-        if (attk_flavour == AF_POISON_NASTY)
-            amount++;
-        else if (attk_flavour == AF_POISON_MEDIUM)
-            amount += random2(3);
-        else if (attk_flavour == AF_POISON_STRONG)
+        if (defender->res_poison() > 0 && defender->has_lifeforce())
         {
-            if (defender->res_poison() > 0 && defender->has_lifeforce())
-            {
-                amount += random2(3);
-                force = true;
-            }
-            else
-                amount += roll_dice(2, 5);
-        }
-
-        if (!defender->poison(attacker, amount, force))
-            return;
-
-        if (needs_message)
-        {
-            mprf("%s poisons %s!",
-                 atk_name(DESC_THE).c_str(),
-                 defender_name().c_str());
-            if (force)
-            {
-                mprf("%s partially resist%s.",
-                    defender_name().c_str(),
-                    defender->is_player() ? "" : "s");
-            }
+            amount /= 2;
+            force = true;
         }
     }
+    else
+    {
+        amount = random_range(attacker->get_experience_level() * 2,
+                              attacker->get_experience_level() * 4);
+    }
+
+    if (!defender->poison(attacker, amount, force))
+        return false;
+
+    if (needs_message)
+    {
+        mprf("%s poisons %s!",
+                atk_name(DESC_THE).c_str(),
+                defender_name().c_str());
+        if (force)
+        {
+            mprf("%s partially resist%s.",
+                defender_name().c_str(),
+                defender->is_player() ? "" : "s");
+        }
+    }
+
+    return true;
 }
 
 void melee_attack::mons_do_napalm()
@@ -4557,25 +4461,9 @@ void melee_attack::mons_apply_attack_flavour()
         break;
 
     case AF_POISON:
-    case AF_POISON_NASTY:
-    case AF_POISON_MEDIUM:
     case AF_POISON_STRONG:
-        mons_do_poison();
-        break;
-
-    case AF_POISON_STR:
-    case AF_POISON_INT:
-    case AF_POISON_DEX:
-        if (defender->poison(attacker, 1))
-        {
-            if (one_chance_in(3))
-            {
-                stat_type drained_stat = (flavour == AF_POISON_STR ? STAT_STR :
-                                          flavour == AF_POISON_INT ? STAT_INT
-                                                                   : STAT_DEX);
-                defender->drain_stat(drained_stat, 1, attacker);
-            }
-        }
+        if (one_chance_in(3))
+            mons_do_poison();
         break;
 
     case AF_ROT:
@@ -4757,7 +4645,11 @@ void melee_attack::mons_apply_attack_flavour()
         }
 
         if (attacker->type == MONS_RED_WASP || one_chance_in(3))
-            defender->poison(attacker, coinflip() ? 2 : 1);
+        {
+            int dmg = random_range(attacker->get_experience_level() * 3 / 2,
+                                   attacker->get_experience_level() * 5 / 2);
+            defender->poison(attacker, dmg);
+        }
 
         int paralyse_roll = (damage_done > 4 ? 3 : 20);
         if (attacker->type == MONS_YELLOW_WASP)
@@ -4774,8 +4666,6 @@ void melee_attack::mons_apply_attack_flavour()
     }
 
     case AF_ACID:
-        if (attacker->type == MONS_SPINY_WORM)
-            defender->poison(attacker, 2 + random2(4));
         splash_defender_with_acid(3);
         break;
 
@@ -4837,9 +4727,7 @@ void melee_attack::mons_apply_attack_flavour()
         {
             const bool spell_user =
                 defender->is_player()
-                || defender->as_monster()->can_use_spells()
-                    && !defender->as_monster()->is_priest()
-                    && !mons_class_flag(defender->type, M_FAKE_SPELLS);
+                || mons_antimagic_affected(defender->as_monster());
 
             if (you.can_see(attacker) || you.can_see(defender))
             {
@@ -5009,11 +4897,8 @@ void melee_attack::mons_apply_attack_flavour()
         break;
 
     case AF_WEAKNESS_POISON:
-        if (defender->poison(attacker, 1))
-        {
-            if (coinflip())
-                defender->weaken(attacker, 12);
-        }
+        if (coinflip() && mons_do_poison())
+            defender->weaken(attacker, 12);
         break;
 
     case AF_SHADOWSTAB:
@@ -5022,7 +4907,7 @@ void melee_attack::mons_apply_attack_flavour()
 
     case AF_DROWN:
         if (attacker->type == MONS_DROWNED_SOUL)
-            attacker->as_monster()->suicide(-10);
+            attacker->as_monster()->suicide(-1000);
 
         if (defender->res_water_drowning() <= 0)
         {
@@ -5398,9 +5283,6 @@ bool melee_attack::do_knockback(bool trample)
 {
     do
     {
-        if (defender->is_player() && player_equip_unrand(UNRAND_SPIDER))
-            return false;
-
         if (defender->is_stationary())
             return false; // don't even print a message
 
@@ -5776,13 +5658,6 @@ int melee_attack::calc_damage()
             damage_max = property(*weapon, PWPN_DAMAGE);
             damage += random2(damage_max);
 
-            if (get_equip_race(*weapon) == ISFLAG_ORCISH
-                && mons_genus(attacker->mons_species()) == MONS_ORC
-                && coinflip())
-            {
-                damage++;
-            }
-
             int wpn_damage_plus = weapon->plus2;
             if (weapon->base_type == OBJ_RODS)
                 wpn_damage_plus = weapon->special;
@@ -5841,9 +5716,6 @@ int melee_attack::calc_damage()
         if (as_mon->has_ench(ENCH_WEAK))
             damage = damage * 2 / 3;
 
-        if (weapon && get_weapon_brand(*weapon) == SPWPN_SPEED)
-            damage = div_rand_round(damage * 9, 10);
-
         bool half_ac = (as_mon->type == MONS_PHANTASMAL_WARRIOR);
 
         // If the defender is asleep, the attacker gets a stab.
@@ -5886,7 +5758,6 @@ int melee_attack::calc_damage()
         damage_done = player_apply_fighting_skill(damage_done, false);
         damage_done = player_apply_misc_modifiers(damage_done);
         damage_done = player_apply_slaying_bonuses(damage_done, false);
-        damage_done = player_apply_weapon_bonuses(damage_done);
         damage_done = player_apply_final_multipliers(damage_done);
 
         damage_done = player_stab(damage_done);

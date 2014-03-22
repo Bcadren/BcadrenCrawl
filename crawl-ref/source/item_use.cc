@@ -67,15 +67,13 @@
 #include "view.h"
 #include "xom.h"
 
-static bool _drink_fountain();
 static int _handle_enchant_armour(int item_slot = -1,
+                                  bool alreadyknown = false,
                                   string *pre_msg = NULL);
 
 static bool _is_cancellable_scroll(scroll_type scroll);
 static bool _safe_to_remove_or_wear(const item_def &item, bool remove,
                                     bool quiet = false);
-static bool _two_targeted_scrolls_identified();
-static bool _one_targeted_scroll_tried();
 
 // Rather messy - we've gathered all the can't-wield logic from wield_weapon()
 // here.
@@ -143,12 +141,11 @@ bool can_wield(item_def *weapon, bool say_reason,
         return false;
     }
 
-    // Only ogres, trolls, and formicids can wield giant clubs (>= 30 aum)
+    // Only ogres and trolls can wield giant clubs (>= 30 aum)
     // and large rocks (60 aum).
-    if ((you.body_size() < SIZE_LARGE && you.species != SP_FORMICID)
-        && (item_mass(*weapon) >= 500
-            || weapon->base_type == OBJ_WEAPONS
-               && item_mass(*weapon) >= 300))
+    if (you.body_size() < SIZE_LARGE && (item_mass(*weapon) >= 500
+                                         || weapon->base_type == OBJ_WEAPONS
+                                            && item_mass(*weapon) >= 300))
     {
         SAY(mpr("That's too large and heavy for you to wield."));
         return false;
@@ -168,7 +165,6 @@ bool can_wield(item_def *weapon, bool say_reason,
 
     // Small species wielding large weapons...
     if (you.body_size(PSIZE_BODY) < SIZE_MEDIUM
-        && you.species != SP_FORMICID
         && !check_weapon_wieldable_size(*weapon, you.body_size(PSIZE_BODY)))
     {
         SAY(mpr("That's too large for you to wield."));
@@ -200,6 +196,7 @@ bool can_wield(item_def *weapon, bool say_reason,
             id_brand = true;
         }
     }
+#if TAG_MAJOR_VERSION == 34
     else if (you.species == SP_DJINNI
              && get_weapon_brand(*weapon) == SPWPN_ANTIMAGIC
              && (item_type_known(*weapon) || !only_known))
@@ -210,6 +207,7 @@ bool can_wield(item_def *weapon, bool say_reason,
             id_brand = true;
         }
     }
+#endif
 
     if (id_brand)
     {
@@ -733,7 +731,11 @@ bool can_wear_armour(const item_def &item, bool verbose, bool ignore_temporary)
             return false;
         }
 
-        if (you.species == SP_NAGA || you.species == SP_DJINNI)
+        if (you.species == SP_NAGA
+#if TAG_MAJOR_VERSION == 34
+            || you.species == SP_DJINNI
+#endif
+           )
         {
             if (verbose)
                 mpr("You have no legs!");
@@ -858,8 +860,6 @@ bool do_wear_armour(int item, bool quiet)
         {
             if (you.species == SP_OCTOPODE)
                 mpr("You need the rest of your tentacles for walking.");
-            else if (you.species == SP_FORMICID)
-                mprf("You'd need six %s to do that!", you.hand_name(true).c_str());
             else
                 mprf("You'd need three %s to do that!", you.hand_name(true).c_str());
         }
@@ -1163,22 +1163,6 @@ static bool _safe_to_remove_or_wear(const item_def &item, bool remove, bool quie
         return false;
     }
     return true;
-}
-
-static bool _two_targeted_scrolls_identified()
-{
-    int ident_count = (you.type_ids[OBJ_SCROLLS][SCR_RECHARGING] == ID_KNOWN_TYPE)
-                    + (you.type_ids[OBJ_SCROLLS][SCR_ENCHANT_ARMOUR] == ID_KNOWN_TYPE)
-                    + (you.type_ids[OBJ_SCROLLS][SCR_IDENTIFY] == ID_KNOWN_TYPE);
-
-    return ident_count == 2;
-}
-
-static bool _one_targeted_scroll_tried()
-{
-    return you.type_ids[OBJ_SCROLLS][SCR_RECHARGING] ==  ID_TRIED_ITEM_TYPE
-           || you.type_ids[OBJ_SCROLLS][SCR_ENCHANT_ARMOUR] == ID_TRIED_ITEM_TYPE
-           || you.type_ids[OBJ_SCROLLS][SCR_IDENTIFY] == ID_TRIED_ITEM_TYPE;
 }
 
 // Checks whether removing an item would cause flight to end and the
@@ -1967,14 +1951,6 @@ void drink(int slot)
         return;
     }
 
-    if (slot == -1)
-    {
-        const dungeon_feature_type feat = grd(you.pos());
-        if (feat >= DNGN_FOUNTAIN_BLUE && feat <= DNGN_DRY_FOUNTAIN)
-            if (_drink_fountain())
-                return;
-    }
-
     if (inv_count() == 0)
     {
         canned_msg(MSG_NOTHING_CARRIED);
@@ -2092,111 +2068,6 @@ void drink(int slot)
         level_change();
 }
 
-static bool _drink_fountain()
-{
-    const dungeon_feature_type feat = grd(you.pos());
-
-    ASSERT(feat >= DNGN_FOUNTAIN_BLUE && feat <= DNGN_DRY_FOUNTAIN);
-
-    if (you.berserk())
-    {
-        canned_msg(MSG_TOO_BERSERK);
-        return true;
-    }
-
-    potion_type fountain_effect = NUM_POTIONS;
-    if (feat == DNGN_DRY_FOUNTAIN)
-        return mpr("This fountain has no liquid!"), false;
-    if (feat == DNGN_FOUNTAIN_BLUE)
-        return mpr("This fountain contains nothing but water."), false;
-    else if (feat == DNGN_FOUNTAIN_BLOOD)
-    {
-        if (!yesno("Drink from the fountain of blood?", true, 'n'))
-            return false;
-
-        mpr("You drink the blood.");
-        fountain_effect = POT_BLOOD;
-    }
-    else
-    {
-        if (!yesno("Drink from the sparkling fountain?", true, 'n'))
-            return false;
-
-        mpr("You drink the sparkling water.");
-
-        fountain_effect =
-            random_choose_weighted(467, NUM_POTIONS,
-                                   48,  POT_DECAY,
-                                   40,  POT_MUTATION,
-                                   40,  POT_CURING,
-                                   40,  POT_HEAL_WOUNDS,
-                                   40,  POT_SPEED,
-                                   40,  POT_MIGHT,
-                                   40,  POT_AGILITY,
-                                   40,  POT_BRILLIANCE,
-                                   32,  POT_DEGENERATION,
-                                   27,  POT_FLIGHT,
-                                   27,  POT_POISON,
-                                   27,  POT_SLOWING,
-                                   27,  POT_PARALYSIS,
-                                   27,  POT_CONFUSION,
-                                   27,  POT_INVISIBILITY,
-                                   20,  POT_MAGIC,
-                                   20,  POT_RESTORE_ABILITIES,
-                                   20,  POT_RESISTANCE,
-                                   20,  POT_STRONG_POISON,
-                                   20,  POT_BERSERK_RAGE,
-                                   12,  POT_BENEFICIAL_MUTATION,
-                                   0);
-    }
-
-    if (fountain_effect != NUM_POTIONS && fountain_effect != POT_BLOOD)
-        xom_is_stimulated(50);
-
-    // Good gods do not punish for bad random effects. However, they do
-    // punish drinking from a fountain of blood.
-    potion_effect(fountain_effect, 100, nullptr, feat != DNGN_FOUNTAIN_SPARKLING, true);
-
-    bool gone_dry = false;
-    if (feat == DNGN_FOUNTAIN_BLUE)
-    {
-        if (one_chance_in(20))
-            gone_dry = true;
-    }
-    else if (feat == DNGN_FOUNTAIN_BLOOD)
-    {
-        // High chance of drying up, to prevent abuse.
-        if (one_chance_in(3))
-            gone_dry = true;
-    }
-    else   // sparkling fountain
-    {
-        if (one_chance_in(10))
-            gone_dry = true;
-        else if (random2(50) > 40)
-        {
-            // Turn fountain into a normal fountain without any message
-            // but the glyph colour gives it away (lightblue vs. blue).
-            grd(you.pos()) = DNGN_FOUNTAIN_BLUE;
-            set_terrain_changed(you.pos());
-        }
-    }
-
-    if (gone_dry)
-    {
-        mpr("The fountain dries up!");
-
-        grd(you.pos()) = DNGN_DRY_FOUNTAIN;
-        set_terrain_changed(you.pos());
-
-        crawl_state.cancel_cmd_repeat();
-    }
-
-    zin_recite_interrupt();
-    you.turn_is_over = true;
-    return true;
-}
-
 // XXX: Only checks brands that can be rebranded to,
 // there's probably a nicer way of doing this.
 static bool _god_hates_brand(const int brand)
@@ -2296,7 +2167,7 @@ static void _rebrand_weapon(item_def& wpn)
     }
 }
 
-static void _brand_weapon(bool alreadyknown, item_def &wpn)
+static void _brand_weapon(item_def &wpn)
 {
     you.wield_change = true;
 
@@ -2408,19 +2279,21 @@ static void _brand_weapon(bool alreadyknown, item_def &wpn)
     return;
 }
 
-// Returns false if we're cancelling the scroll.
-static bool _handle_brand_weapon(bool alreadyknown, string *pre_msg)
+// Returns NULL if no weapon was chosen.
+static item_def* _scroll_choose_weapon(bool alreadyknown, string *pre_msg, scroll_type scroll)
 {
     int item_slot;
+    bool branding = scroll == SCR_BRAND_WEAPON;
 
     while (true)
     {
-        item_slot = prompt_invent_item("Brand which weapon?", MT_INVLIST,
-                                       OSEL_BRANDABLE_WEAPON, true, true, false);
+        item_slot = prompt_invent_item(branding ? "Brand which weapon?" : "Enchant which weapon?",
+                                       MT_INVLIST, branding ? OSEL_BRANDABLE_WEAPON : OSEL_ENCHANTABLE_WEAPON,
+                                       true, true, false);
 
         // The scroll is used up if we didn't know what it was originally.
         if (item_slot == PROMPT_NOTHING)
-            return !alreadyknown;
+            return NULL;
 
         if (item_slot == PROMPT_ABORT)
         {
@@ -2430,7 +2303,7 @@ static bool _handle_brand_weapon(bool alreadyknown, string *pre_msg)
                 || yesno("Really abort (and waste the scroll)?", false, 0))
             {
                 canned_msg(MSG_OK);
-                return !alreadyknown;
+                return NULL;
             }
             else
             {
@@ -2439,13 +2312,13 @@ static bool _handle_brand_weapon(bool alreadyknown, string *pre_msg)
             }
         }
 
-        item_def& wpn(you.inv[item_slot]);
+        item_def* wpn = &you.inv[item_slot];
 
-        if (!is_brandable_weapon(wpn, true))
+        if (branding && !is_brandable_weapon(*wpn, true)
+            || !branding && !is_item_selected(*wpn, OSEL_ENCHANTABLE_WEAPON))
         {
-            mpr("Choose a weapon to brand, or Esc to abort.");
-            if (Options.auto_list)
-                more();
+            mpr("Choose a valid weapon, or Esc to abort.");
+            more();
 
             item_slot = -1;
             continue;
@@ -2455,11 +2328,22 @@ static bool _handle_brand_weapon(bool alreadyknown, string *pre_msg)
         if (pre_msg && alreadyknown)
             mpr(pre_msg->c_str());
 
-        _brand_weapon(alreadyknown, wpn);
-
-        return true;
+        return wpn;
     }
+}
 
+// Returns true if the scroll is used up.
+static bool _handle_brand_weapon(bool alreadyknown, string *pre_msg)
+{
+    item_def* weapon = _scroll_choose_weapon(alreadyknown, pre_msg, SCR_BRAND_WEAPON);
+
+    if (!weapon)
+        if (alreadyknown)
+            return false;
+        else
+            return true;
+
+    _brand_weapon(*weapon);
     return true;
 }
 
@@ -2509,11 +2393,7 @@ bool enchant_weapon(item_def &wpn, int acc, int dam, const char *colour)
     }
 
     if (!success && colour)
-    {
-        if (!wpn.defined())
-            iname = "Your " + you.hand_name(true);
         mprf("%s very briefly gain%s a %s sheen.", iname.c_str(), s, colour);
-    }
 
     if (success)
         you.wield_change = true;
@@ -2521,12 +2401,21 @@ bool enchant_weapon(item_def &wpn, int acc, int dam, const char *colour)
     return success;
 }
 
-static void _handle_enchant_weapon(int acc, int dam, const char *colour)
+static bool _handle_enchant_weapon(bool alreadyknown, string *pre_msg, scroll_type scr)
 {
-    item_def nothing, *weapon = you.weapon();
+    item_def* weapon = _scroll_choose_weapon(alreadyknown, pre_msg, SCR_ENCHANT_WEAPON_I);
     if (!weapon)
-        weapon = &nothing;
-    enchant_weapon(*weapon, acc, dam, colour);
+        if (alreadyknown)
+            return false;
+        else
+            return true;
+
+    int acc = (scr == SCR_ENCHANT_WEAPON_I ? 1 : scr == SCR_ENCHANT_WEAPON_II ? 0 : 1 + random2(2));
+    int dam = (scr == SCR_ENCHANT_WEAPON_I ? 0 : scr == SCR_ENCHANT_WEAPON_II ? 1 : 1 + random2(2));
+    enchant_weapon(*weapon, acc, dam, scr == SCR_ENCHANT_WEAPON_I ? "green" :
+                                     scr == SCR_ENCHANT_WEAPON_II ? "red"  :
+                                     "yellow");
+    return true;
 }
 
 bool enchant_armour(int &ac_change, bool quiet, item_def &arm)
@@ -2605,7 +2494,8 @@ bool enchant_armour(int &ac_change, bool quiet, item_def &arm)
     return true;
 }
 
-static int _handle_enchant_armour(int item_slot, string *pre_msg)
+static int _handle_enchant_armour(int item_slot, bool alreadyknown,
+                                  string *pre_msg)
 {
     do
     {
@@ -2614,23 +2504,39 @@ static int _handle_enchant_armour(int item_slot, string *pre_msg)
             item_slot = prompt_invent_item("Enchant which item?", MT_INVLIST,
                                            OSEL_ENCH_ARM, true, true, false);
         }
-        if (prompt_failed(item_slot))
+
+        if (item_slot == PROMPT_NOTHING)
             return -1;
+
+        if (item_slot == PROMPT_ABORT)
+        {
+            if (alreadyknown
+                || crawl_state.seen_hups
+                || yesno("Really abort (and waste the scroll)?", false, 0))
+            {
+                canned_msg(MSG_OK);
+                return (alreadyknown || crawl_state.seen_hups) ? -1 : 0;
+            }
+            else
+            {
+                item_slot = -1;
+                continue;
+            }
+        }
 
         item_def& arm(you.inv[item_slot]);
 
         if (!is_enchantable_armour(arm, true, true))
         {
             mpr("Choose some type of armour to enchant, or Esc to abort.");
-            if (Options.auto_list)
-                more();
+            more();
 
             item_slot = -1;
             continue;
         }
 
         // Okay, we may actually (attempt to) enchant something.
-        if (pre_msg)
+        if (!alreadyknown && pre_msg)
             mpr(pre_msg->c_str());
 
         int ac_change;
@@ -2699,99 +2605,6 @@ static void _handle_read_book(int item_slot)
     }
 }
 
-// For unidentified scrolls of recharging, identify and enchant armour
-// offer full choice of inventory and only identify the scroll if you chose
-// something that is affected by the scroll. Once they're identified, you'll
-// get the limited inventory listing.
-// Returns true if the scroll had an obvious effect and should be identified.
-static bool _scroll_modify_item(item_def scroll)
-{
-    ASSERT(scroll.base_type == OBJ_SCROLLS);
-
-    int item_slot;
-
-retry:
-    do
-    {
-        // Get the slot of the item the scroll is to be used on.
-        // Ban the scroll's own slot from the prompt to avoid the stupid situation
-        // where you use identify on itself.
-        item_slot = prompt_invent_item("Use on which item? (\\ to view known items)",
-                                       MT_INVLIST, OSEL_SCROLL_TARGET, true, true, false, 0,
-                                       scroll.link, NULL, OPER_ANY, true);
-
-        if (item_slot == PROMPT_NOTHING)
-            return false;
-
-        // FIXME: when interrupted by a HUP, the scroll shouldn't get lost.
-        if (item_slot == PROMPT_ABORT
-            && (crawl_state.seen_hups
-                || yesno("Really abort (and waste the scroll)?", false, 0)))
-        {
-            canned_msg(MSG_OK);
-            return false;
-        }
-    }
-    while (item_slot < 0);
-
-    item_def &item = you.inv[item_slot];
-
-    if (item_is_melded(you.inv[item_slot]))
-    {
-        mpr("This item is melded into your body!");
-        if (Options.auto_list)
-            more();
-        goto retry;
-    }
-
-    bool show_msg = true;
-    const char* id_prop = nullptr;
-
-    switch (scroll.sub_type)
-    {
-    case SCR_IDENTIFY:
-        if (!fully_identified(item) || is_deck(item) && !top_card_is_known(item))
-        {
-            identify(-1, item_slot);
-            return true;
-        }
-        else
-            id_prop = "SCR_ID";
-        break;
-
-    case SCR_RECHARGING:
-        if (item_is_rechargeable(item) && recharge_wand(item_slot, false))
-            return true;
-        id_prop = "SCR_RC";
-        break;
-
-    case SCR_ENCHANT_ARMOUR:
-        if (is_enchantable_armour(item, true))
-        {
-            // Might still fail because of already high enchantment.
-            // (If so, already prints the "Nothing happens" message.)
-            if (_handle_enchant_armour(item_slot) > 0)
-                return true;
-            show_msg = false;
-        }
-
-        id_prop = "SCR_EA";
-        break;
-
-    default:
-        mprf("Buggy scroll %d can't modify item!", scroll.sub_type);
-        break;
-    }
-
-    if (id_prop)
-        you.type_id_props[id_prop] = item.name(DESC_PLAIN, false, false, false);
-
-    // Oops, wrong item...
-    if (show_msg)
-        canned_msg(MSG_NOTHING_HAPPENS);
-    return false;
-}
-
 static void _vulnerability_scroll()
 {
     // First cast antimagic on yourself.
@@ -2830,7 +2643,10 @@ bool _is_cancellable_scroll(scroll_type scroll)
            || scroll == SCR_REMOVE_CURSE
            || scroll == SCR_CURSE_ARMOUR
            || scroll == SCR_CURSE_JEWELLERY
-           || scroll == SCR_BRAND_WEAPON;
+           || scroll == SCR_BRAND_WEAPON
+           || scroll == SCR_ENCHANT_WEAPON_I
+           || scroll == SCR_ENCHANT_WEAPON_II
+           || scroll == SCR_ENCHANT_WEAPON_III;
 }
 
 void read_scroll(int slot)
@@ -2933,19 +2749,8 @@ void read_scroll(int slot)
         case SCR_ENCHANT_WEAPON_I:
         case SCR_ENCHANT_WEAPON_II:
         case SCR_ENCHANT_WEAPON_III:
-            if (you.weapon() && is_weapon(*you.weapon())
-                && !you.weapon()->cursed()
-                && (is_artefact(*you.weapon())
-                    || you.weapon()->base_type != OBJ_WEAPONS))
-            {
-                mpr("This weapon cannot be enchanted.");
+            if (!any_items_to_select(OSEL_ENCHANTABLE_WEAPON, true))
                 return;
-            }
-            else if (!you.weapon() || !is_weapon(*you.weapon()))
-            {
-                mpr("You are not wielding a weapon.");
-                return;
-            }
             break;
 
         case SCR_IDENTIFY:
@@ -2972,19 +2777,13 @@ void read_scroll(int slot)
             break;
 
         case SCR_CURSE_ARMOUR:
-            if (you_worship(GOD_ASHENZARI)
-                && !any_items_to_select(OSEL_UNCURSED_WORN_ARMOUR, true))
-            {
+            if (!any_items_to_select(OSEL_UNCURSED_WORN_ARMOUR, true))
                 return;
-            }
             break;
 
         case SCR_CURSE_JEWELLERY:
-            if (you_worship(GOD_ASHENZARI)
-                && !any_items_to_select(OSEL_UNCURSED_WORN_JEWELLERY, true))
-            {
+            if (!any_items_to_select(OSEL_UNCURSED_WORN_JEWELLERY, true))
                 return;
-            }
             break;
 
         default:
@@ -3032,11 +2831,6 @@ void read_scroll(int slot)
 
     const bool dangerous = player_in_a_dangerous_place();
 
-    // It is the exception, not the rule, that the scroll will not
-    // be identified. {dlb}
-    bool id_the_scroll = true;  // to prevent unnecessary repetition
-    bool tried_on_item = false; // used to modify item (?EA, ?RC, ?ID)
-
     bool bad_effect = false; // for Xom: result is bad (or at least dangerous)
 
     int prev_quantity = you.inv[item_slot].quantity;
@@ -3069,7 +2863,7 @@ void read_scroll(int slot)
         if (!alreadyknown)
         {
             mprf("%s", pre_succ_msg.c_str());
-            id_the_scroll = remove_curse(false);
+            remove_curse(false);
         }
         else
             cancel_scroll = !remove_curse(true, &pre_succ_msg);
@@ -3093,7 +2887,7 @@ void read_scroll(int slot)
         break;
 
     case SCR_SUMMONING:
-        cast_shadow_creatures(true);
+        cast_shadow_creatures(MON_SUMM_SCROLL);
         break;
 
     case SCR_FOG:
@@ -3142,8 +2936,13 @@ void read_scroll(int slot)
             || !is_weapon(*you.weapon())
             || you.weapon()->cursed())
         {
-            canned_msg(MSG_NOTHING_HAPPENS);
-            id_the_scroll = false;
+            bool plural = false;
+            string weapon_name =
+                you.weapon()
+                ? you.weapon()->name(DESC_YOUR)
+                : "Your " + you.hand_name(true, &plural);
+            mprf("%s very briefly gain%s a black sheen.",
+                 weapon_name.c_str(), plural ? "" : "s");
         }
         else
         {
@@ -3155,15 +2954,20 @@ void read_scroll(int slot)
         break;
 
     case SCR_ENCHANT_WEAPON_I:
-        _handle_enchant_weapon(1, 0, "green");
-        break;
-
     case SCR_ENCHANT_WEAPON_II:
-        _handle_enchant_weapon(0, 1, "red");
-        break;
-
     case SCR_ENCHANT_WEAPON_III:
-        _handle_enchant_weapon(1 + random2(2), 1 + random2(2), "bright yellow");
+        if (!alreadyknown)
+        {
+            mpr(pre_succ_msg.c_str());
+            mprf("It is a scroll of enchant weapon %s.",
+                    which_scroll == SCR_ENCHANT_WEAPON_I ? "I" :
+                    which_scroll == SCR_ENCHANT_WEAPON_II ? "II" :
+                    "III");
+            // Pause to display the message before jumping to the weapon list.
+            more();
+        }
+
+        cancel_scroll = !_handle_enchant_weapon(alreadyknown, &pre_succ_msg, which_scroll);
         break;
 
     case SCR_BRAND_WEAPON:
@@ -3172,67 +2976,53 @@ void read_scroll(int slot)
             mpr(pre_succ_msg.c_str());
             mpr("It is a scroll of brand weapon.");
             // Pause to display the message before jumping to the weapon list.
-            if (Options.auto_list)
-                more();
+            more();
         }
+
         cancel_scroll = !_handle_brand_weapon(alreadyknown, &pre_succ_msg);
         break;
 
     case SCR_IDENTIFY:
-        if (!item_type_known(scroll))
+        if (!alreadyknown)
         {
             mpr(pre_succ_msg.c_str());
-            id_the_scroll = _scroll_modify_item(scroll);
-            if (!id_the_scroll)
-                tried_on_item = true;
+            mpr("It is a scroll of identify.");
+            more();
+            // Do this here so it doesn't turn up in the ID menu.
+            set_ident_type(scroll, ID_KNOWN_TYPE);
         }
-        else
-            cancel_scroll = (identify(-1, -1, &pre_succ_msg) == 0);
+        cancel_scroll = (identify(-1, -1, alreadyknown, &pre_succ_msg) == 0);
         break;
 
     case SCR_RECHARGING:
-        if (!item_type_known(scroll))
+        if (!alreadyknown)
         {
             mpr(pre_succ_msg.c_str());
-            id_the_scroll = _scroll_modify_item(scroll);
-            if (!id_the_scroll)
-                tried_on_item = true;
+            mpr("It is a scroll of recharging.");
+            more();
         }
-        else
-            cancel_scroll = (recharge_wand(-1, true, &pre_succ_msg) == -1);
+        cancel_scroll = (recharge_wand(-1, alreadyknown, &pre_succ_msg) == -1);
         break;
 
     case SCR_ENCHANT_ARMOUR:
-        if (!item_type_known(scroll))
-        {
-            mpr(pre_succ_msg.c_str());
-            id_the_scroll = _scroll_modify_item(scroll);
-            if (!id_the_scroll)
-                tried_on_item = true;
-        }
-        else
-            cancel_scroll = (_handle_enchant_armour(-1, &pre_succ_msg) == -1);
-        break;
-
-    case SCR_CURSE_ARMOUR:
-    case SCR_CURSE_JEWELLERY:
         if (!alreadyknown)
         {
-            mprf("%s", pre_succ_msg.c_str());
-            if (curse_item(which_scroll == SCR_CURSE_ARMOUR, false))
-                bad_effect = true;
-            else
-                id_the_scroll = false;
+            mpr(pre_succ_msg.c_str());
+            mpr("It is a scroll of enchant armour.");
+            more();
         }
-        else if (curse_item(which_scroll == SCR_CURSE_ARMOUR, true,
-                            &pre_succ_msg))
-        {
-            bad_effect = true;
-        }
-        else
-            cancel_scroll = you_worship(GOD_ASHENZARI);
-
+        cancel_scroll =
+            (_handle_enchant_armour(-1, alreadyknown, &pre_succ_msg) == -1);
         break;
+
+    // Should always be identified by Ashenzari.
+    case SCR_CURSE_ARMOUR:
+    case SCR_CURSE_JEWELLERY:
+    {
+        const bool armour = which_scroll == SCR_CURSE_ARMOUR;
+        cancel_scroll = !curse_item(armour, &pre_succ_msg);
+        break;
+    }
 
     case SCR_HOLY_WORD:
     {
@@ -3279,13 +3069,8 @@ void read_scroll(int slot)
     if (cancel_scroll)
         you.turn_is_over = false;
 
-    set_ident_type(scroll, id_the_scroll ? ID_KNOWN_TYPE :
-                           tried_on_item ? ID_TRIED_ITEM_TYPE
-                                         : ID_TRIED_TYPE);
-
-    // Finally, destroy and identify the scroll.
-    if (id_the_scroll)
-        set_ident_flags(scroll, ISFLAG_KNOW_TYPE); // for notes
+    set_ident_type(scroll, ID_KNOWN_TYPE);
+    set_ident_flags(scroll, ISFLAG_KNOW_TYPE); // for notes
 
     string scroll_name = scroll.name(DESC_QUALNAME).c_str();
 
@@ -3295,29 +3080,19 @@ void read_scroll(int slot)
         count_action(CACT_USE, OBJ_SCROLLS);
     }
 
-    if (id_the_scroll
-        && !alreadyknown
+    if (!alreadyknown
         && which_scroll != SCR_ACQUIREMENT
-        && which_scroll != SCR_BRAND_WEAPON)
+        && which_scroll != SCR_BRAND_WEAPON
+        && which_scroll != SCR_ENCHANT_WEAPON_I
+        && which_scroll != SCR_ENCHANT_WEAPON_II
+        && which_scroll != SCR_ENCHANT_WEAPON_III
+        && which_scroll != SCR_IDENTIFY
+        && which_scroll != SCR_ENCHANT_ARMOUR
+        && which_scroll != SCR_RECHARGING)
     {
         mprf("It %s a %s.",
              you.inv[item_slot].quantity < prev_quantity ? "was" : "is",
              scroll_name.c_str());
-    }
-
-    if (_two_targeted_scrolls_identified()
-        && _one_targeted_scroll_tried()
-        && (which_scroll == SCR_IDENTIFY
-            || which_scroll == SCR_RECHARGING
-            || which_scroll == SCR_ENCHANT_ARMOUR))
-    {
-        mpr("You have identified the last targeted scroll.");
-        if (set_ident_type(OBJ_SCROLLS, SCR_IDENTIFY, ID_KNOWN_TYPE))
-            pack_item_identify_message(OBJ_SCROLLS, SCR_IDENTIFY);
-        if (set_ident_type(OBJ_SCROLLS, SCR_RECHARGING, ID_KNOWN_TYPE))
-            pack_item_identify_message(OBJ_SCROLLS, SCR_RECHARGING);
-        if (set_ident_type(OBJ_SCROLLS, SCR_ENCHANT_ARMOUR, ID_KNOWN_TYPE))
-            pack_item_identify_message(OBJ_SCROLLS, SCR_ENCHANT_ARMOUR);
     }
 
     if (!alreadyknown && dangerous)

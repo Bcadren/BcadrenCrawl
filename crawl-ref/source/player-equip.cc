@@ -1,7 +1,7 @@
 #include "AppHdr.h"
 
 #include "player-equip.h"
-
+#include "act-iter.h"
 #include "art-enum.h"
 #include "areas.h"
 #include "artefact.h"
@@ -14,6 +14,7 @@
 #include "itemname.h"
 #include "itemprop.h"
 #include "items.h"
+#include "libutil.h"
 #include "misc.h"
 #include "notes.h"
 #include "options.h"
@@ -36,7 +37,13 @@ static void _equip_effect(equipment_type slot, int item_slot, bool unmeld,
                           bool msg);
 static void _unequip_effect(equipment_type slot, int item_slot, bool meld,
                             bool msg);
+static void _mark_unseen_monsters();
 
+/**
+ * Recalculate the player's max hp and set the current hp based on the %change
+ * of max hp.  This has resulted from our having equipped an artefact that
+ * changes max hp.
+ */
 static void _calc_hp_artefact()
 {
     // Rounding must be down or Deep Dwarves would abuse certain values.
@@ -48,7 +55,7 @@ static void _calc_hp_artefact()
     hp = hp * new_max / old_max;
     if (hp < 100)
         hp = 100;
-    you.hp = min(hp / 100, you.hp_max);
+    set_hp(min(hp / 100, you.hp_max));
     you.hit_points_regeneration = hp % 100;
     if (you.hp_max <= 0) // Borgnjor's abusers...
         ouch(0, NON_MONSTER, KILLED_BY_DRAINING);
@@ -422,6 +429,9 @@ static void _unequip_artefact_effect(item_def &item,
         contaminate_player(7000, true);
     }
 
+    if (proprt[ARTP_EYESIGHT])
+        _mark_unseen_monsters();
+
     if (is_unrandom_artefact(item))
     {
         const unrandart_entry *entry = get_unrand_entry(item.special);
@@ -517,10 +527,12 @@ static void _equip_weapon_effect(item_def& item, bool showMsgs, bool unmeld)
             int mp = item.special - you.elapsed_time / POWER_DECAY;
 
             if (mp > 0)
+#if TAG_MAJOR_VERSION == 34
                 if (you.species == SP_DJINNI)
                     you.hp += mp;
                 else
-                    you.magic_points += mp;
+#endif
+                you.magic_points += mp;
 
             if (get_real_mp(true) >= 50)
                 mpr("You feel your magic capacity is already quite full.");
@@ -857,6 +869,7 @@ static void _unequip_weapon_effect(item_def& item, bool showMsgs, bool meld)
     else if (item.base_type == OBJ_STAVES && item.sub_type == STAFF_POWER)
     {
         int mp = you.magic_points;
+#if TAG_MAJOR_VERSION == 34
         if (you.species == SP_DJINNI)
         {
             mp = you.hp;
@@ -868,6 +881,10 @@ static void _unequip_weapon_effect(item_def& item, bool showMsgs, bool meld)
             calc_mp();
             mp -= you.magic_points;
         }
+#else
+        calc_mp();
+        mp -= you.magic_points;
+#endif
 
         // Store the MP in case you'll re-wield quickly.
         item.special = mp + you.elapsed_time / POWER_DECAY;
@@ -984,7 +1001,11 @@ static void _equip_armour_effect(item_def& arm, bool unmeld)
             if (!unmeld && you.spirit_shield() < 2)
             {
                 dec_mp(you.magic_points);
-                if (you.species == SP_DJINNI || you.species == SP_VINE_STALKER)
+                if (
+#if TAG_MAJOR_VERSION == 34
+                        you.species == SP_DJINNI ||
+#endif
+                        you.species == SP_VINE_STALKER)
                     mpr("You feel the presence of a powerless spirit.");
                 else
                     mpr("You feel your power drawn to a protective spirit.");
@@ -1066,7 +1087,10 @@ static void _unequip_armour_effect(item_def& item, bool meld)
 
     case SPARM_SEE_INVISIBLE:
         if (!you.can_see_invisible())
+        {
             mpr("You feel less perceptive.");
+            _mark_unseen_monsters();
+        }
         break;
 
     case SPARM_DARKNESS:
@@ -1382,7 +1406,11 @@ static void _equip_jewellery_effect(item_def &item, bool unmeld)
         if (you.spirit_shield() < 2 && !unmeld)
         {
             dec_mp(you.magic_points);
-            if (you.species == SP_DJINNI || you.species == SP_VINE_STALKER)
+            if (
+#if TAG_MAJOR_VERSION == 34
+                    you.species == SP_DJINNI ||
+#endif
+                    you.species == SP_VINE_STALKER)
                 mpr("You feel the presence of a powerless spirit.");
             else
                 mpr("You feel your power drawn to a protective spirit.");
@@ -1519,13 +1547,16 @@ static void _unequip_jewellery_effect(item_def &item, bool mesg, bool meld)
     case RING_PROTECTION_FROM_FIRE:
     case RING_PROTECTION_FROM_MAGIC:
     case RING_REGENERATION:
-    case RING_SEE_INVISIBLE:
     case RING_SLAYING:
     case RING_SUSTAIN_ABILITIES:
     case RING_SUSTENANCE:
     case RING_TELEPORTATION:
     case RING_WIZARDRY:
     case RING_TELEPORT_CONTROL:
+        break;
+
+    case RING_SEE_INVISIBLE:
+        _mark_unseen_monsters();
         break;
 
     case RING_PROTECTION:
@@ -1617,4 +1648,18 @@ bool unwield_item(bool showMsgs)
     you.attribute[ATTR_WEAPON_SWAP_INTERRUPTED] = 0;
 
     return true;
+}
+
+static void _mark_unseen_monsters()
+{
+
+    for (monster_iterator mi; mi; mi++)
+    {
+        if (testbits((*mi)->flags, MF_WAS_IN_VIEW) && !you.can_see(*mi))
+        {
+            (*mi)->went_unseen_this_turn = true;
+            (*mi)->unseen_pos = (*mi)->pos();
+        }
+
+    }
 }

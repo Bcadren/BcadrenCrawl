@@ -270,6 +270,7 @@ int book_rarity(uint8_t which_book)
 
     case BOOK_TEMPESTS:
     case BOOK_DEATH:
+    case BOOK_SUMMONINGS:
         return 11;
 
     case BOOK_BURGLARY:
@@ -281,9 +282,6 @@ int book_rarity(uint8_t which_book)
     case BOOK_WARP:
     case BOOK_DRAGON:
         return 15;
-
-    case BOOK_SUMMONINGS:
-        return 18;
 
     case BOOK_ANNIHILATIONS:
     case BOOK_GRAND_GRIMOIRE:
@@ -573,6 +571,7 @@ bool you_cannot_memorise(spell_type spell, bool &form)
     {
         rc = true, form = false;
     }
+#if TAG_MAJOR_VERSION == 34
 
     if (you.species == SP_DJINNI
         && (spell == SPELL_ICE_FORM
@@ -581,6 +580,7 @@ bool you_cannot_memorise(spell_type spell, bool &form)
     {
         rc = true, form = false;
     }
+#endif
 
     if (you.species == SP_LAVA_ORC
         && (spell == SPELL_STONESKIN
@@ -1159,6 +1159,13 @@ string desc_cannot_memorise_reason(bool form)
     return desc;
 }
 
+/**
+ * Can the player learn the given spell?
+ *
+ * @param   specspell  The spell to be learned.
+ * @returns            false if the player can't learn the spell for any
+ *                     reason, true otherwise.
+*/
 static bool _learn_spell_checks(spell_type specspell)
 {
     if (!can_learn_spell())
@@ -1198,15 +1205,16 @@ static bool _learn_spell_checks(spell_type specspell)
         return false;
     }
 
-    if (spell_fail(specspell) >= 100 && !vehumet_is_offering(specspell))
-    {
-        mpr("This spell is too difficult to memorise!");
-        return false;
-    }
-
     return true;
 }
 
+/**
+ * Attempt to make the player learn the given spell.
+ *
+ * @param   specspell  The spell to be learned.
+ * @returns            true if the player learned the spell, false
+ *                     otherwise.
+*/
 bool learn_spell(spell_type specspell)
 {
     if (!_learn_spell_checks(specspell))
@@ -1214,12 +1222,14 @@ bool learn_spell(spell_type specspell)
 
     double chance = get_miscast_chance(specspell);
 
-    if (chance >= 0.025)
+    if (spell_fail(specspell) >= 100 && !vehumet_is_offering(specspell))
+        mprf(MSGCH_WARN, "This spell is impossible to cast!");
+    else if (chance >= 0.025)
         mprf(MSGCH_WARN, "This spell is very dangerous to cast!");
     else if (chance >= 0.005)
         mprf(MSGCH_WARN, "This spell is quite dangerous to cast!");
     else if (chance >= 0.001)
-        mpr("This spell is slightly dangerous to cast.");
+        mprf(MSGCH_WARN, "This spell is slightly dangerous to cast.");
 
     snprintf(info, INFO_SIZE,
              "Memorise %s, consuming %d spell level%s and leaving %d?",
@@ -1325,7 +1335,7 @@ int rod_spell(int rod, bool check_range)
              "Evoke which spell from the rod ([a-%c] spell [?*] list)? ",
              'a' + num_spells - 1);
 
-        // Note that auto_list is ignored here.
+        // Note that the list of spells is not presented here.
         keyin = get_ch();
 
         if (keyin == '?' || keyin == '*')

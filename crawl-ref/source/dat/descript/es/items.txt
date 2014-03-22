@@ -847,7 +847,7 @@ potion of slowing
 
 Una poción que vuelve más lentas tus acciones.
 %%%%
-potion of speed
+potion of haste
 
 Un brebaje encantado que hace más rápidas las acciones de quien lo beba.
 %%%%
@@ -976,19 +976,6 @@ se pueden ajustar fácilmente a cualquier humanoide, sea cual sea su tamaño.
 Esta vestimenta ofrece poca protección ante el daño físico, pero no obstaculiza
 la capacidad para evadir ataques, o la adecuada realización de los gestos
 taumatúrgicos.
-%%%%
-rod of demonology
-
-Esta vara contiene hechizos de invocación, algunos de los cuales pueden liberar
-demonios hacia este mundo desprevenido.
-%%%%
-rod of venom
-
-Esta vara contiene hechizos ofensivos de veneno.
-%%%%
-rod of warding
-
-Esta vara contiene hechizos diseñados para repeler enemigos.
 %%%%
 royal jelly
 

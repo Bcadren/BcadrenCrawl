@@ -119,6 +119,7 @@
 #include "spl-goditem.h"
 #include "spl-other.h"
 #include "spl-selfench.h"
+#include "spl-summoning.h"
 #include "spl-transloc.h"
 #include "spl-util.h"
 #include "stairs.h"
@@ -682,7 +683,7 @@ static void _do_wizard_command(int wiz_command, bool silent_fail)
         return;
     }
 
-    case CONTROL('B'): you.teleport(true, false, true); break;
+    case CONTROL('B'): you.teleport(true, true); break;
     case CONTROL('D'): wizard_edit_durations(); break;
     case CONTROL('E'): debug_dump_levgen(); break;
     case CONTROL('F'): wizard_fight_sim(true); break;
@@ -2006,7 +2007,8 @@ void process_command(command_type cmd)
         break;
 
     case CMD_EVOKE_WIELDED:
-        if (!evoke_item(you.equip[EQ_WEAPON], true))
+    case CMD_FORCE_EVOKE_WIELDED:
+        if (!evoke_item(you.equip[EQ_WEAPON], cmd != CMD_FORCE_EVOKE_WIELDED))
             flush_input_buffer(FLUSH_ON_FAILURE);
         break;
 
@@ -2382,6 +2384,10 @@ static void _handle_recitation(int step)
 //  Perhaps we should write functions like: update_liquid_flames(), etc.
 //  Even better, we could have a vector of callback functions (or
 //  objects) which get installed at some point.
+
+/**
+ * Decrement player durations based on how long the player's turn lasted in aut.
+ */
 static void _decrement_durations()
 {
     int delay = you.time_taken;
@@ -2608,8 +2614,6 @@ static void _decrement_durations()
 
     _decrement_a_duration(DUR_POWERED_BY_DEATH, delay,
                           "You feel less regenerative.");
-    if (you.duration[DUR_POWERED_BY_DEATH] > 0)
-        handle_pbd_corpses(true);
 
     _decrement_a_duration(DUR_TELEPATHY, delay, "You feel less empathic.");
 
@@ -2632,8 +2636,7 @@ static void _decrement_durations()
 
     if (_decrement_a_duration(DUR_TELEPORT, delay))
     {
-        // Only to a new area of the abyss sometimes (for abyss teleports).
-        you_teleport_now(true, one_chance_in(5));
+        you_teleport_now(true);
         untag_followers();
     }
 
@@ -2649,7 +2652,6 @@ static void _decrement_durations()
     }
 
     _decrement_a_duration(DUR_STEALTH, delay, "You feel less stealthy.");
-    _decrement_a_duration(DUR_SLAYING, delay, "You feel less lethal.");
 
     if (_decrement_a_duration(DUR_INVIS, delay, NULL,
                               coinflip(), "You flicker for a moment."))
@@ -2687,12 +2689,17 @@ static void _decrement_durations()
     _decrement_a_duration(DUR_SURE_BLADE, delay,
                           "The bond with your blade fades away.");
 
+    _decrement_a_duration(DUR_FORESTED, delay,
+                          "Space becomes stable.");
+
     if (_decrement_a_duration(DUR_MESMERISED, delay,
                               "You break out of your daze.",
                               0, NULL, MSGCH_RECOVERY))
     {
         you.clear_beholders();
     }
+
+    _decrement_a_duration(DUR_MESMERISE_IMMUNE, delay);
 
     if (_decrement_a_duration(DUR_AFRAID, delay,
                               "Your fear fades away.",
@@ -2795,7 +2802,7 @@ static void _decrement_durations()
         you.hunger = max(HUNGER_STARVING - 100, you.hunger);
 
         // 1KB: No berserk healing.
-        you.hp = (you.hp + 1) * 2 / 3;
+        set_hp((you.hp + 1) * 2 / 3);
         calc_hp();
 
         learned_something_new(HINT_POSTBERSERK);
@@ -2913,13 +2920,13 @@ static void _decrement_durations()
     dec_disease_player(delay);
 
     if (you.duration[DUR_POISONING])
-        dec_poison_player();
+        handle_player_poison(delay);
 
     if (you.duration[DUR_DEATHS_DOOR])
     {
         if (you.hp > allowed_deaths_door_hp())
         {
-            you.hp = allowed_deaths_door_hp();
+            set_hp(allowed_deaths_door_hp());
             you.redraw_hit_points = true;
         }
 
@@ -3067,6 +3074,27 @@ static void _decrement_durations()
             "You are no longer teleporting projectiles to their destination."))
     {
         you.attribute[ATTR_PORTAL_PROJECTILE] = 0;
+    }
+
+     _decrement_a_duration(DUR_DRAGON_CALL_COOLDOWN, delay,
+                              "You can once more reach out to the dragon horde.");
+
+    if (you.duration[DUR_DRAGON_CALL])
+    {
+        do_dragon_call(delay);
+        if (_decrement_a_duration(DUR_DRAGON_CALL, delay,
+                              "The roar of the dragon horde subsides."))
+        {
+            you.duration[DUR_DRAGON_CALL_COOLDOWN] = random_range(150, 250);
+        }
+
+    }
+
+    if (you.duration[DUR_ABJURATION_AURA])
+    {
+        do_aura_of_abjuration(delay);
+        _decrement_a_duration(DUR_ABJURATION_AURA, delay,
+                              "Your aura of abjuration expires.");
     }
 
     dec_elixir_player(delay);
@@ -3301,13 +3329,13 @@ static void _player_reacts()
             if (teleportitis_level >= 8)
                 you_teleport_now(true);
             else
-                you_teleport_now(true, false, false, teleportitis_level * 5);
+                you_teleport_now(true, false, teleportitis_level * 5);
         }
         else if (player_in_branch(BRANCH_ABYSS) && one_chance_in(80)
           && (!map_masked(you.pos(), MMT_VAULT) || one_chance_in(3)))
         {
             mprf(MSGCH_BANISHMENT, "You are suddenly pulled into a different region of the Abyss!");
-            you_teleport_now(false, true); // to new area of the Abyss
+            you_teleport_now(false); // to new area of the Abyss
 
             // It's effectively a new level, make a checkpoint save so eventual
             // crashes lose less of the player's progress (and fresh new bad
@@ -3373,7 +3401,10 @@ static void _player_reacts()
         xom_tick();
 }
 
-// Ran after monsters and clouds get to act.
+
+/**
+ * Player reactions after monster and cloud activities in the turn are finished.
+ */
 static void _player_reacts_to_monsters()
 {
     // In case Maurice managed to steal a needed item for example.
@@ -3383,13 +3414,7 @@ static void _player_reacts_to_monsters()
     if (you.duration[DUR_FIRE_SHIELD] > 0)
         manage_fire_shield(you.time_taken);
 
-    // penance checked there (as you can have antennae too)
-    if (player_mutation_level(MUT_ANTENNAE)
-        || you.religion == GOD_ASHENZARI
-        || player_equip_unrand(UNRAND_BOOTS_ASSASSIN))
-    {
-        check_antennae_detect();
-    }
+    check_monster_detect();
 
     if ((you_worship(GOD_ASHENZARI) && !player_under_penance())
         || you.mutation[MUT_JELLY_GROWTH])

@@ -159,7 +159,11 @@ bool player::is_habitable_feat(dungeon_feature_type actual_grid) const
     if (!can_pass_through_feat(actual_grid))
         return false;
 
-    if (airborne() || species == SP_DJINNI)
+    if (airborne()
+#if TAG_MAJOR_VERSION == 34
+            || species == SP_DJINNI
+#endif
+            )
         return true;
 
     if (actual_grid == DNGN_LAVA && species != SP_LAVA_ORC
@@ -295,12 +299,7 @@ item_def *player::weapon(int /* which_attack */) const
 hands_reqd_type player::hands_reqd(const item_def &item) const
 {
     if (species == SP_FORMICID)
-    {
-        if (weapon_size(item) >= SIZE_BIG)
-            return HANDS_TWO;
-        else
-            return HANDS_ONE;
-    }
+        return HANDS_ONE;
     else
         return actor::hands_reqd(item);
 }
@@ -330,8 +329,6 @@ bool player::could_wield(const item_def &item, bool ignore_brand,
 {
     if (species == SP_FELID)
         return false;
-    if (species == SP_FORMICID)
-        return true;
 
     if (body_size(PSIZE_TORSO, ignore_transform) < SIZE_LARGE
             && (item_mass(item) >= 500
@@ -491,8 +488,10 @@ string player::foot_name(bool plural, bool *can_plural) const
         }
         else if (species == SP_FELID)
             str = "paw";
+#if TAG_MAJOR_VERSION == 34
         else if (species == SP_DJINNI)
             str = "underside", *can_plural = false;
+#endif
         else if (fishtail)
         {
             str         = "tail";
@@ -694,6 +693,7 @@ bool player::can_go_berserk(bool intentional, bool potion, bool quiet) const
         return false;
     }
 
+#if TAG_MAJOR_VERSION == 34
     if (you.species == SP_DJINNI)
     {
         if (verbose)
@@ -702,6 +702,7 @@ bool player::can_go_berserk(bool intentional, bool potion, bool quiet) const
         return false;
     }
 
+#endif
     if (is_lifeless_undead())
     {
         if (verbose)
@@ -752,14 +753,13 @@ bool player::can_jump(bool quiet) const
             mpr("You're too exhausted to jump.");
         return false;
     }
-
     if (in_water())
     {
         if (!quiet)
             mpr("You can't jump while in water.");
         return false;
     }
-    if (feat_is_lava(grd(pos())))
+    if (in_lava())
     {
         if (!quiet)
             mpr("You can't jump while standing in lava.");
@@ -777,6 +777,12 @@ bool player::can_jump(bool quiet) const
             mpr("You can't jump while being constricted.");
         return false;
     }
+    if (caught())
+    {
+        if (!quiet)
+            mprf("You can't jump while %s.", held_status());
+        return false;
+    }
     if (form == TRAN_TREE || form == TRAN_WISP)
     {
         if (!quiet)
@@ -790,6 +796,7 @@ bool player::can_jump() const
 {
     return can_jump(false);
 }
+
 bool player::berserk() const
 {
     return duration[DUR_BERSERK];

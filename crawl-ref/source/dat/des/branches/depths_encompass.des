@@ -359,8 +359,10 @@ ENDMAP
 
 ##############################################################################
 # A mockup of the Forest branch (1KB)
+# XXX: disabled pending a possible rework.
 #
 NAME:    spriggan_forest
+WEIGHT:  0
 ORIENT:  encompass
 TAGS:    no_pool_fixup uniq_d_encompass
 MONS:    spriggan, spriggan rider, spriggan druid, spriggan berserker
@@ -384,9 +386,9 @@ COLOUR:  C = white
 KFEAT:   C = stone_wall
 TILE:    C = wall_marble
 KFEAT:   _ = altar_trog
-: _G.set_random_mon_list("place:Forest:3")
 veto {{
-  return crawl.game_started() and dgn.br_exists("Forest")
+  return crawl.game_started()
+         and (dgn.br_exists("Forest") or you.uniques("the Enchantress"))
 }}
 MAP
 tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
@@ -1098,7 +1100,7 @@ KMONS:   C = rakshasa ; robe good_item . wand of cold | wand of fire | \
                       wand of lightning . \
                       glaive ego:freezing | glaive ego:flaming . \
                       potion of heal wounds | potion of might | \
-                      potion of speed | nothing w:20
+                      potion of haste | nothing w:20
 KMONS:   D = tengu reaver
 KMONS:   E = deep elf annihilator ; robe randart | mundane ice dragon armour | \
                                   mundane fire dragon armour | robe w:1 . \
@@ -1575,11 +1577,11 @@ MONS:    lindwurm / death yak / elephant / griffon / polar bear w:5 / \
          red wasp / tarantella w:2 / redback w:3 / wolf spider / \
          sea snake w:5 / alligator / hell hound w:2
 MONS:    swamp dragon w:5 / fire crab w:4 / catoblepas w:4 / \
-         fire dragon w:16 / ice dragon w:16 / orb spider w:1 / spiny worm w:1 / \
+         fire dragon w:16 / ice dragon w:16 / orb spider w:1 / \
          dire elephant w:9 / anaconda / hydra w:15 / snapping turtle / harpy w:4
 MONS:    ghost moth w:4 / death drake w:2 / golden dragon / iron dragon / \
          quicksilver dragon w:15 / shadow dragon w:20 / storm dragon w:20 / \
-         hell beast w:4 / hellephant w:4 / apis w:1 / ancient bear / \
+         hell beast w:4 / hellephant w:4 / apis w:1 / \
          alligator snapping turtle w:5 / emperor scorpion w:5
 MONS:    very ugly thing / very large slime creature / great orb of eyes / \
          shapeshifter hd:4 w:5 / unseen horror / large abomination w:1 / \

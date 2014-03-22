@@ -57,10 +57,10 @@ enum attack_type
     AT_POUNCE,
     AT_REACH_STING,
     AT_CHERUB,
-
-    AT_SHOOT,       // Attack representing missile damage for M_ARCHER.
-    AT_WEAP_ONLY,   // Ranged weap: shoot point-blank like AT_SHOOT, melee weap
-                    //   use it, no weapon: stand there doing nothing.
+#if TAG_MAJOR_VERSION == 34
+    AT_SHOOT,
+#endif
+    AT_WEAP_ONLY,   // AT_HIT if wielding a melee weapon, AT_NONE otherwise
     AT_RANDOM,      // Anything but AT_SHOOT and AT_WEAP_ONLY.
 };
 
@@ -83,13 +83,17 @@ enum attack_flavour
     AF_MUTATE,
     AF_PARALYSE,
     AF_POISON,
+#if TAG_MAJOR_VERSION == 34
     AF_POISON_NASTY,
     AF_POISON_MEDIUM,
+#endif
     AF_POISON_STRONG,
+#if TAG_MAJOR_VERSION == 34
     AF_POISON_STR,
     AF_POISON_INT,
     AF_POISON_DEX,
     AF_POISON_STAT,
+#endif
     AF_ROT,
     AF_VAMPIRIC,
     AF_KLOWN,
@@ -131,6 +135,7 @@ enum mon_summon_type
     MON_SUMM_ZOT,     // Zot trap
     MON_SUMM_WRATH,   // Divine wrath
     MON_SUMM_AID,     // Divine aid
+    MON_SUMM_SCROLL,  // Scroll of summoning
 };
 
 #include "mon-flags.h"

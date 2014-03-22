@@ -223,7 +223,7 @@ mset(with_props("place:Lair:$ w:165 / dire elephant w:12 / " ..
      with_props("place:Tar:$ w:460 / Shadow Fiend / " ..
                  "curse toe / shadow demon w:20", { weight = 5 }),
      with_props("daeva / angel / cherub / pearl dragon / shedu band / " ..
-                "ophan / apis / w:5 phoenix / w:5 silver star", { weight = 2 }),
+                "ophan / apis / w:2 silver star", { weight = 2 }),
      with_props("hill giant / cyclops / stone giant / fire giant / " ..
                 "frost giant / ettin / titan", { weight = 2 }),
      with_props("fire elemental / fire drake / hell hound / efreet / " ..
@@ -412,8 +412,7 @@ local function ziggurat_create_monsters(p, mfn)
 end
 
 local function ziggurat_create_loot_at(c)
-  -- Basically, loot grows linearly with depth. However, the entry fee
-  -- affects the loot randomly (separatedly on each stage).
+  -- Basically, loot grows linearly with depth.
   local depth = you.depth()
   local nloot = depth
   local nloot = depth + crawl.random2(math.floor(nloot * 0.5))
@@ -433,13 +432,13 @@ local function ziggurat_create_loot_at(c)
   end
 
   -- dgn.good_scrolls is a list of items with total weight 1000
-  local good_loot = dgn.item_spec("* no_pickup w:7000 / " .. dgn.good_scrolls)
-  local super_loot = dgn.item_spec("| no_pickup w:7000 /" ..
-                                   "potion of experience no_pickup w:200 /" ..
-                                   "potion of cure mutation no_pickup w:200 /" ..
-                                   "potion of porridge no_pickup w:100 /" ..
-                                   "wand of heal wounds no_pickup w:10 / " ..
-                                   "wand of hasting no_pickup w:10 / " ..
+  local good_loot = dgn.item_spec("* no_pickup no_mimic w:7000 / " .. dgn.good_scrolls)
+  local super_loot = dgn.item_spec("| no_pickup no_mimic w:7000 /" ..
+                                   "potion of experience no_pickup no_mimic w:200 /" ..
+                                   "potion of cure mutation no_pickup no_mimic w:200 /" ..
+                                   "potion of porridge no_pickup no_mimic w:100 /" ..
+                                   "wand of heal wounds no_pickup no_mimic w:10 / " ..
+                                   "wand of hasting no_pickup no_mimic w:10 / " ..
                                    dgn.good_scrolls)
 
   local loot_spots = find_free_space(nloot * 4)

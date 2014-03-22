@@ -19,6 +19,7 @@
 #include "dungeon.h"
 #include "effects.h"
 #include "env.h"
+#include "evoke.h"
 #include "food.h"
 #include "fight.h"
 #include "fineff.h"
@@ -29,6 +30,8 @@
 #include "items.h"
 #include "item_use.h"
 #include "libutil.h"
+#include "los.h"
+#include "losglobal.h"
 #include "mapmark.h"
 #include "message.h"
 #include "misc.h"
@@ -39,7 +42,6 @@
 #include "mon-place.h"
 #include "mon-project.h"
 #include "mgen_data.h"
-#include "mon-stuff.h"
 #include "mon-util.h"
 #include "notes.h"
 #include "player.h"
@@ -47,6 +49,7 @@
 #include "religion.h"
 #include "shopping.h" // for item values
 #include "spl-book.h"
+#include "spl-clouds.h"
 #include "spl-damage.h"
 #include "spl-summoning.h"
 #include "spl-util.h"
@@ -114,21 +117,8 @@ static void _monster_regenerate(monster* mons)
     }
 
     if (mons_class_fast_regen(mons->type)
-        || (mons->type == MONS_FIRE_ELEMENTAL
-            && (grd(mons->pos()) == DNGN_LAVA
-                || cloud_type_at(mons->pos()) == CLOUD_FIRE))
-
-        || (mons->type == MONS_WATER_ELEMENTAL
-            && feat_is_watery(grd(mons->pos())))
-
-        || (mons->type == MONS_AIR_ELEMENTAL
-            && env.cgrid(mons->pos()) == EMPTY_CLOUD
-            && one_chance_in(3))
-
         || mons->has_ench(ENCH_REGENERATION)
-
         || mons->has_ench(ENCH_WITHDRAWN)
-
         || _mons_natural_regen_roll(mons))
     {
         mons->heal(1);
@@ -403,10 +393,6 @@ static bool _mon_on_interesting_grid(monster* mon)
     // Spiders...
     case DNGN_ENTER_SPIDER:
         return mons_is_native_in_branch(mon, BRANCH_SPIDER);
-
-    // And the forest natives.
-    case DNGN_ENTER_FOREST:
-        return mons_is_native_in_branch(mon, BRANCH_FOREST);
 
     default:
         return false;
@@ -1006,7 +992,7 @@ static bool _handle_scroll(monster* mons)
             {
                 create_monster(
                     mgen_data(RANDOM_MOBILE_MONSTER, SAME_ATTITUDE(mons), mons,
-                              3, SPELL_SHADOW_CREATURES, mons->pos(), mons->foe,
+                              3, MON_SUMM_SCROLL, mons->pos(), mons->foe,
                               0, GOD_NO_GOD));
             }
             ident = ID_KNOWN_TYPE;
@@ -1266,13 +1252,20 @@ static bool _handle_rod(monster *mons, bolt &beem)
     // monster-castable rod spells!
     switch (mzap)
     {
-    case SPELL_BOLT_OF_FIRE:
+    case SPELL_RANDOM_BOLT:
+        // don't use quicksilver, it does fixed damage from monsters
+        mzap = random_choose(SPELL_BOLT_OF_FIRE,
+                             SPELL_BOLT_OF_COLD,
+                             SPELL_VENOM_BOLT,
+                             SPELL_BOLT_OF_DRAINING,
+                             SPELL_CRYSTAL_BOLT,
+                             SPELL_LIGHTNING_BOLT,
+                             -1);
     case SPELL_BOLT_OF_INACCURACY:
-    case SPELL_IRON_SHOT:
-    case SPELL_LIGHTNING_BOLT:
     case SPELL_POISON_ARROW:
     case SPELL_THROW_FLAME:
     case SPELL_THROW_FROST:
+    case SPELL_CLOUD_CONE:
         break;
 
     case SPELL_FIREBALL:
@@ -1295,15 +1288,16 @@ static bool _handle_rod(monster *mons, bolt &beem)
         }
         break;
 
-    case SPELL_CALL_IMP:
     case SPELL_CAUSE_FEAR:
-    case SPELL_SUMMON_DEMON:
     case SPELL_SUMMON_SWARM:
     case SPELL_OLGREBS_TOXIC_RADIANCE:
+    case SPELL_WEAVE_SHADOWS:
         _rod_fired_pre(mons);
         mons_cast(mons, beem, mzap, false);
         _rod_fired_post(mons, rod, weapon, beem, rate, was_visible);
         return true;
+
+       break;
 
     default:
         return false;
@@ -1330,6 +1324,8 @@ static bool _handle_rod(monster *mons, bolt &beem)
     }
     else if (mzap == SPELL_THUNDERBOLT)
         zap = _thunderbolt_tracer(mons, power, beem.target);
+    else if (mzap == SPELL_CLOUD_CONE)
+        zap = mons_should_cloud_cone(mons, power, beem.target);
     else
     {
         fire_tracer(mons, beem);
@@ -1349,6 +1345,12 @@ static bool _handle_rod(monster *mons, bolt &beem)
     {
         _rod_fired_pre(mons);
         cast_thunderbolt(mons, power, beem.target);
+        return _rod_fired_post(mons, rod, weapon, beem, rate, was_visible);
+    }
+    else if (mzap == SPELL_CLOUD_CONE)
+    {
+        _rod_fired_pre(mons);
+        cast_cloud_cone(mons, power, beem.target);
         return _rod_fired_post(mons, rod, weapon, beem, rate, was_visible);
     }
     else if (zap)
@@ -1743,6 +1745,15 @@ static void _pre_monster_move(monster* mons)
         }
     }
 
+    // Dissipate player ball lightnings that have left the player's sight
+    // (monsters are allowed to 'cheat', as with orb of destruction)
+    if (mons->type == MONS_BALL_LIGHTNING && mons->summoner == MID_PLAYER
+        && !cell_see_cell(you.pos(), mons->pos(), LOS_SOLID))
+    {
+        monster_die(mons, KILL_RESET, NON_MONSTER);
+        return;
+    }
+
     if (mons_stores_tracking_data(mons))
     {
         actor* foe = mons->get_foe();
@@ -1924,6 +1935,10 @@ static void _grand_avatar_act(monster* mons)
         if (!mons->alive())
             return;
     }
+
+    // Avatar may have dissipated after firing.
+    if (!mons->alive())
+        return;
 
     bolt tracer;
     tracer.source    = mons->pos();
@@ -2459,12 +2474,29 @@ static void _post_monster_move(monster* mons)
     if (mons->type == MONS_WATER_NYMPH)
     {
         for (adjacent_iterator ai(mons->pos(), false); ai; ++ai)
-            if (feat_has_solid_floor(grd(*ai))
+            if (can_flood_feature(grd(*ai))
                 && (coinflip() || *ai == mons->pos()))
             {
                 temp_change_terrain(*ai, DNGN_SHALLOW_WATER, random_range(50, 80),
                                     TERRAIN_CHANGE_FLOOD);
             }
+    }
+
+    if (mons->type == MONS_GUARDIAN_GOLEM)
+        guardian_golem_bond(mons);
+
+    // A rakshasa that has regained full health dismisses its emergency clones
+    // (if they're somehow still alive) and regains the ability to summon new ones.
+    if (mons->type == MONS_RAKSHASA && mons->hit_points == mons->max_hit_points
+        && !mons->has_ench(ENCH_PHANTOM_MIRROR)
+        && mons->props.exists("emergency_clone"))
+    {
+        mons->props.erase("emergency_clone");
+        for (monster_iterator mi; mi; ++mi)
+        {
+            if (mi->type == MONS_RAKSHASA && mi->summoner == mons->mid)
+                mi->del_ench(ENCH_ABJ);
+        }
     }
 
     if (mons->type != MONS_NO_MONSTER && mons->hit_points < 1)
@@ -3132,6 +3164,14 @@ static bool _mons_can_displace(const monster* mpusher,
     if (invalid_monster_index(ipushee))
         return false;
 
+    if (mpusher->type == MONS_WANDERING_MUSHROOM
+        && mpushee->type == MONS_TOADSTOOL
+        || mpusher->type == MONS_TOADSTOOL
+           && mpushee->type == MONS_WANDERING_MUSHROOM)
+    {
+        return true;
+    }
+
     if (!mpushee->has_action_energy()
         && !_same_tentacle_parts(mpusher, mpushee))
     {
@@ -3268,7 +3308,7 @@ bool mon_can_move_to_pos(const monster* mons, const coord_def& delta,
         || target_grid == DNGN_GRATE && digs)
     {
     }
-    else if (!mons_can_traverse(mons, targ, false)
+    else if (!mons_can_traverse(mons, targ, false, false)
              && !monster_habitable_grid(mons, target_grid))
     {
         // If the monster somehow ended up in this habitat (and is
@@ -3314,6 +3354,31 @@ bool mon_can_move_to_pos(const monster* mons, const coord_def& delta,
     if (mons->type == MONS_FIRE_ELEMENTAL && feat_is_watery(target_grid))
         return false;
 
+    // Try to avoid deliberately blocking the player's line of fire.
+    if (mons->type == MONS_SPELLFORGED_SERVITOR)
+    {
+        // Only check if our target is something the player could theoretically
+        // be aiming at.
+        if (mons->get_foe() && mons->target != you.pos()
+                            && you.see_cell_no_trans(mons->target))
+        {
+            ray_def ray;
+            if (find_ray(you.pos(), mons->target, ray, opc_immob))
+            {
+                while (ray.advance())
+                {
+                    // Either we've reached the end of the ray, or we're already
+                    // (maybe) in the player's way and shouldn't care if our
+                    // next step also is.
+                    if (ray.pos() == mons->target || ray.pos() == mons->pos())
+                        break;
+                    else if (ray.pos() == targ)
+                        return false;
+                }
+            }
+        }
+    }
+
     // Submerged water creatures avoid the shallows where
     // they would be forced to surface. -- bwr
     // [dshaligram] Monsters now prefer to head for deep water only if
@@ -3347,6 +3412,10 @@ bool mon_can_move_to_pos(const monster* mons, const coord_def& delta,
 
         if (!summon_can_attack(mons, targ))
             return false;
+
+        if (targmonster->type == MONS_TOADSTOOL
+            && mons->type == MONS_WANDERING_MUSHROOM)
+            return true;
 
         // Cut down plants only when no alternative, or they're
         // our target.
@@ -3489,7 +3558,7 @@ static void _jelly_grows(monster* mons)
     _jelly_divide(mons);
 }
 
-static bool _monster_swaps_places(monster* mon, const coord_def& delta)
+bool monster_swaps_places(monster* mon, const coord_def& delta, bool takes_time)
 {
     if (delta.origin())
         return false;
@@ -3524,11 +3593,14 @@ static bool _monster_swaps_places(monster* mon, const coord_def& delta)
     }
 
     // Okay, do the swap!
+    if (takes_time)
+    {
 #ifdef EUCLIDEAN
-    _swim_or_move_energy(mon, delta.abs() == 2);
+        _swim_or_move_energy(mon, delta.abs() == 2);
 #else
-    _swim_or_move_energy(mon);
+        _swim_or_move_energy(mon);
 #endif
+    }
 
     mon->set_position(n);
     mgrd(n) = mon->mindex();
@@ -3540,7 +3612,8 @@ static bool _monster_swaps_places(monster* mon, const coord_def& delta)
     const int m2i = m2->mindex();
     ASSERT_RANGE(m2i, 0, MAX_MONSTERS);
     mgrd(c) = m2i;
-    _swim_or_move_energy(m2);
+    if (takes_time)
+        _swim_or_move_energy(m2);
 
     mon->check_redraw(c, false);
     if (mon->is_wall_clinging())
@@ -4023,8 +4096,12 @@ static bool _monster_move(monster* mons)
                 && (!crawl_state.game_is_zotdef()
                     || !_may_cutdown(mons, targ)))
             {
+                bool takes_time = !(mons->type == MONS_WANDERING_MUSHROOM
+                                    && targ->type == MONS_TOADSTOOL
+                                    || mons->type == MONS_TOADSTOOL
+                                       && targ->type == MONS_WANDERING_MUSHROOM);
                 // Zotdef: monsters will cut down firewood
-                ret = _monster_swaps_places(mons, mmov);
+                ret = monster_swaps_places(mons, mmov, takes_time);
             }
             else
             {
@@ -4047,7 +4124,7 @@ static bool _monster_move(monster* mons)
             place_cloud(CLOUD_FIRE, mons->pos(), 2 + random2(4), mons);
         }
 
-        if (mons->type == MONS_ROTTING_DEVIL || mons->type == MONS_CURSE_TOE)
+        if (mons->type == MONS_CURSE_TOE)
             place_cloud(CLOUD_MIASMA, mons->pos(), 2 + random2(3), mons);
     }
     else

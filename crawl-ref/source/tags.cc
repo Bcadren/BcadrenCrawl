@@ -1420,11 +1420,6 @@ static void tag_construct_you(writer &th)
     for (j = 0; j < NUM_ATTRIBUTES; ++j)
         marshallInt(th, you.attribute[j]);
 
-    // Sacrifice values.
-    marshallByte(th, NUM_OBJECT_CLASSES);
-    for (j = 0; j < NUM_OBJECT_CLASSES; ++j)
-        marshallInt(th, you.sacrifice_value[j]);
-
     // Event timers.
     marshallByte(th, NUM_TIMERS);
     for (j = 0; j < NUM_TIMERS; ++j)
@@ -1471,10 +1466,6 @@ static void tag_construct_you(writer &th)
     // how much piety have you achieved at highest with each god?
     for (i = 0; i < NUM_GODS; i++)
         marshallByte(th, you.piety_max[i]);
-
-    marshallByte(th, NUM_NEMELEX_GIFT_TYPES);
-    for (i = 0; i < NUM_NEMELEX_GIFT_TYPES; ++i)
-        marshallBoolean(th, you.nemelex_sacrificing[i]);
 
     marshallByte(th, you.gift_timeout);
 
@@ -2430,12 +2421,16 @@ static void tag_read_you(reader &th)
         you.attribute[ATTR_SEARING_RAY] = 0;
 #endif
 
-    count = unmarshallByte(th);
-    ASSERT(count <= NUM_OBJECT_CLASSES);
-    for (j = 0; j < count; ++j)
-        you.sacrifice_value[j] = unmarshallInt(th);
-    for (j = count; j < NUM_OBJECT_CLASSES; ++j)
-        you.sacrifice_value[j] = 0;
+#if TAG_MAJOR_VERSION == 34
+    // Nemelex item type sacrifice toggles.
+    if (th.getMinorVersion() < TAG_MINOR_NEMELEX_WEIGHTS)
+    {
+        count = unmarshallByte(th);
+        ASSERT(count <= NUM_OBJECT_CLASSES);
+        for (j = 0; j < count; ++j)
+            unmarshallInt(th);
+    }
+#endif
 
     int timer_count = 0;
 #if TAG_MAJOR_VERSION == 34
@@ -2562,7 +2557,11 @@ static void tag_read_you(reader &th)
                                = min(1 + you.experience_level / 6, 3);
     }
     if (you.species == SP_FORMICID)
+    {
         you.mutation[MUT_ANTENNAE] = you.innate_mutations[MUT_ANTENNAE] = 3;
+        you.mutation[MUT_EXOSKELETON] =
+        you.innate_mutations[MUT_EXOSKELETON] = 0;
+    }
 #endif
 
     count = unmarshallUByte(th);
@@ -2618,23 +2617,22 @@ static void tag_read_you(reader &th)
         you.one_time_ability_used.set(i, unmarshallBoolean(th));
     for (i = 0; i < count; i++)
         you.piety_max[i] = unmarshallByte(th);
-    count = unmarshallByte(th);
 #if TAG_MAJOR_VERSION == 34
     if (th.getMinorVersion() < TAG_MINOR_NEMELEX_DUNGEONS)
     {
+        unmarshallByte(th);
         for (i = 0; i < NEM_GIFT_SUMMONING; i++)
-            you.nemelex_sacrificing.set(i, unmarshallBoolean(th));
+            unmarshallBoolean(th);
         unmarshallBoolean(th); // dungeons weight
         for (i = NEM_GIFT_SUMMONING; i < NUM_NEMELEX_GIFT_TYPES; i++)
-            you.nemelex_sacrificing.set(i, unmarshallBoolean(th));
+            unmarshallBoolean(th);
     }
-    else
+    else if (th.getMinorVersion() < TAG_MINOR_NEMELEX_WEIGHTS)
     {
-#endif
-    ASSERT(count == NUM_NEMELEX_GIFT_TYPES);
-    for (i = 0; i < count; i++)
-        you.nemelex_sacrificing.set(i, unmarshallBoolean(th));
-#if TAG_MAJOR_VERSION == 34
+        count = unmarshallByte(th);
+        ASSERT(count == NUM_NEMELEX_GIFT_TYPES);
+        for (i = 0; i < count; i++)
+            unmarshallBoolean(th);
     }
 #endif
 
@@ -2951,9 +2949,21 @@ static void tag_read_you_items(reader &th)
             continue;
         for (j = 0; j < count2; ++j)
         {
-            uint8_t x = unmarshallUByte(th);
+#if TAG_MAJOR_VERSION == 34
+            uint8_t x;
+
+            if (th.getMinorVersion() < TAG_MINOR_BOOK_ID
+                && i == OBJ_BOOKS)
+                x = ID_UNKNOWN_TYPE;
+            else
+                x = unmarshallUByte(th);
+
             ASSERT(x < NUM_ID_STATE_TYPES);
             you.type_ids[i][j] = static_cast<item_type_id_state_type>(x);
+#else
+            you.type_ids[i][j] = static_cast<item_type_id_state_type>(
+                                     unmarshallUByte(th));
+#endif
         }
         for (j = count2; j < MAX_SUBTYPES; ++j)
             you.type_ids[i][j] = ID_UNKNOWN_TYPE;
@@ -3539,6 +3549,31 @@ void unmarshallItem(reader &th, item_def &item)
     {
         item.special = SPWPN_NORMAL;
     }
+
+    if (item.base_type == OBJ_MISCELLANY && item.sub_type == MISC_HORN_OF_GERYON
+        && th.getMinorVersion() < TAG_MINOR_HORN_GERYON_CHANGE)
+    {
+        item.plus2 = 0;
+    }
+
+    // Rescale old MR (range 35-99) to new discrete steps (40/80/120)
+    // Negative MR was only supposed to exist for Folly, but paranoia.
+    if (th.getMinorVersion() < TAG_MINOR_MR_ITEM_RESCALE
+        && is_artefact(item)
+        && artefact_wpn_property(item, ARTP_MAGIC))
+    {
+        int prop_mr = artefact_wpn_property(item, ARTP_MAGIC);
+        if (prop_mr > 99)
+            artefact_set_property(item, ARTP_MAGIC, 3);
+        else if (prop_mr > 79)
+            artefact_set_property(item, ARTP_MAGIC, 2);
+        else if (prop_mr < -40)
+            artefact_set_property(item, ARTP_MAGIC, -2);
+        else if (prop_mr < 0)
+            artefact_set_property(item, ARTP_MAGIC, -1);
+        else
+            artefact_set_property(item, ARTP_MAGIC, 1);
+    }
 #endif
 
     if (is_unrandom_artefact(item))
@@ -3836,6 +3871,8 @@ void marshallMonster(writer &th, const monster& m)
     marshallInt(th, m.foe_memory);
     marshallShort(th, m.damage_friendly);
     marshallShort(th, m.damage_total);
+    marshallByte(th, m.went_unseen_this_turn);
+    marshallCoord(th, m.unseen_pos);
 
     if (parts & MP_GHOST_DEMON)
     {
@@ -4339,6 +4376,14 @@ static void tag_read_level(reader &th)
         env.shop[i].type  = static_cast<shop_type>(unmarshallByte(th));
         if (env.shop[i].type == SHOP_UNASSIGNED)
             continue;
+#if TAG_MAJOR_VERSION == 34
+        if (th.getMinorVersion() < TAG_MINOR_MISC_SHOP_CHANGE
+            && env.shop[i].type == NUM_SHOPS)
+        {
+            // This was SHOP_MISCELLANY, which is now part of SHOP_EVOKABLES.
+            env.shop[i].type = SHOP_EVOKABLES;
+        }
+#endif
         env.shop[i].keeper_name[0] = unmarshallUByte(th);
         env.shop[i].keeper_name[1] = unmarshallUByte(th);
         env.shop[i].keeper_name[2] = unmarshallUByte(th);
@@ -4541,6 +4586,21 @@ void unmarshallMonster(reader &th, monster& m)
 
     m.damage_friendly = unmarshallShort(th);
     m.damage_total = unmarshallShort(th);
+
+#if TAG_MAJOR_VERSION == 34
+    if (th.getMinorVersion() < TAG_MINOR_UNSEEN_MONSTER)
+    {
+        m.went_unseen_this_turn = false;
+        m.unseen_pos = coord_def(0, 0);
+    }
+    else
+    {
+#endif
+    m.went_unseen_this_turn = unmarshallByte(th);
+    m.unseen_pos = unmarshallCoord(th);
+#if TAG_MAJOR_VERSION == 34
+    }
+#endif
 
 #if TAG_MAJOR_VERSION == 34
     if (m.type == MONS_LABORATORY_RAT)
@@ -5050,6 +5110,7 @@ static void unmarshallSpells(reader &th, monster_spells &spells)
     for (int j = 0; j < NUM_MONSTER_SPELL_SLOTS; ++j)
     {
         spells[j] = unmarshallSpellType(th
+
 #if TAG_MAJOR_VERSION == 34
             , true
 #endif
@@ -5057,6 +5118,12 @@ static void unmarshallSpells(reader &th, monster_spells &spells)
 #if TAG_MAJOR_VERSION == 34
         if (th.getMinorVersion() < TAG_MINOR_MALMUTATE && spells[j] == SPELL_POLYMORPH)
             spells[j] = SPELL_MALMUTATE;
+
+        if (spells[j] == SPELL_FAKE_RAKSHASA_SUMMON)
+            spells[j] = SPELL_PHANTOM_MIRROR;
+
+        if (spells[j] == SPELL_SUNRAY)
+            spells[j] = SPELL_STONE_ARROW;
 #endif
     }
 }

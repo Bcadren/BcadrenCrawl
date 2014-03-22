@@ -436,7 +436,7 @@ void check_net_will_hold_monster(monster* mons)
     {
         const int net = get_trapping_net(mons->pos());
         if (net != NON_ITEM)
-            remove_item_stationary(mitm[net]);
+            free_stationary_net(net);
 
         if (mons->is_insubstantial())
         {
@@ -893,9 +893,8 @@ void trap_def::trigger(actor& triggerer, bool flat_footed)
                 // If somehow already caught, make it worse.
                 m->add_ench(ENCH_HELD);
 
-                // Alert both monsters and player
+                // Alert monsters.
                 check_monsters_sense(SENSE_WEB_VIBRATION, 100, triggerer.position);
-                check_player_sense(SENSE_WEB_VIBRATION, 100, triggerer.position);
             }
         }
         break;
@@ -1409,7 +1408,7 @@ void free_self_from_net()
             you.attribute[ATTR_HELD] = 0;
             you.redraw_quiver = true;
             you.redraw_evasion = true;
-            remove_item_stationary(mitm[net]);
+            free_stationary_net(net);
             return;
         }
 
@@ -1419,6 +1418,23 @@ void free_self_from_net()
             mpr("You struggle to escape the net.");
 
         you.attribute[ATTR_HELD] -= escape;
+    }
+}
+
+void free_stationary_net(int item_index)
+{
+    item_def &item = mitm[item_index];
+    if (item.base_type == OBJ_MISSILES && item.sub_type == MI_THROWING_NET)
+    {
+        // Probabilistically mulch net based on damage done, otherwise
+        // reset damage counter (ie: item.plus).
+        if (x_chance_in_y(-item.plus, 9))
+            destroy_item(item_index);
+        else
+        {
+            item.plus = 0;
+            item.plus2 = 0;
+        }
     }
 }
 
@@ -1432,7 +1448,7 @@ void clear_trapping_net()
 
     const int net = get_trapping_net(you.pos());
     if (net != NON_ITEM)
-        remove_item_stationary(mitm[net]);
+        free_stationary_net(net);
 
     you.attribute[ATTR_HELD] = 0;
     you.redraw_quiver = true;
@@ -1569,7 +1585,7 @@ void trap_def::shoot_ammo(actor& act, bool was_known)
 
             // Needle traps can poison.
             if (poison)
-                poison_player(1 + random2(3), "", n);
+                poison_player(1 + roll_dice(2, 7), "", n);
 
             ouch(damage_taken, NON_MONSTER, KILLED_BY_TRAP, n.c_str());
         }
@@ -1585,7 +1601,7 @@ void trap_def::shoot_ammo(actor& act, bool was_known)
             }
 
             if (poison)
-                act.poison(NULL, 1 + random2(3));
+                act.poison(NULL, 3 + roll_dice(2, 5));
             act.hurt(NULL, damage_taken);
         }
     }
@@ -2039,6 +2055,5 @@ bool ensnare(actor *fly)
         return true;
 
     check_monsters_sense(SENSE_WEB_VIBRATION, 100, fly->pos());
-    check_player_sense(SENSE_WEB_VIBRATION, 100, fly->pos());
     return true;
 }

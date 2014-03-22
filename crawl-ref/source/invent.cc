@@ -66,7 +66,8 @@ string InvTitle::get_text(const bool) const
 }
 
 InvEntry::InvEntry(const item_def &i, bool show_bg)
-    : MenuEntry("", MEL_ITEM), show_background(show_bg), item(&i)
+    : MenuEntry("", MEL_ITEM), show_background(show_bg), item(&i),
+      show_weight(false)
 {
     data = const_cast<item_def *>(item);
 
@@ -217,7 +218,7 @@ string InvEntry::get_text(bool need_cursor) const
     //estimate it by the following heuristics {kittel}.
     unsigned max_chars_in_line = get_number_of_cols() - 2;
 #ifdef USE_TILE_LOCAL
-    if (Options.tile_menu_icons && Options.show_inventory_weights)
+    if (Options.tile_menu_icons && show_weight)
         max_chars_in_line = get_number_of_cols() * 4 / 9 - 2;
 #endif
 
@@ -230,12 +231,11 @@ string InvEntry::get_text(bool need_cursor) const
         colour_tag_adjustment = colour_tag.size() * 2 + 5;
     }
 
-    if (Options.show_inventory_weights)
+    if (show_weight)
         max_chars_in_line -= 1;
 
-    const int w_weight = Options.show_inventory_weights
-                         ? 10 //length of " (999 aum)"
-                         : 0;
+    const int w_weight = show_weight ? 10 //length of " (999 aum)"
+                                     : 0;
     const int excess = strwidth(tstr.str()) - colour_tag_adjustment
                      + strwidth(text) + w_weight - max_chars_in_line;
     if (excess > 0)
@@ -243,7 +243,7 @@ string InvEntry::get_text(bool need_cursor) const
     else
         tstr << text;
 
-    if (Options.show_inventory_weights)
+    if (show_weight)
     {
         const int mass = item_mass(*item) * item->quantity;
         // Note: If updating the " (%i aum)" format, remember to update
@@ -524,6 +524,8 @@ static string _no_selectables_message(int item_selector)
         return "You aren't wearing any piece of uncursed jewellery.";
     case OSEL_BRANDABLE_WEAPON:
         return "You aren't carrying any weapons that can be branded.";
+    case OSEL_ENCHANTABLE_WEAPON:
+        return "You aren't carrying any weapons that can be enchanted.";
     }
 
     return "You aren't carrying any such object.";
@@ -861,14 +863,20 @@ menu_letter InvMenu::load_items(const vector<const item_def*> &mitems,
         items_in_class.clear();
 
         InvEntry *forced_first = NULL;
+        const bool show_weight = Options.show_inventory_weights
+                                 >= (flags & MF_DROP_PICKUP ? MB_MAYBE : MB_TRUE);
         for (int j = 0, count = mitems.size(); j < count; ++j)
         {
             if (mitems[j]->base_type != i)
                 continue;
+
+            InvEntry * const ie = new InvEntry(*mitems[j]);
+            ie->show_weight = show_weight;
+
             if (mitems[j]->sub_type == get_max_subtype(mitems[j]->base_type))
-                forced_first = new InvEntry(*mitems[j]);
+                forced_first = ie;
             else
-                items_in_class.push_back(new InvEntry(*mitems[j]));
+                items_in_class.push_back(ie);
         }
 
         sort_menu(items_in_class, cond);
@@ -928,7 +936,9 @@ bool InvMenu::process_key(int key)
 {
     if (key == CONTROL('W'))
     {
-        Options.show_inventory_weights = !Options.show_inventory_weights;
+        for (size_t i = 0; i < items.size(); i++)
+            if (InvEntry *ie = dynamic_cast<InvEntry *>(items[i]))
+                ie->show_weight = !ie->show_weight;
         draw_menu();
         return true;
     }
@@ -1106,7 +1116,12 @@ vector<SelItem> select_items(const vector<const item_def*> &items,
         menu.set_title_annotator(titlefn);
         menu.set_title(title);
         if (mtype == MT_PICKUP)
+        {
             menu.set_tag("pickup");
+            // Need this before load_items.
+            menu.set_flags(menu.get_flags() | MF_DROP_PICKUP);
+        }
+
         menu.load_items(items);
         int new_flags = noselect ? MF_NOSELECT
                                  : MF_MULTISELECT | MF_ALLOW_FILTER;
@@ -1166,6 +1181,9 @@ static bool _item_class_selected(const item_def &i, int selector)
 
     case OSEL_THROWABLE:
     {
+        if (you_worship(GOD_TROG) && item_is_spellbook(i))
+            return true;
+
         if (i.base_type != OBJ_WEAPONS && i.base_type != OBJ_MISSILES)
             return false;
 
@@ -1231,6 +1249,15 @@ static bool _item_class_selected(const item_def &i, int selector)
     case OSEL_BRANDABLE_WEAPON:
         return is_brandable_weapon(i, true);
 
+    case OSEL_ENCHANTABLE_WEAPON:
+        return is_weapon(i)
+               && (itype == OBJ_WEAPONS
+                    && !is_artefact(i)
+                    && (i.plus < MAX_WPN_ENCHANT
+                        || i.plus2 < MAX_WPN_ENCHANT
+                        || !(item_ident(i, ISFLAG_KNOW_PLUSES)))
+                   || i.cursed());
+
     default:
         return false;
     }
@@ -1247,7 +1274,7 @@ static bool _userdef_item_selected(const item_def &i, int selector)
 #endif
 }
 
-static bool _is_item_selected(const item_def &i, int selector)
+bool is_item_selected(const item_def &i, int selector)
 {
     return _item_class_selected(i, selector)
            || _userdef_item_selected(i, selector);
@@ -1260,7 +1287,7 @@ static void _get_inv_items_to_show(vector<const item_def*> &v,
     {
         if (you.inv[i].defined()
             && you.inv[i].link != excluded_slot
-            && _is_item_selected(you.inv[i], selector))
+            && is_item_selected(you.inv[i], selector))
         {
             v.push_back(&you.inv[i]);
         }
@@ -1273,7 +1300,7 @@ bool any_items_to_select(int selector, bool msg, int excluded_slot)
     {
         if (you.inv[i].defined()
             && you.inv[i].link != excluded_slot
-            && _is_item_selected(you.inv[i], selector))
+            && is_item_selected(you.inv[i], selector))
         {
             return true;
         }
@@ -1299,6 +1326,8 @@ static unsigned char _invent_select(const char *title = NULL,
                                     Menu::selitem_tfn selitemfn = NULL,
                                     const vector<SelItem> *pre_select = NULL)
 {
+    if (type == MT_DROP || type == MT_PICKUP)
+        flags |= MF_DROP_PICKUP;
     InvMenu menu(flags | MF_ALLOW_FORMATTING);
 
     menu.set_preselect(pre_select);
@@ -1392,7 +1421,7 @@ vector<SelItem> prompt_invent_items(
                         menu_type mtype,
                         int type_expect,
                         invtitle_annotator titlefn,
-                        bool allow_auto_list,
+                        bool auto_list,
                         bool allow_easy_quit,
                         const char other_valid_char,
                         vector<text_pattern> *select_filter,
@@ -1405,7 +1434,6 @@ vector<SelItem> prompt_invent_items(
     bool           need_redraw = false;
     bool           need_prompt = true;
     bool           need_getch  = true;
-    bool           auto_list   = Options.auto_list && allow_auto_list;
 
     if (auto_list)
     {
@@ -1668,19 +1696,36 @@ static string _operation_verb(operation_types oper)
     }
 }
 
-static bool _nasty_stasis(const item_def &item, operation_types oper)
-{
-    return oper == OPER_PUTON
-           && item.base_type == OBJ_JEWELLERY
-           && item.sub_type == AMU_STASIS
-           && (you.duration[DUR_HASTE] || you.duration[DUR_SLOW]
-               || you.duration[DUR_TELEPORT] || you.duration[DUR_FINESSE]);
-}
-
 static bool _is_wielded(const item_def &item)
 {
     int equip = you.equip[EQ_WEAPON];
     return equip != -1 && item.link == equip;
+}
+
+static bool _is_known_no_tele_item(const item_def &item)
+{
+    if (!is_artefact(item))
+        return false;
+
+    bool known;
+    int val = artefact_wpn_property(item, ARTP_PREVENT_TELEPORTATION, known);
+
+    if (known && val)
+        return true;
+    else
+        return false;
+}
+
+static bool _nasty_stasis(const item_def &item, operation_types oper)
+{
+    return (oper == OPER_PUTON
+           && (item.base_type == OBJ_JEWELLERY
+               && item.sub_type == AMU_STASIS
+               && (you.duration[DUR_HASTE] || you.duration[DUR_SLOW]
+                   || you.duration[DUR_TELEPORT] || you.duration[DUR_FINESSE])))
+            || (oper == OPER_PUTON || oper == OPER_WEAR
+                || oper == OPER_WIELD && !_is_wielded(item))
+                && (_is_known_no_tele_item(item) && you.duration[DUR_TELEPORT]);
 }
 
 bool needs_handle_warning(const item_def &item, operation_types oper)
@@ -1831,7 +1876,7 @@ bool check_warning_inscriptions(const item_def& item,
 // Note: This function never checks if the item is appropriate.
 int prompt_invent_item(const char *prompt,
                        menu_type mtype, int type_expect,
-                       bool must_exist, bool allow_auto_list,
+                       bool must_exist, bool auto_list,
                        bool allow_easy_quit,
                        const char other_valid_char,
                        int excluded_slot,
@@ -1862,7 +1907,6 @@ int prompt_invent_item(const char *prompt,
     bool           need_redraw = false;
     bool           need_prompt = true;
     bool           need_getch  = true;
-    bool           auto_list   = Options.auto_list && allow_auto_list;
 
     if (auto_list)
     {

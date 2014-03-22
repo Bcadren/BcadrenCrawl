@@ -415,7 +415,7 @@ void banished(const string &who)
         {
             // On Abyss:5 we can't go deeper; cause a shift to a new area
             mprf(MSGCH_BANISHMENT, "You are banished to a different region of the Abyss.");
-            abyss_teleport(true);
+            abyss_teleport();
         }
         return;
     }
@@ -697,16 +697,32 @@ int recharge_wand(int item_slot, bool known, string *pre_msg)
             item_slot = prompt_invent_item("Charge which item?", MT_INVLIST,
                                             OSEL_RECHARGE, true, true, false);
         }
-        if (prompt_failed(item_slot))
-            return -1;
+
+        if (item_slot == PROMPT_NOTHING)
+            return known || crawl_state.seen_hups ? -1 : 0;
+
+        if (item_slot == PROMPT_ABORT)
+        {
+            if (known
+                || crawl_state.seen_hups
+                || yesno("Really abort (and waste the scroll)?", false, 0))
+            {
+                canned_msg(MSG_OK);
+                return known || crawl_state.seen_hups ? -1 : 0;
+            }
+            else
+            {
+                item_slot = -1;
+                continue;
+            }
+        }
 
         item_def &wand = you.inv[ item_slot ];
 
         if (!item_is_rechargeable(wand, known))
         {
             mpr("Choose an item to recharge, or Esc to abort.");
-            if (Options.auto_list)
-                more();
+            more();
 
             // Try again.
             item_slot = -1;
@@ -737,7 +753,7 @@ int recharge_wand(int item_slot, bool known, string *pre_msg)
                 desc = info;
             }
 
-            if (pre_msg)
+            if (known && pre_msg)
                 mpr(pre_msg->c_str());
 
             mprf("%s %s for a moment%s.",
@@ -787,7 +803,7 @@ int recharge_wand(int item_slot, bool known, string *pre_msg)
             if (!work)
                 return 0;
 
-            if (pre_msg)
+            if (known && pre_msg)
                 mpr(pre_msg->c_str());
 
             mprf("%s glows for a moment.", wand.name(DESC_YOUR).c_str());
@@ -2015,9 +2031,10 @@ static void _handle_magic_contamination()
     if (you.duration[DUR_FINESSE])
         added_contamination += 20;
 
+#if TAG_MAJOR_VERSION == 34
     if (you.duration[DUR_REGENERATION] && you.species == SP_DJINNI)
         added_contamination += 20;
-
+#endif
     // The Orb halves dissipation (well a bit more, I had to round it),
     // but won't cause glow on its own -- otherwise it'd spam the player
     // with messages about contamination oscillating near zero.
@@ -2086,7 +2103,12 @@ static void _magic_contamination_effects(int time_delta)
                "mutagenic glow", true,
                coinflip(),
                false, false, false, false,
-               you.species == SP_DJINNI);
+#if TAG_MAJOR_VERSION == 34
+               you.species == SP_DJINNI
+#else
+               false
+#endif
+               );
 
         // we're meaner now, what with explosions and whatnot, but
         // we dial down the contamination a little faster if its actually
@@ -2118,13 +2140,9 @@ static void _recover_stats(int time_delta)
             }
         }
 
-        // Slow heal mutation.  Applied last.
-        // Each level reduces your stat recovery by one third.
-        if (player_mutation_level(MUT_SLOW_HEALING) > 0
-            && x_chance_in_y(player_mutation_level(MUT_SLOW_HEALING), 3))
-        {
+        // Slow heal 3 mutation stops stat recovery.
+        if (player_mutation_level(MUT_SLOW_HEALING) == 3)
             recovery = false;
-        }
 
         // Rate of recovery equals one level of MUT_DETERIORATION.
         if (recovery && x_chance_in_y(4, 200))
@@ -3191,13 +3209,13 @@ void slime_wall_damage(actor* act, int delay)
     }
 }
 
-void recharge_elemental_evokers(int exp)
+void recharge_xp_evokers(int exp)
 {
     FixedVector<item_def*, NUM_MISCELLANY> evokers(nullptr);
     for (int i = 0; i < ENDOFPACK; ++i)
     {
         item_def& item(you.inv[i]);
-        if (is_elemental_evoker(item) && item.plus2 > 0)
+        if (is_xp_evoker(item) && item.plus2 > 0)
         {
             // Only recharge one of each type of evoker at a time.
             if (evokers[item.sub_type]

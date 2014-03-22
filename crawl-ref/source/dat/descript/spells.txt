@@ -46,6 +46,12 @@ be moved by this spell.
 Extremely powerful magical items, such as the Orb of Zot, may actively resist
 the pull of this spell.
 %%%%
+Aura of Abjuration spell
+
+This spell causes the caster to continuously abjure nearby hostile summoned
+creatures for a short while, rapidly sending each of them back where they came
+from.
+%%%%
 Awaken Forest spell
 
 This spell allows the caster to give some very limited motility to surrounding
@@ -228,6 +234,14 @@ Chaotic Mirror spell
 This spell mirrors a wild and unpredictable effect onto both the target and
 the caster.
 %%%%
+Cloud Cone spell
+
+This spell blasts the area near the caster with various destructive clouds.
+At low power, the most lethal clouds the spell can create are noxious fumes;
+as power increases, this gives way to roaring flames, freezing vapours,
+and poisonous gas, and at the highest tiers of power even stronger clouds
+become available.
+%%%%
 Cold Breath spell
 
 This creature may exhale a focused blast of icy-cold air. It may knock back
@@ -254,7 +268,9 @@ induce a state of confusion in the monster.
 Conjure Ball Lightning spell
 
 This spell allows the conjurer to create ball lightning. Using the spell is not
-without risk — ball lightning can be difficult to control.
+without risk — ball lightning can be difficult to control. Note that the magic
+which keeps ball lightning cohesive has limited range, and they may dissipate
+harmlessly if allowed to drift too far away from their caster before exploding.
 %%%%
 Conjure Flame spell
 
@@ -365,11 +381,6 @@ Successfully casting this spell gives the caster the ability to instantaneously
 release a fireball at a later time. Knowing this spell allows the learner to
 memorise Fireball for no additional spell levels.
 %%%%
-Demonic Horde spell
-
-This spell calls forth a small swarm of small demons to do battle with the
-caster's foes (and sometimes with each other!).
-%%%%
 Dig spell
 
 This spell digs a tunnel through unworked rock.
@@ -415,6 +426,13 @@ Dragon Form spell
 This spell temporarily transforms the caster into a great, fire-breathing
 dragon. Draconian casters will instead retain their innate colour and breath
 weapon once transformed.
+%%%%
+Dragon's Call spell
+
+This spell issues a powerful call to a draconic realm, beckoning forth dragon
+after dragon to engage the summoner's enemies. The spell is taxing to maintain,
+and each new dragon which answers the call will further drain the summoner's
+magical reserves.
 %%%%
 Drain Life spell
 
@@ -507,6 +525,13 @@ Force Lance spell
 This spell fires a shaft of concussive force which can send its target hurtling
 backwards if the impact is not nullified by their defenses.
 %%%%
+Forceful Dismissal spell
+
+This spell violently unbinds the magic which keeps the caster's summoned
+creatures in this world, engulfing anything near them in a maelstrom of magical
+force. The more powerful the creature released, the stronger the resulting
+backlash will be.
+%%%%
 Forceful Invitation spell
 
 This ability summons some of the lesser threats from one of the Lair of
@@ -555,6 +580,14 @@ energy. It resembles eerie greenish flames, but it has nothing in common with
 fire besides appearance. Both the direct hit and residual flame does damage to
 living beings and heals the undead. The energy tends to coalesce into spectral
 undead creatures on its own.
+%%%%
+Glaciate spell
+
+This spell conjures forth a mighty blast of ice; targets within its
+cone-shaped area of effect take progressively more ice damage the closer they
+are to the caster. Targets hit by the blast are encased in ice, slowing their
+movement for a few turns; targets killed by the blast may be frozen into solid
+blocks of ice.
 %%%%
 Grand Avatar spell
 
@@ -620,11 +653,6 @@ Ice Form spell
 This spell temporarily transforms the caster's body into a frozen ice-creature,
 light enough to float on water.
 %%%%
-Ice Storm spell
-
-This spell hurls a raging blizzard of ice, sleet and freezing gasses at the
-target, dealing partially irresistible cold damage in a large area.
-%%%%
 Ignite Poison spell
 
 This spell attempts to convert all nearby poison into liquid flame, burning
@@ -677,7 +705,8 @@ This spell conjures a small globe of magical energy linked to the caster's own
 reserves of power, which will hover alongside its creator and augment their
 destructive might. While the battlesphere cannot take independent action, it
 will fire volleys of energy at the caster's enemies in near-perfect sync with
-its creator's own destructive conjurations.
+its creator's own destructive conjurations.  With increasing spell power, the
+battlesphere lasts longer and deals more damage per volley.
 %%%%
 Iskenderun's Mystic Blast spell
 
@@ -728,6 +757,11 @@ This spell hurls a mighty bolt of lightning. Although this spell inflicts less
 damage than similar fire and ice spells, it can at once rip through whole rows
 of creatures.
 %%%%
+Localized Ignite Poison spell
+
+This spell attempts to convert the poison in and around one creature into
+liquid flame, burning a poisoned creature from within.
+%%%%
 Magic Dart spell
 
 This spell hurls a small bolt of magical energy. It never misses.
@@ -763,12 +797,6 @@ Mara Summon spell
 Mara, the lord of rakshasas, likes to weave illusions of himself. Unlike lesser
 rakshasas, his doubles are physically as strong as Mara himself, and hardly
 weaker in magic.
-%%%%
-Mass Abjuration spell
-
-This spell attempts to send all hostile summoned creatures in sight to the
-place whence they came, or at least shorten their stay in the caster's
-locality.
 %%%%
 Mass Confusion spell
 
@@ -817,6 +845,12 @@ of the same name.
 Minor Healing spell
 
 This spell heals a small amount of damage to the caster's body.
+%%%%
+Monstrous Menagerie spell
+
+This spell summons a powerful exotic creature to the caster's aid. At high
+power, the beings which it calls will be even mightier examples of their
+species.
 %%%%
 Necromutation spell
 
@@ -981,6 +1015,13 @@ Rakshasas are known to often weave illusions of themselves to fool their foes.
 These illusions are partially real, and can even hit you or cast spells,
 although it takes but a single hit to dispel them.
 %%%%
+Random Bolt spell
+
+This spell creates, at random, a bolt of venom, negative energy, fire, cold,
+dispelling energy, electricity, or a bouncing crystal bolt either freezing or
+burning the unfortunate victim.
+%%%%
+# TAG_MAJOR_VERSION == 34
 Rearrange the Pieces spell
 
 This spell swaps positions of random pairs of nearby creatures.
@@ -1036,6 +1077,10 @@ Sentinel's Mark spell
 This spell bestows a strong beacon upon an enemy. It announces the presence and
 location of the marked person to everyone on the same same dungeon level.
 %%%%
+Shadow Bolt spell
+
+A bolt spell mimicked by the shadow of a Dithmenos worshipper.
+%%%%
 Shadow Creatures spell
 
 This spell weaves a creature from shadows and threads of ethereal matter. The
@@ -1043,6 +1088,10 @@ creature thus brought into existence will recreate some type of creature found
 in the caster's immediate vicinity. The spell even creates appropriate
 equipment for the creature, which are given a lasting substance by their firm
 contact with reality.
+%%%%
+Shadow Shard spell
+
+A damaging spell mimicked by the shadow of a Dithmenos worshipper.
 %%%%
 Shatter spell
 
@@ -1133,6 +1182,14 @@ Kills by a spectral weapon count as your own when singing a Song of Slaying.
 Certain powerful named artefacts possess too strong a spirit for this spell to
 be able to draw them out.
 %%%%
+Spellforged Servitor spell
+
+This spell summons an extraplanar elemental and binds it to a durable shell of
+magical power forged from the caster's own magic. By drawing upon the energy of
+the vessel which gives it form, the servitor is capable of unleashing some of
+the destructive spells known to its creator, though the strongest and most
+volatile of magics cannot be imbued in this fashion.
+%%%%
 Spider Form spell
 
 This spell temporarily transforms the caster into a swift, venomous (but
@@ -1221,12 +1278,14 @@ This spell creates a shower of colourful butterflies. How pretty!
 Summon Demon spell
 
 This spell opens a gate to the realm of Pandemonium and draws forth one of its
-inhabitants to serve the caster for a time (although the demon's servitude is
-by no means guaranteed).
+inhabitants to serve the caster for a time. The demon's servitude is not
+guaranteed, but will be more likely with high power.
 %%%%
 Summon Dragon spell
 
 This spell summons and binds a powerful dragon to perform the caster's bidding.
+At high power it may summon particularly deadly varieties of dragon, or
+multiple lesser dragons at once.
 %%%%
 Summon Drakes spell
 
@@ -1254,11 +1313,24 @@ Summon Fire Elementals spell
 
 This spell summons one or more fire elementals.
 %%%%
+Summon Forest spell
+
+This spell finds a forested plane and forcefully intersects it with this
+world; however, it requires open space to succeed. While the spell holds,
+some of its terrain and spirit inhabitants may be trapped here.
+%%%%
 Summon Greater Demon spell
 
 This spell calls forth one of the greater demons of Pandemonium to serve the
-caster. Beware, for the spell binding it to service may not outlast that which
-binds it to this world!
+caster. With high power, the summoned demon will be less likely to be initially
+hostile — but the strongest demons may eventually turn against their summoner
+regardless!
+%%%%
+Summon Guardian Golem spell
+
+This spell summons a protective golem. It redirects the injuries of its
+allies to itself, though it risks overheating after absorbing significant
+amounts of damage. It will gain more health at high power.
 %%%%
 Summon Hell Beast spell
 
@@ -1288,6 +1360,18 @@ Summon Iron Elementals spell
 
 This spell summons one or more iron elementals.
 %%%%
+Summon Lightning Spire spell
+
+This spell constructs a temporary lightning spire in a nearby tile. Though it
+can fire bouncing bolts of electricity at the caster's foes, it is completely
+immobile.
+%%%%
+Summon Mana Viper spell
+
+This spell summons a violet-scaled serpent whose bite can swiftly drain the
+magical reserves of nearly any foe. At higher power, the antimagic properties
+of the viper's bite grow even stronger.
+%%%%
 Summon Minor Demon spell
 
 This spell summons between one and three minor (rank 5) demons.
@@ -1296,11 +1380,6 @@ Summon Mushrooms spell
 
 This spell summons a bunch of icky wandering mushrooms and deathcaps next to a
 chosen foe.
-%%%%
-Summon Scorpions spell
-
-This spell summons one or more scorpions (some of which may not be bound to the
-caster's service).
 %%%%
 Summon Small Mammal spell
 
@@ -1321,10 +1400,6 @@ Summon Ufetubus spell
 This spell summons multiple ufetubi, small annoying demons who flock around
 you.
 %%%%
-Summon Ugly Thing spell
-
-This spell summons a mutated otherworldly creature to the caster's aid.
-%%%%
 Summon Undead spell
 
 This spell summons multiple undead monsters. It cannot spawn liches, revenants
@@ -1338,15 +1413,6 @@ This spell summons a bunch of rats, spiders or worms.
 Summon Water Elementals spell
 
 This spell summons one or more water elementals.
-%%%%
-Sunray spell
-
-This spell calls forth a beam of intense light, damaging its target. Obviously,
-invisibility lets the light pass through, leaving such creatures unharmed.
-Vampires and shadows are known to be especially vulnerable to it.
-
-Not being a missile, this spell is not affected by Repel and Deflect effects —
-you want to be able to see, don't you?
 %%%%
 Sure Blade spell
 
@@ -1438,6 +1504,11 @@ Venom Bolt spell
 
 This spell throws a bolt of poison.
 %%%%
+Virulence spell
+
+This spell makes a target more vulnerable to poison, and enhances any poison
+that was already in their body.
+%%%%
 Volley of Thorns spell
 
 This ability allows launching a small hail of sharp thorns.
@@ -1460,6 +1531,13 @@ Waterstrike spell
 This spell causes water around or under the target to violently swirl, dealing
 damage. It cannot be cast at those not already in water, although floating
 above the surface doesn't make you safe.
+%%%%
+Weave Shadows spell
+
+This spell weaves a creature from shadows and threads of ethereal matter. The
+creatures thus brought into existence increase in power with spellpower.
+The spell even creates appropriate equipment for the creature, which are given
+a lasting substance by their firm contact with reality.
 %%%%
 Wind Blast spell
 

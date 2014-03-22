@@ -228,7 +228,9 @@ static string _stk_walker()
 {
     return Skill_Species == SP_NAGA         ? "Slider"   :
            Skill_Species == SP_TENGU        ? "Glider"   :
+#if TAG_MAJOR_VERSION == 34
            Skill_Species == SP_DJINNI       ? "Floater"  :
+#endif
            Skill_Species == SP_OCTOPODE     ? "Wriggler" :
            Skill_Species == SP_VINE_STALKER ? "Stalker"
                                             : "Walker";
@@ -497,30 +499,6 @@ void init_skill_order(void)
             }
         }
     }
-}
-
-void calc_hp()
-{
-    int oldhp = you.hp, oldmax = you.hp_max;
-    you.hp_max = get_real_hp(true, false);
-    if (you.species == SP_DJINNI)
-        you.hp_max += get_real_mp(true);
-    deflate_hp(you.hp_max, false);
-    if (oldhp != you.hp || oldmax != you.hp_max)
-        dprf("HP changed: %d/%d -> %d/%d", oldhp, oldmax, you.hp, you.hp_max);
-}
-
-void calc_mp()
-{
-    if (you.species == SP_DJINNI)
-    {
-        you.magic_points = you.max_magic_points = 0;
-        return calc_hp();
-    }
-
-    you.max_magic_points = get_real_mp(true);
-    you.magic_points = min(you.magic_points, you.max_magic_points);
-    you.redraw_magic_points = true;
 }
 
 bool is_useless_skill(skill_type skill)

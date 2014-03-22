@@ -429,19 +429,8 @@ monster_info::monster_info(const monster* m, int milev)
 
     bool nomsg_wounds = false;
 
-    // friendly fake Rakshasas/Maras are known
-    if ((m->type == MONS_RAKSHASA_FAKE || m->type == MONS_MARA_FAKE)
-        && attitude != ATT_FRIENDLY && monster_by_mid(m->summoner))
-    {
-        const monster* real = monster_by_mid(m->summoner);
-        type = real->type;
-        threat = mons_threat_level(real);
-    }
-    else
-    {
-        type = m->type;
-        threat = mons_threat_level(m);
-    }
+    type = m->type;
+    threat = mons_threat_level(m);
 
     props.clear();
     if (!m->props.empty())
@@ -494,7 +483,7 @@ monster_info::monster_info(const monster* m, int milev)
 
     int stype = 0;
     if (m->is_summoned(0, &stype)
-        && m->type != MONS_RAKSHASA_FAKE && m->type != MONS_MARA_FAKE)
+        && !m->has_ench(ENCH_PHANTOM_MIRROR))
     {
         mb.set(MB_SUMMONED);
         if (stype > 0 && stype < NUM_SPELLS
@@ -664,7 +653,7 @@ monster_info::monster_info(const monster* m, int milev)
     case ATT_HOSTILE:
         if (you_worship(GOD_SHINING_ONE)
             && !tso_unchivalric_attack_safe_monster(m)
-            && is_unchivalric_attack(&you, m))
+            && find_stab_type(&you, m) != STAB_NO_STAB)
         {
             mb.set(MB_EVIL_ATTACK);
         }
@@ -699,6 +688,7 @@ monster_info::monster_info(const monster* m, int milev)
         u.ghost.xl_rank = ghost_level_to_rank(ghost.xl);
         u.ghost.ac = quantise(ghost.ac, 5);
         u.ghost.damage = quantise(ghost.damage, 5);
+        u.ghost.can_sinv = ghost.see_invis;
     }
 
     // book loading for player ghost and vault monsters
@@ -832,7 +822,7 @@ string monster_info::_core_name() const
     case MONS_SIMULACRUM_SMALL: case MONS_SIMULACRUM_LARGE:
 #endif
     case MONS_SPECTRAL_THING:   case MONS_PILLAR_OF_SALT:
-    case MONS_CHIMERA:
+    case MONS_BLOCK_OF_ICE:     case MONS_CHIMERA:
     case MONS_SENSED:
         nametype = base_type;
         break;
@@ -1034,6 +1024,9 @@ string monster_info::common_name(description_level_type desc) const
         break;
     case MONS_PILLAR_OF_SALT:
         ss << (nocore ? "" : " ") << "shaped pillar of salt";
+        break;
+    case MONS_BLOCK_OF_ICE:
+        ss << (nocore ? "" : " ") << "shaped block of ice";
         break;
     default:
         break;

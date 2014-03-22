@@ -24,6 +24,12 @@ class MainHandler(tornado.web.RequestHandler):
         self.render("client.html", socket_server = protocol + host + "/socket",
                     username = None, config = config)
 
+class NoCacheHandler(tornado.web.StaticFileHandler):
+    def set_extra_headers(self, path):
+        self.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.set_header("Pragma", "no-cache")
+        self.set_header("Expires", "0")
+
 def err_exit(errmsg):
     logging.error(errmsg)
     sys.exit(errmsg)
@@ -106,6 +112,9 @@ def bind_server():
         "static_path": static_path,
         "template_loader": DynamicTemplateLoader.get(template_path)
         }
+
+    if hasattr(config, "no_cache") and config.no_cache:
+        settings["static_handler_class"] = NoCacheHandler
 
     application = tornado.web.Application([
             (r"/", MainHandler),

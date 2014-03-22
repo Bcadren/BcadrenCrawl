@@ -2515,7 +2515,7 @@ SHUFFLE: 16
 MONS:    centaur / centaur warrior / yaktaur / yaktaur captain
 MONS:    rat / green rat / orange rat / quokka
 MONS:    worker ant / soldier ant / queen ant
-MONS:    spiny worm / brain worm / worm / giant leech
+MONS:    brain worm / worm / giant leech
 MONS:    lindwurm / death drake / komodo dragon / basilisk / swamp drake
 MONS:    ettin / frost giant / hill giant / stone giant / fire giant
 : else
@@ -2524,7 +2524,7 @@ MONS:    giant gecko / iguana / giant newt / crocodile / komodo dragon
 MONS:    hog / jackal / wolf / hound
 MONS:    giant cockroach / worker ant / butterfly / killer bee /\
          redback / giant mite
-MONS:    swamp worm / lindwurm / worm / spiny worm
+MONS:    swamp worm / lindwurm / worm
 MONS:    swamp drake / hydra / wyvern / fire drake
 MONS:    polar bear / grizzly bear / black bear
 MONS:    black mamba / water moccasin / anaconda / salamander
@@ -3144,4 +3144,34 @@ c...........c
 c.....(.....c
 c...........c
 ccccccccccccc
+ENDMAP
+
+##############################################################################
+
+NAME: wheals_arrival_demonology
+ORIENT: float
+TAGS: arrival no_monster_gen
+KPROP: 12345&a = no_rtele_into
+SUBST: a=.
+SHUFFLE: 1234
+SHUFFLE: [{(
+SUBST: [=., (=.
+# Don't worry, they can't hurt you
+MONS: Executioner, hell beast / reaper, sun demon / ice devil / chaos spawn
+MONS: iron devil / blue devil / orange demon / red devil
+MONS: iron imp / white imp
+KMONS: & = pandemonium lord spells:.
+MAP
+xxxxxxxxxxxxxxxxx
+x[......{......(x
+x...............x
+x.ccc.ccccc.ccc.x
+x.c1c.n5&5n.c4c.x
+x.cnc.na5an.cnc.x
+x.....naaan.....x
+x.cnc.naaan.cnc.x
+x.c2c.naaan.c3c.x
+x.ccc.ccccc.ccc.x
+x...............x
+xxxxxxxx+xxxxxxxx
 ENDMAP

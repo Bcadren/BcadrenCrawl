@@ -156,6 +156,9 @@ bool feat_is_travelable_stair(dungeon_feature_type feat)
     case DNGN_ENTER_TARTARUS:
 #if TAG_MAJOR_VERSION == 34
     case DNGN_ENTER_DWARF:
+    case DNGN_RETURN_FROM_DWARF:
+    case DNGN_ENTER_FOREST:
+    case DNGN_RETURN_FROM_FOREST:
 #endif
     case DNGN_ENTER_ORC:
     case DNGN_ENTER_LAIR:
@@ -171,11 +174,7 @@ bool feat_is_travelable_stair(dungeon_feature_type feat)
     case DNGN_ENTER_SWAMP:
     case DNGN_ENTER_SHOALS:
     case DNGN_ENTER_SPIDER:
-    case DNGN_ENTER_FOREST:
     case DNGN_ENTER_DEPTHS:
-#if TAG_MAJOR_VERSION == 34
-    case DNGN_RETURN_FROM_DWARF:
-#endif
     case DNGN_RETURN_FROM_ORC:
     case DNGN_RETURN_FROM_LAIR:
     case DNGN_RETURN_FROM_SLIME:
@@ -190,7 +189,6 @@ bool feat_is_travelable_stair(dungeon_feature_type feat)
     case DNGN_RETURN_FROM_SWAMP:
     case DNGN_RETURN_FROM_SHOALS:
     case DNGN_RETURN_FROM_SPIDER:
-    case DNGN_RETURN_FROM_FOREST:
     case DNGN_RETURN_FROM_DEPTHS:
         return true;
     default:
@@ -965,7 +963,7 @@ static void _dgn_check_terrain_player(const coord_def pos)
     if (you.can_pass_through(pos))
         move_player_to_grid(pos, false, true);
     else
-        you_teleport_now(true, false);
+        you_teleport_now(true);
 }
 
 void dungeon_terrain_changed(const coord_def &pos,
@@ -1610,7 +1608,10 @@ static const char *dngn_feature_names[] =
 "enter_hall_of_blades", "enter_zot", "enter_temple",
 "enter_snake_pit", "enter_elven_halls", "enter_tomb",
 "enter_swamp", "enter_shoals", "enter_spider_nest",
-"enter_forest", "enter_depths",
+#if TAG_MAJOR_VERSION == 34
+"enter_forest",
+#endif
+"enter_depths",
 
 #if TAG_MAJOR_VERSION == 34
 "return_from_dwarven_hall",
@@ -1622,7 +1623,10 @@ static const char *dngn_feature_names[] =
 "return_from_temple", "return_from_snake_pit",
 "return_from_elven_halls", "return_from_tomb",
 "return_from_swamp", "return_from_shoals", "return_from_spider_nest",
-"return_from_forest", "return_from_depths",
+#if TAG_MAJOR_VERSION == 34
+"return_from_forest",
+#endif
+"return_from_depths",
 
 "altar_zin", "altar_the_shining_one", "altar_kikubaaqudgha",
 "altar_yredelemnul", "altar_xom", "altar_vehumet",
@@ -1630,6 +1634,9 @@ static const char *dngn_feature_names[] =
 "altar_nemelex_xobeh", "altar_elyvilon", "altar_lugonu",
 "altar_beogh", "altar_jiyva", "altar_fedhas", "altar_cheibriados",
 "altar_ashenzari", "altar_dithmenos",
+#if TAG_MAJOR_VERSION > 34
+"", "", "", "", "", "", "", "",
+#endif
 
 "fountain_blue", "fountain_sparkling", "fountain_blood",
 #if TAG_MAJOR_VERSION == 34
@@ -1963,7 +1970,9 @@ static bool _revert_terrain_to(coord_def pos, dungeon_feature_type newfeat)
 
             // Don't revert sealed doors to normal doors if we're trying to
             // remove the door altogether
-            if (marker->change_type == TERRAIN_CHANGE_DOOR_SEAL
+            // Same for destroyed trees
+            if ((marker->change_type == TERRAIN_CHANGE_DOOR_SEAL
+                || marker->change_type == TERRAIN_CHANGE_FORESTED)
                 && newfeat == DNGN_FLOOR)
             {
                 env.markers.remove(marker);

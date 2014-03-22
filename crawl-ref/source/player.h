@@ -111,7 +111,6 @@ public:
 
   FixedVector<int, NUM_ATTRIBUTES> attribute;
   FixedVector<uint8_t, NUM_AMMO> quiver; // default items for quiver
-  FixedVector<int, NUM_OBJECT_CLASSES> sacrifice_value;
   FixedVector<int, NUM_TIMERS> last_timer_effect;
   FixedVector<int, NUM_TIMERS> next_timer_effect;
 
@@ -192,9 +191,6 @@ public:
   FixedVector<short,   NUM_GODS>  num_total_gifts;
   FixedBitVector<   NUM_GODS>  one_time_ability_used;
   FixedVector<uint8_t, NUM_GODS>  piety_max;
-
-  // Nemelex sacrifice toggles
-  FixedBitVector<NUM_NEMELEX_GIFT_TYPES> nemelex_sacrificing;
 
   FixedVector<uint8_t, NUM_MUTATIONS> mutation;
   FixedVector<uint8_t, NUM_MUTATIONS> innate_mutations;
@@ -579,7 +575,6 @@ public:
     void banish(actor *agent, const string &who = "");
     void blink(bool allow_partial_control = true);
     void teleport(bool right_now = false,
-                  bool abyss_shift = false,
                   bool wizard_tele = false);
     void drain_stat(stat_type stat, int amount, actor* attacker);
 
@@ -914,6 +909,8 @@ int player_sust_abil(bool calc_unid = true);
 
 int player_teleport(bool calc_unid = true);
 
+int player_monster_detect_radius();
+
 bool items_give_ability(const int slot, artefact_prop_type abil);
 
 int slaying_bonus(weapon_property_type which_affected, bool ranged = false);
@@ -953,6 +950,9 @@ bool enough_hp(int minimum, bool suppress_msg, bool abort_macros = true);
 bool enough_mp(int minimum, bool suppress_msg, bool abort_macros = true);
 bool enough_zp(int minimum, bool suppress_msg);
 
+void calc_hp();
+void calc_mp();
+
 void dec_hp(int hp_loss, bool fatal, const char *aux = NULL);
 void dec_mp(int mp_loss, bool silent = false);
 void drain_mp(int mp_loss);
@@ -984,13 +984,16 @@ void contaminate_player(int change, bool controlled = false, bool msg = true);
 
 bool confuse_player(int amount, bool quiet = false);
 
-bool curare_hits_player(int death_source, int amount, string name,
-                        string source_name);
+bool curare_hits_player(int death_source, string name, string source_name);
 bool poison_player(int amount, string source, string source_aux = "",
                    bool force = false);
 void paralyse_player(string source, int amount = 0, int factor = 1);
-void dec_poison_player();
-void reduce_poison_player(int amount);
+void handle_player_poison(int delay);
+void reduce_player_poison(int amount);
+int get_player_poisoning();
+bool poison_is_lethal();
+int poison_survival();
+
 bool miasma_player(string source, string source_aux = "");
 
 bool napalm_player(int amount, string source, string source_aux = "");

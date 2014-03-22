@@ -240,9 +240,8 @@ MONS: sun demon
 SUBST: y = x..
 SUBST: ; = %A.....l
 : dgn.delayed_decay(_G, '%', 'dwarf skeleton')
-KITEM: A = any weapon race:dwarven w:20 / chain mail race:dwarven w:60 / \
-           plate armour race:dwarven w:19 / \
-           crystal plate armour race:dwarven w:1
+KITEM: A = any weapon w:20 / chain mail w:60 / plate armour w:19 / \
+           crystal plate armour w:1
 : hell_entry_tier(_G, "mid")
 MAP
 xxxxxxxxxxxxxxx
@@ -379,7 +378,7 @@ ENDMAP
 
 NAME:    hangedman_tar_grid_catacomb
 TAGS:    transparent
-KMONS:   O = rotting devil / shadow imp w:20 / nothing
+KMONS:   O = shadow imp w:20 / nothing
 KFEAT:   A = stone_arch
 SHUFFLE: o@O& / O&o@
 SUBST:   o = ., & = x
@@ -406,7 +405,7 @@ ENDMAP
 ####
 # A couple of Dis-inspired mini-entries; total weight 14.
 NAME: grunt_hell_entry_dis_old
-TAGS: transparent nolayout_encompass
+TAGS: transparent nolayout_encompass uniq_hell_entry_dis
 WEIGHT: 4
 MONS: iron imp / nothing
 KMONS: O = iron devil
@@ -430,7 +429,7 @@ MAP
 ENDMAP
 
 NAME: grunt_hell_entry_dis_mu
-TAGS: transparent nolayout_encompass
+TAGS: transparent nolayout_encompass uniq_hell_entry_dis
 WEIGHT: 5
 MONS: iron imp / nothing
 KMONS: O = iron devil
@@ -453,7 +452,7 @@ MAP
 ENDMAP
 
 NAME: grunt_hell_entry_dis_grunt
-TAGS: transparent nolayout_encompass
+TAGS: transparent nolayout_encompass uniq_hell_entry_dis
 WEIGHT: 5
 MONS: iron imp / nothing
 KMONS: O = iron devil

@@ -195,9 +195,17 @@ void formatted_string::parse_string1(const string &s, formatted_string &fs,
 
         if (revert_colour)
         {
-            colour_stack.pop_back();
-            if (colour_stack.size() < 1)
-                die("Stack underflow in string \"%s\"", s.c_str());
+            const int endcolour = get_colour(tagtext);
+
+            if (colour_stack.size() > 1 && endcolour == colour_stack.back())
+                colour_stack.pop_back();
+            else
+            {
+                // If this was the only tag, or the colour didn't match
+                // the one we are popping, display the tag as a warning.
+                fs.textcolor(LIGHTRED);
+                fs.cprintf("</%s>", tagtext.c_str());
+            }
         }
         else
             colour_stack.push_back(get_colour(tagtext));

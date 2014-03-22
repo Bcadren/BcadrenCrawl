@@ -792,7 +792,6 @@ static bool _beogh_retribution()
                 ASSERT(mon->weapon() != NULL);
                 item_def& wpn(*mon->weapon());
 
-                set_equip_race(wpn, ISFLAG_ORCISH);
                 set_item_ego_type(wpn, OBJ_WEAPONS, SPWPN_ELECTROCUTION);
 
                 wpn.plus  = random2(3);
@@ -921,7 +920,11 @@ static bool _sif_muna_retribution()
         break;
 
     case 8:
-        if (you.magic_points > 0 || you.species == SP_DJINNI)
+        if (you.magic_points > 0
+#if TAG_MAJOR_VERSION == 34
+                 || you.species == SP_DJINNI
+#endif
+                )
         {
             drain_mp(100);  // This should zero it.
             mprf(MSGCH_WARN, "You suddenly feel drained of magical energy!");
@@ -1088,7 +1091,6 @@ static bool _vehumet_retribution()
             break;
         case 9:
             spell = random_choose(SPELL_FIRE_STORM,
-                                  SPELL_ICE_STORM,
                                   SPELL_HELLFIRE, // let it end...
                                   -1);
             break;
@@ -1405,9 +1407,13 @@ static bool _dithmenos_retribution()
         for (int i = 0; i < how_many; ++i)
         {
             if (create_monster(
-                    mgen_data::hostile_at(
-                        RANDOM_MOBILE_MONSTER, "the darkness of Dithmenos",
-                        true, 4, MON_SUMM_WRATH, you.pos(), 0, god)))
+                    mgen_data(
+                        RANDOM_MOBILE_MONSTER, BEH_HOSTILE, 0,
+                        4, MON_SUMM_WRATH, you.pos(), MHITYOU, 0, god,
+                        MONS_NO_MONSTER, 0, BLACK, PROX_ANYWHERE,
+                        level_id(BRANCH_DUNGEON,
+                                 min(27, you.experience_level + 5)),
+                        0, 0, 0, "", "the darkness of Dithmenos")))
             {
                 count++;
             }
@@ -1649,28 +1655,35 @@ static bool _ely_holy_revenge(const monster *victim)
 {
     god_acting gdact(GOD_ELYVILON, true);
 
-    string msg = getSpeakString("Elyvilon holy");
-    if (msg.empty())
-        msg = "Elyvilon is displeased.";
-    mprf(MSGCH_GOD, GOD_ELYVILON, "%s", msg.c_str());
-
-    vector<monster*> targets;
-    for (monster_near_iterator mi(you.pos(), LOS_NO_TRANS); mi; ++mi)
+    if (!is_good_god(you.religion)
+        && ((is_evil_god(you.religion) && one_chance_in(4))
+            || one_chance_in(6)))
     {
-        if (mi->friendly())
-            targets.push_back(*mi);
+        string msg = getSpeakString("Elyvilon holy");
+        if (msg.empty())
+            msg = "Elyvilon is displeased.";
+        mprf(MSGCH_GOD, GOD_ELYVILON, "%s", msg.c_str());
+
+        vector<monster*> targets;
+        for (monster_near_iterator mi(you.pos(), LOS_NO_TRANS); mi; ++mi)
+        {
+            if (mi->friendly())
+                targets.push_back(*mi);
+        }
+
+        mprf("You %sare rebuked by divine will.", targets.size() ? "and your allies "
+                                                                 : "");
+        for (vector<monster*>::const_iterator mi = targets.begin();
+             mi != targets.end(); ++mi)
+        {
+            (*mi)->weaken(NULL, 25);
+        }
+        you.weaken(NULL, 25);
+
+        return true;
     }
 
-    mprf("You %sare rebuked by divine will.", targets.size() ? "and your allies "
-                                                             : "");
-    for (vector<monster*>::const_iterator mi = targets.begin();
-         mi != targets.end(); ++mi)
-    {
-        (*mi)->weaken(NULL, 25);
-    }
-    you.weaken(NULL, 25);
-
-    return true;
+    return false;
 }
 
 static void _god_smites_you(god_type god, const char *message,

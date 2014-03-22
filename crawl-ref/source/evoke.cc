@@ -252,8 +252,7 @@ static bool _reaching_weapon_attack(const item_def& wpn)
 
 static bool _evoke_horn_of_geryon(item_def &item)
 {
-    // Note: This assumes that the Vestibule has not been changed.
-    bool rc = false;
+    bool created = false;
 
     if (silenced(you.pos()))
     {
@@ -262,21 +261,49 @@ static bool _evoke_horn_of_geryon(item_def &item)
     }
 
     mprf(MSGCH_SOUND, "You produce a hideous howling noise!");
-    create_monster(
-        mgen_data::hostile_at(MONS_HELL_BEAST, "the horn of Geryon",
-            true, 4, 0, you.pos()));
-    return rc;
+    did_god_conduct(DID_UNHOLY, 3);
+    int num = 1;
+    if (you.skill(SK_EVOCATIONS, 10) + random2(90) > 130)
+        ++num;
+    if (you.skill(SK_EVOCATIONS, 10) + random2(90) > 180)
+        ++num;
+    if (you.skill(SK_EVOCATIONS, 10) + random2(90) > 230)
+        ++num;
+    for (int n = 0; n < num; ++n)
+    {
+        monster* mon;
+        beh_type beh = BEH_HOSTILE;
+        bool will_anger = player_will_anger_monster(MONS_HELL_BEAST);
+
+        if (!will_anger && random2(you.skill(SK_EVOCATIONS, 10)) > 7)
+            beh = BEH_FRIENDLY;
+        mgen_data mg(MONS_HELL_BEAST, beh, &you, 3, SPELL_NO_SPELL, you.pos(),
+                     MHITYOU, MG_FORCE_BEH, GOD_NO_GOD, MONS_HELL_BEAST, 0, BLACK,
+                     PROX_CLOSE_TO_PLAYER);
+        mon = create_monster(mg);
+        if (mon)
+            created = true;
+        if (mon && will_anger)
+        {
+            mprf("%s is enraged by your holy aura!",
+                 mon->name(DESC_THE).c_str());
+        }
+    }
+    if (!created)
+        mpr("Nothing answers your call.");
+    return true;
 }
 
 static bool _check_crystal_ball()
 {
+#if TAG_MAJOR_VERSION == 34
     if (you.species == SP_DJINNI)
     {
         mpr("These balls have not yet been approved for use by djinn. "
             "(OOC: they're supposed to work, but need a redesign.)");
         return false;
     }
-
+#endif
     if (you.intel() <= 1)
     {
         mpr("You lack the intelligence to focus on the shapes in the ball.");
@@ -561,8 +588,12 @@ string manual_skill_names(bool short_text)
     FixedVector<item_def,ENDOFPACK>::const_pointer iter = you.inv.begin();
     for (;iter!=you.inv.end(); ++iter)
     {
-        if (iter->base_type != OBJ_BOOKS || iter->sub_type != BOOK_MANUAL)
+        if (iter->base_type != OBJ_BOOKS
+            || iter->sub_type != BOOK_MANUAL
+            || is_useless_item(*iter))
+        {
             continue;
+        }
 
         skills.insert(static_cast<skill_type>(iter->plus));
     }
@@ -605,8 +636,7 @@ static const pop_entry pop_beasts[] =
   { 16, 27,  100, PEAK, MONS_ANACONDA },
   { 16, 27,   50, PEAK, MONS_RAVEN },
   { 18, 27,   50, UP,   MONS_DIRE_ELEPHANT },
-  { 20, 27,   25, UP,   MONS_FIRE_DRAGON },
-  { 20, 27,   25, UP,   MONS_ANCIENT_BEAR },
+  { 20, 27,   50, UP,   MONS_FIRE_DRAGON },
   { 23, 27,   10, UP,   MONS_APIS },
   { 23, 27,   10, UP,   MONS_HELLEPHANT },
   { 23, 27,   10, UP,   MONS_GOLDEN_DRAGON },
@@ -669,7 +699,7 @@ static bool _box_of_beasts(item_def &box)
                                  BEH_FRIENDLY, &you,
                                  3 + random2(3), 0,
                                  you.pos(),
-                                 MHITYOU);
+                                 MHITYOU, MG_AUTOFOE);
         mg.define_chimera(mon, mon2, mon3);
         mons = create_monster(mg);
         if (mons)
@@ -683,6 +713,7 @@ static bool _box_of_beasts(item_def &box)
         did_god_conduct(DID_CHAOS, random_range(5,10));
         // Decrease charges
         box.plus--;
+        box.plus2++;
         // Let each part announce itself
         for (int n = 0; n < NUM_CHIMERA_HEADS; ++n)
         {
@@ -726,7 +757,7 @@ static bool _sack_of_spiders(item_def &sack)
                                      BEH_FRIENDLY, &you,
                                      3 + random2(4), 0,
                                      you.pos(),
-                                     MHITYOU);
+                                     MHITYOU, MG_AUTOFOE);
             if (create_monster(mg))
                 success = true;
         }
@@ -751,6 +782,7 @@ static bool _sack_of_spiders(item_def &sack)
         xom_is_stimulated(10);
         // Decrease charges
         sack.plus--;
+        sack.plus2++;
     }
     else
         // Failed to create monster for some reason
@@ -1424,6 +1456,12 @@ static bool _stone_of_tremors()
     return true;
 }
 
+// Used for phials and water nymphs.
+bool can_flood_feature(dungeon_feature_type feat)
+{
+    return feat == DNGN_FLOOR || feat == DNGN_SHALLOW_WATER;
+}
+
 static bool _phial_of_floods()
 {
     dist target;
@@ -1453,7 +1491,7 @@ static bool _phial_of_floods()
         int dur = 40 + you.skill_rdiv(SK_EVOCATIONS, 8, 3);
         for (distance_iterator di(center, true, false, 2); di && num > 0; ++di)
         {
-            if ((grd(*di) == DNGN_FLOOR || grd(*di) == DNGN_SHALLOW_WATER)
+            if (can_flood_feature(grd(*di))
                 && cell_see_cell(center, *di, LOS_NO_TRANS))
             {
                 num--;
@@ -1488,7 +1526,7 @@ static bool _phial_of_floods()
     return false;
 }
 
-static void _expend_elemental_evoker(item_def &item)
+static void _expend_xp_evoker(item_def &item)
 {
     item.plus2 = 10;
 }
@@ -1612,7 +1650,10 @@ bool evoke_item(int slot, bool check_range)
             return false;
         }
         else if (you.magic_points >= you.max_magic_points
-                 && (you.species != SP_DJINNI || you.hp == you.hp_max))
+#if TAG_MAJOR_VERSION == 34
+                 && (you.species != SP_DJINNI || you.hp == you.hp_max)
+#endif
+                )
         {
             mpr("Your reserves of magic are already full.");
             return false;
@@ -1657,7 +1698,7 @@ bool evoke_item(int slot, bool check_range)
             }
             wind_blast(&you, you.skill(SK_EVOCATIONS, 10), coord_def());
             _fan_of_gales_elementals();
-            _expend_elemental_evoker(item);
+            _expend_xp_evoker(item);
             break;
 
         case MISC_LAMP_OF_FIRE:
@@ -1667,7 +1708,7 @@ bool evoke_item(int slot, bool check_range)
                 return false;
             }
             if (_lamp_of_fire())
-                _expend_elemental_evoker(item);
+                _expend_xp_evoker(item);
             else
                 return false;
 
@@ -1680,7 +1721,7 @@ bool evoke_item(int slot, bool check_range)
                 return false;
             }
             if (_stone_of_tremors())
-                _expend_elemental_evoker(item);
+                _expend_xp_evoker(item);
             else
                 return false;
             break;
@@ -1692,14 +1733,21 @@ bool evoke_item(int slot, bool check_range)
                 return false;
             }
             if (_phial_of_floods())
-                _expend_elemental_evoker(item);
+                _expend_xp_evoker(item);
             else
                 return false;
             break;
 
         case MISC_HORN_OF_GERYON:
+            if (!evoker_is_charged(item))
+            {
+                mpr("That is presently inert.");
+                return false;
+            }
             if (_evoke_horn_of_geryon(item))
-                pract = 1;
+                _expend_xp_evoker(item);
+            else
+                return false;
             break;
 
         case MISC_BOX_OF_BEASTS:

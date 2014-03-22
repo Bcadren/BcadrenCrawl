@@ -1809,8 +1809,17 @@ void StashTracker::search_stashes()
     }
 
     bool sort_by_dist = true;
-    bool show_as_stacks = false;
-    bool filter_useless = true;
+    bool show_as_stacks = true;
+    for (unsigned i = 0; i < results.size(); ++i)
+        if (!(results[i].matching_items.empty() && results[i].shop))
+        {
+            // Only split up stacks if at least one match is a
+            // non-shop (and split anyway in the case of a
+            // weapon shop and a search for "weapon").
+            show_as_stacks = false;
+            break;
+        }
+    bool filter_useless = false;
     bool default_execute = true;
     while (true)
     {
@@ -1903,7 +1912,7 @@ void StashSearchMenu::draw_title()
                  " by <w>%s</w> [<w>/</w>],"
                  " <w>%s</w> useless [<w>=</w>]"
                  "</lightgrey>",
-                 menu_action == ACT_EXECUTE ? " view " : "travel",
+                 menu_action == ACT_EXECUTE ? "travel" : "view  ",
                  stack_style, sort_style, filtered)), false);
     }
 }

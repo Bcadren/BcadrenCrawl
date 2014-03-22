@@ -32,6 +32,7 @@ enum object_selector
     OSEL_UNCURSED_WORN_JEWELLERY = -16,
     OSEL_SCROLL_TARGET           = -17,
     OSEL_BRANDABLE_WEAPON        = -18,
+    OSEL_ENCHANTABLE_WEAPON      = -19,
 };
 
 #define SLOT_BARE_HANDS      -2
@@ -113,6 +114,8 @@ public:
     virtual bool get_tiles(vector<tile_def>& tiles) const;
 #endif
 
+    bool show_weight;
+
 private:
     void add_class_hotkeys(const item_def &i);
 };
@@ -174,13 +177,14 @@ protected:
 
 void get_class_hotkeys(const int type, vector<char> &glyphs);
 
+bool is_item_selected(const item_def &item, int selector);
 bool any_items_to_select(int type_expect, bool msg = false, int excluded_slot = -1);
 
 int prompt_invent_item(const char *prompt,
                        menu_type type,
                        int type_expect,
                        bool must_exist = true,
-                       bool allow_auto_list = true,
+                       bool auto_list = true,
                        bool allow_easy_quit = true,
                        const char other_valid_char = '\0',
                        int excluded_slot = -1,
@@ -199,7 +203,7 @@ vector<SelItem> prompt_invent_items(
                         menu_type type,
                         int type_expect,
                         invtitle_annotator titlefn = NULL,
-                        bool allow_auto_list = true,
+                        bool auto_list = true,
                         bool allow_easy_quit = true,
                         const char other_valid_char = '\0',
                         vector<text_pattern> *filter = NULL,

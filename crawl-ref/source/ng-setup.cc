@@ -205,7 +205,7 @@ static void _give_bonus_items()
 {
     _newgame_give_item(OBJ_POTIONS, POT_CURING);
     _newgame_give_item(OBJ_POTIONS, POT_HEAL_WOUNDS);
-    _newgame_give_item(OBJ_POTIONS, POT_SPEED);
+    _newgame_give_item(OBJ_POTIONS, POT_HASTE);
     _newgame_give_item(OBJ_POTIONS, POT_MAGIC, 2);
     _newgame_give_item(OBJ_POTIONS, POT_BERSERK_RAGE);
     _newgame_give_item(OBJ_SCROLLS, SCR_BLINKING);
@@ -322,11 +322,12 @@ void give_basic_mutations(species_type speci)
         break;
     case SP_FORMICID:
         you.mutation[MUT_ANTENNAE]    = 3;
-        you.mutation[MUT_EXOSKELETON] = 1;
         break;
+#if TAG_MAJOR_VERSION == 34
     case SP_DJINNI:
         you.mutation[MUT_NEGATIVE_ENERGY_RESISTANCE] = 3;
         break;
+#endif
     case SP_VINE_STALKER:
         you.mutation[MUT_FANGS]          = 2;
         you.mutation[MUT_ANTIMAGIC_BITE] = 1;
@@ -423,6 +424,9 @@ void newgame_make_item(int slot, equipment_type eqslot,
     }
 
     if (item.base_type == OBJ_ARMOUR && !can_wear_armour(item, false, false))
+        return;
+
+    if (is_shield(item) && is_shield_incompatible(*(you.weapon()), &item))
         return;
 
     if (eqslot == EQ_WEAPON && !can_wield(&item, false, false))
@@ -539,6 +543,7 @@ static void _give_items_skills(const newgame_def& ng)
         newgame_make_item(2, EQ_SHIELD, OBJ_ARMOUR,
                           you.body_size() >= SIZE_MEDIUM ? ARM_SHIELD
                                                          : ARM_BUCKLER);
+        newgame_make_item(4, EQ_NONE, OBJ_POTIONS, POT_MIGHT);
 
         // Skills.
         you.skills[SK_FIGHTING] = 3;
@@ -657,7 +662,7 @@ static void _give_items_skills(const newgame_def& ng)
         you.piety = 38;
 
         newgame_make_item(0, EQ_WEAPON, OBJ_WEAPONS, WPN_SHORT_SWORD, -1, 1,
-                          2, 2);
+                          1, 1);
         _update_weapon(ng);
 
         newgame_make_item(1, EQ_BODY_ARMOUR, OBJ_ARMOUR, ARM_LEATHER_ARMOUR,
@@ -1097,31 +1102,6 @@ static void _mark_starting_books()
             mark_had_book(you.inv[i]);
 }
 
-static void _racialise_starting_equipment()
-{
-    for (int i = 0; i < ENDOFPACK; ++i)
-    {
-        if (you.inv[i].defined())
-        {
-            if (is_useless_item(you.inv[i]))
-                _newgame_clear_item(i);
-            // Don't change object type modifier unless it starts plain.
-            else if ((you.inv[i].base_type == OBJ_ARMOUR
-                    || you.inv[i].base_type == OBJ_WEAPONS)
-                && get_equip_race(you.inv[i]) == ISFLAG_NO_RACE)
-            {
-                // Now add appropriate species type mod.
-                if (player_genus(GENPC_ELVEN))
-                    set_equip_race(you.inv[i], ISFLAG_ELVEN);
-                else if (you.species == SP_DEEP_DWARF)
-                    set_equip_race(you.inv[i], ISFLAG_DWARVEN);
-                else if (player_genus(GENPC_ORCISH))
-                    set_equip_race(you.inv[i], ISFLAG_ORCISH);
-            }
-        }
-    }
-}
-
 static void _give_basic_spells(job_type which_job)
 {
     // Wanderers may or may not already have a spell. - bwr
@@ -1201,16 +1181,6 @@ static void _give_basic_knowledge(job_type which_job)
     you.type_ids[OBJ_POTIONS][POT_BLOOD] = ID_KNOWN_TYPE;
     you.type_ids[OBJ_POTIONS][POT_BLOOD_COAGULATED] = ID_KNOWN_TYPE;
     you.type_ids[OBJ_POTIONS][POT_PORRIDGE] = ID_KNOWN_TYPE;
-
-    switch (which_job)
-    {
-    case JOB_ARTIFICER:
-        set_ident_type(OBJ_SCROLLS, SCR_RECHARGING, ID_KNOWN_TYPE);
-        break;
-
-    default:
-        break;
-    }
 }
 
 static void _setup_normal_game();
@@ -1337,7 +1307,16 @@ static void _setup_generic(const newgame_def& ng)
     _give_basic_spells(you.char_class);
     _give_basic_knowledge(you.char_class);
 
-    _racialise_starting_equipment();
+    // Clear known-useless items (potions for Mummies, etc).
+    for (int i = 0; i < ENDOFPACK; ++i)
+    {
+        if (you.inv[i].defined())
+        {
+            if (is_useless_item(you.inv[i]))
+                _newgame_clear_item(i);
+        }
+    }
+
     initialise_item_descriptions();
 
     for (int i = 0; i < ENDOFPACK; ++i)
@@ -1388,10 +1367,6 @@ static void _setup_generic(const newgame_def& ng)
 
     // Generate the second name of Jiyva
     fix_up_jiyva_name();
-
-    // Enable sacrificing for all Nemelex gift types
-    for (int i = 0; i < NUM_NEMELEX_GIFT_TYPES; ++i)
-        you.nemelex_sacrificing.set(i);
 
     // Get rid of god companions left from previous games
     init_companions();

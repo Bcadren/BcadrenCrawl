@@ -98,6 +98,7 @@ struct bolt
     bool        effect_wanton;         // could we have guessed it would happen?
 
     int         draw_delay;            // delay used when drawing beam.
+    int         explode_delay;         // delay when drawing explosions.
 
     bolt*       special_explosion;     // For exploding with a different
                                        // flavour/damage/etc than the beam
@@ -317,6 +318,8 @@ bool enchant_monster_with_flavour(monster* mon, actor *atk,
 
 bool enchant_monster_invisible(monster* mon, const string &how);
 
+bool ench_flavour_affects_monster(beam_type flavour, const monster* mon,
+                                                  bool intrinsic_only = false);
 spret_type mass_enchantment(enchant_type wh_enchant, int pow,
                             bool fail = false);
 
@@ -341,5 +344,5 @@ void clear_zap_info_on_exit();
 
 int zap_power_cap(zap_type ztype);
 void zappy(zap_type z_type, int power, bolt &pbolt);
-
+void bolt_parent_init(bolt *parent, bolt *child);
 #endif

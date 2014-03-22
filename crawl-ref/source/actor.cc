@@ -4,6 +4,7 @@
 #include "actor.h"
 #include "areas.h"
 #include "artefact.h"
+#include "art-enum.h"
 #include "attack.h"
 #include "coord.h"
 #include "env.h"
@@ -52,7 +53,11 @@ bool actor::airborne() const
  */
 bool actor::ground_level() const
 {
-    return !airborne() && !is_wall_clinging() && mons_species() != MONS_DJINNI;
+    return !airborne() && !is_wall_clinging()
+#if TAG_MAJOR_VERSION == 34
+        && mons_species() != MONS_DJINNI
+#endif
+        ;
 }
 
 bool actor::stand_on_solid_ground() const
@@ -330,7 +335,8 @@ bool actor::no_cast(bool calc_unid, bool items) const
 
 bool actor::rmut_from_item(bool calc_unid) const
 {
-    return wearing(EQ_AMULET, AMU_RESIST_MUTATION, calc_unid);
+    return wearing(EQ_AMULET, AMU_RESIST_MUTATION, calc_unid)
+           || is_player() && player_equip_unrand(UNRAND_ORDER);
 }
 
 bool actor::evokable_berserk(bool calc_unid) const

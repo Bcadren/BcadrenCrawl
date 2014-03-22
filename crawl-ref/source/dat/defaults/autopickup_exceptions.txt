@@ -22,6 +22,9 @@ ae += dangerous_item
 # Exclude items which your god disapproves of.
 ae += forbidden
 
+# Ignore books that you have already seen
+ae += [^n]identified.*spellbook
+
 # Excluding amulets as you only need one of each. (If you know the
 # subtype that means you already have one of it.) Also for some rings.
 # Some items may already be excluded as bad_item, e.g. inaccuracy.
@@ -30,10 +33,8 @@ ae += amulet of (resist .*|clarity|rage|conservation|guardian spirit|faith|stasi
 # Rings of teleportation are not redundant -- double *Tele is pretty good in
 # the Abyss. Still, they're more in line with lanterns of shadow, so you can
 # pick up the second one by hand.
-ae += ring of (see invisible|flight|teleportation|invisibility|teleport control)
-: if you.race() ~= "Formicid" then
-ae += ring of poison resistance
-: end
+ae += ring of (see invisible|flight|poison resistance|teleportation)
+ae += ring of (invisibility|teleport control)
 : if you.race() ~= "Ogre" and you.race() ~= "Troll"
 :    and you.race() ~= "Centaur" and you.race() ~= "Octopode" then
 ae += ring of sustenance

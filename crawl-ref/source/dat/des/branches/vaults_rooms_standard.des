@@ -794,7 +794,7 @@ MAP
 ENDMAP
 
 NAME:    v_rooms_1
-TAGS:    vault_orient_n vault_orient_s vault_orient_w
+TAGS:    vaults_orient_n vaults_orient_s vaults_orient_w
 NSUBST:  y = 1:+ / *:x
 NSUBST:  z = 1:+ / *:x
 NSUBST:  w = 1:+ / *:x
@@ -1742,4 +1742,60 @@ x..xmmx
 x.....x
 x.....x
 xxxx..x
+ENDMAP
+
+NAME: nicolae_vaults_puzzle_piece
+TAGS: vaults_room allow_dup
+SUBST: A : ._, B : ._, C : ._, D : ._, ) = )))0
+KMONS: 0 = 0 band
+CLEAR: _
+MAP
+        AAA
+       AAAAA
+       AAAAA
+   ....AAAAA....
+   ....AAAAA....
+   ..)..AAA..)..
+   .............
+ DDDD.........BBBB
+DDDDDD.......BBBBBB
+DDDDDD...)...BBBBBB
+DDDDDD.......BBBBBB
+ DDDD.........BBBB
+   .............
+   ..)..CCC..)..
+   ....CCCCC....
+   ....CCCCC....
+       CCCCC
+       CCCCC
+        CCC
+ENDMAP
+
+NAME: nicolae_vaults_disjoint_gnomons
+TAGS: vaults_room allow_dup
+NSUBST: A = + / x, B = + / x, C = + / x, D = + / x, E = + / x, F = + / x, \
+        ) = 3:0 / 3:) / 3:% / 3:.%0 / *:.
+MAP
+...........
+.)...)...).
+...........
+...xBBBBBBx
+...A.......
+.).A.)...).
+...A.......
+...A...xCCx
+...A...C...
+.).A.).C.).
+...x...x...
+           ...x...x...
+           .).D.).F.).
+           ...D...F...
+           xDDx...F...
+           .......F...
+           .)...).F.).
+           .......F...
+           xEEEEEEx...
+           ...........
+           .)...)...).
+           ...........
 ENDMAP

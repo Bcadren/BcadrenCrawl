@@ -56,10 +56,9 @@ function (exports, $, key_conversion, chat, comm) {
             var msgobj;
             try
             {
-                if (JSON && JSON.parse)
-                    msgobj = JSON.parse(msgtext);
-                else
-                    msgobj = eval("(" + msgtext + ")");
+                // Can't use JSON.parse here, because 0.11 and older send
+                // invalid JSON messages
+                msgobj = eval("(" + msgtext + ")");
             }
             catch (e)
             {
@@ -72,6 +71,8 @@ function (exports, $, key_conversion, chat, comm) {
                 msgs = [ msgobj ];
             for (var i in msgs)
             {
+                if (window.log_messages && window.log_messages !== 2)
+                    console.log("Message: " + msgs[i].msg, msgs[i]);
                 if (!comm.handle_message_immediately(msgs[i]))
                     message_queue.push(msgs[i]);
             }
@@ -163,7 +164,8 @@ function (exports, $, key_conversion, chat, comm) {
 
     function in_game()
     {
-        return current_layer != "lobby" && current_layer != "loader";
+        return current_layer != "lobby" && current_layer != "loader"
+               && !showing_close_message;
     }
 
     function set_layer(layer)
@@ -1044,7 +1046,8 @@ function (exports, $, key_conversion, chat, comm) {
     {
         if (game_version == null || data["version"] != game_version)
         {
-            $(document).unbind("game_preinit game_init game_cleanup");
+            $(document).off();
+            bind_document_events();
             for (var i in loaded_modules)
                 requirejs.undef(loaded_modules[i]);
             loaded_modules = [];
@@ -1122,9 +1125,15 @@ function (exports, $, key_conversion, chat, comm) {
             return false; // buggy Blob builder
         if (b.safari)
             return false;
-        if (b.opera) // JavaScript errors in version 12.15
-            return false;
         return true;
+    }
+
+    function bind_document_events()
+    {
+        $(document).on("keypress.client", handle_keypress);
+        $(document).on("keydown.client", handle_keydown);
+        $(document).on("game_keypress", stale_processes_keypress);
+        $(document).on("game_keypress", force_terminate_keypress);
     }
 
     // Global functions for backwards compatibility (HACK)
@@ -1171,9 +1180,7 @@ function (exports, $, key_conversion, chat, comm) {
     });
 
     $(document).ready(function () {
-        // Key handler
-        $(document).bind('keypress.client', handle_keypress);
-        $(document).bind('keydown.client', handle_keydown);
+        bind_document_events();
 
         $(window).resize(function (ev) {
             do_layout();
@@ -1202,8 +1209,6 @@ function (exports, $, key_conversion, chat, comm) {
 
         $("#force_terminate_no").click(force_terminate_no);
         $("#force_terminate_yes").click(force_terminate_yes);
-        $(document).on("game_keypress", stale_processes_keypress);
-        $(document).on("game_keypress", force_terminate_keypress);
 
         do_layout();
 
@@ -1257,7 +1262,7 @@ function (exports, $, key_conversion, chat, comm) {
                         var x = inflater.append(data);
                     }
                     decode_utf8(decompressed, function (s) {
-                        if (window.log_messages)
+                        if (window.log_messages === 2)
                             console.log("Message: " + s);
                         if (window.log_message_size)
                             console.log("Message size: " + s.length);
@@ -1267,7 +1272,7 @@ function (exports, $, key_conversion, chat, comm) {
                     return;
                 }
 
-                if (window.log_messages)
+                if (window.log_messages === 2)
                     console.log("Message: " + msg.data);
                 if (window.log_message_size)
                     console.log("Message size: " + msg.data.length);

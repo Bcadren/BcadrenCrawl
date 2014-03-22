@@ -333,7 +333,6 @@ wint_t TilesFramework::_handle_control_message(sockaddr_un addr, string data)
     else if (msgtype == "spectator_joined")
     {
         flush_messages();
-        _send_options();
         _send_everything();
         flush_messages();
     }
@@ -655,6 +654,14 @@ player_info::player_info()
     position = coord_def(-1, -1);
 }
 
+/**
+ * Send the player properties to the webserver.  Any player properties that
+ * must be available to the WebTiles client must be sent here through an
+ * _update_* function call of the correct data type.
+ * @param force_full  If true, all properties will be updated in the json
+ *                    regardless whether their values are the same as the
+ *                    current info in m_current_player_info.
+ */
 void TilesFramework::_send_player(bool force_full)
 {
     player_info& c = m_current_player_info;
@@ -698,8 +705,10 @@ void TilesFramework::_send_player(bool force_full)
     _update_int(force_full, c.hp, you.hp, "hp");
     _update_int(force_full, c.hp_max, you.hp_max, "hp_max");
     int max_max_hp = get_real_hp(true, true);
+#if TAG_MAJOR_VERSION == 34
     if (you.species == SP_DJINNI)
         max_max_hp += get_real_mp(true); // compare _print_stats_hp
+
     _update_int(force_full, c.real_hp_max, max_max_hp, "real_hp_max");
 
     if (you.species != SP_DJINNI)
@@ -719,6 +728,13 @@ void TilesFramework::_send_player(bool force_full)
             contam = 16000;
         _update_int(force_full, c.contam, contam, "contam");
     }
+#else
+    _update_int(force_full, c.real_hp_max, max_max_hp, "real_hp_max");
+    _update_int(force_full, c.mp, you.magic_points, "mp");
+    _update_int(force_full, c.mp_max, you.max_magic_points, "mp_max");
+#endif
+    _update_int(force_full, c.poison_survival, poison_survival(),
+                "poison_survival");
 
     if (you.species == SP_LAVA_ORC)
         _update_int(force_full, c.heat, temperature(), "heat");
@@ -860,17 +876,14 @@ void TilesFramework::_send_item(item_info& current, const item_info& next,
     {
         string name = next.name(DESC_A, true, false, true);
         if (force_full || current.name(DESC_A, true, false, true) != name)
-        {
             json_write_string("name", name);
 
-            const string current_prefix = item_prefix(current);
-            const string prefix = item_prefix(next);
-
-            const int current_prefcol = menu_colour(current.name(DESC_INVENTORY), current_prefix);
-            const int prefcol = menu_colour(next.name(DESC_INVENTORY), prefix);
-            if (force_full || current_prefcol != prefcol)
-                json_write_int("col", prefcol);
-        }
+        const string current_prefix = item_prefix(current);
+        const string prefix = item_prefix(next);
+        const int current_prefcol = menu_colour(current.name(DESC_INVENTORY), current_prefix);
+        const int prefcol = menu_colour(next.name(DESC_INVENTORY), prefix);
+        if (force_full || current_prefcol != prefcol)
+            json_write_int("col", prefcol);
 
         tileidx_t tile = tileidx_item(next);
         if (force_full || tileidx_item(current) != tile)
@@ -1061,17 +1074,9 @@ void TilesFramework::_send_cell(const coord_def &gc,
     ucs_t glyph = next_sc.glyph;
     if (current_sc.glyph != glyph)
     {
-        json_write_comma();
-        if (glyph == '\\')
-            write_message("\"g\":\"\\\\\"");
-        else if (glyph == '"')
-            write_message("\"g\":\"\\\"\"");
-        else
-        {
-            char buf[5];
-            buf[wctoutf8(buf, glyph)] = 0;
-            write_message("\"g\":\"%s\"", buf);
-        }
+        char buf[5];
+        buf[wctoutf8(buf, glyph)] = 0;
+        json_write_string("g", buf);
     }
     if ((current_sc.colour != next_sc.colour
          || current_sc.glyph == ' ') && glyph != ' ')
@@ -1523,6 +1528,7 @@ void TilesFramework::resize()
 void TilesFramework::_send_everything()
 {
     _send_version();
+    _send_options();
 
     // UI State
     _send_ui_state(m_ui_state);
@@ -1855,13 +1861,17 @@ void TilesFramework::write_message_escaped(const string& s)
 
     for (size_t i = 0; i < s.size(); ++i)
     {
-        char c = s[i];
+        unsigned char c = s[i];
         if (c == '"')
             m_msg_buf.append("\\\"");
         else if (c == '\\')
             m_msg_buf.append("\\\\");
-        else if (c == '\n')
-            m_msg_buf.append("\\n");
+        else if (c < 0x20)
+        {
+            char buf[7];
+            snprintf(buf, sizeof(buf), "\\u%04x", c);
+            m_msg_buf.append(buf);
+        }
         else
             m_msg_buf.append(1, c);
     }

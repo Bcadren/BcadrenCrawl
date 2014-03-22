@@ -621,6 +621,17 @@ void MiscastEffect::_potion_effect(potion_type pot_eff, int pot_pow)
     }
 }
 
+bool MiscastEffect::_paralyse(int dur)
+{
+    if (source != HELL_EFFECT_MISCAST)
+    {
+        target->paralyse(act_source, dur, cause);
+        return true;
+    }
+    else
+        return false;
+}
+
 bool MiscastEffect::_send_to_abyss()
 {
     if ((player_in_branch(BRANCH_ABYSS) && x_chance_in_y(you.depth, brdepth[BRANCH_ABYSS]))
@@ -1042,22 +1053,29 @@ void MiscastEffect::_enchantment(int severity)
 
     case 3:         // potentially lethal
         // Only use first two cases for monsters.
-        switch (random2(target->is_player() ? 4 : 2))
+        bool reroll = true;
+        while (reroll)
         {
-        case 0:
-            target->paralyse(act_source, 2 + random2(6), cause);
-            break;
-        case 1:
-            _potion_effect(POT_CONFUSION, 10);
-            break;
-        case 2:
-            contaminate_player(random2avg(18000, 3), spell != SPELL_NO_SPELL);
-            break;
-        case 3:
-            while (curse_an_item(true) && !one_chance_in(3))
-                ;
-            mpr("You sense an overwhelmingly malignant aura!");
-            break;
+            switch (random2(target->is_player() ? 4 : 2))
+            {
+            case 0:
+                reroll = !_paralyse(2 + random2(6));
+                break;
+            case 1:
+                _potion_effect(POT_CONFUSION, 10);
+                reroll = false;
+                break;
+            case 2:
+                contaminate_player(random2avg(18000, 3), spell != SPELL_NO_SPELL);
+                reroll = false;
+                break;
+            case 3:
+                while (curse_an_item(true) && !one_chance_in(3))
+                    ;
+                mpr("You sense an overwhelmingly malignant aura!");
+                reroll = false;
+                break;
+            }
         }
         break;
     }
@@ -1516,7 +1534,11 @@ void MiscastEffect::_divination_you(int severity)
             break;
         case 1:
             mpr("You lose your focus.");
-            if (you.magic_points > 0 || you.species == SP_DJINNI)
+            if (you.magic_points > 0
+#if TAG_MAJOR_VERSION == 34
+                    || you.species == SP_DJINNI
+#endif
+                    )
             {
                 drain_mp(3 + random2(10));
                 mprf(MSGCH_WARN, "You suddenly feel drained of magical energy!");
@@ -1532,7 +1554,11 @@ void MiscastEffect::_divination_you(int severity)
         {
         case 0:
             mpr("You lose concentration completely!");
-            if (you.magic_points > 0 || you.species == SP_DJINNI)
+            if (you.magic_points > 0
+#if TAG_MAJOR_VERSION == 34
+                || you.species == SP_DJINNI
+#endif
+                    )
             {
                 drain_mp(5 + random2(20));
                 mprf(MSGCH_WARN, "You suddenly feel drained of magical energy!");
@@ -2754,7 +2780,7 @@ void MiscastEffect::_poison(int severity)
             {
                 you_msg      = "You feel sick.";
                 mon_msg_seen = "@The_monster@ looks sick.";
-                _do_poison(2 + random2(3));
+                _do_poison(7 + random2(9));
             }
             do_msg();
             break;
@@ -2780,7 +2806,7 @@ void MiscastEffect::_poison(int severity)
             {
                 you_msg      = "You feel very sick.";
                 mon_msg_seen = "@The_monster@ looks very sick.";
-                _do_poison(3 + random2avg(9, 2));
+                _do_poison(14 + random2avg(17, 2));
             }
             do_msg();
             break;
@@ -2812,7 +2838,7 @@ void MiscastEffect::_poison(int severity)
             {
                 you_msg      = "You feel incredibly sick.";
                 mon_msg_seen = "@The_monster@ looks incredibly sick.";
-                _do_poison(10 + random2avg(19, 2));
+                _do_poison(20 + random2avg(35, 2));
             }
             do_msg();
             break;
@@ -2986,12 +3012,6 @@ void MiscastEffect::_zot()
                 goto reroll_2;
             break;
         case 4:
-            you_msg      = "You feel incredibly sick.";
-            mon_msg_seen = "@The_monster@ looks incredibly sick.";
-            _do_poison(10 + random2avg(19, 2));
-            do_msg();
-            break;
-        case 5:
             if (!target->is_player())
                 target->polymorph(0);
             else if (coinflip())
@@ -3009,8 +3029,8 @@ void MiscastEffect::_zot()
                 do_msg();
             }
             break;
+        case 5:
         case 6:
-        case 7:
             roll = random2(3); // Give 2 of 3 effects.
             if (roll != 0)
                 _potion_effect(POT_CONFUSION, 15);
@@ -3034,26 +3054,26 @@ void MiscastEffect::_zot()
                 }
             }
             break;
-        case 8:
+        case 7:
             you_msg      = "You are engulfed in negative energy!";
             mon_msg_seen = "@The_monster@ is engulfed in negative energy!";
             do_msg();
             target->drain_exp(act_source, false, 100);
             break;
-        case 9:
+        case 8:
             if (target->is_player())
                 contaminate_player(2000 + random2avg(13000, 2), false);
             else
                 target->polymorph(0);
             break;
-        case 10:
+        case 9:
             if (you.magic_points > 0)
             {
                 dec_mp(10 + random2(21));
                 mprf(MSGCH_WARN, "You suddenly feel drained of magical energy!");
             }
             break;
-        case 11:
+        case 10:
         {
             vector<string> wands;
             for (int i = 0; i < ENDOFPACK; ++i)
@@ -3078,15 +3098,15 @@ void MiscastEffect::_zot()
                 do_msg(); // For canned_msg(MSG_NOTHING_HAPPENS)
             break;
         }
-        case 12:
+        case 11:
             _lose_stat(STAT_RANDOM, 1 + random2avg((coinflip() ? 7 : 4), 2));
             break;
-        case 13:
+        case 12:
             mpr("An unnatural silence engulfs you.");
             you.increase_duration(DUR_SILENCE, 10 + random2(21), 30);
             invalidate_agrid(true);
             break;
-        case 14:
+        case 13:
             if (mons_word_of_recall(NULL, 2 + random2(3)) == 0)
                 canned_msg(MSG_NOTHING_HAPPENS);
             break;

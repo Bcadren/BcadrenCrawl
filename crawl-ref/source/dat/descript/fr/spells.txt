@@ -292,11 +292,6 @@ Incanter avec succès ce sort donne au sorcier l'habilité de relâcher
 instantanément une boule de feu plus tard. Connaitre ce sortilège permet au
 sorcier d'apprendre Boule de feu sans coût additionnel de niveau de sort.
 %%%%
-Demonic Horde spell
-
-Ce sort convoque un essaim de petits démons pour se battre aux côtés du sorcier
-(et parfois entre eux !).
-%%%%
 Dig spell
 
 Ce sort forme des tunnels au travers la pierre brute.
@@ -499,12 +494,6 @@ Ice Form spell
 Ce sort transforme temporairement le corps du sorcier en une créature de glace
 gelée, suffisamment légère pour flotter sur l'eau.
 %%%%
-Ice Storm spell
-
-Ce sort propulse un blizzard de glace rageur, des giboulées, et du gaz gelés
-sur votre cible, causant des dégâts de froid partiellement irrésistibles sur
-une large zone.
-%%%%
 Ignite Poison spell
 
 Ce sort tente de transformer tous les poisons à proximité en flammes liquides,
@@ -631,12 +620,6 @@ Mara Summon spell
 Mara, le seigneur des rakshasas, aime tisser des illusions de lui-même.
 Contrairement aux rakshasas inferieur, ses doubles sont physiquement aussi fort
 que Mara lui-même, et à peine plus faible en magie.
-%%%%
-Mass Abjuration spell
-
-Ce sort tente d'envoyer d'où elles viennent toutes les créatures, convoquées et
-hostiles à portée de vue, ou au moins de raccourcir leur temps de séjour sur le
-plan.
 %%%%
 Mass Confusion spell
 
@@ -1136,11 +1119,6 @@ Summon Mushrooms spell
 Ce sort convoque un tas de poisseux champignons errants et de calices de la
 mort à côté de l'ennemi choisi.
 %%%%
-Summon Scorpions spell
-
-Ce sort convoque un ou plusieurs scorpions (dont certains pourraient ne pas
-être liés au service du sorcier).
-%%%%
 Summon Small Mammal spell
 
 Ce sort convoque une ou deux petites créatures pour aider le sorcier.
@@ -1160,10 +1138,6 @@ Summon Ufetubus spell
 Ce sort convoque plein d'ufetubi, petits démons ennuyeux se pressant autour de
 vous.
 %%%%
-Summon Ugly Thing spell
-
-Ce sort convoque une créature mutante d'un autre monde pour aider le sorcier.
-%%%%
 Summon Undead spell
 
 Ce sort convoque plusieurs monstres morts-vivants. Il ne peut pas faire
@@ -1177,16 +1151,6 @@ Ce sort invoque un tas de rats, d'araignées ou de vers.
 Summon Water Elementals spell
 
 Ce sort invoque un ou plusieurs élémentaires d'eau.
-%%%%
-Sunray spell
-
-Ce sort suscite un faisceau de lumière intense, endommageant sa cible. De toute
-évidence, l'invisibilité laisse passer la lumière, laissant ces créatures
-saines et sauves. Les vampires et les ombres sont connus pour y être
-particulièrement vulnérables.
-
-N'étant pas un missile, ce sort n'est pas affecté par les effets de Renvoie et
-de Déflection — vous voulez être en mesure de voir, n'est-ce pas ?
 %%%%
 Sure Blade spell
 

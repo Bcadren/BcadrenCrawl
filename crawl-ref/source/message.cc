@@ -118,6 +118,14 @@ struct message_item
         return text + rep;
     }
 
+    string pure_text_with_repeats() const
+    {
+        string rep = "";
+        if (repeats > 1)
+            rep = make_stringf(" x%d", repeats);
+        return pure_text() + rep;
+    }
+
     // Tries to condense the argument into this message.
     // Either *this needs to be an empty item, or it must be the
     // same as the argument.
@@ -635,32 +643,25 @@ class message_store
     bool last_of_turn;
     int temp; // number of temporary messages
 
-    int unsent; // number of messages not yet sent to the webtiles client
-    bool prev_unsent;
-    int client_rollback;
 #ifdef USE_TILE_WEB
+    int unsent; // number of messages not yet sent to the webtiles client
+    int client_rollback;
     bool send_ignore_one;
 #endif
 
 public:
-    message_store() : last_of_turn(false), temp(0),
-                      unsent(0), prev_unsent(false),
-                      client_rollback(0)
+    message_store() : last_of_turn(false), temp(0)
 #ifdef USE_TILE_WEB
-                      , send_ignore_one(false)
+                      , unsent(0), client_rollback(0), send_ignore_one(false)
 #endif
     {}
 
     void add(const message_item& msg)
     {
         if (msg.channel != MSGCH_PROMPT && prev_msg.merge(msg))
-        {
-            prev_unsent = true;
             return;
-        }
         flush_prev();
         prev_msg = msg;
-        prev_unsent = true;
         if (msg.channel == MSGCH_PROMPT || _temporary)
             flush_prev();
     }
@@ -691,7 +692,9 @@ public:
 
     void roll_back()
     {
+#ifdef USE_TILE_WEB
         client_rollback = max(0, temp - unsent);
+#endif
         msgs.roll_back(temp);
         temp = 0;
     }
@@ -710,11 +713,9 @@ public:
         // writing out to the message window might
         // in turn result in a recursive flush_prev.
         prev_msg = message_item();
-        if (prev_unsent)
-        {
-            unsent++;
-            prev_unsent = false;
-        }
+#ifdef USE_TILE_WEB
+        unsent++;
+#endif
         store_msg(msg);
         if (last_of_turn)
         {
@@ -770,19 +771,8 @@ public:
                 tiles.json_write_int("repeats", msg.repeats);
             tiles.json_close_object();
         }
-        if (prev_unsent && have_prev())
-        {
-            tiles.json_open_object();
-            tiles.json_write_string("text", prev_msg.text);
-            tiles.json_write_int("turn", prev_msg.turn);
-            tiles.json_write_int("channel", prev_msg.channel);
-            if (prev_msg.repeats > 1)
-                tiles.json_write_int("repeats", prev_msg.repeats);
-            tiles.json_close_object();
-        }
         tiles.json_close_array();
         unsent = send_ignore_one ? 1 : 0;
-        prev_unsent = false;
     }
 #endif
 };
@@ -1394,10 +1384,6 @@ static void mpr_check_patterns(const string& message,
     if (channel != MSGCH_DIAGNOSTICS && channel != MSGCH_EQUIPMENT)
         interrupt_activity(AI_MESSAGE, channel_to_str(channel) + ":" + message);
 
-    // Any sound has a chance of waking the PC if the PC is asleep.
-    if (channel == MSGCH_SOUND)
-        you.check_awaken(5);
-
     if (!Options.sound_mappings.empty())
         for (unsigned i = 0; i < Options.sound_mappings.size(); i++)
         {
@@ -1532,7 +1518,7 @@ static bool _pre_more()
 
     if (crawl_state.game_is_arena())
     {
-        delay(Options.arena_delay);
+        delay(Options.view_delay);
         return true;
     }
 
@@ -1586,7 +1572,7 @@ string get_last_messages(int mcount, bool full)
         if (!msg)
             break;
         if (full || is_channel_dumpworthy(msg.channel))
-            text = msg.pure_text() + "\n" + text;
+            text = msg.pure_text_with_repeats() + "\n" + text;
         mcount--;
     }
 

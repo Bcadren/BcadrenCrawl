@@ -20,6 +20,7 @@
 #include "random.h"
 #include "skills2.h"
 #include "spl-cast.h"
+#include "spl-util.h"
 #include "mon-util.h"
 #include "mon-transit.h"
 #include "player.h"
@@ -40,7 +41,7 @@ static spell_type search_order_conj[] =
 {
     SPELL_LEHUDIBS_CRYSTAL_SPEAR,
     SPELL_FIRE_STORM,
-    SPELL_ICE_STORM,
+    SPELL_GLACIATE,
     SPELL_CHAIN_LIGHTNING,
     SPELL_BOLT_OF_DRAINING,
     SPELL_AGONY,
@@ -62,6 +63,7 @@ static spell_type search_order_conj[] =
     SPELL_STONE_ARROW,
     SPELL_FORCE_LANCE,
     SPELL_DISCHARGE,
+    SPELL_DAZZLING_SPRAY,
     SPELL_THROW_FLAME,
     SPELL_THROW_FROST,
     SPELL_FREEZE,
@@ -82,25 +84,23 @@ static spell_type search_order_third[] =
 {
     SPELL_SYMBOL_OF_TORMENT,
     SPELL_SUMMON_GREATER_DEMON,
+    SPELL_DRAGON_CALL,
     SPELL_SUMMON_HORRIBLE_THINGS,
-    SPELL_SUMMON_DRAGON,
     SPELL_HAUNT,
     SPELL_SUMMON_HYDRA,
     SPELL_SUMMON_DEMON,
-    SPELL_DEMONIC_HORDE,
     SPELL_HASTE,
     SPELL_SILENCE,
     SPELL_BATTLESPHERE,
     SPELL_SUMMON_BUTTERFLIES,
     SPELL_SUMMON_ELEMENTAL,
     SPELL_SUMMON_SWARM,
-    SPELL_SUMMON_UGLY_THING,
+    SPELL_MONSTROUS_MENAGERIE,
     SPELL_SWIFTNESS,
     SPELL_SUMMON_ICE_BEAST,
     SPELL_ANIMATE_DEAD,
     SPELL_TWISTED_RESURRECTION,
     SPELL_INVISIBILITY,
-    SPELL_SUMMON_SCORPIONS,
     SPELL_CALL_IMP,
     SPELL_SUMMON_SMALL_MAMMAL,
     SPELL_MALIGN_GATEWAY,
@@ -184,9 +184,9 @@ void ghost_demon::init_random_demon()
 
     // Is demon a spellcaster?
     // Non-spellcasters get some boosts to their melee and speed instead.
-    spellcaster = !one_chance_in(3);
+    spellcaster = !one_chance_in(4);
 
-    see_invis = !one_chance_in(10);
+    see_invis = true;
 
     resists = 0;
 
@@ -304,7 +304,7 @@ void ghost_demon::init_random_demon()
         if (one_chance_in(25))
             spells[0] = SPELL_FIRE_STORM;
         if (one_chance_in(25))
-            spells[0] = SPELL_ICE_STORM;
+            spells[0] = SPELL_GLACIATE;
         if (one_chance_in(25))
             spells[0] = SPELL_METAL_SPLINTERS;
         if (one_chance_in(25))
@@ -364,7 +364,7 @@ static int _player_ghost_base_movement_speed()
         speed -= slow + 1;
 
     if (you.wearing_ego(EQ_BOOTS, SPARM_RUNNING))
-        speed += 2;
+        speed += 1;
 
     // Cap speeds.
     if (speed < MIN_GHOST_SPEED)
@@ -505,8 +505,8 @@ static attack_flavour _very_ugly_thing_flavour_upgrade(attack_flavour u_att_flav
         u_att_flav = AF_NAPALM;
         break;
 
-    case AF_POISON_NASTY:
-        u_att_flav = AF_POISON_MEDIUM;
+    case AF_POISON:
+        u_att_flav = AF_POISON_STRONG;
         break;
 
     case AF_DISEASE:
@@ -535,7 +535,7 @@ static attack_flavour _ugly_thing_colour_to_flavour(colour_t u_colour)
         break;
 
     case GREEN:
-        u_att_flav = AF_POISON_NASTY;
+        u_att_flav = AF_POISON;
         break;
 
     case CYAN:
@@ -563,8 +563,8 @@ static attack_flavour _ugly_thing_colour_to_flavour(colour_t u_colour)
 void ghost_demon::init_ugly_thing(bool very_ugly, bool only_mutate,
                                   colour_t force_colour)
 {
-    // Movement speed: 11, the same as in mon-data.h.
-    speed = 11;
+    // Movement speed: 10, the same as in mon-data.h.
+    speed = 10;
 
     // Midpoint: 10, as in mon-data.h.
     ev = 9 + random2(3);
@@ -649,8 +649,8 @@ static resists_t _ugly_thing_resists(bool very_ugly, attack_flavour u_att_flav)
     case AF_ACID:
         return MR_RES_ACID;
 
-    case AF_POISON_NASTY:
-    case AF_POISON_MEDIUM:
+    case AF_POISON:
+    case AF_POISON_STRONG:
         return MR_RES_POISON * (very_ugly ? 2 : 1);
 
     case AF_ELEC:
@@ -882,10 +882,10 @@ spell_type ghost_demon::translate_spell(spell_type spell) const
     {
     case SPELL_CONTROLLED_BLINK:
         return SPELL_BLINK;        // approximate
-    case SPELL_DEMONIC_HORDE:
-        return SPELL_SUMMON_MINOR_DEMON;
     case SPELL_DELAYED_FIREBALL:
         return SPELL_FIREBALL;
+    case SPELL_DRAGON_CALL:
+        return SPELL_SUMMON_DRAGON;
     default:
         break;
     }
@@ -1045,4 +1045,139 @@ int ghost_level_to_rank(const int xl)
     if (xl < 26) return 5;
     if (xl < 27) return 6;
     return 7;
+}
+
+static spell_type servitor_spells_primary[] =
+{
+    SPELL_LEHUDIBS_CRYSTAL_SPEAR,
+    SPELL_IOOD,
+    SPELL_IRON_SHOT,
+    SPELL_BOLT_OF_FIRE,
+    SPELL_BOLT_OF_COLD,
+    SPELL_POISON_ARROW,
+    SPELL_LIGHTNING_BOLT,
+    SPELL_BOLT_OF_MAGMA,
+    SPELL_BOLT_OF_DRAINING,
+    SPELL_VENOM_BOLT,
+    SPELL_THROW_ICICLE,
+    SPELL_STONE_ARROW,
+    SPELL_ISKENDERUNS_MYSTIC_BLAST,
+    SPELL_NO_SPELL,                        // end search
+};
+
+static spell_type servitor_spells_secondary[] =
+{
+    SPELL_CONJURE_BALL_LIGHTNING,
+    SPELL_FIREBALL,
+    SPELL_AIRSTRIKE,
+    SPELL_LRD,
+    SPELL_FREEZING_CLOUD,
+    SPELL_POISONOUS_CLOUD,
+    SPELL_FORCE_LANCE,
+    SPELL_DAZZLING_SPRAY,
+    SPELL_MEPHITIC_CLOUD,
+    SPELL_NO_SPELL,                        // end search
+};
+
+static spell_type servitor_spells_fallback[] =
+{
+    SPELL_STICKY_FLAME,
+    SPELL_THROW_FLAME,
+    SPELL_THROW_FROST,
+    SPELL_FREEZE,
+    SPELL_FLAME_TONGUE,
+    SPELL_STING,
+    SPELL_SANDBLAST,
+    SPELL_MAGIC_DART,
+    SPELL_NO_SPELL,                        // end search
+};
+
+static spell_type _best_aligned_spell(vector<spell_type> spells, skill_type skill)
+{
+    for (unsigned int i = 0; i < spells.size(); ++i)
+    {
+        if (spell_typematch(spells[i], skill))
+            return spells[i];
+    }
+
+    // If we couldn't find any that match, just pick the first one
+    return spells[0];
+}
+
+// Select servitor spells based on those known to the player
+// (Primary determines whether we are populating the first 3 or next 2 slots)
+bool ghost_demon::populate_servitor_spells(spell_type* spell_list, bool primary,
+                                           skill_type primary_skill)
+{
+    vector<spell_type> candidates;
+    const unsigned int num = (primary ? 3 : 2);
+    const unsigned int offset = (primary ? 0 : 3);
+
+    int i = 0;
+    spell_type spell = SPELL_NO_SPELL;
+    while ((spell = spell_list[i++]) != SPELL_NO_SPELL)
+    {
+        if (_know_spell(spell))
+            candidates.push_back(spell);
+    }
+
+    if (candidates.size() >= num)
+    {
+        for (unsigned int j = offset; j < offset + num; ++j)
+            spells[j] = candidates[j - offset];
+    }
+    else if (candidates.size() > 0)
+    {
+        // Choose the highest-level spell best aligned with our spell
+        // skills to duplicate
+        const spell_type copy_spell = _best_aligned_spell(candidates,
+                                                            primary_skill);
+
+        for (unsigned int j = offset; j < offset + num; ++j)
+        {
+            if (candidates.size() > j - offset)
+                spells[j] = candidates[j - offset];
+            else
+                spells[j] = copy_spell;
+        }
+    }
+
+    return candidates.size() > 0;
+}
+
+void ghost_demon::init_spellforged_servitor()
+{
+    // Determine highest magic skill (used for solving some tie-breakers)
+    skill_type best_magic_skill = NUM_SKILLS;
+    int skill_level = -1;
+    for (int i = SK_FIRE_MAGIC; i <= SK_POISON_MAGIC; ++i)
+    {
+        if (you.skill((skill_type)i) >= skill_level)
+        {
+            skill_level = you.skill((skill_type)i);
+            best_magic_skill = (skill_type)i;
+        }
+    }
+
+    int pow = calc_spell_power(SPELL_SPELLFORGED_SERVITOR, true);
+
+    colour = LIGHTMAGENTA; // cf. mon-data.h
+    speed = 10;
+    ev = 10;
+    ac = 10;
+    xl = 9 + div_rand_round(pow, 14);
+    max_hp = 80;
+    spellcaster = true;
+    damage = 0;
+    att_type = AT_NONE;
+
+    // Give the servitor its spells
+    bool primary   = populate_servitor_spells(servitor_spells_primary, true,
+                                              best_magic_skill);
+    bool secondary = populate_servitor_spells(servitor_spells_secondary, false,
+                                              best_magic_skill);
+
+    if (!primary && !secondary)
+        populate_servitor_spells(servitor_spells_fallback, true, best_magic_skill);
+
 }

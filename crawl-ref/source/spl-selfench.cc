@@ -9,6 +9,7 @@
 #include "externs.h"
 
 #include "areas.h"
+#include "art-enum.h"
 #include "env.h"
 #include "godconduct.h"
 #include "hints.h"
@@ -112,7 +113,8 @@ spret_type ice_armour(int pow, bool fail)
 spret_type missile_prot(int pow, bool fail)
 {
     if (you.attribute[ATTR_REPEL_MISSILES]
-        || you.attribute[ATTR_DEFLECT_MISSILES])
+        || you.attribute[ATTR_DEFLECT_MISSILES]
+        || player_equip_unrand(UNRAND_AIR))
     {
         mpr("You are already protected from missiles.");
         return SPRET_ABORT;
@@ -187,13 +189,6 @@ spret_type cast_swiftness(int power, bool fail)
     if (you.form == TRAN_TREE)
     {
         canned_msg(MSG_CANNOT_MOVE);
-        return SPRET_ABORT;
-    }
-
-    if (you.in_water() || you.liquefied_ground())
-    {
-        mprf("The %s foams!", you.in_water() ? "water"
-                                             : "liquid ground");
         return SPRET_ABORT;
     }
 
@@ -279,9 +274,7 @@ int cast_selective_amnesia(string *pre_msg)
 
     // Pick a spell to forget.
     mprf(MSGCH_PROMPT, "Forget which spell ([?*] list [ESC] exit)? ");
-    keyin = Options.auto_list
-            ? list_spells(false, false, false, "Forget which spell?")
-            : get_ch();
+    keyin = list_spells(false, false, false, "Forget which spell?");
     redraw_screen();
 
     while (true)
@@ -301,6 +294,7 @@ int cast_selective_amnesia(string *pre_msg)
         if (!isaalpha(keyin))
         {
             mesclr();
+            mprf(MSGCH_PROMPT, "Forget which spell ([?*] list [ESC] exit)? ");
             keyin = get_ch();
             continue;
         }

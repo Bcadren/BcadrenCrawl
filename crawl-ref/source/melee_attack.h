@@ -148,7 +148,7 @@ private:
     string mons_attack_verb();
     string mons_attack_desc();
     // TODO: Unify do_poison and poison_monster
-    void mons_do_poison();
+    bool mons_do_poison();
     void mons_do_napalm();
     void mons_do_eyeball_confusion();
     void apply_black_mark_effects();
@@ -165,7 +165,6 @@ private:
 
     int  player_stat_modify_damage(int damage);
     int  player_aux_stat_modify_damage(int damage);
-    int  player_apply_weapon_bonuses(int damage);
     int  player_apply_weapon_skill(int damage);
     int  player_apply_fighting_skill(int damage, bool aux);
     int  player_apply_misc_modifiers(int damage);

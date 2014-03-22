@@ -524,76 +524,42 @@ A decaying skeleton.
 deck of changes
 
 A deck of magical cards which induce changes in the user or his environment.
-
-It may contain the following cards: the Elixir, Battlelust, Metamorphosis, the
-Helm, the Blade, the Shadow, the Mercenary, the Potion, Focus, Shuffle,
-Experience, Wild Magic, the Helix, the Sage, Water, Vitrification, Dowsing,
-the Trowel, the Minefield.
 %%%%
 deck of defence
 
 A deck of magical cards, most of which defend the user from harm in various
 ways.
-
-It may contain the following cards: the Tomb, the Banshee, Damnation, Solitude,
-Warpwright, Flight, the Alchemist, the Elixir, Battlelust, Metamorphosis,
-the Helm, the Blade, the Shadow, the Mercenary.
 %%%%
 deck of destruction
 
 A deck of magical cards, most of which hurl death and destruction at one's foes
 (or, if unlucky, at oneself).
-
-It may contain the following cards: Vitriol, Flame, Frost, Venom, the Spark,
-the Hammer, Pain, the Orb.
 %%%%
 deck of dungeons
 
 A deck of magical cards which deal with shaping the dungeon.
-
-It may contain the following cards: Water, Vitrification, Dowsing, the Trowel,
-the Minefield.
 %%%%
 deck of escape
 
 A deck of magical cards, mainly dealing with various forms of escape.
 Incautious use may lead to being dumped from the frying pan into the fire!
-
-It may contain the following cards: the Portal, the Warp, Swap, Velocity, the
-Tomb, the Banshee, Damnation, Solitude, Warpwright, Flight, the Alchemist.
 %%%%
 deck of punishment
 
 A deck of magical cards which wreak havoc on the user.
-
-It may contain the following cards: the Wraith, Wild Magic, Wrath, Xom, Famine,
-the Curse, the Tomb, Damnation, the Portal, the Minefield, the Swine, Torment.
 %%%%
 deck of summonings
 
 A deck of magical cards, depicting a range of weird and wondrous creatures.
-
-It may contain the following cards: the Crusade, the Herd, the Pentagram, the
-Dance, Foxfire, the Bones, Repulsiveness.
 %%%%
 deck of war
 
 A deck of magical cards which are useful before and during battle.
-
-It may contain the following cards: the Portal, the Warp, Swap, Velocity, the
-Tomb, the Banshee, Damnation, Solitude, Warpwright, Flight, the Alchemist,
-the Elixir, Battlelust, Metamorphosis, the Helm, the Blade, the Shadow, the
-Mercenary, the Crusade, the Herd, the Pentagram, the Dance, Foxfire, the Bones,
-Repulsiveness, Vitriol, Flame, Frost, Venom, the Spark, the Hammer, Pain,
-Torment.
 %%%%
 deck of wonders
 
 A deck of highly mysterious and magical cards, which can alter the drawer's
 physical and mental condition, for better or worse.
-
-It may contain the following cards: the Potion, Focus, Shuffle, Experience,
-Wild Magic, the Helix, the Sage, the Trowel.
 %%%%
 demon blade
 
@@ -752,8 +718,8 @@ A lump of the delicious honeycomb made by giant bees.
 horn of Geryon
 
 The horn belonging to Geryon, guardian of the Vestibule of Hell. Legends say
-that a mortal who desires access into one of the Hells must use it in order to
-gain entry.
+this unholy item has the power to call forth the aid of demonic beasts. It is
+also said, however, that the alliances of these monsters are not certain.
 %%%%
 ice dragon armour
 
@@ -958,7 +924,6 @@ plate armour
 # often filled with mail.
 A full suit of solid metal plate: cuirass, pauldrons, vambraces, waist plate
 and greaves. Chainmail covers gaps, allowing movement.
-
 It provides excellent protection, yet donning it takes forever.
 %%%%
 potion of agility
@@ -1038,8 +1003,9 @@ A potion which hides you from the sight of others.
 potion of lignification
 
 A potion which temporarily transforms the imbiber into an animated tree with
-branches capable of holding weapons. Such a tree is quite resilient, although
-cannot retreat in any way.
+branches capable of holding weapons. Such a tree is very resilient, although
+it is rooted in place for the duration, and additionally cannot teleport or
+consume food or potions.
 %%%%
 potion of magic
 
@@ -1079,7 +1045,7 @@ potion of slowing
 
 A potion which slows your actions.
 %%%%
-potion of speed
+potion of haste
 
 An enchanted beverage which speeds the actions of anyone who drinks it.
 %%%%
@@ -1243,27 +1209,29 @@ offer only a little protection against physical harm, but their generous cut
 does not hinder evasion from attack or the proper performance of thaumaturgical
 gestures.
 %%%%
-rod of demonology
+rod of clouds
 
-This rod contains spells of summoning, some of which can unleash demons unto
-this unsuspecting world.
+This rod allows its wielder to blast a cone-shaped area in front of them with
+various destructive clouds, their lethality increasing with the evocation
+ability of the wielder.
 %%%%
 rod of destruction
 
-This rod contains a varied set of spells of mayhem and destruction.
+This rod can be evoked to release a damaging spell picked at random from a small
+set, all able to pierce through monsters to damage the ones behind them.
 %%%%
 rod of fiery destruction
 
 This rod allows its wielder to launch a fiery bolt of explosive energy.
 %%%%
-rod of frigid destruction
-
-This rod contains spells that destroy your enemies with projected cold.
-%%%%
 rod of inaccuracy
 
 This rod allows its wielder to fire a powerful but extremely inaccurate bolt of
 power.
+%%%%
+rod of shadows
+
+This rod weaves creatures from shadows and ethereal matter.
 %%%%
 rod of striking
 
@@ -1274,14 +1242,6 @@ skill will help improve your basic effectiveness with the weapon.
 rod of the swarm
 
 This rod allows its wielder to summon a swarm of insects.
-%%%%
-rod of venom
-
-This rod contains offensive spells of poison.
-%%%%
-rod of warding
-
-This rod contains spells designed to repel one's enemies.
 %%%%
 royal jelly
 
@@ -1372,21 +1332,21 @@ It can also be used to enchant the hides of certain exotic creatures.
 %%%%
 scroll of enchant weapon i
 
-This scroll places an enchantment on the wielded weapon, making it more
-accurate in combat. It becomes increasingly less likely to succeed when used on
-highly enchanted weapons, and can only ever enchant them up to +9. Magical
-artefacts cannot be enchanted at all.
+This scroll places an enchantment on a weapon chosen by the reader, making it
+more accurate in combat. It becomes increasingly less likely to succeed when
+used on highly enchanted weapons, and can only ever enchant them up to +9.
+Magical artefacts cannot be enchanted at all.
 %%%%
 scroll of enchant weapon ii
 
-This scroll places an enchantment on the wielded weapon, making it inflict
-greater damage in combat. It becomes increasingly less likely to succeed when
-used on highly enchanted weapons, and can only ever enchant them up to +9.
+This scroll places an enchantment on a weapon chosen by the reader, making it
+inflict greater damage in combat. It becomes increasingly less likely to succeed
+when used on highly enchanted weapons, and can only ever enchant them up to +9.
 Magical artefacts cannot be enchanted at all.
 %%%%
 scroll of enchant weapon iii
 
-This scroll enchants the wielded weapon to be far more effective in combat,
+This scroll enchants a chosen weapon to be far more effective in combat,
 increasing both accuracy and damage. It becomes increasingly less likely to
 succeed when used on highly enchanted weapons, and can only ever enchant them
 up to +9. Magical artefacts cannot be enchanted at all.

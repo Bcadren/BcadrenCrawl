@@ -1,21 +1,19 @@
-Stone Soup 0.14 (up to 0.14-a0-2527-g57e2a1b)
+Stone Soup 0.14 (up to 0.14-a0-3343-gf50c63c)
 ---------------------------------------------
 * The lower half of D is now a new branch, the Depths.
-* Four new races: Lava Orcs, Djinn, Formicids, and Vine Stalkers.
-* A new deity: Dithmengos the Shadowed.
+* Two new races: Formicids and Vine Stalkers.
+* A new deity: Dithmenos the Shadowed.
 * Greatly revised monster sets in the Lair branches.
+* Greatly revised summoning spell sets.
 
 Branches, environment
 ---------------------
-* The main Dungeon is now sixteen levels.
-* A new branch: the Depths; entered from the end of Dungeon, it is six levels
+* The main Dungeon is now fifteen levels.
+* A new branch: the Depths; entered from the end of Dungeon, it is five levels
   long and contains the entrance to the Realm of Zot.
-* A new branch: the Enchanted Forest, alternating with Crypt; five levels
-  long, and contains the entrance to Tomb where it exists.
-* The Vaults are now entered from D:14-15 and need a rune to enter.
-* The Abyss randomly draws monsters from elsewhere in the Dungeon.
+* The Vaults are now entered from D:13-14 and need a rune to enter.
 * Abyssal stairs appear more frequently, and are fixed with depth.
-* Ziggurats require three runes to enter; an entrance is guaranteed only
+* Ziggurats require only three runes to enter; an entrance is guaranteed
   in Depths, but still spawn as normal in Pan.
 * Portals are no longer closed when carrying the Orb of Zot.
 * The Horn of Geryon is no longer necessary for entering Hell branches.
@@ -24,37 +22,55 @@ Branches, environment
 * Crypt endings now contain some pieces of thematic loot: draining and/or
   pain and/or vampiric weapons, rings of positive energy and amulets of
   warding, one of several unrands, the Necronomicon, or evokers/staves.
+* Easy ice cave portals now appear only in D, Lair, and Orc; hard ice cave
+  portals appear in Elf and rotating Lair branches.
+* Portal timers have been generally shortened and made more consistent with
+  each other; additionally, the shorter timer started upon first seeing them
+  has been removed.
+* The layout of the last level of the Vaults has been changed, with all four
+  subsections being open at each corner.
+* Gadget shops and wand shops have been merged; the resulting gadget shops
+  now also sell rods.
+* The price of items in shops has been recalibrated.
+* Pandemonium exits occur more frequently as the player obtains runes from
+  Pandemonium.
 
 Character
 ---------
 * New races:
-    - Lava Orcs heat up and cool down in response to their surroundings, with
-      their abilities changing as a result;
-    - Djinn draw both health and magic from a shared Essence pool, and have
-      complete immunity to all forms of fire;
     - Formicids possess four strong arms to use large weapons together with
       shields, in addition to strong natural digging abilities and a permanent
       stasis effect.
     - Vine stalkers regenerate quickly, but cannot heal with wands or
       potions; they possess innate spirit shield and an anti-magic bite.
 * Felids have an innate jump attack ability, allowing them to jump over
-  other monsters to attack their target.
-    - There must be a safe, unoccupied landing spot next to the target.
-      One of these spots is selected at random for landing.
-    - It is not possible to jump over giant or flying creatures.
-    - Jumping causes exhaustion like berserk (but no slowing).
+  other monsters and attack their target in a single turn.
+* Felids can use wands.
+* Demonspawns' negative energy facet has the second level of rN replaced by
+  "black mark," which gives melee attacks a chance to heal the player and apply
+  a bad status to the victim.
 * The first two levels of the slow healing mutation only affect rates of
   healing when enemies are in sight (half and no healing for those levels
   respectively). Stat regeneration and the third level of the mutation
   are unchanged.
-* Venom Mages and Assassins no longer start with knowledge of potions of
-  poison.
 * Fast/slow movement mutations no longer occur randomly.
+* Recommended backgrounds and species have been adjusted; in particular,
+  backgrounds can recommend species that don't necessarily recommend that
+  background and vice versa (e.g. CK -> Tr may be recommended whereas Tr -> CK
+  is not).
+* Poison damage is now deterministic.
+* The antennae mutation gives invisible monster indicators for every invisible
+  enemy in LOS.
+* Merfolk can now be mesmerised by mermaids and sirens.
+* Artificers, Wanderers, Assassins, and Venom Mages no longer start with
+  knowledge of potions and scrolls they don't possess.
+* Fighters and Gladiators start with higher-tier weapons.
+* Fighers start with a potion of might.
 
 Monsters
 --------
 * Guardian serpents no longer have Teleport Other; instead they get
-  Word of Recall and Blink Allies Encircle.
+  Blink Allies Encircle.
 * Lom Lobon can now cast Tornado.
 * The plain "dragon" is now known as "fire dragon".
 * Dragons, drakes, crabs, and acid blobs no longer flee at low health.
@@ -76,10 +92,15 @@ Monsters
       thorns fired from afar.
     - Thorn hunters, who fire volleys of thorns and create briar patches to
       impede their foes' movements.
+    - Dryads, who turn the forest against you by casting Awaken Forest like
+      spriggan druids and summoning snaplasher vines that pull their enemies
+      around.
     - Water nymphs, who passively form a pool of water around themselves
       and strike down the player with said water.
     - Shambling mangroves, slow-moving, tough plants home to a nest of ravens
       or wasps.
+    - Formicid venom mages, who can dig out the level and attack the
+      player with poisonous conjurations and a single-target Ignite Poison;
     - Raiju, which can attack by transforming themselves into a bolt of
       lightning.
     - Worldbinders, abyssal enemies which summon low tier enemies from other
@@ -93,6 +114,8 @@ Monsters
       version of Ignite Poison, and Iskenderun's Mystic Blast;
     - Salamander firebrands, whose attacks cause a ring of flames to appear
       around the target.
+    - Octopode crushers, who can throw both the victims they constrict as well
+      as icicles.
 * A new set of enemies based on demonspawn, appearing in Pan.
     - Base types:
         - monstrous (auxiliary attacks and more HP);
@@ -105,8 +128,8 @@ Monsters
           conjurations, and Ephemeral Infusion, which temporarily heals
           nearby allies);
         - chaos champions (Chaotic Reflection, which inflicts a random hex-like
-          effect on itself and the target, and Rearrange the Pieces, which
-          shuffles the placement of nearby creatures);
+          effect on itself and the target, and Random Bolt as per the rod
+          of destruction);
         - warmongers (Grand Avatar, essentially a hybrid battlesphere and
           spectral weapon which triggers on sufficiently damaging attacks of
           nearby allies, and Sap Magic, a hex which hinders spellcasting success
@@ -116,8 +139,12 @@ Monsters
           mutations);
         - black suns (Black Mark, which empowers nearby allies with various
           draining attacks that heal on hit, and previously existing spells
-          Bolt of Draining, Malign Offering, Dispel Undead, and Death's Door).
-* Adjustments to lair enemies:
+          Bolt of Draining, Malign Offering, and Dispel Undead).
+* Adjustments to lair branch enemies:
+    - Spriggan druids' Druid's Call now calls 2-3 creatures out of LOS nearby
+      and does not invisibly might creatures; instead, nearby creatures
+      are healed and frenzied on their death. Stone Arrow also replaces
+      Sunray in their spell set.
     - Siren songs' pulling effects are now irresistible if the player is
       already mesmerised.
     - Siren songs call drowned souls, weak temporary enemies with a drowning
@@ -125,30 +152,53 @@ Monsters
     - Manticores' spines now embed themselves in targets, causing damage while
       moving until a few turns is spent doing nothing to remove them.
     - Harpies no longer steal food.
+    - Plain salamanders have been weakened, and all salamanders can slither
+      around on land.
 * Adjustments to other enemies:
+    - Quokkas are speed 12 (making them effectively identical to grey rats).
+    - Boggarts are more durable.
+    - Rakshasas gain a monster spell "Phantom Mirror", which summons
+      a clone of a nearby allied monster with half the hit points, with
+      a 50% chance of swapping the clone for the original; this replaces
+      their previous self-cloning abilities.  They can now also cast
+      Iskenderun's Mystic Blast and will summon two clones of themselves
+      at 50% HP as a one-time effect.
+    - Giant orange brains get Mass Confusion instead of Confusion.
+    - Spriggans in general now merely have fast movement speed instead of
+      fast speed in general, more damage and less EV.
+    - Spriggan air mages have Haste (replacing Shock).
     - Deep elf demonologists summon more greater demons instead of minor
       demons.
     - Draconian knights have fewer but distinct spell sets focusing on
       ice and necromancy.
+    - Gargoyles and molten gargoyles now have Stone Arrow and Bolt of
+      Magma respectively, and generate with mace-type weapons.
     - Metal gargoyles are now war gargoyles - fast and with the ability to
       fire metal fragments at targets.
+    - Crystal golems are now crystal guardians - less health, but with the
+      ability to fire crystal bolts that bounce off of all walls and deal
+      either fire or cold damage on a per-bolt basis.
 * New uniques:
     - Asterion, a minotaur of Makhleb who flings Major Destruction and
       can employ Spectral Weapon with his demon weapon;
     - Natasha, a felid ex-familiar with minor spellcasting abilities;
     - Vashnia, leader of a squad of naga sharpshooters with translocational
       ability to match.
-* Moths of suppression, rock worms, and lava fish are no more.
+* Moths of suppression, rock worms, lava fish, lemures, jellyfish, grey rats,
+  spiny worms, giant amoebae, deep dwarf berserkers, agate snails, giant
+  centipedes, and rotting devils are no more.
 * Ball lightnings are no longer permanently confused, instead seeking out
   targets like giant spores.
-* Salamanders can now slither across land (like nagas) in addition to
-  swimming in lava.
-* Geryon can fly once again.
 * Killer Klowns have a different set of possible damage brands: strong
   poison, pain, drain speed, fire, cold, electric, and anti-magic.
 * Flying enemies are no longer immune to throwing nets.
+* Geryon can fly once again.
 * Antaeus gains Flash Freeze, an ice conjuration which impedes the target's
   movement for three turns.
+* Player ghosts can retain and cast dazzling spray, which has a chance to cause
+  a confusion effect against the player.
+* All pandemonium lords now see invisible.
+* The Enchantress now appears as a normal unique in the Depths.
 * Lamia has been de-throned.
 
 Spells
@@ -156,9 +206,43 @@ Spells
 * Resisting an enchantment now displays a message showing how difficult in
   general the target will be to enchant, rather than how well or how poorly
   they fared on that particular resistance roll.
+* New spells:
+    - Summon Lightning Spire (L4 Summoning/Air), which places a lightning
+      spire up to two squares away from the player; it replaces Summon
+      Scorpions in the book of Callings.
+    - Summon Guardian Golem (L4 Summoning/Charms), which creates a golem
+      that protects the player with Injury Bond and occasionally explodes
+      on death; appears in the book of Callings.
+    - Summon Forest (L5 Summoning/Translocations), which summons a dryad
+      and temporarily converts terrain near the player to forest; it
+      is in the Book of the Warp.
+    - Summon Mana Viper (L5 Summoning/Hexes); it appears in the Book of
+      Beasts.
+    - Monstrous Menagerie (L6 Summoning), which summons a manticore, some
+      harpies, a lindwurm, or a sphinx (at high spellpower); it appears in
+      the book of Beasts and the book of Summonings (replacing Summon
+      Ugly Thing).
+    - Forceful Dismissal (L6 Summoning), which ends all player summons
+      and damages enemies next to them; it appears in the Grand Grimoire.
+    - Aura of Abjuration (L6 Summoning), a less powerful but per-turn mass
+      abjuration effect; it replaces Mass Abjuration in the Grand Grimoire.
+    - Spellforged Servitor (L7 Conjuration/Summoning), which summons a
+      servitor with a subset of the player's most destructive conjurations;
+      it replaces Fireball in the book of Wizardry.
+    - Glaciate (L9 Ice/Conjurations), which fires a great blast of ice in
+      a cone, turning slain monsters into blocks of ice and Flash Freezing the
+      survivors; it replaces Ice Storm in the Book of Annihilations.
+    - Dragon's Call (L9 Summoning), which for its duration of effect summons
+      dragons near targets at the end of LOS (at the full spell cost per
+      summon); replaces Summon Dragon in the Book of the Dragon.
 * Sticks to Snakes only works on missiles (arrows and javelins) now.
-* Conjure Ball Lightning has been reduced from level 7 to 6.
+* Conjure Ball Lightning has been reduced from level 7 to 6, and the
+  duration of the ball lightning has been lowered.
+* Metabolic Englaciation has been reduced from level 6 to 5, and the slow
+  duration is cumulative across casts.
 * Bolt of Draining has been reduced from level 6 to 5.
+* Fulminant Prism has been reduced from level 5 to 4.
+* Iskenderun's Battlesphere has been increased from level 4 to 5.
 * Ozocubu's Armour now has an encumbrance cap of 4, rendering it no longer
   usable with mottled dragon armour.
 * Song of Slaying has an increased duration and grants more slaying, but
@@ -176,7 +260,10 @@ Spells
   being a duration.
 * Portal Projectile is now a duration, rather than firing individual
   projectiles.
-* Removed spells: Song of Shielding, Polymorph.
+* All clouds caused by the player will dissipate much faster outside of your
+  line of sight.
+* Removed spells: Dig, Summon Scorpions, Song of Shielding, Polymorph, Ice
+  Storm, Demonic Horde, Summon Ugly Thing, Summon Dragon, Mass Abjuration.
 
 Items
 -----
@@ -190,68 +277,108 @@ Items
 * The jumping ego (available only on boots) gives a jump attack ability
   like that of felids.
 * The reaching brand for whips is no more.
-* Large rocks now crash through monsters / the player, i.e. implicitly have
-  the penetration brand.
 * Enchantment-like effects of chaos projectiles are now irresistible.
 * Spears, daggers, clubs, and hand axes are no longer good for throwing.
-    - The artefact "Lehudib's crystal spear" has been removed.
 * New "tomahawk" item: a throwing missile, usable by all non-felids, between
   darts and javelins in damage.
     - Small race hunters and arcane marksmen may select tomahawks.
-    - Small race gladiators receive tomahawks instead of nets.
 * New "potion of lignification" - induces tree form.
-* Piercer gets the penetration brand (was vorpal).
-* Boots of the Assassin return in a new form: they now detect monsters and
-  allow short-blade-quality stabbing with any weapon (or unarmed).
-* Hellfire now shoots hellfire bolts, dealing hellfire-branded damage and
-  exploding.
-* The Elemental Staff is reworked considerably - it grants rElec, rF++,
-  rC++, MR++, AC+5, and randomly deals elemental-branded attacks based
-  on the user's Evocations skill.
-* The skin of Zhor now grants rC+++.
-* Leech drains HP on all hits (instead of 3/5 for other vampiric weapons).
-* Sniper is now a +15 vorpal crossbow with a slower rate of fire.
-* Snakebite is now a +5 venom whip that applies a curare effect on two out of
-  five hits.
-* The Singing Sword is now a bastard sword.
-* The shield of the gong is now +27 with -5 EV.
-* New unrand: "macabre finger necklace" - gives warding and an extra ring slot.
-* New unrand: "boots of the spider" - gives clinging, trample immunity, and
-  jump attack.
-* New unrand: "dark maul" - a very large, very slow two-handed weapon using
-  the Maces and Flails skill.
-* New unrand: "hat of the High Council" - spellpower at the expense of
-  spell success rates.
-* The blowgun of the Assassin and Bullseye have been removed.
-* Potions of slowing are no more.
+* Small races can use throwing nets.
+* Throwing nets do not degrade: instead, they have a chance to be destroyed
+  like other projectiles.
+* Multiple changes to unrandarts:
+    - Piercer gets the penetration brand (was vorpal).
+    - Boots of the Assassin return in a new form: they now detect monsters and
+      allow short-blade-quality stabbing with any weapon (or unarmed).
+    - Hellfire now shoots hellfire bolts, dealing hellfire-branded damage and
+      exploding.
+    - The Elemental Staff is reworked considerably - it grants rElec, rF++,
+      rC++, MR++, AC+5, and randomly deals elemental-branded attacks based
+      on the user's Evocations skill.
+    - The skin of Zhor now grants rC+++.
+    - Leech drains HP on all hits (instead of 3/5 for other vampiric weapons).
+    - Sniper is now a +15 vorpal crossbow with a slower rate of fire.
+    - Snakebite is now a +5 venom whip that applies a curare effect on two out
+      of five hits.
+    - The Singing Sword is now a bastard sword.
+    - The shield of the gong is now +27 with -5 EV.
+    - The ring of Shadows now has an umbra instead of +4 EV and -4 Acc.
+    - New unrand: "macabre finger necklace" - gives warding and an extra ring
+      slot.
+    - New unrand: "boots of the Spider" - gives clinging and jump attack.
+    - New unrand: "dark maul" - a very large, very slow two-handed weapon using
+      the Maces and Flails skill.
+    - New unrand: "hat of the High Council" - spellpower at the expense of
+      spell success rates.
+    - New unrand: "arc blade" - a cutlass which inflicts discharges of static
+      electricity on targets it hits.
+    - New unrand: "Spellbinder" - an antimagic demon whip which inflicts
+      miscasts on magic-using targets.
+    - New unrand: "lajatang of Order" - does silver damage (like the ammunition
+      brand) and grants resistance to mutation.
+    - New unrand: "Firestarter" - a +7 great mace {flame, rF++} which protects
+      scrolls from fire damage and inner flames targets it hits.
+    - The blowgun of the Assassin, Bullseye, and Lehudib's Crystal Spear (the
+      unrandart) are gone.
 * Potions with known type that would have no effect can no longer be quaffed
   at all.
-* Potions other than potions of porridge no longer give nutrition.
+* Potions other than potions of porridge and blood no longer give nutrition.
 * All gauntlets and bracers are now gloves.
 * All caps and wizard hats are now plain "hats".
 * Great maces deal slightly less damage and are much less available than
   before.
-* Potions of restore abilities partially cure skill draining.
-* The last item-targeting scroll and healing potion are automatically
-  identified, assuming knowledge that they are item-targeting scrolls and
-  healing potions.
+* All scrolls now identify on read.
+* The last healing potion is automatically identified assuming knowledge that
+  it is a healing potion.
 * Magical penetrating projectiles now pierce shields.
+* Ponderous items reduce movement delay by -1 (was -2), to match running
+  items.
 * Electrocution weapons no longer cause discharges on targets in water.
-* Wearing body armour / rings no longer requires removing cloakes / gloves
+* Wearing body armour / rings no longer requires removing cloaks / gloves
   first.
+* Scrolls are destroyed less frequently by sticky flame.
+* Gold dragon armour, crystal plate armour, and plate armour have had their
+  encumbrance ratings reduced (27 -> 25, 24 -> 23, and 19 -> 18 respectively).
+* The speed brand now grants 2/3 weapon delay and no damage reduction (was
+  1/2 delay and 10% damage reduction for melee weapons).
+* Racial equipment is no more.
+* Many changes to rods:
+    - The rod of destruction now fires random bolts instead of having a pre-set
+      selection.
+    - The rod of fiery destruction has only one spell, Explosive Bolt, which
+      explodes a fireball on every target hit in a line.
+    - New rod: rod of shadows, which summons Shadow Creatures from a depth in
+      the dungeon roughly equivalent to the user's skill with Evocations,
+      drawing out-of-depth spawns after 16.
+    - New rod: rod of clouds, which creates various clouds based on power,
+      with high skill giving several new types of clouds.
+    - The rod of warding, venom, demonology, and frigid destruction are gone.
+* The Horn of Geryon has been reworked into an XP-charged evokable, summoning
+  1-4 hell beasts whose friendliness depends on evocations power.
 * Renamed items:
-  - Sabres are now cutlasses (and the captain's cutlass has been adjusted to
-    match);
-  - Double swords are now bastard swords;
-  - Triple swords are now claymores.
+    - Sabres are now cutlasses (and the captain's cutlass has been adjusted to
+      match);
+    - Double swords are now bastard swords;
+    - Triple swords are now claymores;
+    - Potions of speed are now potions of haste.
+* Scrolls of vulnerability are now more common.
+* Curse scrolls and potions of blood no longer randomly generate.
+* All curse scrolls now accept targets (as though the player was worshipping
+  Ashenzari in previous versions).
+* Removed potions of slowing.
 
 Cards
 -----
 * The Elixir card now heals over time instead of instantly.
+* The Alchemist card is in decks of escape, but not wonders.
+* The Bargain card has been removed.
+* The Trowel card is in decks of wonder and only creates portals.
+* The Battlelust card now deals primarily in might and agility at high power,
+  with the delayed berserk effect now occurring at lower power.
 
 Gods
 ----
-* A new deity: Dithmengos the Shadowed.
+* A new deity: Dithmenos the Shadowed.
   - A temple god; guaranteed an altar in Temple or somewhere on D:2-9.
   - Accepts kills of most dungeon enemies, particularly those associated
     with fire or light.
@@ -283,8 +410,20 @@ Gods
   and bone dragons.
 * Yredelemnul's servants are no longer angered when read-identifying a scroll
   of holy word.
-* Nemelex no longer gifts decks of dungeons.
-* Divine wrath is now contingent on XP gain.
+* Nemelex no longer gifts decks of dungeons, and deck gift types are now
+  independent of sacrificed item types.
+* Jiyva's abilities no longer use Invocations.
+* Divine wrath is now contingent on XP gain and cannot be waited out.
+* Okawaru, Trog, Makhleb, Yredelemnul, and Kikubaaqudgha wrath now scales
+  better with player XL.
+* Vehmuet wrath now employs actual conjurations instead of miscasts.
+* Makhleb wrath can now hurl destruction at the player instead of being
+  limited to servant summoning.
+* All skills eventually trainable by divine abilities can be trained
+  immediately on worshipping that god (Invocations for many gods, Evocations
+  for Nemelex, Necromancy for Kiku, and Shields for TSO per Divine Shield).
+* Ashenzari now generate 1-3 curse scrolls per remove curse scroll.
+* Innate abilities hated by your god are now marked as such.
 
 Interface
 ---------
@@ -297,8 +436,44 @@ Interface
 * You are prompted to continue wearing/unwearing armour when a monster comes
   into view.
 * "pickup_mode = multi|single" is now "pickup_menu = true|false", with true
-  being the default; "pickup_mode = auto:X" is no more.
+  being the default; "pickup_menu_limit" has been introduced to handle
+  the old "auto:X" settings.
+* The "auto_list" option has been removed.
 * The WebTiles spectator box sorts names and links online player profiles.
+* URLs occurring in WebTiles chat messages are hyperlinked.
+* New default minimap colours.
+* Examining a monster now displays the speeds at which it takes actions if
+  those actions are slower or faster than its normal speed.
+* arena_delay, which controls the speed of arena play and animations, is now
+  available outside of arena mode as view_delay.
+* Monsters get invisible monster indicators for one turn after they become
+  invisible to the player.
+* The shop screen layout has been revised.
+
+Stone Soup 0.13.2 (2014????)
+----------------------------
+* More crash fixes.
+* More message improvements.
+* Long inscriptions in inventory are trimmed.
+* Inscriptions can show unicode.
+* Branch entrances can no longer be blocked by traps.
+* Autoexplore no longer mysteriously gets stuck.
+
+Stone Soup 0.13.1 (20131128)
+----------------------------
+* Several crash fixes.
+* Several message improvements.
+* Spectral weapon and battlespheres behave better with stairs.
+* Wind blasts can no longer push monsters through walls.
+* Shadow creatures band members don't count towards the summon cap.
+* Awakened trees and flaying ghosts respect sanctuary.
+* Unfinished monsters shouldn't spawn anymore, and are identified if they do.
+* You can check \ when reading scrolls of identify.
+* clua/gearset works again.
+* Vampires can't use lich form anymore.
+* A tome of destruction evoke-fest exploit is no more.
+* Monsters can't swap weapons while berserk.
+* Fixed several bugs related to removed or disabled species/backgrounds.
 
 Stone Soup 0.13 (20131011)
 --------------------------
@@ -578,7 +753,6 @@ Items
 * New unrand: the +4 moon troll leather armour {Spirit MP+5 Regen}.
 * Adjustments to unrands:
    - Arga is now a broad axe.
-   - Bullseye is now a large shield.
    - The shield of the gong no longer has guardian spirit; it is otherwise
      unchanged.
    - The knife of accuracy and boots of the Assassin are no more.

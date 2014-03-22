@@ -147,18 +147,6 @@ Sticky Flame cast
 
 @The_monster@ sprays @target@ with burning goo.
 %%%%
-Sunray cast
-
-@The_monster@ raises @possessive@ hand.
-
-@The_monster@ calls in a beam of light.
-%%%%
-unseen Sunray cast
-
-Suddenly, a bright light shines from nowhere!
-
-An intense light blinds you for a moment.
-%%%%
 Holy Flames cast
 
 @The_monster@ calls forth blessed flames!
@@ -189,7 +177,7 @@ Major Destruction cast
 %%%%
 Druid's Call cast
 
-@The_monster@ calls out to the beasts of the land!
+@The_monster@ calls out to the beasts of the wild!
 %%%%
 Legendary Destruction cast
 
@@ -198,6 +186,10 @@ Legendary Destruction cast
 Ephemeral Infusion cast
 
 @The_monster@ gestures around itself.
+%%%%
+Phantom Mirror cast
+
+@The_monster@ weaves an illusion.
 #####################################################
 # Individual innate spells (breathing and spitting).
 #####################################################
@@ -281,11 +273,11 @@ Frances cast
 %%%%
 Gastronok cast targeted
 
-@The_monster@ looks at @target@ while chanting.
+@The_monster@ looks @at@ @target@ while chanting.
 
-@The_monster@ looks at @target@ and mumbles some strange words.
+@The_monster@ looks @at@ @target@ and mumbles some strange words.
 
-@The_monster@ casts a spell at @target@.
+@The_monster@ casts a spell @at@ @target@.
 %%%%
 Dissolution cast
 
@@ -347,7 +339,7 @@ Confuse Rupert cast
 %%%%
 Ensnare Arachne cast
 
-@The_monster@ points her staff at @target@, shooting a whitish beam.
+@The_monster@ points her staff @at@ @target@, shooting a whitish beam.
 
 @The_monster@'s staff shoots out a whitish beam.
 %%%%
@@ -391,7 +383,7 @@ sphinx cast
 %%%%
 eidolon cast targeted
 
-@The_monster@ stares piercingly at @target@.
+@The_monster@ stares piercingly @at@ @target@.
 %%%%
 basilisk cast targeted
 
@@ -407,7 +399,7 @@ thrashing horror cast
 %%%%
 Airstrike wind drake cast
 
-@The_monster@ flaps its wings at @target@.
+@The_monster@ flaps its wings @at@ @target@.
 %%%%
 dryad cast
 
@@ -432,6 +424,18 @@ Metal Splinters war gargoyle cast
 Crystal Bolt crystal guardian cast
 
 @The_monster@ fires a crystalline bolt @at@ @target@.
+%%%%
+Blink Other statue cast
+
+@The_monster@ casts a spell @at@ @target@.
+%%%%
+Stone Arrow gargoyle cast
+
+@The_monster@ hurls a @beam@ @at@ @target@.
+%%%%
+Bolt of Magma molten gargoyle cast
+
+@The_monster@ blasts magma @at@ @target@!
 ########################################################################
 # Monster species and genus messages.
 ########################################################################
@@ -478,9 +482,9 @@ giant eyeball cast
 %%%%
 guardian serpent cast targeted
 
-@The_monster@ coils @reflexive@ and waves @possessive@ upper body at @target@.
+@The_monster@ coils @reflexive@ and waves @possessive@ upper body @at@ @target@.
 
-@The_monster@ casts a spell at @target@.
+@The_monster@ casts a spell @at@ @target@.
 %%%%
 guardian serpent cast
 
@@ -523,7 +527,7 @@ Static Discharge shock serpent cast
 %%%%
 polymorphed wizard cast targeted
 
-@The_monster@ casts a spell at @target@.
+@The_monster@ casts a spell @at@ @target@.
 %%%%
 polymorphed wizard cast
 
@@ -550,7 +554,7 @@ Might Other priest cast
 %%%%
 Malign Offering priest cast
 
-@The_monster@ utters a dark prayer and points at @target@.
+@The_monster@ utters a dark prayer and points @at@ @target@.
 %%%%
 priest cast targeted
 
@@ -582,9 +586,9 @@ You hear some strange, mumbled prayers to @a_God@.
 %%%%
 non-humanoid wizard cast targeted
 
-@The_monster@ stares at @target@ and mumbles some strange words.
+@The_monster@ stares @at@ @target@ and mumbles some strange words.
 
-@The_monster@ casts a spell at @target@.
+@The_monster@ casts a spell @at@ @target@.
 %%%%
 non-humanoid wizard cast
 
@@ -598,11 +602,11 @@ You hear some strange, mumbled words.
 %%%%
 wizard cast targeted
 
-@The_monster@ gestures at @target@ while chanting.
+@The_monster@ gestures @at@ @target@ while chanting.
 
-@The_monster@ points at @target@ and mumbles some strange words.
+@The_monster@ points @at@ @target@ and mumbles some strange words.
 
-@The_monster@ casts a spell at @target@.
+@The_monster@ casts a spell @at@ @target@.
 %%%%
 wizard cast
 
@@ -618,7 +622,7 @@ You hear some strange, mumbled words.
 %%%%
 demon cast targeted
 
-@The_monster@ gestures at @target@.
+@The_monster@ gestures @at@ @target@.
 %%%%
 demon cast
 

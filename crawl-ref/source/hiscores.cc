@@ -621,7 +621,7 @@ static const char *kill_method_names[] =
     "falling_down_stairs", "acid", "curare",
     "beogh_smiting", "divine_wrath", "bounce", "reflect", "self_aimed",
     "falling_through_gate", "disintegration", "headbutt", "rolling",
-    "mirror_damage", "spines", "frailty", "barbs",
+    "mirror_damage", "spines", "frailty", "barbs", "being_thrown",
 };
 
 static const char *_kill_method_name(kill_method_type kmt)
@@ -1136,6 +1136,31 @@ string scorefile_entry::short_kill_message() const
     return msg;
 }
 
+/**
+ * Remove from a string everything up to and including a given infix.
+ *
+ * @param[in,out] str   The string to modify.
+ * @param[in]     infix The infix to remove.
+ * @post If \c infix occured as a substring of <tt>str</tt>, \c str is updated
+ *       by removing all characters up to and including the last character
+ *       of the the first occurrence. Otherwise, \c str is unchanged.
+ * @return \c true if \c str was modified, \c false otherwise.
+ */
+static bool _strip_to(string &str, const char *infix)
+{
+    // Don't treat stripping the empty string as a change.
+    if (*infix == '\0')
+        return false;
+
+    size_t pos = str.find(infix);
+    if (pos != string::npos)
+    {
+        str.erase(0, pos + strlen(infix));
+        return true;
+    }
+    return false;
+}
+
 void scorefile_entry::init_death_cause(int dam, int dsrc,
                                        int dtype, const char *aux,
                                        const char *dsrc_name)
@@ -1178,7 +1203,8 @@ void scorefile_entry::init_death_cause(int dam, int dsrc,
             || death_type == KILLED_BY_REFLECTION
             || death_type == KILLED_BY_ROLLING
             || death_type == KILLED_BY_SPINES
-            || death_type == KILLED_BY_WATER)
+            || death_type == KILLED_BY_WATER
+            || death_type == KILLED_BY_BEING_THROWN)
         && !invalid_monster_index(death_source)
         && menv[death_source].type != MONS_NO_MONSTER)
     {
@@ -1216,11 +1242,8 @@ void scorefile_entry::init_death_cause(int dam, int dsrc,
         if (death || you.can_see(mons))
             death_source_name = mons->full_name(desc, true);
 
-        if (mons->mid == MID_PLAYER && mons->mname.empty())
+        if (mons_is_player_shadow(mons))
             death_source_name = "their own shadow"; // heh
-
-        if (death && mons->type == MONS_MARA_FAKE)
-            death_source_name = "an illusion of Mara";
 
         if (mons->has_ench(ENCH_SHAPESHIFTER))
             death_source_name += " (shapeshifter)";
@@ -1230,6 +1253,9 @@ void scorefile_entry::init_death_cause(int dam, int dsrc,
         if (mons->type == MONS_PANDEMONIUM_LORD)
             death_source_name += " the pandemonium lord";
 
+        if (mons->has_ench(ENCH_PHANTOM_MIRROR))
+            death_source_name += " (illusionary)";
+
         if (mons_is_unique(mons->type))
             death_source_flags.insert("unique");
 
@@ -1238,9 +1264,8 @@ void scorefile_entry::init_death_cause(int dam, int dsrc,
             const CrawlVector& blame = mons->props["blame"].get_vector();
 
             indirectkiller = blame[blame.size() - 1].get_string();
-
-            if (indirectkiller.find(" by ") != string::npos)
-                indirectkiller.erase(0, indirectkiller.find(" by ") + 4);
+            _strip_to(indirectkiller, " by ");
+            _strip_to(indirectkiller, "ed to "); // "attached to" and similar
 
             killerpath = "";
 
@@ -1521,7 +1546,6 @@ void scorefile_entry::init(time_t dt)
         DUR_PETRIFIED,
         DUR_PETRIFYING,
         DUR_RESISTANCE,
-        DUR_SLAYING,
         DUR_SLIMIFY,
         DUR_SLEEP,
         DUR_STONESKIN,
@@ -2068,7 +2092,8 @@ string scorefile_entry::death_description(death_desc_verbosity verbosity) const
             snprintf(scratch, sizeof(scratch), "%s by ",
                       _range_type_verb(auxkilldata.c_str()));
             desc += scratch;
-            desc += death_source_desc();
+            desc += (death_source_name == "you") ? "themself"
+                                                 : death_source_desc();
 
             if (semiverbose)
             {
@@ -2091,9 +2116,18 @@ string scorefile_entry::death_description(death_desc_verbosity verbosity) const
         {
             // "by" is used for priest attacks where the effect is indirect
             // in verbose format we have another line for the monster
-            needs_called_by_monster_line = true;
-            snprintf(scratch, sizeof(scratch), "Killed %s",
-                      auxkilldata.c_str());
+            if (death_source_name == "you")
+            {
+                needs_damage = true;
+                snprintf(scratch, sizeof(scratch), "Killed by their own %s",
+                         auxkilldata.substr(3).c_str());
+            }
+            else
+            {
+                needs_called_by_monster_line = true;
+                snprintf(scratch, sizeof(scratch), "Killed %s",
+                          auxkilldata.c_str());
+            }
             desc += scratch;
         }
         else
@@ -2105,7 +2139,10 @@ string scorefile_entry::death_description(death_desc_verbosity verbosity) const
             else if (!terse)
                 desc += "Killed from afar by ";
 
-            desc += death_source_desc();
+            if (death_source_name == "you")
+                desc += "themself";
+            else
+                desc += death_source_desc();
 
             if (!auxkilldata.empty())
                 needs_beam_cause_line = true;
@@ -2458,6 +2495,14 @@ string scorefile_entry::death_description(death_desc_verbosity verbosity) const
 
     case KILLED_BY_BARBS:
         desc += terse ? "barbs" : "Succumbed to a manticore's barbed spikes";
+        break;
+
+    case KILLED_BY_BEING_THROWN:
+        if (terse)
+            desc += apostrophise(death_source_desc()) + " throw";
+        else
+            desc += "Thrown by " + death_source_desc();
+        needs_damage = true;
         break;
 
     default:

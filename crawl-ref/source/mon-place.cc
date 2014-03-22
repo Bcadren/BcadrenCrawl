@@ -110,8 +110,10 @@ bool feat_compatible(dungeon_feature_type feat_wanted,
 bool monster_habitable_grid(const monster* mon,
                             dungeon_feature_type actual_grid)
 {
-    // Zombified monsters enjoy the same habitat as their original.
-    const monster_type mt = mons_base_type(mon);
+    // Zombified monsters enjoy the same habitat as their original,
+    // except lava-based monsters.
+    const monster_type mt = fixup_zombie_type(mon->type,
+                                              mons_base_type(mon));
 
     return monster_habitable_grid(mt,
                                   actual_grid,
@@ -441,6 +443,13 @@ static bool _is_incompatible_monster(monster_type mt)
         || player_will_anger_monster(mt);
 }
 
+static bool _is_banded_monster(monster_type mt)
+{
+    int idummy;
+    bool bdummy;
+    return _choose_band(mt, idummy, bdummy) != BAND_NO_BAND;
+}
+
 // Caller must use !invalid_monster_type to check if the return value
 // is a real monster.
 monster_type pick_random_monster(level_id place,
@@ -467,6 +476,8 @@ monster_type pick_random_monster(level_id place,
         return pick_monster(place, mons_class_is_stationary);
     else if (kind == RANDOM_COMPATIBLE_MONSTER)
         return pick_monster(place, _is_incompatible_monster);
+    else if (kind == RANDOM_BANDLESS_MONSTER)
+        return pick_monster(place, _is_banded_monster);
     else if (mons_class_is_zombified(kind))
         return pick_monster(place, _is_not_zombifiable);
     else if (crawl_state.game_is_sprint())
@@ -730,6 +741,17 @@ static int _is_near_stairs(coord_def &p)
     return result;
 }
 
+// For generation purposes, don't treat simulacra of lava enemies as
+// being able to place on lava.
+const monster_type fixup_zombie_type(const monster_type cls,
+                                         const monster_type base_type)
+{
+    return (mons_class_is_zombified(cls)
+            && mons_class_secondary_habitat(base_type) != HT_LAVA)
+            ? base_type
+            : cls;
+}
+
 // Checks if the monster is ok to place at mg_pos. If force_location
 // is true, then we'll be less rigorous in our checks, in particular
 // allowing land monsters to be placed in shallow water and water
@@ -744,8 +766,7 @@ static bool _valid_monster_generation_location(const mgen_data &mg,
         return false;
     }
 
-    const monster_type montype = (mons_class_is_zombified(mg.cls) ? mg.base_type
-                                                                  : mg.cls);
+    const monster_type montype = fixup_zombie_type(mg.cls, mg.base_type);
     if (!monster_habitable_grid(montype, grd(mg_pos), mg.preferred_grid_feature,
                                 mons_class_flies(montype), false)
         || (mg.behaviour != BEH_FRIENDLY && !mons_is_mimic(montype)
@@ -784,37 +805,6 @@ static bool _valid_monster_generation_location(mgen_data &mg)
 static bool _in_ood_pack_protected_place()
 {
     return env.turns_on_level < 1400 - env.absdepth0 * 117;
-}
-
-static void _abyss_monster_creation_message(const monster* mon)
-{
-    if (mon->type == MONS_DEATH_COB)
-    {
-        mprf(coinflip() ? "%s appears in a burst of microwaves!"
-                        : "%s pops from nullspace!",
-             mon->name(DESC_A).c_str()); // always "a death cob"
-        return;
-    }
-
-    mprf(random_choose_weighted(
-         17, "%s appears in a shower of translocational energy.",
-         34, "%s appears in a shower of sparks.",
-         45, "%s materialises.",
-         13, "%s emerges from chaos.",
-         26, "%s emerges from the beyond.",
-         33, "%s assembles %s!",
-          9, "%s erupts from nowhere!",
-         18, "%s bursts from nowhere!",
-          7, "%s is cast out of space!",
-         14, "%s is cast out of reality!",
-          5, "%s coalesces out of pure chaos.",
-         10, "%s coalesces out of seething chaos.",
-          2, "%s punctures the fabric of time!",
-          7, "%s punctures the fabric of the universe.",
-          3, "%s manifests%3$s!",
-          0),
-         mon->name(DESC_A).c_str(), mon->pronoun(PRONOUN_REFLEXIVE).c_str(),
-         silenced(you.pos()) ? "" : " with a bang");
 }
 
 monster* place_monster(mgen_data mg, bool force_pos, bool dont_place)
@@ -1069,16 +1059,13 @@ monster* place_monster(mgen_data mg, bool force_pos, bool dont_place)
     }
     else if (mg.proximity == PROX_NEAR_STAIRS && you.can_see(mon))
     {
-        const char *msg = nullptr;
         switch (stair_type)
         {
-        case DCHAR_STAIRS_DOWN: msg = "up the stairs."; break;
-        case DCHAR_STAIRS_UP:   msg = "down the stairs."; break;
-        case DCHAR_ARCH:        msg = "through the gate."; break;
+        case DCHAR_STAIRS_DOWN: mon->seen_context = SC_UPSTAIRS; break;
+        case DCHAR_STAIRS_UP:   mon->seen_context = SC_DOWNSTAIRS; break;
+        case DCHAR_ARCH:        mon->seen_context = SC_GATE; break;
         default: ;
         }
-        if (msg)
-            mprf("%s comes %s", mon->name(DESC_A).c_str(), msg);
     }
     else if (player_in_branch(BRANCH_ABYSS) && you.can_see(mon)
              && !crawl_state.generating_level
@@ -1086,7 +1073,7 @@ monster* place_monster(mgen_data mg, bool force_pos, bool dont_place)
              && !crawl_state.is_god_acting()
              && !(mon->flags & MF_WAS_IN_VIEW)) // is this possible?
     {
-        _abyss_monster_creation_message(mon);
+        mon->seen_context = SC_ABYSS;
     }
 
     // Now, forget about banding if the first placement failed, or there are
@@ -1217,8 +1204,7 @@ static monster* _place_monster_aux(const mgen_data &mg, const monster *leader,
     if (!mon)
         return 0;
 
-    const monster_type montype = (mons_class_is_zombified(mg.cls) ? mg.base_type
-                                                                  : mg.cls);
+    const monster_type montype = fixup_zombie_type(mg.cls, mg.base_type);
 
     // Setup habitat and placement.
     // If the space is occupied, try some neighbouring square instead.
@@ -1347,11 +1333,8 @@ static monster* _place_monster_aux(const mgen_data &mg, const monster *leader,
     else if (mons_class_flag(mg.cls, M_PRIEST))
     {
         // Berserkers belong to Trog.
-        if (mg.cls == MONS_DEEP_DWARF_BERSERKER
-            || mg.cls == MONS_SPRIGGAN_BERSERKER)
-        {
+        if (mg.cls == MONS_SPRIGGAN_BERSERKER)
             mon->god = GOD_TROG;
-        }
         // Profane servitors and deep dwarf death knights belong to Yredelemnul.
         else if (mg.cls == MONS_PROFANE_SERVITOR
                  || mg.cls == MONS_DEEP_DWARF_DEATH_KNIGHT)
@@ -1489,13 +1472,15 @@ static monster* _place_monster_aux(const mgen_data &mg, const monster *leader,
     if (mons_class_flag(mg.cls, M_CONFUSED))
         mon->add_ench(ENCH_CONFUSION);
 
-    if (montype == MONS_SHAPESHIFTER)
+    if (mg.cls == MONS_SHAPESHIFTER)
         mon->add_ench(ENCH_SHAPESHIFTER);
 
-    if (montype == MONS_GLOWING_SHAPESHIFTER)
+    if (mg.cls == MONS_GLOWING_SHAPESHIFTER)
         mon->add_ench(ENCH_GLOWING_SHAPESHIFTER);
 
-    if (mg.cls == MONS_TOADSTOOL || mg.cls == MONS_PILLAR_OF_SALT)
+    if (mg.cls == MONS_TOADSTOOL
+        || mg.cls == MONS_PILLAR_OF_SALT
+        || mg.cls == MONS_BLOCK_OF_ICE)
     {
         // This enchantment is a timer that counts down until death.
         // It should last longer than the lifespan of a corpse, to avoid
@@ -1639,10 +1624,21 @@ static monster* _place_monster_aux(const mgen_data &mg, const monster *leader,
                            mark_items,
                            mg.summon_type);
 
-        if (mg.summon_type > 0 && mg.summoner)
+        if (mg.summon_type > 0 && mg.summoner && !(mg.flags & MG_DONT_CAP))
         {
-            summoned_monster(mon, mg.summoner,
-                             static_cast<spell_type>(mg.summon_type));
+            // If this is a band member created by shadow creatures, link its
+            // ID and don't count it against the summon cap
+            if ((mg.summon_type == SPELL_SHADOW_CREATURES
+                 || mg.summon_type == SPELL_WEAVE_SHADOWS)
+                 && leader)
+            {
+                mon->props["summon_id"].get_int() = leader->mid;
+            }
+            else
+            {
+                summoned_monster(mon, mg.summoner,
+                                static_cast<spell_type>(mg.summon_type));
+            }
         }
     }
 
@@ -1818,6 +1814,8 @@ monster_type pick_random_zombie()
 static bool _good_zombie(monster_type base, monster_type cs,
                          const coord_def& pos)
 {
+    base = fixup_zombie_type(cs, base);
+
     // Actually pick a monster that is happy where we want to put it.
     // Fish zombies on land are helpless and uncool.
     if (in_bounds(pos) && !monster_habitable_grid(base, grd(pos)))
@@ -2655,18 +2653,18 @@ static band_type _choose_band(monster_type mon_type, int &band_size,
         break;
 
     case MONS_SPRIGGAN_BERSERKER:
-        if (one_chance_in(3))
-            break;
-        natural_leader = true;
-    case MONS_SPRIGGAN:
-        band = BAND_SPRIGGANS;
-        band_size = 2 + random2(3);
+        if (coinflip())
+        {
+            natural_leader = true;
+            band = BAND_SPRIGGANS;
+            band_size = 2 + random2(2);
+        }
         break;
 
     case MONS_SPRIGGAN_DEFENDER:
         natural_leader = true;
         band = BAND_SPRIGGAN_ELITES;
-        band_size = 2 + random2(4);
+        band_size = 2 + random2(3);
         break;
 
     case MONS_THE_ENCHANTRESS:
@@ -2737,6 +2735,9 @@ static band_type _choose_band(monster_type mon_type, int &band_size,
         break;
 
     case MONS_MONSTROUS_DEMONSPAWN:
+        // Horrible hack for wizlab_wucad_mu.
+        if (player_in_branch(BRANCH_WIZLAB))
+            break;
         band = BAND_MONSTROUS_DEMONSPAWN;
         band_size = random2(4);
         break;
@@ -2790,6 +2791,14 @@ static band_type _choose_band(monster_type mon_type, int &band_size,
         natural_leader = true;
         band = BAND_VASHNIA;
         band_size = 3 + random2(3);
+        break;
+
+    case MONS_RAKSHASA:
+        if (coinflip())
+        {
+            band = BAND_RANDOM_SINGLE;
+            band_size = 1;
+        }
         break;
 
     default: ;
@@ -2979,9 +2988,9 @@ static monster_type _band_member(band_type band, int which)
 
     case BAND_KOBOLD_DEMONOLOGIST:
         return random_choose_weighted(8, MONS_KOBOLD,
-                                          4, MONS_BIG_KOBOLD,
-                                          1, MONS_KOBOLD_DEMONOLOGIST,
-                                          0);
+                                      4, MONS_BIG_KOBOLD,
+                                      2, MONS_KOBOLD_DEMONOLOGIST,
+                                      0);
         break;
 
     case BAND_GUARDIAN_SERPENT:
@@ -2998,7 +3007,7 @@ static monster_type _band_member(band_type band, int which)
                                           11, MONS_NAGA_MAGE,
                                            6, MONS_NAGA_RITUALIST,
                                            8, MONS_NAGA_SHARPSHOOTER,
-                                           4, MONS_SALAMANDER_MYSTIC,
+                                           6, MONS_SALAMANDER_MYSTIC,
                                            0);
         }
         else
@@ -3188,19 +3197,13 @@ static monster_type _band_member(band_type band, int which)
         }
         return MONS_SPRIGGAN;
     case BAND_SPRIGGAN_ELITES:
-        if (which == 1 && one_chance_in(3))
+        if (which == 1 && coinflip())
             return coinflip() ? MONS_SPRIGGAN_ENCHANTER : MONS_SPRIGGAN_ASSASSIN;
     case BAND_SPRIGGANS:
-        if ((band == BAND_SPRIGGAN_ELITES && which <= 2)
-            || one_chance_in(4))
-        {
-            return random_choose_weighted(5, MONS_SPRIGGAN_AIR_MAGE,
-                                          3, MONS_SPRIGGAN_BERSERKER,
-                                          1, MONS_SPRIGGAN_DRUID,
-                                          2, MONS_SPRIGGAN_RIDER,
-                                          0);
-        }
-        return MONS_SPRIGGAN;
+        return random_choose_weighted( 4, MONS_SPRIGGAN_AIR_MAGE,
+                                       3, MONS_SPRIGGAN_BERSERKER,
+                                      11, MONS_SPRIGGAN_RIDER,
+                                       0);
 
     case BAND_AIR_ELEMENTALS:
         return MONS_AIR_ELEMENTAL;
@@ -3273,7 +3276,7 @@ static monster_type _band_member(band_type band, int which)
     case BAND_TORTUROUS_DEMONSPAWN:
         if (which == 1 || which == 2 && one_chance_in(5))
         {
-            return random_choose_weighted( 2, MONS_ROTTING_DEVIL,
+            return random_choose_weighted( 2, MONS_ORANGE_DEMON,
                                            2, MONS_SIXFIRHY,
                                            3, MONS_TORTUROUS_DEMONSPAWN,
                                            0);
@@ -3350,6 +3353,9 @@ static monster_type _band_member(band_type band, int which)
 
     case BAND_VASHNIA:
         return MONS_NAGA_SHARPSHOOTER;
+
+    case BAND_RANDOM_SINGLE:
+        return pick_random_monster(level_id::current(), RANDOM_BANDLESS_MONSTER);
 
     default:
         die("unhandled band type %d", band);
@@ -3498,17 +3504,17 @@ monster* mons_place(mgen_data mg)
             creation->add_ench(ENCH_CHARM);
         }
 
-        if (creation->type == MONS_RAKSHASA_FAKE && !one_chance_in(3))
-            creation->add_ench(ENCH_INVIS);
-
         if (!(mg.flags & MG_FORCE_BEH) && !crawl_state.game_is_arena())
             player_angers_monster(creation);
 
         behaviour_event(creation, ME_EVAL);
     }
 
-    if (mg.flags & MG_AUTOFOE && creation->attitude == ATT_FRIENDLY)
+    if (mg.flags & MG_AUTOFOE && (creation->attitude == ATT_FRIENDLY
+                                  || mg.behaviour == BEH_CHARMED))
+    {
         set_nearest_monster_foe(creation, true);
+    }
 
     return creation;
 }
@@ -3746,8 +3752,7 @@ monster* create_monster(mgen_data mg, bool fail_msg)
 {
     ASSERT(in_bounds(mg.pos)); // otherwise it's a guaranteed fail
 
-    const monster_type montype = mons_class_is_zombified(mg.cls) ? mg.base_type
-                                                                 : mg.cls;
+    const monster_type montype = fixup_zombie_type(mg.cls, mg.base_type);
 
     monster *summd = 0;
 
@@ -3763,8 +3768,8 @@ monster* create_monster(mgen_data mg, bool fail_msg)
             monster dummy;
             const monster_type resistless_mon = MONS_HUMAN;
             // If the type isn't known yet assume no resists or anything.
-            dummy.type         = _is_random_monster(mg.cls) ? resistless_mon
-                                                            : mg.cls;
+            dummy.type         = needs_resolution(mg.cls) ? resistless_mon
+                                                          : mg.cls;
             dummy.base_monster = mg.base_type;
             dummy.god          = mg.god;
             dummy.behaviour    = mg.behaviour;
@@ -3891,7 +3896,6 @@ monster_type summon_any_demon(monster_type dct)
                 1, MONS_IRON_DEVIL,
                 1, MONS_ORANGE_DEMON,
                 1, MONS_RED_DEVIL,
-                1, MONS_ROTTING_DEVIL,
                 1, MONS_SIXFIRHY,
                 1, MONS_HELLWING,
                 0);

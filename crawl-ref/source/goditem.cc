@@ -112,6 +112,9 @@ bool is_unholy_item(const item_def& item)
     case OBJ_RODS:
         retval = _is_bookrod_type(item, is_unholy_spell);
         break;
+    case OBJ_MISCELLANY:
+        retval = item.sub_type == MISC_HORN_OF_GERYON;
+        break;
     default:
         break;
     }
@@ -140,6 +143,13 @@ bool is_potentially_evil_item(const item_def& item)
     case OBJ_WANDS:
         if (item.sub_type == WAND_RANDOM_EFFECTS)
             return true;
+        break;
+    case OBJ_RODS:
+        if (item.sub_type == ROD_DESTRUCTION
+            || item.sub_type == ROD_CLOUDS)
+        {
+            return true;
+        }
         break;
     default:
         break;
@@ -210,6 +220,7 @@ bool is_evil_item(const item_def& item)
     case OBJ_STAVES:
         return item.sub_type == STAFF_DEATH;
     case OBJ_BOOKS:
+    case OBJ_RODS:
         return _is_bookrod_type(item, is_evil_spell);
     case OBJ_MISCELLANY:
         return item.sub_type == MISC_LANTERN_OF_SHADOWS;
@@ -343,7 +354,7 @@ bool is_hasty_item(const item_def& item)
         retval = (item.sub_type == AMU_RAGE);
         break;
     case OBJ_POTIONS:
-        retval = (item.sub_type == POT_SPEED
+        retval = (item.sub_type == POT_HASTE
                   || item.sub_type == POT_BERSERK_RAGE);
         break;
     case OBJ_BOOKS:
@@ -416,9 +427,23 @@ static bool _is_potentially_fiery_item(const item_def& item)
 {
     switch (item.base_type)
     {
+    case OBJ_WEAPONS:
+        {
+        const int item_brand = get_weapon_brand(item);
+        if (item_brand == SPWPN_CHAOS)
+            return true;
+        }
+        break;
     case OBJ_WANDS:
         if (item.sub_type == WAND_RANDOM_EFFECTS)
             return true;
+        break;
+    case OBJ_RODS:
+        if (item.sub_type == ROD_DESTRUCTION
+            || item.sub_type == ROD_CLOUDS)
+        {
+            return true;
+        }
         break;
     default:
         break;
@@ -525,7 +550,6 @@ bool is_hasty_spell(spell_type spell)
 bool is_illuminating_spell(spell_type spell)
 {
     return spell == SPELL_CORONA
-           || spell == SPELL_SUNRAY
            || spell == SPELL_HOLY_LIGHT;
 }
 

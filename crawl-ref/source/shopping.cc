@@ -92,39 +92,45 @@ static void _shop_mpr(const char* msg)
         mpr(msg);
 }
 
-static string _hyphenated_suffix(char prev, char last)
+#ifdef USE_TILE_LOCAL
+static void _draw_shop_fs(const char hotkey, formatted_string &fs,
+                          MenuFreeform* freeform)
 {
-    string s;
-    if (prev > last + 2)
-        s += "</w>-<w>";
-    else if (prev == last + 2)
-        s += (char) (last + 1);
+    TextItem* tmp = new TextItem();
 
-    if (prev != last)
-        s += prev;
-    return s;
+    tmp->set_fg_colour(LIGHTGRAY);
+    tmp->set_bg_colour(BLACK);
+    tmp->set_highlight_colour(WHITE);
+    tmp->set_text("");
+    tmp->set_bounds(coord_def(wherex(), wherey()),
+                    coord_def(wherex() + fs.tostring().size(), wherey() + 1));
+    tmp->add_hotkey(hotkey);
+    tmp->set_id(hotkey);
+    tmp->set_description_text(fs.tostring());
+    freeform->attach_item(tmp);
+    fs.display();
+    tmp->set_visible(true);
 }
-
-static string _purchase_keys(const string &s)
+#else
+static void _draw_shop_fs(const char hotkey, formatted_string &fs,
+                          const bool freeform)
 {
-    if (s.empty())
-        return "";
+    fs.display();
+}
+#endif
 
-    string list = "<w>" + s.substr(0, 1);
-    char last = s[0];
-    for (unsigned int i = 1; i < s.length(); ++i)
+static string _hyphenated_letters(int how_many, char first)
+{
+    string s = "<w>";
+    s += first;
+    s += "</w>";
+    if (how_many > 1)
     {
-        if (s[i] == s[i - 1] + 1)
-            continue;
-
-        char prev = s[i - 1];
-        list += _hyphenated_suffix(prev, last);
-        list += (last = s[i]);
+        s += "-<w>";
+        s += first + how_many - 1;
+        s += "</w>";
     }
-
-    list += _hyphenated_suffix(s[s.length() - 1], last);
-    list += "</w>";
-    return list;
+    return s;
 }
 
 static bool _can_shoplist(level_id lev = level_id::current())
@@ -133,287 +139,83 @@ static bool _can_shoplist(level_id lev = level_id::current())
     return is_connected_branch(lev.branch);
 }
 
+static void _list_shop_keys(bool viewing, int total_stock
 #ifdef USE_TILE_LOCAL
-static void _list_shop_keys(const string &purchasable, bool viewing,
-                            int total_stock, int num_selected,
-                            int num_in_list, MenuFreeform* freeform)
+                            , MenuFreeform* freeform
+#endif
+                            )
 {
     ASSERT(total_stock > 0);
+
+#ifndef USE_TILE_LOCAL
+    const bool freeform = false; // unused
+#endif
 
     const int numlines = get_number_of_lines();
     formatted_string fs;
 
-    TextItem* tmp = NULL;
-
-    string shop_list = "";
-    if (!viewing && _can_shoplist())
-    {
-        shop_list = "[$] ";
-        if (num_selected > 0)
-            shop_list += "selected -> shopping list";
-        else if (num_in_list > 0)
-            shop_list += "shopping list -> selected";
-        else
-            shop_list = "";
-    }
-    if (!shop_list.empty())
-    {
-        // set cursor [line 1]
-        cgotoxy(1, numlines - 2, GOTO_CRT);
-        // print formatted string
-        fs = formatted_string::parse_string(shop_list);
-        // print menu item
-        tmp = new TextItem();
-        tmp->set_fg_colour(LIGHTGRAY);
-        tmp->set_bg_colour(BLACK);
-        tmp->set_highlight_colour(WHITE);
-        tmp->set_text(""); //shop_list);
-        tmp->set_bounds(coord_def(1, wherey()),
-                        coord_def(shop_list.size() + 1, wherey() + 1));
-        tmp->add_hotkey('$');
-        tmp->set_id('$');
-        tmp->set_description_text(shop_list);
-        freeform->attach_item(tmp);
-        // draw
-        fs.display();
-        tmp->set_visible(true);
-    }
-
     // ///////// EXIT //////////
-    // set cursor [line 2]
+    // set cursor [line 1]
     cgotoxy(1, numlines - 1, GOTO_CRT);
-    // print formatted string for EXIT
-    fs = formatted_string::parse_string(make_stringf(
-            "[<w>x</w>/<w>Esc</w>"
-            "/<w>R-Click</w>"
-            "] exit"));
-    // print menu item
-    tmp = new TextItem();
-    tmp->set_fg_colour(LIGHTGRAY);
-    tmp->set_highlight_colour(WHITE);
-    tmp->set_text(""); //fs.tostring());
-    tmp->set_bounds(coord_def(wherex(), wherey()),
-                    coord_def(wherex() + fs.tostring().size(), wherey() + 1));
-    tmp->add_hotkey('x');
-    tmp->set_id('x');
-    tmp->set_description_text(fs.tostring());
-    freeform->attach_item(tmp);
-    // draw
-    fs.display();
-    tmp->set_visible(true);
 
-    // ///////// BUY/EXAMINE ITEMS //////////
-    // set cursor [20 chars of text + 11 spaces + start at 1]
-    cgotoxy(32, numlines - 1, GOTO_CRT);
-    // print formatted string for BUY/EXAMINE ITEMS
-    fs = formatted_string::parse_string(make_stringf(
-            "[<w>!</w>] %s",
-            (viewing ? "buy items" : "examine items") ));
+    fs = formatted_string::parse_string(
+#if defined(USE_TILE) && !defined(TOUCH_UI)
+            "[<w>Esc</w>/<w>R-Click</w>] exit"
+#else
+            //               "/R-Click"
+            "[<w>Esc</w>] exit        "
+#endif
+            );
+
     // print menu item
-    tmp = new TextItem();
-    tmp->set_fg_colour(LIGHTGRAY);
-    tmp->set_bg_colour(BLACK);
-    tmp->set_highlight_colour(WHITE);
-    tmp->set_text(""); //fs.tostring());
-    tmp->set_bounds(coord_def(wherex(), wherey()),
-                    coord_def(wherex() + fs.tostring().size(), wherey() + 1));
-    tmp->add_hotkey('!');
-    tmp->set_id('!');
-    tmp->set_description_text(fs.tostring());
-    freeform->attach_item(tmp);
-    // draw
-    fs.display();
-    tmp->set_visible(true);
+    _draw_shop_fs('x', fs, freeform);
+
+    // ///////// BUY/EXAMINE TOGGLE //////////
+    // strlen("[Esc/R-Click] exit") = 18
+    // set cursor [18 chars of text + 2 spaces + start at 1]
+    cgotoxy(21, numlines - 1, GOTO_CRT);
+
+    fs = formatted_string::parse_string(make_stringf(
+            "[<w>!</w>] %s items",
+            (viewing ? "<w>examine</w>|buy" : "examine|<w>buy</w>") ));
+
+    _draw_shop_fs('!', fs, freeform);
 
     // ///////// SELECT ITEM TO BUY/EXAMINE //////////
-    // set cursor [32 + 16 chars + 5 whitespace]
-    cgotoxy(53, numlines - 1, GOTO_CRT);
-    // calculate and draw formatted text
-    string pkeys = "";
-    if (viewing)
-    {
-        pkeys = "<w>a</w>";
-        if (total_stock > 1)
-        {
-            pkeys += "-<w>";
-            pkeys += 'a' + total_stock - 1;
-            pkeys += "</w>";
-        }
-    }
-    else
-        pkeys = _purchase_keys(purchasable);
+    // strlen("[!] examine|buy items") = 21
+    // set cursor [21 from above, + 21 chars + 5 whitespace]
+    cgotoxy(47, numlines - 1, GOTO_CRT);
 
-    if (!pkeys.empty())
-    {
-        pkeys = "[" + pkeys + "] select item to "
-                + (viewing ? "examine" : "buy");
-    }
-    fs = formatted_string::parse_string(pkeys.c_str());
+    // calculate and draw formatted text
+    string keys = _hyphenated_letters(total_stock, 'a');
+
+    keys = "[" + keys + "] select item "
+            + (viewing ? "to examine" : "for purchase");
+
+    fs = formatted_string::parse_string(keys.c_str());
     fs.display();
 
-    // ///////// THIRD LINE //////////
-    // ///////// ENTER MAKE PURCHASE //////////
-    // cursor at 1,n
-    cgotoxy(1, numlines, GOTO_CRT);
-    // print formatted string
+    // ///////// MAKE PURCHASE //////////
+    // set cursor [last line], align with 21 from line above
+    cgotoxy(21, numlines, GOTO_CRT);
     fs = formatted_string::parse_string(
             "[<w>Enter</w>"
             "] make purchase");
-    // print menu item
-    tmp = new TextItem();
-    tmp->set_fg_colour(LIGHTGRAY);
-    tmp->set_bg_colour(BLACK);
-    tmp->set_highlight_colour(WHITE);
-    tmp->set_text(""); //fs.tostring());
-    tmp->set_bounds(coord_def(wherex(), wherey()),
-                    coord_def(wherex() + fs.tostring().size(), wherey() + 1));
-    tmp->add_hotkey(' ');
-    tmp->set_id(' ');
-    tmp->set_description_text(fs.tostring());
-    freeform->attach_item(tmp);
-    // draw
-    fs.display();
-    tmp->set_visible(true);
 
-    // ///////// LIST KNOWN //////////
-    // cursor at 1 + 21 chars + 2 whitespace
-    cgotoxy(24, numlines, GOTO_CRT);
-    // print formatted string
-    fs = formatted_string::parse_string("[<w>\\</w>] list known items");
-    // print menu item
-    tmp = new TextItem();
-    tmp->set_fg_colour(LIGHTGRAY);
-    tmp->set_bg_colour(BLACK);
-    tmp->set_highlight_colour(WHITE);
-    tmp->set_text(""); //fs.tostring());
-    tmp->set_bounds(coord_def(wherex(), wherey()),
-                    coord_def(wherex() + fs.tostring().size(), wherey() + 1));
-    tmp->add_hotkey('\\');
-    tmp->set_id('\\');
-    tmp->set_description_text(fs.tostring());
-    freeform->attach_item(tmp);
-    // draw
-    fs.display();
-    tmp->set_visible(true);
+    _draw_shop_fs(' ', fs, freeform);
 
-    // ///////// INVENTORY //////////
-    // cursor at 24 + 20 chars + 1 whitespace
-    cgotoxy(45, numlines, GOTO_CRT);
-    // print formatted string
-    fs = formatted_string::parse_string("[<w>?</w>] inventory");
-    // print menu item
-    tmp = new TextItem();
-    tmp->set_fg_colour(LIGHTGRAY);
-    tmp->set_bg_colour(BLACK);
-    tmp->set_highlight_colour(WHITE);
-    tmp->set_text(""); //fs.tostring());
-    tmp->set_bounds(coord_def(wherex(), wherey()),
-                    coord_def(wherex() + fs.tostring().size(), wherey() + 1));
-    tmp->add_hotkey('?');
-    tmp->set_id('?');
-    tmp->set_description_text(fs.tostring());
-    freeform->attach_item(tmp);
-    // draw
-    fs.display();
-    tmp->set_visible(true);
+    // ///////// PUT ITEM ON SHOPPING LIST //////////
+    // cursor at 47 to align with line above
+    cgotoxy(47, numlines, GOTO_CRT);
 
-    // ///////// INVERT SELN //////////
-    // cursor at 45 + 13 chars + 2 whitespace
-    cgotoxy(60, numlines, GOTO_CRT);
-    // print formatted string
-    fs = formatted_string::parse_string("[<w>*</w>] invert selection");
-    // print menu item
-    tmp = new TextItem();
-    tmp->set_fg_colour(LIGHTGRAY);
-    tmp->set_bg_colour(BLACK);
-    tmp->set_highlight_colour(WHITE);
-    tmp->set_text(""); //fs.tostring());
-    tmp->set_bounds(coord_def(wherex(), wherey()),
-                    coord_def(wherex() + fs.tostring().size(), wherey() + 1));
-    tmp->add_hotkey('*');
-    tmp->set_id('*');
-    tmp->set_description_text(fs.tostring());
-    freeform->attach_item(tmp);
-    // draw
-    fs.display();
-    tmp->set_visible(true);
-}
-#else
-static void _list_shop_keys(const string &purchasable, bool viewing,
-                            int total_stock, int num_selected, int num_in_list)
-{
-    ASSERT(total_stock > 0);
+    keys = _hyphenated_letters(total_stock, 'A');
+    keys = "[" + keys + "] put item on shopping list";
 
-    const int numlines = get_number_of_lines();
-    formatted_string fs;
-
-    string shop_list = "";
-    if (!viewing && _can_shoplist())
-    {
-        shop_list = "[<w>$</w>] ";
-        if (num_selected > 0)
-            shop_list += "selected -> shopping list";
-        else if (num_in_list > 0)
-            shop_list += "shopping list -> selected";
-        else
-            shop_list = "";
-    }
-    if (!shop_list.empty())
-    {
-        cgotoxy(1, numlines - 2, GOTO_CRT);
-        fs = formatted_string::parse_string(shop_list);
-        fs.cprintf("%*s", get_number_of_cols() - fs.width() - 1, "");
-        fs.display();
-    }
-
-    cgotoxy(1, numlines - 1, GOTO_CRT);
-
-    string pkeys = "";
-    if (viewing)
-    {
-        pkeys = "<w>a</w>";
-        if (total_stock > 1)
-        {
-            pkeys += "-<w>";
-            pkeys += 'a' + total_stock - 1;
-            pkeys += "</w>";
-        }
-    }
-    else
-        pkeys = _purchase_keys(purchasable);
-
-    if (!pkeys.empty())
-    {
-        pkeys = "[" + pkeys + "] select item to "
-                + (viewing ? "examine" : "buy");
-    }
-    fs = formatted_string::parse_string(make_stringf(
-            "[<w>x</w>/<w>Esc</w>"
-#ifdef USE_TILE
-            "/<w>R-Click</w>"
-#endif
-            "] exit           [<w>!</w>] %s  %s",
-            (viewing ? "buy items      " : "examine items  "),
-            pkeys.c_str()));
-
-    fs.cprintf("%*s", get_number_of_cols() - fs.width() - 1, "");
-    fs.display();
-    cgotoxy(1, numlines, GOTO_CRT);
-
-    fs = formatted_string::parse_string(
-            "[<w>Enter</w>"
-#ifdef USE_TILE
-#ifndef TOUCH_UI
-            "/<w>L-Click</w>"
-#endif
-#endif
-            "] make purchase  [<w>\\</w>] list known items "
-            "[<w>?</w>] inventory  [<w>*</w>] invert selection");
-
-    fs.cprintf("%*s", get_number_of_cols() - fs.width() - 1, "");
+    fs = formatted_string::parse_string(keys.c_str());
     fs.display();
 }
-#endif
+
+//fs.cprintf("%*s", get_number_of_cols() - fs.width() - 1, "");
 
 static vector<int> _shop_get_stock(int shopidx)
 {
@@ -432,19 +234,18 @@ static int _shop_get_item_value(const item_def& item, int greed, bool id)
     return max(result, 1);
 }
 
-static string _shop_print_stock(const vector<int>& stock,
-                                const vector<bool>& selected,
-                                const vector<bool>& in_list,
-                                const shop_struct& shop,
-                                int total_cost, bool viewing
+static void _shop_print_stock(const vector<int>& stock,
+                              const vector<bool>& selected,
+                              const vector<bool>& in_list,
+                              const shop_struct& shop,
+                              int total_cost, bool viewing
 #ifdef USE_TILE_LOCAL
-                                , MenuFreeform* freeform
+                              , MenuFreeform* freeform
 #endif
-                                )
+                              )
 {
     ShopInfo &si  = StashTrack.get_shop(shop.pos);
     const bool id = shoptype_identifies_stock(shop.type);
-    string purchasable;
 #ifdef USE_TILE_LOCAL
     TextItem* tmp = NULL;
 #endif
@@ -456,8 +257,6 @@ static string _shop_print_stock(const vector<int>& stock,
 
         cgotoxy(1, i+1, GOTO_CRT);
         const char c = i + 'a';
-        if (can_afford)
-            purchasable += c;
 
         // Colour stock as follows:
         //  * lightcyan, if on the shopping list.
@@ -497,13 +296,12 @@ static string _shop_print_stock(const vector<int>& stock,
         if (shop_item_unknown(item))
             item_name += " (unknown)";
 
-        const int cols = get_number_of_cols();
-
-        cprintf("%s%5d gold", chop_string(item_name, cols-14).c_str(), gp_value);
+        cprintf("%4d gold   %s", gp_value, item_name.c_str());
 
         si.add_item(item, gp_value);
 
 #ifdef USE_TILE_LOCAL
+        const int cols = get_number_of_cols();
         tmp = new TextItem();
         tmp->set_highlight_colour(WHITE);
         tmp->set_text(""); // will print bounding box around formatted text
@@ -516,8 +314,6 @@ static string _shop_print_stock(const vector<int>& stock,
 #endif
     }
     textcolor(LIGHTGREY);
-
-    return purchasable;
 }
 
 static int _count_identical(const vector<int>& stock, const item_def& item)
@@ -542,14 +338,8 @@ static int _count_identical(const vector<int>& stock, const item_def& item)
 //  New, suggested shopping keys:
 //  * letter keys [a-t] (de)select item, as now
 //  * Enter buys (with prompt), as now
-//  * \ shows discovered items, as now
 //  * x exits (also Esc), as now
 //  * ! toggles examination mode (where letter keys view items)
-//  * *, ? lists inventory
-//
-//  For the ? key, the text should read:
-//  [!] switch to examination mode
-//  [!] switch to selection mode
 static bool _in_a_shop(int shopidx, int &num_in_list)
 {
     const shop_struct& shop = env.shop[shopidx];
@@ -637,18 +427,16 @@ static bool _in_a_shop(int shopidx, int &num_in_list)
             return bought_something;
         }
 
+        _shop_print_stock(stock, selected, in_list, shop, total_cost, viewing
 #ifdef USE_TILE_LOCAL
-        const string purchasable = _shop_print_stock(stock, selected, in_list,
-                                                     shop, total_cost, viewing,
-                                                     freeform);
-        _list_shop_keys(purchasable, viewing, stock.size(), num_selected,
-                        num_in_list, freeform);
-#else
-        const string purchasable = _shop_print_stock(stock, selected, in_list,
-                                                     shop, total_cost, viewing);
-        _list_shop_keys(purchasable, viewing, stock.size(), num_selected,
-                        num_in_list);
+                          , freeform
 #endif
+                          );
+        _list_shop_keys(viewing, stock.size()
+#ifdef USE_TILE_LOCAL
+                        , freeform
+#endif
+                        );
 
         // Cull shopping list after shop contents have been displayed, but
         // only once.
@@ -747,9 +535,7 @@ static bool _in_a_shop(int shopidx, int &num_in_list)
         int key = getchm();
 #endif
 
-        if (key == '\\')
-            check_item_knowledge();
-        else if (key == 'x' || key_is_escape(key) || key == CK_MOUSE_CMD)
+        if (toalower(key) == 'x' || key_is_escape(key) || key == CK_MOUSE_CMD)
             break;
 #ifdef USE_TILE_LOCAL
         else if (key == ' ' || key == CK_MOUSE_CLICK || key == CK_ENTER)
@@ -857,13 +643,11 @@ static bool _in_a_shop(int shopidx, int &num_in_list)
             //_shop_more();
             continue;
         }
-        else if (key == '!')
+        else if (key == '!' || key == '?')
         {
             // Toggle between browsing and shopping.
             viewing = !viewing;
         }
-        else if (key == '?')
-            get_invent(OSEL_ANY, false);
         else if (key == '$')
         {
             if (viewing || (num_selected == 0 && num_in_list == 0))
@@ -913,19 +697,6 @@ static bool _in_a_shop(int shopidx, int &num_in_list)
                 }
             }
         }
-        else if (key=='*')
-        {
-            total_cost = 0;
-            for (unsigned i = 0; i < selected.size(); ++i)
-            {
-                selected[i] = !selected[i];
-                if (selected[i])
-                {
-                    total_cost += _shop_get_item_value(mitm[stock[i]],
-                                                       shop.greed, id_stock);
-                }
-            }
-        }
         else if (!isaalpha(key))
         {
 #ifdef TOUCH_UI
@@ -937,6 +708,9 @@ static bool _in_a_shop(int shopidx, int &num_in_list)
         }
         else
         {
+            // Uppercase means toggle the item on the shopping list
+            // (unmarking for purchase if it was marked).
+            bool to_shoplist = isaupper(key);
             key = toalower(key) - 'a';
             if (key >= static_cast<int>(stock.size()))
             {
@@ -946,7 +720,7 @@ static bool _in_a_shop(int shopidx, int &num_in_list)
             }
 
             item_def& item = mitm[stock[key]];
-            if (viewing)
+            if (viewing && !to_shoplist)
             {
                 // A hack to make the description more useful.
                 // In theory, the user could kill the process at this
@@ -969,34 +743,38 @@ static bool _in_a_shop(int shopidx, int &num_in_list)
             {
                 const int gp_value = _shop_get_item_value(item, shop.greed,
                                                           id_stock);
-
                 if (in_list[key])
                 {
-                    if (gp_value > you.gold)
+                    if (to_shoplist)
                     {
-                        if (_shop_yesno("Remove from shopping list? (y/N)",
-                                         'n'))
-                        {
-                            shopping_list.del_thing(item);
-                            in_list[key]  = false;
-                            selected[key] = false;
-                        }
+                        shopping_list.del_thing(item);
+                        in_list[key] = false;
+                        selected[key] = false;
                         continue;
                     }
                     else
                     {
-                        if (_shop_yesno("Remove item from shopping list and "
-                                         "mark for purchase? (Y/n)",  'y'))
-                        {
-                            shopping_list.del_thing(item);
-                            in_list[key] = false;
-                            // Will be toggled to true later
-                            selected[key] = false;
-                        }
-                        else
-                            continue;
+                        shopping_list.del_thing(item);
+                        in_list[key]  = false;
+                        // Will be toggled to true later
+                        selected[key] = false;
                     }
                 }
+                else if (to_shoplist)
+                {
+                    in_list[key] = true;
+                    if (selected[key])
+                        total_cost -= gp_value;
+                    selected[key] = false;
+                    const int cost = _shop_get_item_value(item, shop.greed,
+                                                          id_stock);
+                    shopping_list.add_thing(item, cost);
+                    continue;
+                }
+
+                // Okay, we are now selecting an item normally, and it
+                // is not on the shopping list.
+                ASSERT(!in_list[key]);
 
                 selected[key] = !selected[key];
                 if (selected[key])
@@ -1073,10 +851,10 @@ int artefact_value(const item_def &item)
     // Brands are already accounted for via existing ego checks
 
     // This should probably be more complex... but this isn't so bad:
-    ret += 3 * prop[ ARTP_AC ] + 3 * prop[ ARTP_EVASION ]
-            + 3 * prop[ ARTP_ACCURACY ] + 3 * prop[ ARTP_DAMAGE ]
-            + 6 * prop[ ARTP_STRENGTH ] + 6 * prop[ ARTP_INTELLIGENCE ]
-            + 6 * prop[ ARTP_DEXTERITY ];
+    ret += 6 * prop[ ARTP_AC ] + 6 * prop[ ARTP_EVASION ]
+            + 3 * prop[ ARTP_ACCURACY ] + 6 * prop[ ARTP_DAMAGE ]
+            + 3 * prop[ ARTP_STRENGTH ] + 3 * prop[ ARTP_INTELLIGENCE ]
+            + 3 * prop[ ARTP_DEXTERITY ];
 
     // These resistances have meaningful levels
     if (prop[ ARTP_FIRE ] > 0)
@@ -1089,43 +867,37 @@ int artefact_value(const item_def &item)
     else if (prop[ ARTP_COLD ] < 0)
         ret -= 10;
 
-    // These normally come alone or in resist/susceptible pairs...
-    // we're making items a bit more expensive if they have both positive.
-    if (prop[ ARTP_FIRE ] > 0 && prop[ ARTP_COLD ] > 0)
-        ret += 20;
+    if (prop[ ARTP_MAGIC ] > 0)
+        ret += 4 + 4 * prop[ ARTP_MAGIC ];
+    else if (prop[ ARTP_MAGIC ] < 0)
+        ret -= 6;
 
     if (prop[ ARTP_NEGATIVE_ENERGY ] > 0)
-        ret += 5 + 5 * (prop[ARTP_NEGATIVE_ENERGY] * prop[ARTP_NEGATIVE_ENERGY]);
+        ret += 3 + 3 * (prop[ARTP_NEGATIVE_ENERGY] * prop[ARTP_NEGATIVE_ENERGY]);
 
     // only one meaningful level:
     if (prop[ ARTP_POISON ])
-        ret += 15;
+        ret += 6;
 
     // only one meaningful level (hard to get):
     if (prop[ ARTP_ELECTRICITY ])
-        ret += 30;
-
-    // magic resistance is from 35-100
-    if (prop[ ARTP_MAGIC ] > 0)
-        ret += 5 + prop[ ARTP_MAGIC ] / 15;
-    else if (prop[ ARTP_MAGIC ] < 0)
-        ret -= 5;
+        ret += 10;
 
     if (prop[ ARTP_EYESIGHT ])
-        ret += 10;
+        ret += 6;
 
     // abilities:
     if (prop[ ARTP_FLY ])
         ret += 3;
 
     if (prop[ ARTP_BLINK ])
-        ret += 3;
+        ret += 10;
 
     if (prop[ ARTP_BERSERK ])
         ret += 5;
 
     if (prop[ ARTP_INVISIBLE ])
-        ret += 20;
+        ret += 10;
 
     if (prop[ ARTP_ANGRY ])
         ret -= 3;
@@ -1148,6 +920,13 @@ int artefact_value(const item_def &item)
     // ranges from 1-3
     if (prop[ ARTP_METABOLISM ])
         ret -= (2 * prop[ ARTP_METABOLISM ]);
+
+    // extremely good
+    if (prop[ ARTP_FOG ])
+        ret += 50;
+
+    if (prop[ ARTP_RMSL ])
+        ret += 20;
 
     return (ret > 0) ? ret : 0;
 }
@@ -1173,11 +952,13 @@ unsigned int item_value(item_def item, bool ident)
     case OBJ_WEAPONS:
         switch (item.sub_type)
         {
+
         case WPN_CLUB:
             valued += 10;
             break;
 
         case WPN_SLING:
+        case WPN_STAFF:
             valued += 15;
             break;
 
@@ -1190,43 +971,41 @@ unsigned int item_value(item_def item, bool ident)
             break;
 
         case WPN_DAGGER:
-        case WPN_STAFF:
             valued += 20;
             break;
 
-        case WPN_WHIP:
         case WPN_BLOWGUN:
+        case WPN_HAMMER:
+        case WPN_WHIP:
             valued += 25;
             break;
 
+        case WPN_BOW:
         case WPN_HAND_AXE:
-            valued += 28;
-            break;
-
-        case WPN_HAMMER:
         case WPN_FALCHION:
         case WPN_MACE:
         case WPN_SCYTHE:
+        case WPN_SHORT_SWORD:
+        case WPN_SPEAR:
             valued += 30;
             break;
 
-        case WPN_BOW:
-            valued += 31;
-            break;
-
-        case WPN_SHORT_SWORD:
-        case WPN_SPEAR:
-            valued += 32;
-            break;
-
+        case WPN_BLESSED_FALCHION:
+        case WPN_WAR_AXE:
         case WPN_FLAIL:
+        case WPN_LONG_SWORD:
+        case WPN_TRIDENT:
             valued += 35;
             break;
 
-        case WPN_WAR_AXE:
-        case WPN_MORNINGSTAR:
+        case WPN_BLESSED_LONG_SWORD:
+        case WPN_BROAD_AXE:
         case WPN_CUTLASS:
+        case WPN_DIRE_FLAIL:
+        case WPN_HALBERD:
+        case WPN_MORNINGSTAR:
         case WPN_QUARTERSTAFF:
+        case WPN_SCIMITAR:
             valued += 40;
             break;
 
@@ -1234,71 +1013,43 @@ unsigned int item_value(item_def item, bool ident)
             valued += 41;
             break;
 
-        case WPN_TRIDENT:
-            valued += 42;
-            break;
-
-        case WPN_LONG_SWORD:
         case WPN_LONGBOW:
-        case WPN_SCIMITAR:
-        case WPN_BLESSED_FALCHION:
             valued += 45;
             break;
 
-        case WPN_BLESSED_LONG_SWORD:
-        case WPN_BLESSED_SCIMITAR:
-            valued += 50;
-
-        case WPN_HALBERD:
-            valued += 52;
-            break;
-
-        case WPN_GLAIVE:
-            valued += 55;
-            break;
-
-        case WPN_BROAD_AXE:
-        case WPN_GREAT_SWORD:
-            valued += 60;
-            break;
-
         case WPN_BATTLEAXE:
+        case WPN_GLAIVE:
         case WPN_GREAT_MACE:
-        case WPN_EVENINGSTAR:
+        case WPN_GREAT_SWORD:
             valued += 65;
             break;
 
-        case WPN_DIRE_FLAIL:
         case WPN_BARDICHE:
             valued += 90;
             break;
 
+        case WPN_CLAYMORE:
         case WPN_EXECUTIONERS_AXE:
             valued += 100;
             break;
 
         case WPN_BASTARD_SWORD:
-            valued += 100;
-            break;
-
+        case WPN_BLESSED_GREAT_SWORD:
+        case WPN_BLESSED_SCIMITAR:
         case WPN_DEMON_WHIP:
-            valued += 130;
-            break;
-
-        case WPN_QUICK_BLADE:
         case WPN_DEMON_TRIDENT:
+        case WPN_DEMON_BLADE:
+        case WPN_EVENINGSTAR:
+        case WPN_LAJATANG:
+        case WPN_QUICK_BLADE:
             valued += 150;
             break;
 
-        case WPN_DEMON_BLADE:
-        case WPN_CLAYMORE:
-        case WPN_EUDEMON_BLADE:
         case WPN_BLESSED_BASTARD_SWORD:
-        case WPN_BLESSED_GREAT_SWORD:
         case WPN_BLESSED_CLAYMORE:
+        case WPN_EUDEMON_BLADE:
         case WPN_SACRED_SCOURGE:
         case WPN_TRISHULA:
-        case WPN_LAJATANG:
             valued += 200;
             break;
         }
@@ -1312,98 +1063,44 @@ unsigned int item_value(item_def item, bool ident)
                 valued *= 10;
                 break;
 
-            case SPWPN_DRAINING:
-                valued *= 64;
-                break;
-
-            case SPWPN_VAMPIRICISM:
-                valued *= 60;
-                break;
-
-            case SPWPN_FLAME:
-            case SPWPN_FROST:
-            case SPWPN_HOLY_WRATH:
-                valued *= 50;
-                break;
-
-            case SPWPN_CHAOS:
             case SPWPN_SPEED:
-                valued *= 40;
+            case SPWPN_VAMPIRICISM:
+                valued *= 30;
                 break;
 
             case SPWPN_DISTORTION:
             case SPWPN_ELECTROCUTION:
             case SPWPN_PAIN:
-                valued *= 30;
-                break;
-
-            case SPWPN_FLAMING:
-            case SPWPN_FREEZING:
-            case SPWPN_DRAGON_SLAYING:
                 valued *= 25;
                 break;
 
-            case SPWPN_VENOM:
-                valued *= 23;
+            case SPWPN_CHAOS:
+            case SPWPN_DRAINING:
+            case SPWPN_FLAME:
+            case SPWPN_FLAMING:
+            case SPWPN_FREEZING:
+            case SPWPN_FROST:
+            case SPWPN_HOLY_WRATH:
+                valued *= 18;
                 break;
 
             case SPWPN_VORPAL:
-            case SPWPN_PROTECTION:
+                valued *= 15;
+                break;
+
+            case SPWPN_DRAGON_SLAYING:
             case SPWPN_EVASION:
-                valued *= 20;
+            case SPWPN_PROTECTION:
+            case SPWPN_VENOM:
+                valued *= 12;
                 break;
             }
 
-            valued /= 10;
-        }
-
-        if (get_equip_race(item) == ISFLAG_ELVEN
-            || get_equip_race(item) == ISFLAG_DWARVEN)
-        {
-            valued *= 12;
-            valued /= 10;
-        }
-
-        if (get_equip_race(item) == ISFLAG_ORCISH)
-        {
-            valued *= 8;
             valued /= 10;
         }
 
         if (item_ident(item, ISFLAG_KNOW_PLUSES))
-        {
-            if (item.plus >= 0)
-            {
-                valued += item.plus * 2;
-                valued *= 10 + 3 * item.plus;
-                valued /= 10;
-            }
-
-            if (item.plus2 >= 0)
-            {
-                valued += item.plus2 * 2;
-                valued *= 10 + 3 * item.plus2;
-                valued /= 10;
-            }
-
-            if (item.plus < 0)
-            {
-                valued -= 5;
-                valued += (item.plus * item.plus * item.plus);
-
-                if (valued < 1)
-                    valued = 1;
-            }
-
-            if (item.plus2 < 0)
-            {
-                valued -= 5;
-                valued += (item.plus2 * item.plus2 * item.plus2);
-
-                if (valued < 1)
-                    valued = 1;
-            }
-        }
+            valued += 10 * item.plus + 50 * item.plus2;
 
         if (is_artefact(item))
         {
@@ -1419,10 +1116,8 @@ unsigned int item_value(item_def item, bool ident)
         }
 
         if (item_known_cursed(item))
-        {
-            valued *= 6;
-            valued /= 10;
-        }
+            valued -= 30;
+
         break;
 
     case OBJ_MISSILES:          // ammunition
@@ -1461,38 +1156,35 @@ unsigned int item_value(item_def item, bool ident)
                 valued *= 10;
                 break;
 
-            case SPMSL_RETURNING:
-                valued *= 50;
-                break;
-
             case SPMSL_CHAOS:
                 valued *= 40;
                 break;
 
             case SPMSL_CURARE:
+            case SPMSL_PARALYSIS:
             case SPMSL_PENETRATION:
             case SPMSL_SILVER:
             case SPMSL_STEEL:
             case SPMSL_DISPERSAL:
-            case SPMSL_EXPLODING:
                 valued *= 30;
                 break;
 
             case SPMSL_FLAME:
             case SPMSL_FROST:
+            case SPMSL_SLEEP:
+            case SPMSL_CONFUSION:
                 valued *= 25;
                 break;
 
+            case SPMSL_EXPLODING:
             case SPMSL_POISONED:
-            case SPMSL_PARALYSIS:
+            case SPMSL_RETURNING:
             case SPMSL_SLOW:
-            case SPMSL_SLEEP:
-            case SPMSL_CONFUSION:
 #if TAG_MAJOR_VERSION == 34
             case SPMSL_SICKNESS:
 #endif
             case SPMSL_FRENZY:
-                valued *= 23;
+                valued *= 20;
                 break;
             }
 
@@ -1505,12 +1197,7 @@ unsigned int item_value(item_def item, bool ident)
                 valued += (item.plus * 2);
 
             if (item.plus < 0)
-            {
                 valued += item.plus * item.plus * item.plus;
-
-                if (valued < 1)
-                    valued = 1;
-            }
         }
         break;
 
@@ -1518,109 +1205,79 @@ unsigned int item_value(item_def item, bool ident)
         switch (item.sub_type)
         {
         case ARM_PEARL_DRAGON_ARMOUR:
-        case ARM_GOLD_DRAGON_ARMOUR:
-            valued += 1600;
+            valued += 1000;
             break;
 
         case ARM_PEARL_DRAGON_HIDE:
-        case ARM_GOLD_DRAGON_HIDE:
-            valued += 1400;
-            break;
-
-        case ARM_STORM_DRAGON_ARMOUR:
-            valued += 1050;
-            break;
-
-        case ARM_STORM_DRAGON_HIDE:
             valued += 900;
+            break;
+
+        case ARM_CRYSTAL_PLATE_ARMOUR:
+        case ARM_GOLD_DRAGON_ARMOUR:
+        case ARM_STORM_DRAGON_ARMOUR:
+            valued += 800;
+            break;
+
+        case ARM_GOLD_DRAGON_HIDE:
+        case ARM_STORM_DRAGON_HIDE:
+            valued += 700;
             break;
 
         case ARM_FIRE_DRAGON_ARMOUR:
         case ARM_ICE_DRAGON_ARMOUR:
-            valued += 750;
-            break;
-
-        case ARM_SWAMP_DRAGON_ARMOUR:
-            valued += 650;
+            valued += 600;
             break;
 
         case ARM_FIRE_DRAGON_HIDE:
-        case ARM_CRYSTAL_PLATE_ARMOUR:
-        case ARM_TROLL_LEATHER_ARMOUR:
         case ARM_ICE_DRAGON_HIDE:
+        case ARM_SWAMP_DRAGON_ARMOUR:
             valued += 500;
             break;
 
         case ARM_MOTTLED_DRAGON_ARMOUR:
+        case ARM_STEAM_DRAGON_ARMOUR:
         case ARM_SWAMP_DRAGON_HIDE:
             valued += 400;
             break;
 
-        case ARM_STEAM_DRAGON_ARMOUR:
         case ARM_MOTTLED_DRAGON_HIDE:
-            valued += 300;
-            break;
-
-        case ARM_PLATE_ARMOUR:
-            valued += 230;
-            break;
-
         case ARM_STEAM_DRAGON_HIDE:
-            valued += 200;
+            valued += 300;
             break;
 
         case ARM_CENTAUR_BARDING:
         case ARM_NAGA_BARDING:
+        case ARM_PLATE_ARMOUR:
+            valued += 230;
+            break;
+
+        case ARM_TROLL_LEATHER_ARMOUR:
             valued += 150;
             break;
 
-        case ARM_TROLL_HIDE:
-            valued += 130;
-            break;
-
         case ARM_CHAIN_MAIL:
-            valued += 110;
-            break;
-
-        case ARM_SCALE_MAIL:
-            valued += 83;
-            break;
-
-        case ARM_LARGE_SHIELD:
-            valued += 75;
-            break;
-
-        case ARM_SHIELD:
-            valued += 45;
-            break;
-
-        case ARM_RING_MAIL:
-            valued += 40;
-            break;
-
         case ARM_HELMET:
 #if TAG_MAJOR_VERSION == 34
         case ARM_CAP:
 #endif
-        case ARM_HAT:
+        case ARM_BOOTS:
+        case ARM_GLOVES:
+        case ARM_CLOAK:
+        case ARM_LARGE_SHIELD:
+        case ARM_SHIELD:
         case ARM_BUCKLER:
-            valued += 25;
+            valued += 45;
+            break;
+
+        case ARM_SCALE_MAIL:
+        case ARM_TROLL_HIDE:
+        case ARM_RING_MAIL:
+        case ARM_HAT:
+            valued += 40;
             break;
 
         case ARM_LEATHER_ARMOUR:
             valued += 20;
-            break;
-
-        case ARM_BOOTS:
-            valued += 15;
-            break;
-
-        case ARM_GLOVES:
-            valued += 12;
-            break;
-
-        case ARM_CLOAK:
-            valued += 10;
             break;
 
         case ARM_ROBE:
@@ -1637,29 +1294,11 @@ unsigned int item_value(item_def item, bool ident)
             const int sparm = get_armour_ego_type(item);
             switch (sparm)
             {
-            case SPARM_NORMAL:
-            default:
-                valued *= 10;
-                break;
-
-            case SPARM_ARCHMAGI:
-                valued *= 100;
-                break;
-
-            case SPARM_DARKNESS:
-            case SPARM_RESISTANCE:
-            case SPARM_REFLECTION:
-                valued *= 60;
-                break;
-
-            case SPARM_POSITIVE_ENERGY:
-                valued *= 50;
-                break;
-
-            case SPARM_MAGIC_RESISTANCE:
-            case SPARM_PROTECTION:
             case SPARM_RUNNING:
-                valued *= 40;
+            case SPARM_ARCHMAGI:
+            case SPARM_PRESERVATION:
+            case SPARM_RESISTANCE:
+                valued += 250;
                 break;
 
             case SPARM_COLD_RESISTANCE:
@@ -1669,55 +1308,28 @@ unsigned int item_value(item_def item, bool ident)
             case SPARM_INTELLIGENCE:
             case SPARM_FLYING:
             case SPARM_JUMPING:
-            case SPARM_PRESERVATION:
             case SPARM_STEALTH:
             case SPARM_STRENGTH:
-                valued *= 30;
+            case SPARM_DARKNESS:
+            case SPARM_MAGIC_RESISTANCE:
+            case SPARM_PROTECTION:
+                valued += 50;
                 break;
 
+            case SPARM_POSITIVE_ENERGY:
             case SPARM_POISON_RESISTANCE:
-                valued *= 20;
+            case SPARM_REFLECTION:
+                valued += 20;
                 break;
 
             case SPARM_PONDEROUSNESS:
-                valued /= 3;
+                valued -= 250;
                 break;
             }
-
-            valued /= 10;
-        }
-
-        if (get_equip_race(item) == ISFLAG_ELVEN
-            || get_equip_race(item) == ISFLAG_DWARVEN)
-        {
-            valued *= 12;
-            valued /= 10;
-        }
-
-        if (get_equip_race(item) == ISFLAG_ORCISH)
-        {
-            valued *= 8;
-            valued /= 10;
         }
 
         if (item_ident(item, ISFLAG_KNOW_PLUSES))
-        {
-            valued += 5;
-            if (item.plus >= 0)
-            {
-                valued += item.plus * 30;
-                valued *= 10 + 4 * item.plus;
-                valued /= 10;
-            }
-
-            if (item.plus < 0)
-            {
-                valued += item.plus * item.plus * item.plus;
-
-                if (valued < 1)
-                    valued = 1;
-            }
-        }
+            valued += 50 * item.plus;
 
         if (is_artefact(item))
         {
@@ -1730,15 +1342,13 @@ unsigned int item_value(item_def item, bool ident)
             valued += 20;
 
         if (item_known_cursed(item))
-        {
-            valued *= 6;
-            valued /= 10;
-        }
+            valued -= 30;
+
         break;
 
     case OBJ_WANDS:
         if (!item_type_known(item))
-            valued += 200;
+            valued += 40;
         else
         {
             // true if the wand is of a good type, a type with significant
@@ -1826,12 +1436,12 @@ unsigned int item_value(item_def item, bool ident)
                 valued += 350;
                 break;
 
-            case POT_MAGIC:
             case POT_RESISTANCE:
+            case POT_HASTE:
                 valued += 70;
                 break;
 
-            case POT_SPEED:
+            case POT_MAGIC:
             case POT_INVISIBILITY:
                 valued += 55;
                 break;
@@ -1840,14 +1450,13 @@ unsigned int item_value(item_def item, bool ident)
             case POT_HEAL_WOUNDS:
             case POT_RESTORE_ABILITIES:
             case POT_FLIGHT:
-            case POT_MUTATION:
-            case POT_LIGNIFY:
                 valued += 30;
                 break;
 
             case POT_MIGHT:
             case POT_AGILITY:
             case POT_BRILLIANCE:
+            case POT_MUTATION:
                 valued += 25;
                 break;
 
@@ -1855,6 +1464,7 @@ unsigned int item_value(item_def item, bool ident)
             case POT_DECAY:
             case POT_DEGENERATION:
             case POT_STRONG_POISON:
+            case POT_LIGNIFY:
                 valued += 20;
                 break;
 
@@ -1882,34 +1492,38 @@ unsigned int item_value(item_def item, bool ident)
             break;
 
         case FOOD_MEAT_RATION:
+            valued = 50;
+            break;
+
         case FOOD_BREAD_RATION:
-            valued = 40;
+            valued = 44;
             break;
 
         case FOOD_HONEYCOMB:
-            valued = 25;
+            valued = 20;
             break;
 
         case FOOD_BEEF_JERKY:
         case FOOD_PIZZA:
-            valued = 18;
+        case FOOD_SNOZZCUMBER:
+            valued = 15;
             break;
 
         case FOOD_CHEESE:
         case FOOD_SAUSAGE:
-            valued = 15;
+            valued = 12;
             break;
 
         case FOOD_LEMON:
         case FOOD_ORANGE:
         case FOOD_BANANA:
-            valued = 12;
+            valued = 10;
             break;
 
         case FOOD_APPLE:
         case FOOD_APRICOT:
         case FOOD_PEAR:
-            valued = 8;
+            valued = 7;
             break;
 
         case FOOD_CHUNK:
@@ -1919,11 +1533,13 @@ unsigned int item_value(item_def item, bool ident)
         case FOOD_CHOKO:
         case FOOD_LYCHEE:
         case FOOD_RAMBUTAN:
-        case FOOD_SNOZZCUMBER:
-            valued = 4;
+            valued = 6;
             break;
 
         case FOOD_STRAWBERRY:
+            valued = 2;
+            break;
+
         case FOOD_GRAPE:
         case FOOD_SULTANA:
             valued = 1;
@@ -1947,10 +1563,13 @@ unsigned int item_value(item_def item, bool ident)
                 valued += 200;
                 break;
 
+            case SCR_RECHARGING:
             case SCR_SUMMONING:
                 valued += 95;
                 break;
 
+            case SCR_BLINKING:
+            case SCR_ENCHANT_ARMOUR:
             case SCR_TORMENT:
             case SCR_HOLY_WORD:
             case SCR_SILENCE:
@@ -1958,15 +1577,12 @@ unsigned int item_value(item_def item, bool ident)
                 valued += 75;
                 break;
 
-            case SCR_RECHARGING:
-            case SCR_AMNESIA:
-            case SCR_ENCHANT_ARMOUR:
-            case SCR_ENCHANT_WEAPON_I:
             case SCR_ENCHANT_WEAPON_II:
-            case SCR_BLINKING:
                 valued += 55;
                 break;
 
+            case SCR_AMNESIA:
+            case SCR_ENCHANT_WEAPON_I:
             case SCR_FEAR:
             case SCR_IMMOLATION:
             case SCR_MAGIC_MAPPING:
@@ -1996,10 +1612,10 @@ unsigned int item_value(item_def item, bool ident)
 
     case OBJ_JEWELLERY:
         if (item_known_cursed(item))
-            valued -= 10;
+            valued -= 30;
 
         if (!item_type_known(item))
-            valued += 250;
+            valued += 50;
         else
         {
             // Variable-strength rings.
@@ -2051,6 +1667,7 @@ unsigned int item_value(item_def item, bool ident)
                     valued += 500;
                     break;
 
+                case AMU_FAITH:
                 case AMU_RESIST_MUTATION:
                 case AMU_RAGE:
                     valued += 400;
@@ -2059,22 +1676,21 @@ unsigned int item_value(item_def item, bool ident)
                 case RING_INVISIBILITY:
                 case RING_REGENERATION:
                 case RING_WIZARDRY:
-                case AMU_FAITH:
+                case AMU_GUARDIAN_SPIRIT:
+                case AMU_CONSERVATION:
                 case AMU_THE_GOURMAND:
                     valued += 300;
                     break;
 
+                case RING_FIRE:
+                case RING_ICE:
                 case RING_PROTECTION_FROM_COLD:
                 case RING_PROTECTION_FROM_FIRE:
                 case RING_PROTECTION_FROM_MAGIC:
-                case AMU_GUARDIAN_SPIRIT:
-                case AMU_CONSERVATION:
                     valued += 250;
                     break;
 
                 case RING_MAGICAL_POWER:
-                case RING_FIRE:
-                case RING_ICE:
                 case RING_LIFE_PROTECTION:
                 case RING_POISON_RESISTANCE:
                 case AMU_CLARITY:
@@ -2129,30 +1745,24 @@ unsigned int item_value(item_def item, bool ident)
             valued += 5000;
             break;
 
-        case MISC_DISC_OF_STORMS:
-            valued += 2000;
-            break;
-
-        case MISC_SACK_OF_SPIDERS:
-            valued += 400;
-            break;
-
         case MISC_FAN_OF_GALES:
         case MISC_STONE_OF_TREMORS:
         case MISC_PHIAL_OF_FLOODS:
         case MISC_LAMP_OF_FIRE:
-            valued += 1000;
+            valued += 400;
             break;
 
         case MISC_BOX_OF_BEASTS:
-            valued += 500;
+        case MISC_DISC_OF_STORMS:
+        case MISC_SACK_OF_SPIDERS:
+            valued += 200;
             break;
 
         default:
             if (is_deck(item))
-                valued += 200 + item.special * 150;
+                valued += 80 + item.special * 60;
             else
-                valued += 500;
+                valued += 200;
         }
         break;
 
@@ -2215,11 +1825,8 @@ unsigned int item_value(item_def item, bool ident)
     case OBJ_RODS:
         if (!item_type_known(item))
             valued = 120;
-        else if (item.sub_type == ROD_STRIKING
-                 || item.sub_type == ROD_WARDING)
-        {
+        else if (item.sub_type == ROD_STRIKING)
             valued = 150;
-        }
         else
             valued = 250;
         if (item_ident(item, ISFLAG_KNOW_PLUSES))
@@ -2378,8 +1985,8 @@ static string _shop_type_name(shop_type type)
             return "Armour";
         case SHOP_JEWELLERY:
             return "Jewellery";
-        case SHOP_WAND:
-            return "Magical Wand";
+        case SHOP_EVOKABLES:
+            return "Gadget";
         case SHOP_BOOK:
             return "Book";
         case SHOP_FOOD:
@@ -2392,8 +1999,6 @@ static string _shop_type_name(shop_type type)
             return "Distillery";
         case SHOP_GENERAL:
             return "General Store";
-        case SHOP_MISCELLANY:
-            return "Gadget";
         default:
             return "Bug";
     }
@@ -2968,13 +2573,24 @@ void ShoppingListMenu::draw_title()
 #ifdef USE_TILE_WEB
         webtiles_set_title(fs);
 #endif
+        string s = "<lightgrey>  [<w>a-z</w>] ";
 
-        const char *verb = menu_action == ACT_EXECUTE ? "travel" :
-                           menu_action == ACT_EXAMINE ? "examine" :
-                                                        "delete";
-        draw_title_suffix(formatted_string::parse_string(make_stringf(
-            "<lightgrey>  [<w>a-z</w>: %-8s <w>?</w>/<w>!</w>: change action]",
-            verb)), false);
+        switch (menu_action)
+        {
+        case ACT_EXECUTE:
+            s += "<w>travel</w>|examine|delete";
+            break;
+        case ACT_EXAMINE:
+            s += "travel|<w>examine</w>|delete";
+            break;
+        default:
+            s += "travel|examine|<w>delete</w>";
+            break;
+        }
+
+        s += "  [<w>?</w>/<w>!</w>] change action</lightgrey>";
+
+        draw_title_suffix(formatted_string::parse_string(s), false);
     }
 }
 

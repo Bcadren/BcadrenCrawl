@@ -299,7 +299,7 @@ NAME:    hangedman_swamp_wriggling
 TAGS:    no_pool_fixup no_monster_gen patrolling transparent
 DEPTH:   Swamp:1-4
 KMONS:   0 = swamp worm
-MONS:    giant leech, spiny worm
+MONS:    giant leech, worm
 KFEAT:   0 = shallow_water
 KFEAT:   t = mangrove
 SHUFFLE: })
@@ -346,7 +346,7 @@ NAME:    hangedman_swamp_muck
 TAGS:    no_pool_fixup no_monster_gen patrolling transparent
 DEPTH:   Swamp:1-4
 KMONS:   1 = slime creature
-KMONS:   2 = giant amoeba
+KMONS:   2 = slime creature / brown ooze
 KMONS:   3 = brown ooze
 KFEAT:   t = mangrove
 KFEAT:   12 = shallow_water
@@ -392,7 +392,7 @@ KMONS:   b = green draconian caller w:15 / yellow draconian caller w:1 / \
 KMONS:   B = green draconian zealot w:15 / yellow draconian zealot w:1 / \
              white draconian zealot w:1 / grey draconian zealot w:1 / \
              pale draconian zealot w:1 / purple draconian zealot w:1
-KMONS:   % = rotting devil / orange demon
+KMONS:   % = necrophage / orange demon
 KMONS:   *d = swamp dragon w:8 / seven-headed hydra w:5 / eight-headed hydra w:5
 KMONS:   | = large abomination / tentacled monstrosity w:5
 SHUFFLE: AB%| / abd*
@@ -703,7 +703,7 @@ SUBST: q = tW., r = W., W = zWW
 # Necromancer gets the spell set without bolt of fire so he doesn't torch the place.
 MONS: necromancer actual_spells spells:bolt_of_cold;bolt_of_draining;animate_dead;simulacrum
 KMONS: z = big fish zombie / swamp drake zombie / swamp worm zombie / \
-        water moccasin zombie / agate snail zombie / swamp dragon zombie / \
+        water moccasin zombie / swamp dragon zombie / \
         komodo dragon zombie / red wasp zombie / alligator zombie / \
         crocodile zombie / hydra zombie / giant leech zombie / hydra zombie / \
         alligator simulacrum w:1 / swamp drake simulacrum w:1 / \
@@ -1098,6 +1098,372 @@ ttWWtttttttttt
 ..ttttt
 ttttttt
 ttttttt
+ENDMAP
+
+NAME:    cheibrodos_swamp_mausoleum
+TAGS:    no_item_gen no_monster_gen no_pool_fixup
+DEPTH:   Swamp, !Swamp:$
+ORIENT:  south
+WEIGHT:  5
+MONS:    spectral hydra, spectral swamp dragon, death drake, necromancer
+MONS:    bog body w:8 / w:5 shadow / w:5 wraith / w:3 phantasmal warrior / \
+         w:1 freezing wraith
+KMONS:   6 = bog body / spriggan zombie w:4 / troll zombie w:4
+KMONS:   7 = large abomination w:2 / swamp worm zombie / giant leech zombie / \
+             alligator zombie w:6 / spiny frog zombie w:6
+KMONS:   q = w:2 col:darkgrey plant name:withered name_adjective              \
+              tile:mons_withered_plant / w:1 col:lightgrey plant name:withered \
+              name_adjective tile:mons_withered_plant
+KFEAT:   67 = W
+KFEAT:   t = mangrove
+KPROP:   ~ = no_rtele_into
+SUBST:   1 = 12, " = 6:15 W
+SHUFFLE: DE
+SUBST:   D = W, E = t, W = W:299 .:1, + = ++W, - = +, ~ = W
+MARKER:  V = lua:fog_machine { cloud_type = "thin mist", pow_min = 1, \
+             pow_max = 3, delay = 20, start_clouds = 1, size_min = 2, \
+             size_max = 4, spread_rate = -1 }
+SUBST:   u = V
+MAP
+ tttttt   tttttttttt
+ ttt..tt t~tt.tt.t.tttt
+txxx.Wtttttt.5..u.WWWttt  xxxxxx
+xxx.WWW..t..5.W..WW7tttttxxx%%xxx
+x"+.W-W...u..W7WW7WWWWuttx6+..+6x
+xxxWWxW7W...tttWWW7WWWWWDDxx..xxx
+x"+WWW7WtWttWxxxxEEEWWW7WDW+..+6x
+xxxWWxWxtWWtxxtWtWWEEW..Wxxx..xxx
+x"WWW+WxWWWxxDWWWWtWEx..Wx"+.W+"x
+xxxWWxxxWttx.DDDWWW7tx.WWxxxWWxxxtt
+xxx.WWxxxxxx..WDDW7WtxWWWxxxWWxxxWtW
+x....WWWW..+...WDDWWxxtWtt7WWWWWtWW@
+x......W...+...WuDWWxxxttWW7WWWWWW..
+xxx..xxxxxxx..WW.tDWWxxxxxxxWWxxWtW@
+xxx..xxxWWxxWWWt..DDEEtttxxxWWxxxtt
+x6+..+6xWWWxxxW....xxEEWWW5-WW-"xt~
+xxx..xxxq..qxx.....xxtW5WWxxWWxxxt
+x6+..-.q..|..xx...xxttWW5WWWWWW"x
+xxx..xxx...qq3x+++xttttWWWWWWWxxx
+x6+..+6xq..xxxx...xxxxttWxW..W+"x
+xxx%%xxxxxxxx.......xxxxxxxx..xxx
+ xxxxxxt~xx...1.1.1...xxt~xxxxxx
+   ttttt~xV....141....Vx~tt~ttt
+      tttxx%....1....%xx~ttt
+       tttxxx*.....*xxx~~tt
+        tttxxxx|W|xxxx~ttt
+         ttt~xxxxxxx~~tt
+          tttt~~t~~tttt
+            ttttttttt
+ENDMAP
+
+NAME:  cheibrodos_swamp_kobolds
+TAGS:  no_item_gen no_monster_gen
+DEPTH: Swamp, !Swamp:$
+MONS:  kobold demonologist
+ITEM:  book of callings, book of summonings
+SUBST: ' = %:20 d:1 e:1
+MAP
+        WWW
+       WxxxW
+      Wxx'xxW
+      Wx.1'xW
+    WWWx+.xxW
+  WWWW..xxxW
+ Wxxx..WWWWW
+Wxx.+xW..WW
+Wx'1.xWWW@
+Wxx'xxWWW
+ WxxxWW
+  WWW
+ENDMAP
+
+NAME:  cheibrodos_swamp_pet_leeches
+TAGS:  no_item_gen no_monster_gen
+DEPTH: Swamp:1-4
+MONS:  vampire ; potion of blood . long sword . robe, giant leech
+KFEAT: t = mangrove
+KPROP: e' = no_rtele_into
+KPROP: .21 = bloody / w:30 nothing
+KPROP: e = bloody
+: dgn.delayed_decay(_G, 'e', 'human corpse')
+MAP
+ ttttt
+tt''ett
+txxmxxt
+tx.1.xt
+tx2.2xt
+tx...xt
+txx+xxt
+ tt@tt
+ENDMAP
+
+NAME:  cheibrodos_swamp_minitomb
+TAGS:  no_item_gen no_monster_gen mini_float
+DEPTH: Swamp
+KFEAT: t = mangrove
+KMONS: - = bog body w:20 / troll zombie / troll skeleton / shadow w:5
+KITEM: - = w:5 gold / w:2 any jewellery / w:20 nothing
+SUBST: ' = .W
+MAP
+  W@WWtW
+tWWWWtxW
+xtWWWtxx
+xtWWW+-x
+xxxWWxxx
+x-+WW+-x
+xxxW'xxx
+x-+'.+-x
+xxx..xxx
+x-+..+-x
+xxxxxxxx
+ xxxxxx
+ENDMAP
+
+NAME:  cheibrodos_swamp_slimy
+TAGS:  no_item_gen no_monster_gen
+DEPTH: Swamp
+KFEAT: t = mangrove
+MONS:  slime creature
+MAP
+   tcGct
+tttc111cttt
+@...1U1...@
+tttc111cttt
+   tcGct
+ENDMAP
+
+NAME: wheals_swamp_sinkhole
+DEPTH: Swamp, !Swamp:$
+TAGS: extra no_monster_gen
+KFEAT: t = mangrove
+KFEAT: ^ = known shaft trap
+SUBST: u = Ww
+MAP
+ttttttttt
+twwwwwwwt
+twuuuuuwt
+twuWWWuwt
+twuW^Wuwt
+twuWWWuwt
+twuuuuuwt
+@wwwwwwwt
+ttttttttt
+ENDMAP
+
+####
+
+NAME: nicolae_swamp_spriggan_camp
+DEPTH: Swamp
+SHUFFLE: Ff/Gg/Hh/Ii
+SUBST: ghi = .
+KMONS: D = patrolling spriggan rider
+KMONS: SGHI = spriggan / nothing
+KMONS: F = spriggan druid
+KITEM: f = potion of porridge / bread ration / apple / banana
+KFEAT: t = mangrove
+MAP
+       ttttt
+  ttttttgggt
+ @.ttt.t.G.t
+@......tt.tt
+t...D..S...t
+tttt.......tt
+ ttt.S..S...t
+ tt......tt.t
+tttt.tt.tt..t
+ti...t...tH.t
+tiI..t.F.thht
+ti...tffftttt
+tttttttttt
+ENDMAP
+
+NAME: nicolae_swamp_thorn_lake
+DEPTH: Swamp
+TAGS: transparent
+SUBST: b = W.
+NSUBST: W = 3:1 / *:W, . = 1:2 / *:.
+KMONS: 1 = thorn lotus
+KMONS: 2 = thorn hunter
+KFEAT: 1 = W
+KFEAT: t = mangrove
+MAP
+  t@@t
+  t..tt
+  tt..t    ttt
+   t..tt ttt.@
+   tt..ttt...@
+    t..t....tt
+   ttt....ttt
+ ttt....ttt
+tt....t..t
+@...ttt..tt
+@.tttttt..t
+tttttttt..tt
+  tt.......t
+ tt........t
+tt...bbb...tt
+t...bbWbb...t
+t..bbWWWbb..t
+t..bWWWWWb..t
+t..bbWWWbb..t
+t...bbWbb...t
+tt...bbb...tt
+ tt.......tt
+  tt.....tt
+   ttttttt
+ENDMAP
+
+NAME: nicolae_swamp_game_of_thorns
+DEPTH: Swamp
+TAGS: no_monster_gen transparent
+NSUBST: h = 2:h / *:.
+NSUBST: l = 3:l / *:W
+SUBST: T = t., W = WWWWw, q = W.
+KMONS: h = thorn hunter
+KMONS: l = thorn lotus
+KFEAT: l = W
+KFEAT: t = mangrove
+MAP
+      ttttt
+    TtTTTtttT
+   ....q.TTqTTTT
+  @..hWT.WWWl.qT
+ T.T..qWWqqWWTTT
+TT..WWWqT.TW.q.T
+t.TqWlq..T..W..tt
+t.TTWWWq.Wqh.W.Tt
+tqWW...WWqWWWq.Tt
+tWqh.WWq..WlWq..t
+tT..Wq.TT.qWWWWqt
+tT..W..h.WWq..qWt
+tTTTTWlWWTTTWlW.t
+tT...WWWWTTTWWT.T
+ T.q.h..qW..TT..
+ TT.qt.qWq.h..@
+  TT.tTTq....q
+   TTtttTTTtTT
+      ttttt
+ENDMAP
+
+NAME: nicolae_swamp_oklob_treasure_island
+DEPTH: Swamp
+TAGS: no_pool_fixup
+SHUFFLE: Aa/Bb/Cc/Dd/Ee/Ff/Gg/Hh/Ii, %*$
+NSUBST: ' = 1:^ / 1:o / *:'
+SUBST: abcde = w, fghi = t, ABCDE = .wW, FGHI = .t, ' = ':100 $$$%%, \
+       _ = .._, . = ......W
+KFEAT: ^ = teleport trap
+KMONS: o = oklob plant
+KFEAT: t = mangrove
+CLEAR: _
+MAP
+       _____
+     __.....__
+    _........._
+   _...GGFFF..._
+  _...GggfffF..._
+ _...GggGFFffF..._
+ _..GggG'''FeeE.._
+_..AaaA'''''EeeE.._
+_..AaA'''''''EeE.._
+_..AaA'''''''EeE.._
+_..AaA'''''''DdD.._
+_..BbbB'''''DddD.._
+ _..BbbB'''DddD.._
+ _...BbbCCCcdD..._
+  _...BbccccC..._
+   _...BCCCC..._
+    _........._
+     __.....__
+       _____
+ENDMAP
+
+NAME: nicolae_swamp_triple_paths
+DEPTH: Swamp
+TAGS: transparent extra decor
+SUBST: R = tr, T = t_
+KFEAT: r = tree
+KFEAT: t = mangrove
+CLEAR: _
+MAP
+         TR@RT
+         TR.RT
+     @TTTTR.RTTTT@
+    T..RRRR.RRRR..T
+    TT....r.r....TT
+     TRRR.r.r.RRRT
+    TTttR.r.r.RttTT
+TTTTTtttR.r.r.RtttTTTTT
+ttttttttR.r.r.Rtttttttt
+TTTTTtttR.r.r.RtttTTTTT
+    TTttR.r.r.RttTT
+     TRRR.r.r.RRRT
+    TT....r.r....TT
+    T..RRRR.RRRR..T
+     @TTTtR.RtTTT@
+        TTR.RTT
+         TR@RT
+ENDMAP
+
+NAME: nicolae_swamp_godswood
+DEPTH: Swamp
+TAGS: transparent extra decor
+KFEAT: t = mangrove
+MAP
+ttt     ttt
+..ttttttt..
+@...ttt...@
+.tt..t..tt.
+tttt...tttt
+ tt..t..tt
+ t.......t
+ tt..w..tt
+  t.www.t
+ tt..w..tt
+ t...C...t
+ tt..t..tt
+  tt...tt
+   ttttt
+ENDMAP
+
+NAME: nicolae_swamp_orc_logging_accident
+DEPTH: Swamp
+PLACE: Swamp:3
+TAGS: decor extra no_monster_gen no_trap_gen
+SUBST: F = 't, T = _t
+NSUBST: p = 4:p / *:., ' = o / '
+SUBST: . = ...b
+KPROP: bp = bloody
+SUBST: b = .
+{{
+dgn.delayed_decay_extra(_G, 'o', 'orc corpse', 'hand axe / broad axe, ' ..
+   'leather armour / pair of gloves, mundane quarterstaff')
+dgn.delayed_decay_extra(_G, 'p', 'orc corpse', 'hand axe / broad axe, ' ..
+   'leather armour / pair of gloves')
+}}
+KITEM: w = mundane quarterstaff
+KITEM: s = meat ration / bread ration
+KFEAT: t = mangrove
+KFEAT: 'o = W
+CLEAR:  _
+MAP
+       TTTTT
+     TTtttttTTT
+    TttttFFttttTT
+   TttttFF'FtttttT
+  TtttttF'''FtttttT
+ TtttttttF''FttttttT
+ Ttt.p........p.ttttT
+TTt..xxxx........tptT
+Tttp.xwwx...xxmx...tT
+Tt...xww+...xpsx...tT
+Tt.p.xwwxp..+.sm.p.tT
+Tt...xxxx...x.sx..ttT
+Tt..p.......xxmx..tTT
+Ttt.....p......p.ttT
+TTtttt..........ttTT
+ TTTTtttt@@ttttttTT
+    TTTT     TTTTT
 ENDMAP
 
 ###############################################################################

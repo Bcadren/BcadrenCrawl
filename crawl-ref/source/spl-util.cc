@@ -1227,6 +1227,7 @@ bool spell_no_hostile_in_range(spell_type spell)
     case SPELL_GOLUBRIAS_PASSAGE:
     case SPELL_LRD:
     case SPELL_FULMINANT_PRISM:
+    case SPELL_SUMMON_LIGHTNING_SPIRE:
 
     // Shock and Lightning Bolt are no longer here, as the code below can
     // account for possible bounces.
@@ -1278,6 +1279,8 @@ bool spell_no_hostile_in_range(spell_type spell)
     zap_type zap = spell_to_zap(spell);
     if (spell == SPELL_FIREBALL)
         zap = ZAP_FIREBALL;
+    else if (spell == SPELL_RANDOM_BOLT) // don't let it think that there are no susceptible monsters in range
+        zap = ZAP_DEBUGGING_RAY;
 
     if (zap != NUM_ZAPS)
     {

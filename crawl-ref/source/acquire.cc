@@ -655,30 +655,40 @@ static int _acquirement_staff_subtype(const has_vector& already_has)
     return result;
 }
 
+/**
+ * Return a miscellaneous evokable item for acquirement.
+ * @returns  The item type chosen.
+ */
 static int _acquirement_misc_subtype()
 {
-    // Note: items listed early are less likely due to chances of being
-    // overwritten.
-    int result = random_range(MISC_FIRST_DECK, MISC_LAST_DECK);
-    if (result == MISC_DECK_OF_SUMMONING && coinflip())
-        result = MISC_SACK_OF_SPIDERS;
-    if (result == MISC_DECK_OF_PUNISHMENT)
-        result = MISC_BOX_OF_BEASTS;
-    if (one_chance_in(4) && !you.seen_misc[MISC_DISC_OF_STORMS])
-        result = MISC_DISC_OF_STORMS;
-    if (one_chance_in(4) && !you.seen_misc[MISC_LAMP_OF_FIRE])
-        result = MISC_LAMP_OF_FIRE;
-    if (one_chance_in(4) && !you.seen_misc[MISC_FAN_OF_GALES])
-        result = MISC_FAN_OF_GALES;
-    if (one_chance_in(4) && !you.seen_misc[MISC_STONE_OF_TREMORS])
-        result = MISC_STONE_OF_TREMORS;
-    if (one_chance_in(4) && !you.seen_misc[MISC_PHIAL_OF_FLOODS])
-        result = MISC_PHIAL_OF_FLOODS;
-    if (one_chance_in(4) && !you.seen_misc[MISC_LANTERN_OF_SHADOWS])
-        result = MISC_LANTERN_OF_SHADOWS;
-    if (x_chance_in_y(you.skills[SK_EVOCATIONS], 27)
-        && (x_chance_in_y(max(you.skills[SK_SPELLCASTING],
-                              you.skills[SK_INVOCATIONS]), 27))
+    // Total weight if none have been seen is 100.
+    int result = random_choose_weighted(              // Decks given lowest weight.
+                                                      2, MISC_DECK_OF_DUNGEONS,
+                                                      2, MISC_DECK_OF_WAR,
+                                                      2, MISC_DECK_OF_CHANGES,
+                                                      2, MISC_DECK_OF_DEFENCE,
+                                                      // The player might want
+                                                      // multiple of these.
+       (you.seen_misc[MISC_LAMP_OF_FIRE] ?       8 : 15), MISC_LAMP_OF_FIRE,
+       (you.seen_misc[MISC_PHIAL_OF_FLOODS] ?    8 : 15), MISC_PHIAL_OF_FLOODS,
+       (you.seen_misc[MISC_FAN_OF_GALES] ?       8 : 15), MISC_FAN_OF_GALES,
+       (you.seen_misc[MISC_STONE_OF_TREMORS] ?   8 : 15), MISC_STONE_OF_TREMORS,
+                                                      // These have charges, so
+                                                      // give them a constant
+                                                      // weight.
+                                                      8, MISC_BOX_OF_BEASTS,
+                                                      8, MISC_SACK_OF_SPIDERS,
+                                                      // The player never needs
+                                                      // more than one.
+       (you.seen_misc[MISC_DISC_OF_STORMS] ?     0 :  8), MISC_DISC_OF_STORMS,
+       (you.seen_misc[MISC_LANTERN_OF_SHADOWS] ? 0 :  8), MISC_LANTERN_OF_SHADOWS,
+                                                      0);
+
+    // Give a crystal ball based on both evocations and either spellcasting or
+    // invocations if we haven't seen one.
+    int skills = you.skills[SK_EVOCATIONS]
+        * max(you.skills[SK_SPELLCASTING], you.skills[SK_INVOCATIONS]);
+    if (x_chance_in_y(skills, MAX_SKILL_LEVEL * MAX_SKILL_LEVEL)
         && !you.seen_misc[MISC_CRYSTAL_BALL_OF_ENERGY])
     {
         result = MISC_CRYSTAL_BALL_OF_ENERGY;
@@ -795,7 +805,15 @@ static int _find_acquirement_subtype(object_class_type &class_wanted,
         case OBJ_WANDS:      type_wanted = _acquirement_wand_subtype(); break;
         case OBJ_STAVES:     type_wanted = _acquirement_staff_subtype(already_has);
             break;
+#if TAG_MAJOR_VERSION == 34
+        case OBJ_RODS:
+            do
+                type_wanted = random2(NUM_RODS);
+            while (type_wanted == ROD_WARDING || type_wanted == ROD_VENOM);
+            break;
+#else
         case OBJ_RODS:       type_wanted = random2(NUM_RODS); break;
+#endif
         case OBJ_JEWELLERY:  type_wanted = _acquirement_jewellery_subtype();
             break;
         default: break;         // gold, books
@@ -1178,8 +1196,7 @@ int acquirement_create_item(object_class_type class_wanted,
             want_arts = false;
 
         thing_created = items(want_arts, class_wanted, type_wanted, true,
-                               ITEM_LEVEL, MAKE_ITEM_RANDOM_RACE,
-                               0, 0, agent);
+                              ITEM_LEVEL, 0, 0, 0, agent);
 
         if (thing_created == NON_ITEM)
             continue;
@@ -1243,8 +1260,7 @@ int acquirement_create_item(object_class_type class_wanted,
                 {
                     destroy_item(thing_created, true);
                     thing_created = items(true, OBJ_ARMOUR, at, true,
-                               ITEM_LEVEL, MAKE_ITEM_RANDOM_RACE,
-                               0, 0, agent);
+                                          ITEM_LEVEL, 0, 0, 0, agent);
                 }
                 else if (agent != GOD_XOM && one_chance_in(3))
                 {
@@ -1256,10 +1272,6 @@ int acquirement_create_item(object_class_type class_wanted,
                 }
             }
         }
-
-        // bias racial make towards the player
-        if (!is_artefact(doodad))
-            maybe_set_item_race(doodad, get_species_race(you.species), 3);
 
         if (doodad.base_type == OBJ_WEAPONS
                && !can_wield(&doodad, false, true)
@@ -1431,9 +1443,9 @@ int acquirement_create_item(object_class_type class_wanted,
         }
         else if (is_deck(doodad))
         {
-            doodad.special = !one_chance_in(3) ? DECK_RARITY_LEGENDARY :
-                             !one_chance_in(5) ? DECK_RARITY_RARE :
-                                                 DECK_RARITY_COMMON;
+            // Non-legendary decks aren't very useful for non-nemelexites
+            // and nemelexites get plenty of lower-quality decks anyway.
+            doodad.special = DECK_RARITY_LEGENDARY;
         }
 
         // Last check: don't acquire items your god hates.

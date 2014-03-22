@@ -126,7 +126,6 @@ abjuration ABJURATION
 mass_abjuration MASS_ABJURATION
 call_canine_familiar CALL_CANINE_FAMILIAR
 call_imp CALL_IMP
-demonic_horde DEMONIC_HORDE
 malign_gateway MALIGN_GATEWAY
 recall RECALL
 sticks_to_snakes STICKS_TO_SNAKES
@@ -138,10 +137,15 @@ summon_greater_demon SUMMON_GREATER_DEMON
 summon_horrible_things SUMMON_HORRIBLE_THINGS
 summon_hydra SUMMON_HYDRA
 summon_ice_beast SUMMON_ICE_BEAST
-summon_scorpions SUMMON_SCORPIONS
 summon_shadow_creatures SUMMON_SHADOW_CREATURES
 summon_small_mammal SUMMON_SMALL_MAMMAL
-summon_ugly_thing SUMMON_UGLY_THING
+summon_lightning_spire SUMMON_LIGHTNING_SPIRE
+summon_guardian_golem SUMMON_GUARDIAN_GOLEM
+summon_forest SUMMON_FOREST
+monstrous_menagerie MONSTROUS_MENAGERIE
+summon_mana_viper SUMMON_MANA_VIPER
+forceful_dismissal FORCEFUL_DISMISSAL
+spellforged_servitor SPELLFORGED_SERVITOR
 
 %sdir gui/spells/translocation
 apportation APPORTATION
@@ -168,6 +172,13 @@ error BOLT_OF_INACCURACY
 error SUMMON_SWARM
 error THUNDERBOLT
 error MELEE
+error EXPLOSIVE_BOLT
+%sdir gui/spells/air
+cloud_cone CLOUD_CONE
+%sdir gui/spells/summoning
+summon_shadow_creatures WEAVE_SHADOWS
+%sdir misc
+error RANDOM_BOLT
 
 # spells normally only used by monsters
 %sdir gui/spells/monster
@@ -175,6 +186,8 @@ air_elementals AIR_ELEMENTALS
 %sdir misc
 error AWAKEN_FOREST
 error AWAKEN_VINES
+error BLACK_MARK
+error BLINK_ALLIES_AWAY
 error BLINK_ALLIES_ENCIRCLE
 error BLINK_AWAY
 error BLINK_CLOSE
@@ -183,6 +196,7 @@ blink_other BLINK_OTHER
 %sdir misc
 error BLINK_OTHER_CLOSE
 error BLINK_RANGE
+error BLINKBOLT
 %sdir gui/spells/monster
 brain_feed BRAIN_FEED
 %sdir misc
@@ -191,12 +205,16 @@ error CALL_TIDE
 %sdir gui/spells/monster
 cantrip CANTRIP
 %sdir misc
+error CHAIN_OF_CHAOS
 error CHAOS_BREATH
+error CHAOTIC_MIRROR
 %sdir gui/spells/monster
 cold_breath COLD_BREATH
 %sdir misc
 error CONTROL_WINDS
+error CORRUPT_BODY
 error CREATE_TENTACLES
+error CRYSTAL_BOLT
 error DIMENSION_ANCHOR
 error DISINTEGRATE
 error DRACONIAN_BREATH
@@ -206,6 +224,7 @@ earth_elementals EARTH_ELEMENTALS
 %sdir misc
 error ENERGY_BOLT
 error ENSNARE
+error EPHEMERAL_INFUSION
 %sdir gui/spells/monster
 fake_mara_summon FAKE_MARA_SUMMON
 fake_rakshasa_summon FAKE_RAKSHASA_SUMMON
@@ -213,8 +232,11 @@ fire_breath FIRE_BREATH
 fire_elementals FIRE_ELEMENTALS
 %sdir misc
 error FIRE_SUMMON
+error FLASH_FREEZE
+error FORCEFUL_INVITATION
 error GHOSTLY_FIREBALL
 error GHOSTLY_FLAMES
+error GRAND_AVATAR
 %sdir gui/spells/monster
 haste_other HASTE_OTHER
 %sdir misc
@@ -225,11 +247,14 @@ hellfire_burst HELLFIRE_BURST
 error HOLY_BREATH
 error HOLY_FLAMES
 error HOLY_LIGHT
+error IGNITE_POISON_SINGLE
 error INJURY_BOND
 error INK_CLOUD
+error INVISIBILITY_OTHER
 %sdir gui/spells/monster
 iron_elementals IRON_ELEMENTALS
 %sdir misc
+error LEGENDARY_DESTRUCTION
 error MALIGN_OFFERING
 error MALMUTATE
 error MESMERISE
@@ -240,7 +265,9 @@ miasma_breath MIASMA_BREATH
 error MIGHT
 error MIGHT_OTHER
 error NOXIOUS_CLOUD
+error ORB_OF_ELECTRICITY
 error PETRIFYING_CLOUD
+error PLANEREND
 %sdir gui/spells/monster
 polymorph POLYMORPH
 porkalator PORKALATOR
@@ -249,7 +276,12 @@ error PRIMAL_WAVE
 %sdir gui/spells/monster
 quicksilver_bolt QUICKSILVER_BOLT
 %sdir misc
+# Remove when TAG_MAJOR_VERSION > 34
+error REARRANGE_PIECES
+error SAP_MAGIC
 error SENTINEL_MARK
+error SHADOW_BOLT
+error SHADOW_SHARD
 error SILVER_BLAST
 error SLEEP
 %sdir gui/spells/monster
@@ -276,10 +308,10 @@ summon_ufetubus SUMMON_UFETUBUS
 summon_undead SUMMON_UNDEAD
 summon_vermin SUMMON_VERMIN
 %sdir misc
-error SUNRAY
 error TELEPORT_SELF
 error THORN_VOLLEY
 error TOMB_OF_DOROKLOHE
+error VIRULENCE
 error WALL_OF_BRAMBLES
 error WATERSTRIKE
 %sdir gui/spells/monster
@@ -298,6 +330,7 @@ beogh_smite SMITING
 elyvilon_lesser_healing HEAL_OTHER
 elyvilon_lesser_self_healing MINOR_HEALING
 elyvilon_greater_self_healing MAJOR_HEALING
+makhleb_major_destruction MAJOR_DESTRUCTION
 lugonu_banish BANISHMENT
 trog_hand TROGS_HAND
 trog_brothers_in_arms BROTHERS_IN_ARMS

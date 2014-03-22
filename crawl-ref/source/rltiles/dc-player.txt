@@ -442,7 +442,7 @@ sam SAM
 vanhel1 VANHEL
 
 maxwell MAXWELL
-lears_chain_mail LEARS_CHAIN_MAIL
+lears_hauberk LEARS_HAUBERK
 faerie_dragon_armour FAERIE_DRAGON_ARMOUR
 moon_troll_leather_armour MOON_TROLL_LEATHER_ARMOUR
 %end_ctg
@@ -507,6 +507,7 @@ snakebite SNAKEBITE
 shillelagh SHILLELAGH
 dark_maul DARK_MAUL
 spellbinder SPELLBINDER
+firestarter FIRESTARTER
 ## polearms
 trident_octopus_king TRIDENT_OCTOPUS_KING
 glaive_of_prune GLAIVE_OF_PRUNE
@@ -520,6 +521,7 @@ elemental_staff ELEMENTAL_STAFF
 asmodeus ASMODEUS
 dispater DISPATER
 olgreb OLGREB
+order ORDER
 ## axes
 axe_trog AXE_TROG
 arga ARGA
@@ -875,8 +877,11 @@ bladehands BLADEHAND
 # The 1-2 "typos" are intentional; the equivalent tiles above have no
 # enums and become TILEP_GREAT_FLAIL_1 and TILEP_GREAT_MACE_1 respectively.
 dagger DAGGER
+dagger2 DAGGER_1
 cutlass CUTLASS
+cutlass2 CUTLASS_1
 short_sword_slant SHORT_SWORD_SLANT
+short_sword_slant2 SHORT_SWORD_SLANT_1
 flail_great GREAT_FLAIL
 flail_great2 GREAT_FLAIL_1
 great_mace GREAT_MACE

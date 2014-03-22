@@ -38,23 +38,26 @@ function interest_check(e)
   end
 end
 
+function get_altar_count(e)
+  local params = dgn.map_parameters()
+  if params ~= nil then
+    local tag = unpack(params)
+    if tag ~= nil then
+      -- temple_overflow_generic_ is 24 characters
+      return string.sub(tag, 25)
+    end
+  end
+
+  return nil
+end
+
 function altar_check(e)
   if e.is_validating() then
     e.subst('C = B')
     return
   end
-  local params = dgn.map_parameters()
-  if params ~= nil then
-    local tag = unpack(params)
-    if tag ~= nil then
-      if string.find(tag, "temple_overflow_generic_") ~= nil then
-        e.subst('C = B')
-      else
-        e.tags('extra')
-      end
-    else
-      e.tags('extra')
-    end
+  if get_altar_count(e) ~= nil then
+    e.subst('C = B')
   else
     e.tags('extra')
   end
@@ -127,17 +130,16 @@ xxxxx.xxxxx
      @
 ENDMAP
 
-NAME:  cheibrodos_chained_mummies
+NAME:  cheibrodos_ashenzari_chains
 TAGS:  temple_overflow_1
 TAGS:  temple_overflow_ashenzari uniq_altar_ashenzari
 DEPTH: D:3-9
-MONS:  mummy
 KFEAT: _ = altar_ashenzari
 KFEAT: m = iron_grate
 MAP
 .............
 .mmm.....mmm.
-.m1mmc_cmm1m.
+.mcmmc_cmmcm.
 .mmm.....mmm.
 .............
 ENDMAP
@@ -162,7 +164,7 @@ DEPTH:   D:2-
 WEIGHT:  1
 KPROP:   1 = no_rtele_into
 KFEAT:   _ = altar_cheibriados
-MONS:    giant slug, agate snail, elephant slug
+MONS:    giant slug, elephant slug
 SUBST:   1 : 1:50 2:30 3:10 4:10
 NSUBST:  4 = 1:1 / 1:2 / 1:3
 : interest_check(_G)
@@ -248,7 +250,7 @@ NAME:   chei_snail_safe_becter
 TAGS:   overflow_altar_cheibriados transparent mini_float no_monster_gen
 DEPTH:  D:4-9
 WEIGHT: 5
-KMONS:  a = agate snail
+KMONS:  a = giant slug
 NSUBST: ' = 1:a / *:.
 KFEAT:  _ = altar_cheibriados
 MAP
@@ -1011,7 +1013,7 @@ TAGS:    overflow_altar_nemelex_xobeh transparent
 TAGS:    no_rotate no_vmirror no_monster_gen no_item_gen
 DEPTH:   D:2-9
 : if you.depth() <= 4 then
-MONS:    orc ; club race:orcish
+MONS:    orc ; club
 : else
 MONS:    ogre ; giant club
 : end
@@ -1385,7 +1387,7 @@ TAGS:   temple_overflow_1 temple_overflow_trog uniq_altar_trog
 DEPTH:  D:2-9
 KFEAT:  _ = altar_trog
 KPROP:  1 = no_rtele_into
-MONS:   moth of wrath, rat / giant newt
+MONS:   moth of wrath, rat / worm w:5
 ITEM:   any weapon
 NSUBST: M = 4:d / *:.
 SUBST:  + = +....
@@ -1604,7 +1606,7 @@ ENDMAP
 
 NAME:   tgw_xom
 DEPTH:  D:2-, Depths
-TAGS:   no_item_gen no_monster gen temple_overflow_1 temple_overflow_xom
+TAGS:   no_item_gen no_monster_gen temple_overflow_1 temple_overflow_xom
 TAGS:   uniq_altar_xom
 KFEAT:  _ = altar_xom
 MONS:   orc; club ego:chaos / orc; dagger ego:chaos / orc; spear ego:chaos
@@ -2766,14 +2768,8 @@ SHUFFLE: defghijk / efghijkd
   local altarcount = 1
   if is_validating() then
     altarcount = 8
-  end
-  local params = dgn.map_parameters()
-  if params ~= nil then
-    local tag = unpack(params)
-    if tag ~= nil then
-      -- temple_overflow_generic_ is 24 characters
-      altarcount = string.sub(tag, 25)
-    end
+  else
+    altarcount = get_altar_count(_G)
   end
   if altarcount == "1" then
     subst("d = B")
@@ -2827,14 +2823,8 @@ TAGS:  temple_overflow_generic_2
   local altarcount = 1
   if is_validating() then
     altarcount = 14
-  end
-  local params = dgn.map_parameters()
-  if params ~= nil then
-    local tag = unpack(params)
-    if tag ~= nil then
-      -- temple_overflow_generic_ is 24 characters
-      altarcount = string.sub(tag, 25)
-    end
+  else
+    altarcount = get_altar_count(_G)
   end
   nsubst("B : " .. altarcount .. ":B / *:x")
 }}
@@ -2857,14 +2847,8 @@ TAGS: temple_overflow_generic_5 temple_overflow_generic_4 temple_overflow_generi
   local altarcount = 1
   if is_validating() then
     altarcount = 5
-  end
-  local params = dgn.map_parameters()
-  if params ~= nil then
-    local tag = unpack(params)
-    if tag ~= nil then
-      -- temple_overflow_generic_ is 24 characters
-      altarcount = string.sub(tag, 25)
-    end
+  else
+    altarcount = get_altar_count(_G)
   end
   if altarcount == "1" then
     subst("c = B")

@@ -23,10 +23,6 @@ Demonspawn
 Demonspawn are half human, half demon. They acquire strong demonic mutations as
 they grow.
 %%%%
-Djinni
-
-The Djinn are spirits of fire, for whom magic is the very essence of life.
-%%%%
 Draconian
 
 Draconians are versatile hybrids. They mature when reaching level 7 and develop
@@ -35,7 +31,7 @@ a colour.
 Formicid
 
 Formicids are humanoid ants adept at digging. Their limbs are exceptionally
-strong and they live in a natural stasis.
+strong and they live in a state of permanent stasis.
 %%%%
 Felid
 

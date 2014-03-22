@@ -2,7 +2,6 @@
 #
 # The Sewer (Eino)
 #
-#
 # The Sewer aspires to be an exciting place to go with a low level character.
 #
 # Flavour: drainage and sewer themed, so rats, kobolds, etc. Water is (dark
@@ -15,7 +14,7 @@
 
 {{
 function sewer_portal(e)
-  local timeout_turns = crawl.random_range(2700, 3300)
+  local timeout_turns = crawl.random_range(800, 1000)
 
   local messager =
     timed_msg {
@@ -38,6 +37,7 @@ function sewer_portal(e)
         disappear = "The drain falls to bits.",
         entity = 'drain',
         turns = timeout_turns,
+        single_timed = true,
         floor = "expired_portal",
         feat_tile = "dngn_portal_sewer_rusted",
         msg = messager })
@@ -64,7 +64,7 @@ TAGS:   mini_float
 : sewer_portal(_G)
 SUBST:  1 = 2234..........
 MONS:   nothing
-MONS:   rat / grey rat / green rat w:5
+MONS:   rat / green rat w:5
 MONS:   ball python / adder w:2
 MONS:   giant cockroach / giant mite / worm w:3
 MAP
@@ -82,8 +82,8 @@ ENDMAP
 NAME:   portal_sewer_entry_b
 ORIENT: float
 : sewer_portal(_G)
-SUBST:  '=W. , W=WW1
-KMONS:  1 = rat w:20 / grey rat w:20 / green rat/ ball python / adder w:2 / \
+SUBST:  ' = W. , W = WW1
+KMONS:  1 = rat w:20 / green rat / ball python / adder w:2 / \
             giant cockroach / giant mite / worm w:3
 MAP
 xxxxxx
@@ -99,7 +99,7 @@ WEIGHT: 4
 : sewer_portal(_G)
 NSUBST: c = 1:+ / 2:n / *:c
 NSUBST: W = 8 = 111W / *:W
-KMONS:  1 = rat w:20 / grey rat w:20 / green rat/ ball python / adder w:2 / \
+KMONS:  1 = rat w:20 / green rat / ball python / adder w:2 / \
             giant cockroach / giant mite / worm w:3
 MAP
 .........
@@ -127,7 +127,7 @@ ORIENT: northwest
 NSUBST: X = 2:+ / *:x
 SUBST:  w = WW.
 NSUBST: W = 8:111W / *:W
-KMONS:  1 = rat w:20 / grey rat w:20 / green rat/ ball python / adder w:2 / \
+KMONS:  1 = rat w:20 / green rat / ball python / adder w:2 / \
             giant cockroach / giant mite / worm w:3
 MAP
 xxxxxxxxx
@@ -176,8 +176,8 @@ ENDMAP
 NAME:   gup_sewer_entry_spiral
 TAGS:   patrolling
 : sewer_portal(_G)
-KMONS:  1 = rat / grey rat / green rat w:5 / giant centipede w:5 / \
-            giant cockroach / giant mite / giant gecko / worm w:5 / nothing
+KMONS:  1 = rat / green rat w:5 / adder w:5 / giant cockroach / \
+            giant mite / giant gecko / worm w:5 / nothing
 NSUBST: - : 8:1 / 8:. / *:W
 MAP
 xxxxxxxxxx
@@ -196,8 +196,8 @@ ENDMAP
 NAME:   gup_sewer_entry_bubbles
 TAGS:   mini_float patrolling
 : sewer_portal(_G)
-KMONS:  1 = rat / grey rat / green rat w:5 / giant centipede w:5 / \
-            giant cockroach / giant mite / giant gecko / worm w:5 / nothing
+KMONS:  1 = rat / green rat w:5 / adder w:5 / giant cockroach / \
+            giant mite / giant gecko / worm w:5 / nothing
 NSUBST: - = 8:1 / *:W
 MAP
  xxx    xxx
@@ -217,7 +217,7 @@ ENDMAP
 NAME:   gup_sewer_entry_bowl
 TAGS:   mini_float
 : sewer_portal(_G)
-KMONS:  1 = rat / grey rat / green rat w:5 / \
+KMONS:  1 = rat / green rat w:5 / \
             giant cockroach / giant mite / giant gecko / worm w:3 / nothing
 MAP
 ..........
@@ -233,7 +233,7 @@ ENDMAP
 NAME:   gup_sewer_entry_glass
 TAGS:   mini_float
 : sewer_portal(_G)
-KMONS:  1 = giant centipede / giant cockroach / nothing
+KMONS:  1 = adder / giant cockroach / nothing
 MAP
 ..........
 .mmmmmmm.
@@ -244,26 +244,44 @@ MAP
 .........
 ENDMAP
 
+NAME: lightli_sewer_entry_pipes
+TAGS: mini_float
+NSUBST: o = 1:O / *:W
+SUBST: W = WWWWW1
+MONS: green rat / adder / rat / worm
+: sewer_portal(_G)
+MAP
+vvvvvvvvvv
+vovWovWvvv
+vWvWvvWWWv
+vWvWvvWvWv
+vWvWWvWvWv
+vWvvWvWvWv
+vWWWWvWvWv
+vvvvWvWvWv
+vWWWWWWvov
+vWvvvvvvvv
+vWWWWWWWWW
+vvvvWvWvWW
+..WWWWW.W.
+....W.....
+..........
+ENDMAP
+
 # The actual portal vaults #####################################
 default-depth: Sewer
 
 ### KOBOLDS ################################################################
-
-# Sewers with kobold settlements. Combined weight 50.
+# Sewers with kobold settlements. Combined weight 40.
 
 ############################################################################
 # Sewer with a small kobold camp, potion treasure and Ely/Zin altar.
-# Easier than sewer_minmay_treatment, so more probably.
+# Easier than sewer_minmay_treatment, so more common.
 #
 NAME:     sewer_kobolds
 TAGS:     no_item_gen no_monster_gen no_pool_fixup
-WEIGHT:   35
+WEIGHT:   25
 ORIENT:   encompass
-: if crawl.one_chance_in(12) then
-SUBST:    C=c, X=w, V=W, v=w, *=f
-: else
-SUBST:    X=c, C=x, V=x, v=x, *=x
-: end
 SUBST:    ' = .W
 SUBST:    ? = .x
 : sewer_setup(_G)
@@ -275,22 +293,18 @@ KMONS:    q = big fish
 KFEAT:    q = w
 COLOUR:   q = green
 MONS:     jackal / w:3 nothing, kobold / w:5 nothing, big kobold
-SHUFFLE:  deef
-ITEM:     potion of heal wounds / potion of curing
-ITEM:     potion of curing / potion of curing q:2 w:5 / \
-          potion of heal wounds / potion of heal wounds q:2 w:5
-KITEM:    f = potion of flight q:2 ident:type, potion of restore abilities w:7 / \
-          potion of beneficial mutation w:30
-KFEAT:    f = shallow_water
-MONS:     rat / grey rat / green rat w:2 / nothing w:3
+SHUFFLE:  de
+ITEM:     potion of curing / potion of heal wounds
+ITEM:     potion of flight / potion of restore abilities
+MONS:     rat w:15 / green rat w:7 / nothing w:3
 MAP
-        cccCCCCCCCCCCCC
-        cwXvvvvvvvvvvvCCC         CCC
-        cwccCCCCCCCCCvvVCCCC      C*CCC
-        cwwc        CCCvvvvCCCC  CCvvvC
-        ccwc          CCCCvvvvCCCCvvvvC
-         cwcc            CCCCvvvvvvvvvC
-        ccwwc               CCCCCCCCCCC
+        ccc
+        cwc
+        cwcc
+        cwwc
+        ccwc
+         cwcc
+        ccwwc
         cwwwc
         cwwwc
         cwwwc
@@ -313,7 +327,7 @@ MAP
       c.'WWW''c
       c..''''.c
 xxxxxxcccc1ccccx
-xefExxxx.122...xx
+xedExxxx.122...xx
 xdexxxx.2232.y..x
 xx?.?xxx....yYy.x
  xx?.xxx?....y.xx
@@ -329,7 +343,7 @@ NAME:   sewer_minmay_treatment
 TAGS:   no_item_gen no_monster_gen no_pool_fixup
 WEIGHT: 15
 ORIENT: encompass
-MONS:   grey rat / rat w:2 / green rat w:1
+MONS:   rat / green rat w:3
 MONS:   kobold / big kobold w:1
 MONS:   ball python / adder w:5 / giant newt w:2 / ooze w:1
 SUBST:   y : yyyyyyW., Y : YYYYYYWw
@@ -380,8 +394,7 @@ vvvvxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxvvvv
 ENDMAP
 
 ### FROGS ##################################################################
-
-# Combined weight 30.
+# Giant frogs, specifically. Combined weight 40.
 
 ############################################################################
 # Two fairly watery vaults with (usually) two giant frogs in the end.
@@ -390,7 +403,6 @@ ENDMAP
 NAME:     sewer_frog_island_01
 TAGS:     no_item_gen no_monster_gen no_pool_fixup
 ORIENT:   encompass
-WEIGHT:   10
 SUBST:    - = WWW.
 SHUFFLE:  |d
 ITEM:     scroll of teleportation w:2 / scroll of blinking / \
@@ -440,7 +452,6 @@ ENDMAP
 NAME:     sewer_frog_island_02
 TAGS:     no_item_gen no_monster_gen no_pool_fixup
 ORIENT:   encompass
-WEIGHT:   10
 NSUBST:   ! = 2:! / *:w
 SUBST:    - = WWWW.
 KMONS:    W = giant newt / ball python / giant cockroach / giant mite / \
@@ -494,14 +505,13 @@ ENDMAP
 # to handle them.
 NAME:    sewer_minmay_w
 TAGS:    no_item_gen no_monster_gen no_pool_fixup
-WEIGHT:  10
 ORIENT:  encompass
 SHUFFLE: de
-MONS:    grey rat / rat w:5 / green rat w:1
+MONS:    rat / green rat w:2
 MONS:    ball python / adder w:5 / giant newt w:2 / ooze w:1
 MONS:    giant frog
 ITEM:    potion of curing / potion of heal wounds / potion of might /\
-         potion of magic / potion of speed w:5 / potion of brilliance w:5
+         potion of magic / potion of haste w:5 / potion of brilliance w:5
 ITEM:    scroll of teleportation / scroll of blinking w:5 /\
          scroll of fear w:5 / scroll of magic mapping /\
          scroll of recharging / scroll of fog
@@ -547,18 +557,16 @@ xxxxxxxxccccccxxxxxxxxxxxxxxxxxxxxxxccccccxxxxxxxx
 ENDMAP
 
 ## BIG BADDIE (Purgy) ######################################################
-
 # Threat is mostly a single larger creature, often Purgy. Combined weight 30.
 
 NAME:     sewer_big_baddie
 TAGS:     no_item_gen no_monster_gen no_pool_fixup
 ORIENT:   encompass
-WEIGHT:   10
 : sewer_setup(_G)
 SUBST:    2 = 23
 KMONS:    2 = crocodile
 KMONS:    3 = Purgy, crocodile
-ITEM:     potion of berserk rage / potion of speed w:5
+ITEM:     potion of berserk rage / potion of haste w:5
 MONS:     bat
 MAP
  ccccccc
@@ -594,7 +602,6 @@ ENDMAP
 NAME:   sewer_the_slug
 TAGS:   no_item_gen no_monster_gen no_pool_fixup
 ORIENT: encompass
-WEIGHT: 10
 SUBST:  - = WW...
 MONS:   kobold, jackal
 SUBST:  3 = 334
@@ -652,7 +659,6 @@ ENDMAP
 NAME:    sewer_co_purgy_island
 TAGS:    no_item_gen no_monster_gen no_pool_fixup
 ORIENT:  encompass
-WEIGHT:  10
 #      Placing Purgy, he appears in one of three places. The crocodile serves
 #      as the back-up, in case Purgy was already placed in the Dungeon.
 SHUFFLE: PQR
@@ -669,7 +675,7 @@ KMONS:   1 = giant newt / ball python w:5 / \
 SUBST:   e = !!!!????%
 KITEM:   ? = potion of flight q:2 w:15 / potion of curing /\
          potion of heal wounds / potion of might / potion of magic /\
-         potion of speed w:5 / potion of brilliance w:5
+         potion of haste w:5 / potion of brilliance w:5
 KITEM:   ! =  scroll of teleportation / scroll of fear w:5 /\
          scroll of blinking w:3 / scroll of magic mapping w:3 /\
          scroll of recharging w:2 / scroll of fog w:3
@@ -724,8 +730,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ENDMAP
 
 ### OTHER #####################################################################
-
-# Other sorts of Sewer maps, each weighted 10. (Total 60).
+# Other sorts of Sewer maps, most weighted 10. (Total 68).
 
 ###############################################################################
 # If you can get to the middle, there are four doors to try; two will give you
@@ -813,7 +818,8 @@ ENDMAP
 NAME:   sewer_sea
 TAGS:   no_item_gen no_monster_gen no_rotate no_pool_fixup
 ORIENT: encompass
-MONS:   rat w:3 / grey rat w:1 / nothing w:1, rat / grey rat / green rat
+WEIGHT: 5
+MONS:   rat w:4 / nothing w:1, rat / green rat w:5
 KMONS:  G = mermaid hd:3 name:malarious name_adjective name_species
 KMONS:  H = siren hd:3 name:sickly name_adjective name_species
 KMONS:  hJ = giant newt / ball python / adder / nothing w:2
@@ -878,7 +884,7 @@ TAGS:    no_item_gen no_monster_gen no_pool_fixup
 ORIENT:  encompass
 MONS:    kobold / w:7 big kobold
 MONS:    kobold / adder / ball python / w:7 worm / w:7 ooze / \
-         rat / green rat / grey rat
+         rat / green rat w:5
 SUBST:   . = W..
 SUBST:   X = xx.
 SUBST:   2 = 222..
@@ -902,7 +908,7 @@ SUBST:   hVZzSsUuTgY = W
 SUBST:   e = !!!!?????
 KITEM:   ? = potion of flight w:5 / potion of flight q:2 w:5 /\
          potion of curing / potion of heal wounds / potion of might /\
-         potion of magic / potion of speed w:5 / potion of brilliance w:5
+         potion of magic / potion of haste w:5 / potion of brilliance w:5
 KITEM:   ! =  scroll of teleportation / scroll of fear w:5 /\
          scroll of blinking w:3 / scroll of magic mapping w:3 /\
          scroll of recharging w:2 / scroll of fog w:3
@@ -958,14 +964,14 @@ TAGS:   no_item_gen no_monster_gen no_pool_fixup
 ORIENT: encompass
 MONS:   kobold / big kobold
 MONS:   adder / ball python / worm
-MONS:   ooze / rat / green rat / grey rat
+MONS:   ooze / rat / green rat w:5
 # less water in the middle, more at the endpoints.
 SUBST:  ~ = WWWW.
 SUBST:  - = WW...
 SUBST:  " = W...
 NSUBST: ? = 4=ef / *=112233
 KITEM:  e = potion of curing / potion of heal wounds / potion of might /\
-        potion of magic / potion of speed w:5 / potion of brilliance w:5
+        potion of magic / potion of haste w:5 / potion of brilliance w:5
 KITEM:  f = scroll of teleportation / scroll of fear w:5 /\
         scroll of blinking w:3 / scroll of magic mapping w:3 /\
         scroll of recharging w:2 / scroll of fog w:3
@@ -1059,7 +1065,7 @@ SUBST:   X = xx"
 : if crawl.one_chance_in(3) then
 NSUBST:  Y = 2:. /*:c
 SUBST:   d = e
-KMONS:   Z = nothing w:60 / rat w:2 / grey rat / green rat w:7
+KMONS:   Z = nothing w:60 / rat / green rat w:7
 KITEM:   Z = cheese w:2 / nothing
 KMONS:   R = orange rat
 KFEAT:   ' = .
@@ -1072,12 +1078,12 @@ KFEAT:   ' = x
 : end
 #      rat path
 KPROP:   " = no_tele_into
-KMONS:   " = nothing w:50 / rat / grey rat / green rat w:5
+KMONS:   " = nothing w:50 / rat w:15 / green rat w:7
 KPROP:   w = no_tele_into
 #      loot
 SUBST:   e = !!!!!?????%
 KITEM:   ? = potion of curing / potion of heal wounds / potion of might /\
-         potion of magic / potion of speed w:5 / potion of brilliance w:5
+         potion of magic / potion of haste w:5 / potion of brilliance w:5
 KITEM:   ! =  scroll of teleportation / scroll of fear w:5 /\
          scroll of blinking w:3 / scroll of magic mapping w:3 /\
          scroll of recharging w:2 / scroll of fog w:3
@@ -1142,14 +1148,14 @@ KMONS:   1 = giant newt / ball python w:5 /  generate_awake ball python w:5 / \
          adder w:7 / big fish w:5
 SUBST:   1 = 1111W
 #      other monsters
-KMONS:   2 = jackal / kobold, w:5 big kobold / w:5 green rat, w:7 grey rat, rat
+KMONS:   2 = jackal / kobold, w:5 big kobold / w:5 green rat, rat
 SUBST:   2 = 222222W.
 #      loot
 SUBST:   e = !!!?????%WWW
 KFEAT:   !?% = W
 COLOUR:  !?% = lightgreen
 KITEM:   ? = potion of curing / potion of heal wounds / potion of might /\
-         potion of magic / potion of speed w:5 / potion of brilliance w:5
+         potion of magic / potion of haste w:5 / potion of brilliance w:5
 KITEM:   ! =  scroll of teleportation / scroll of fear w:5 /\
          scroll of blinking w:3 / scroll of magic mapping w:3 /\
          scroll of recharging w:2 / scroll of fog w:3
@@ -1205,78 +1211,25 @@ xxxxxxYwwwwwwYYYYwwwYYYwwYxxxxxxxX.....Xxxxx
 xxxxxxxYYYxYYxxxxYYYxxxYYxxxxxxxxxxXXXxxxxxx
 ENDMAP
 
-################################################################################
-# A Prince Ribbit Lair by badplayer.
-#
-NAME: sewer_ribbit_badplayer
-ORIENT:  encompass
-TAGS:   no_item_gen no_monster_gen no_pool_fixup
-KMONS:   1 = adder w:20 / ball python w:80
-KMONS:   2 = Giant Frog
-KMONS:   3 = Prince Ribbit, Blink Frog
-KFEAT:   1 = '
-KFEAT:   23 = W
-KPROP:   "' = no_tele_into
-NSUBST:  1 = 8=1 / *='
-NSUBST:  2 = 2=2 / *=x
-COLOUR:  23 = lightgreen
-KITEM:   ? = potion of curing / potion of heal wounds / potion of might /\
-         potion of magic / potion of speed w:5 / potion of brilliance w:5
-KITEM:   ! =  scroll of teleportation / scroll of fear w:5 /\
-         scroll of blinking w:3 / scroll of magic mapping w:3 /\
-         scroll of recharging w:2 / scroll of fog w:3
-SUBST:    ' = wW, " = .wW, ` = .W
-SUBST:    $ = !?*
-: sewer_setup(_G)
-MAP
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxx'''''111111xx
-xxxxxxxxx2````+.........111111x
-xxxxxx2```````+..........11111x
-xxxxx`````xxxxxxxx.......11111x
-xxxxx```xxx````xxxxx......111xx
-xxxxx``xx````xxWxxxx...."""11xx
-xxxxx``x$$$`xxWWWxxx.....""11xx
-xxxx2``x$$$xxWWWWWxxx....""1xxx
-xxx````x$$xxWWW3WWWxx...."11xxx
-xxx```xx$xxWWWWWWWWWxx""".1xxxx
-xxx``xxxxxWWWWWWWWWWWxx"".1xxxx
-xxx``xxxxWWWWWWWWWWWWWx"".1xxxx
-xxx``xxxxxxx+xxxxx+xxxx"".1xxxx
-xxx``````xww.......wwx""".1xxxx
-xxx2`````xww.......wwxx""<xxxxx
-xxxxxx2``xww...<...wwxx"A"xxxxx
-xxxxxxx``xww.......wwxxxxxxxxxx
-xxxxxxx``xxww.....wwxxxxxxxxxxx
-xxxxxxx```xxxx++xxxxxxxxxxxxxxx
-xxxxxxx2``````""xxxxxxxxxxxxxxx
-xxxxxxxxx'''''''xxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-ENDMAP
-
 NAME:   sewer_kobold_necro_badplayer
 TAGS:   no_item_gen no_monster_gen no_pool_fixup
 ORIENT: encompass
 WEIGHT: 3
-KMONS:  1  = rat w:80 / grey rat w:20
-KMONS:  4  = rat w:75 / grey rat w:15 / green rat w:8 / orange rat w:2
+KMONS:  1  = rat
+KMONS:  4  = rat w:85 / green rat w:13 / orange rat w:2
 KMONS:  23 = big kobold spells:animate_dead name:necromancer n_suf \
              col:white ; dagger | club . robe
 : dgn.delayed_decay(_G, '%', 'rat skeleton w:40 / rat corpse w:20 /' ..
-:    'rotting rat corpse w:20 / grey rat skeleton w:10 /' ..
-:    'grey rat corpse w:5 / rotting grey rat corpse w:5')
+:    'rotting rat corpse w:20')
 : dgn.delayed_decay(_G, '^', 'rat skeleton w:16 / rat corpse w:8 /' ..
-:    'rotting rat corpse w:8 / grey rat skeleton w:24 /' ..
-:    'grey rat corpse w:12 / rotting grey rat corpse w:12 /' ..
-:    'green rat skeleton w:10 / green rat corpse w:5 /' ..
-:    'rotting green rat corpse w:5')
-: dgn.delayed_decay(_G, '&', 'grey rat skeleton w:36 /' ..
-:    'grey rat corpse w:18 / rotting grey rat corpse w:18 /' ..
-:    'green rat skeleton w:24 / green rat corpse w:12 /' ..
-:    'rotting green rat corpse w:12 / orange rat skeleton w:2 /' ..
-:    'orange rat corpse w:1 / rotting orange rat corpse w:1')
+:    'rotting rat corpse w:8 / green rat skeleton w:10 /' ..
+:    'green rat corpse w:5 / rotting green rat corpse w:5')
+: dgn.delayed_decay(_G, '&', 'green rat skeleton w:24 /' ..
+:    'green rat corpse w:12 / rotting green rat corpse w:12 /' ..
+:    'orange rat skeleton w:2 / orange rat corpse w:1 /' ..
+:    'rotting orange rat corpse w:1')
 KITEM:  ?  = potion of curing / potion of heal wounds / potion of might /\
-             potion of magic / potion of speed w:5 /\
+             potion of magic / potion of haste w:5 /\
              potion of brilliance w:5
 KFEAT:  1 = '
 KFEAT:  3 = ~
@@ -1325,7 +1278,7 @@ ORIENT: encompass
 KFEAT: bcd = . w:1 / W w:9
 : local rnd = crawl.random2(3)
 : if rnd == 0 then
-KMONS: bcd = rat w:40 / grey rat w:1 / nothing w:59
+KMONS: bcd = rat w:40 / nothing w:60
 : elseif rnd == 1 then
 KMONS: bcd = ball python w:40 / adder w:1 / nothing w:59
 : else
@@ -1333,7 +1286,7 @@ KMONS: bcd = giant newt w:40 / giant gecko w:1 / nothing w:59
 : end
 KITEM: $ = potion of might / potion of berserk rage /\
            potion of agility / potion of magic /\
-           potion of brilliance / potion of speed w:5
+           potion of brilliance / potion of haste w:5
 COLOUR: bcd = lightgreen
 SUBST: ^ = .:10 W:2, ! = .:5 W:5
 NSUBST: cbd = 5:$
@@ -1357,4 +1310,85 @@ xxxxxxxxxxxxcccccxxxxxxxxxxxx
 xxxxxxxxxxxxcccccxxxxxxxxxxxx
 xxxxxxxxxxxxcccccxxxxxxxxxxxx
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ENDMAP
+
+#############################################################
+# Kobolds who escaped to the sewers to worship Makhleb in peace
+# The temple has 3 sealed chambers at the end, each with loot and a
+# boss monster.
+# Total loot: 8 ok items (mosty consumables), 4 star items
+NAME:    kennysheep_sewer_church
+TAGS:    no_item_gen no_monster_gen no_pool_fixup
+ORIENT:  encompass
+WEIGHT:  3
+KFEAT:   B = altar_makhleb
+MARKER:  F = lua:fog_machine { cloud_type = "flame", pow_min = 100, \
+                               pow_max = 100, delay = 10, size = 1, \
+                               walk_dist = 0, excl_rad = 0 }
+: sewer_setup(_G)
+# Placed monsters.
+MONS:    kobold w:30 / shadow imp / big kobold zombie /\
+         ufetubus / nothing w:5
+# Randomly generated monsters.
+MONS:    kobold w:50 / kobold zombie / ooze / giant mite / \
+         giant mite zombie w:3 / giant cockroach / \
+         giant cockroach zombie w:3 / adder / adder zombie w:3 / \
+         bat / bat zombie w:3
+SUBST:   . = .:175 2
+# Sub-boss.
+KMONS:   3 = big kobold / quasit / nothing w:5
+# Bosses.
+KMONS:   4 = big kobold
+KMONS:   5 = Grinder, shadow imp
+KMONS:   6 = kobold demonologist name:apprentice n_adj n_noc \
+             spells:summon_minor_demon;cantrip;summon_minor_demon;\
+             cantrip;cantrip;cantrip
+SHUFFLE: 456
+KMONS:   - = big fish / big fish zombie w:5 / nothing w:90
+KFEAT:   - = deep_water
+KPROP:   W- = no_tele_into
+KITEM:   456 = star_item
+SUBST:   W = WWWw.
+COLOUR:  - = lightgreen
+SUBST:   - = wwwW-
+ITEM:    potion of curing / potion of heal wounds / \
+         potion of restore abilities / potion of might w:2 / \
+         potion of brilliance w:2 / potion of agility w:2 / \
+         potion of flight w:4 / any scroll w:7 / any armour w:2 / \
+         any weapon w:2
+NSUBST:  d = 1:*
+MAP
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xwwwxwwwwwww---xWWWx---wwwwww----WWxWWWx  ccc
+xwwwwwwwwwww----W.WW---wwwwww----W..WWWx  c<c
+xwwwxwwwwwww---xWW.x---wwwwww----WWx111x ccdcc
+xx-xxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxx1xx cd4dc
+x---x          x-W.xwwwwwwwwwwww-W.+.W-xcc1.1cc
+xWWWx          x-W.xwwwwwwwwwwww-W.x.W-xc.....c
+x.<.x          x-W.xwwwwwwwwwwww-W.x.W-xc.lll.c
+x...x          x-W.xwwwwwwwwwww--W.x.W-xc.....c
+xWWWx          x-W.xwwwwwwwwww--W..x.W-xcc+++cc
+x---x          x-W.x-----------W...x.W-xcc...ccccccc
+xx-xxxxxxxxxxxxxx.xxxx-xx-xx-xxx.xxxx.xcc..F..cc...ccc
+xwwwxwwwwwww---x-W.xW..........W1w-xW..c..2.2F.+.l.1dccc
+xwwwwwwwwwww-----W...wwwwwwwwww1ww--W..+.F.B3..+.l..5d<c
+xwwwxwwwwwww---x-W.xW..........W1w-xW..c..2.2F.+.l.1dccc
+xxxxxxxxxxxxxxxxx.xxxxx-x--xxx-x.xxxx.xcc..F..cc...ccc
+               x-W.x-----------W...x.W-xcc...ccccccc
+               x-W.xwwwwwwwwww--W..x.W-xcc+++cc
+               x-W.xwwwwwwwwwww--W.x.W-xc.....c
+               x-W.xwwwwwwwwwwww-W.x.W-xc.lll.c
+               x-W.xwwwwwwwwwwww-W.x.W-xc.....c
+               x-W.xwwwwwwwwwwww-W.+.W-xcc1.1cc
+xxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxx1xx cd6dc
+x--------------x-W1x---wwwwwww---WWx111x ccdcc
+xWWWWWWWWWWWWWW.WW.W---wwwwwww---W..W.Wx  c<c
+x..............x1.Wx---wwwwwww---WWxWWWx  ccc
+xxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xx...xx
+x.....x
+x..A..x
+x..<..x
+xx...xx
+ xxxxx
 ENDMAP

@@ -40,6 +40,7 @@ string get_god_powers(god_type which_god);
 string get_god_likes(god_type which_god, bool verbose = false);
 string get_god_dislikes(god_type which_god, bool verbose = false);
 
+bool active_penance(god_type god);
 void dec_penance(int val);
 void dec_penance(god_type god, int val);
 
@@ -74,6 +75,7 @@ bool god_likes_spell(spell_type spell, god_type god);
 bool god_hates_spell(spell_type spell, god_type god,
                      bool rod_spell = false);
 bool god_loathes_spell(spell_type spell, god_type god);
+bool god_hates_ability(ability_type ability, god_type god);
 bool god_can_protect_from_harm(god_type god);
 int elyvilon_lifesaving();
 bool god_protects_from_harm();
@@ -107,8 +109,6 @@ void vehumet_accept_gift(spell_type spell);
 bool god_hates_attacking_friend(god_type god, const actor *fr);
 bool god_likes_item(god_type god, const item_def& item);
 bool god_likes_items(god_type god, bool greedy_explore = false);
-
-void get_pure_deck_weights(int weights[]);
 
 void religion_turn_start();
 void religion_turn_end();

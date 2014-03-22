@@ -224,7 +224,7 @@ function arena_sprint_get_monster_set(round, boss)
             mon_set = {
                 "place:D:3 / place:D:5 / w:4 sigmund / w:2 jessica / w:2 terence",
                 "goblin / hobgoblin / kobold / big kobold / ijyb w:6 / pikel w:4",
-                "rat / quokka / grey rat / green rat / porcupine / w:2 orange rat / w:6 purgy",
+                "rat / quokka / green rat / porcupine / w:2 orange rat / w:6 purgy",
                 "ball python / adder w:15 / water moccasin w:5",
                 "orc w:40 / orc wizard w:8 / orc priest w:5 / w:5 orc warrior / blork the orc",
                 "gnoll w:35 / hound w:5 / gnoll sergeant / gnoll shaman / crazy yiuf",
@@ -232,7 +232,7 @@ function arena_sprint_get_monster_set(round, boss)
                 "zombie / skeleton / wight w:5 / necrophage / phantom w:5",
                 "worker ant / soldier ant w:2 / queen ant w:1 / killer bee w:2",
                 "ooze / w:5 jelly / w:1 brown ooze",
-                "giant cockroach / giant mite / giant centipede / w:5 spider /\
+                "giant cockroach / giant mite w:20 / w:5 spider /\
                     w:5 goliath beetle / worm / w:5 brain worm",
                 "giant spore hd:3"
             }
@@ -261,7 +261,7 @@ function arena_sprint_get_monster_set(round, boss)
                 "killer bee w:20 / w:5 queen bee",
                 "zombie / skeleton / wight / necrophage /\
                     phantom w:5 / w:1 josephine",
-                "w:7 blue devil / iron devil w:5 / orange demon / red devil w:5 / rotting devil /\
+                "w:7 blue devil / iron devil w:5 / orange demon / red devil w:5 /\
                     sixfirhy w:2 / hellwing",
                 "w:20 mummy / w:5 guardian mummy / w:5 menkaure",
                 -- Fire, Air, Earth, Water, Death
@@ -318,7 +318,7 @@ function arena_sprint_get_monster_set(round, boss)
                 -- Misc
                 "centaur w:20 / centaur warrior w:2 / nessos w:1",
                 "ugly thing",
-                "spiny worm w:5 / giant leech / worm / brain worm w:5",
+                "giant leech / worm / brain worm w:5",
                 "ogre w:15 / two-headed ogre / ogre mage w:5 / w:1 erolcha",
                 "troll / deep troll w:12 / iron troll w:2",
                 "fire drake / swamp drake / steam dragon / swamp dragon /\
@@ -595,7 +595,7 @@ function arena_sprint_get_monster_set(round, boss)
                 "brimstone fiend / ice fiend / shadow fiend / executioner / hell sentinel",
                 "titan / spriggan air mage / blizzard demon / w:20 sky beast",
                 "sphinx / place:Tomb:$",
-                "orb of fire / w:5 orb of fire name:orb_of_ice n_rpl n_des spells:ice_storm col:lightblue tile:mons_orb_of_ice /\
+                "orb of fire / w:5 orb of fire name:orb_of_ice n_rpl n_des spells:glaciate col:lightblue tile:mons_orb_of_ice /\
                   orb of fire name:orb_of_electricity n_rpl n_des spells:chain_lightning col:yellow tile:mons_orb_of_electricity /\
                   w:5 silver star",
                 "hellion / w:5 efreet"
@@ -667,7 +667,7 @@ function arena_sprint_get_monster_set(round, boss)
                 "brimstone fiend / ice fiend / shadow fiend w:5 / hell sentinel",
                 "titan / spriggan air mage / blizzard demon",
                 "sphinx",
-                "orb of fire / orb of fire name:orb_of_ice n_rpl n_des spells:ice_storm col:lightblue tile:mons_orb_of_ice /\
+                "orb of fire / orb of fire name:orb_of_ice n_rpl n_des spells:glaciate col:lightblue tile:mons_orb_of_ice /\
                   orb of fire name:orb_of_electricity n_rpl n_des spells:chain_lightning col:yellow tile:mons_orb_of_electricity /\
                   w:20 silver star",
                 "hellion"
@@ -733,10 +733,10 @@ function arena_sprint_init_boss_table()
                  col:flash deep elf sorcerer hp:400 \
                      name:deep_elf_elementalist n_rpl n_des n_noc tile:mons_deep_elf_elementalist \
                      spells:iron_shot;summon_air_elementals;sticky_flame_range;summon_water_elementals;haste;blink actual_spells \
-                     ; robe ego:fire_resistance race:elven | \
-                     robe ego:cold_resistance race:elven | \
-                     robe ego:resistance race:elven . dagger ego:freezing race:elven | \
-                     dagger ego:flaming race:elven | dagger ego:electrocution race:elven",
+                     ; robe ego:fire_resistance | \
+                     robe ego:cold_resistance | \
+                     robe ego:resistance . dagger ego:freezing | \
+                     dagger ego:flaming | dagger ego:electrocution",
                  "elven rune of zot"}
     else
         bs[3] = {"place:Forest:$ w:50 / spriggan druid w:2 / spriggan air mage w:5 /\
@@ -784,7 +784,7 @@ function arena_sprint_init_boss_table()
     -- Final (and tenth) boss
     bs[10] = {"pandemonium lord",
               "ancient lich name:Master_Blaster n_rpl hd:30 hp:1500 col:lightmagenta \
-              spells:fire_storm;fire_storm;ice_storm;miasma_breath;teleport_self", "demonic rune of zot"}
+              spells:fire_storm;fire_storm;glaciate;miasma_breath;teleport_self", "demonic rune of zot"}
     return bs
 end
 
@@ -1017,7 +1017,7 @@ KFEAT:  l = altar_jiyva
 KFEAT:  n = altar_fedhas
 KFEAT:  o = altar_dithmenos
 KITEM:  { = scroll of blinking q:3, scroll of fog q:3 ident:all, \
-            potion of heal wounds q:3, potion of speed q:3, \
+            potion of heal wounds q:3, potion of haste q:3, \
             wand of fire charges:5 ident:all, \
             wand of cold charges:5 ident:all, \
             potion of resistance ident:all, gold q:200
@@ -1048,7 +1048,7 @@ KFEAT:  EP = scroll shop greed:10 use_all count:17 ; \
             scroll of amnesia q:5 | scroll of remove curse q:15 | scroll of enchant weapon iii q:6 |\
             scroll of enchant armour q:4 | scroll of enchant armour q:4
 KFEAT:  FS = distillery shop use_all count:17 greed:10 ; \
-             potion of speed q:3 | potion of speed q:4 | potion of speed q:5 |\
+             potion of haste q:3 | potion of haste q:4 | potion of haste q:5 |\
              potion of agility q:6 | potion of might q:6 | potion of brilliance q:6 |\
              potion of cure mutation | potion of cure mutation q:2 | potion of cure mutation q:3 |\
              potion of resistance q:3 | potion of resistance q:4 | potion of resistance q:5 |\

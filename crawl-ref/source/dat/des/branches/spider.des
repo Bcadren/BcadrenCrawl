@@ -177,8 +177,7 @@ NAME: nicolae_spider_entry_non_spiders
 TAGS: spider_entry ruin_lair
 NSUBST: 1 = 21 / 1
 KFEAT: O = enter_spider_nest
-KMONS: 1 = scorpion / goliath beetle / worm / giant centipede / giant mite / \
-           giant cockroach
+KMONS: 1 = scorpion / goliath beetle / worm / giant mite / giant cockroach
 KMONS: 2 = demonic crawler / boulder beetle / yellow wasp
 MAP
 ...........
@@ -227,7 +226,7 @@ TAGS:    no_item_gen no_monster_gen no_pool_fixup
 DEPTH:   Spider:1-4
 WEIGHT:  5
 ORIENT:  southeast
-MONS:    giant centipede
+MONS:    giant mite / scorpion w:5
 MONS:    scorpion / emperor scorpion w:1
 MONS:    trapdoor spider generate_awake / nothing w:20
 MONS:    redback / wolf spider
@@ -515,13 +514,13 @@ TAGS:    no_monster_gen patrolling
 ORIENT:  float
 DEPTH:   Spider:1-4
 WEIGHT:  5
-KMONS:   1 = giant centipede w:35 / scorpion w:20 / spider w:13 / \
-             worker ant w:4 / giant mite w:1 / giant cockroach w:1 / worm w:1
+KMONS:   1 = scorpion w:20 / spider w:13 / worker ant w:35 / \
+             giant mite w:5 / giant cockroach w:1 / worm w:1
 KMONS:   2 = soldier ant / goliath beetle / vampire mosquito w:5
 KMONS:   3aAdD = brain worm / boulder beetle w:5
 KMONS:   4bB = demonic crawler
 KMONS:   5eE = place:Spider:$ zombie
-KMONS:   6cCfF = spiny worm / emperor scorpion w:8
+KMONS:   6cCfF = wolf spider / emperor scorpion w:8
 KMONS:   0% = crawling corpse hd:3 / nothing
 KITEM:   fF = star_item w:8 / superb_item w:2
 KITEM:   6 = superb_item w:5 / any armour good_item ego:poison_resistance w:5
@@ -642,8 +641,7 @@ SUBST:  z = v:1 z:14
 KMONS:  z = jumping spider w:5 / wolf spider w:3 / spider w:5 / redback w:1 / \
             tarantella w:1 /  nothing w:100
 : dgn.delayed_decay(_G, 'v', 'orc skeleton')
-KITEM: z = any armour race:orcish w:5 / any weapon race:orcish w:5 / \
-           gold w:1 / nothing w:50
+KITEM: z = any armour w:5 / any weapon w:5 / gold w:1 / nothing w:50
 KFEAT: z = web / floor w:60
 MAP
 xxxxxxxxxxxxxxx
@@ -683,8 +681,7 @@ SUBST:  z = v:1 z:14
 KMONS:  z = jumping spider w:5 / wolf spider w:3 / spider w:5 / redback w:1 / \
             tarantella w:1 / nothing w:100
 : dgn.delayed_decay(_G, 'v', 'orc skeleton')
-KITEM: z = any armour race:orcish w:5 / any weapon race:orcish w:5 / \
-           gold w:1 / nothing w:50
+KITEM: z = any armour w:5 / any weapon w:5 / gold w:1 / nothing w:50
 KFEAT: z = web / floor w:60
 KFEAT:  _ = altar_beogh
 
@@ -724,8 +721,7 @@ SUBST:  z = v:1 z:14
 KMONS:  z = jumping spider w:5 / wolf spider w:3 / spider w:5 / redback w:1 / \
             tarantella w:1 / nothing w:100
 : dgn.delayed_decay(_G, 'v', 'orc skeleton')
-KITEM: z = any armour race:orcish w:5 / any weapon race:orcish w:5 / \
-           gold w:1 / nothing w:50
+KITEM: z = any armour w:5 / any weapon w:5 / gold w:1 / nothing w:50
 KFEAT: z = web / floor w:60
 KFEAT: Q = abandoned_shop
 MAP
@@ -1052,7 +1048,7 @@ NSUBST: a = 1:} / 1:] / 1:) / 1:1 / *:.
 KMONS:  bcdefghi = tarantella / redback / wolf spider / \
         jumping spider / orb spider / demonic crawler / \
         scorpion / emperor scorpion / \
-        trapdoor spider / spiny worm / yellow wasp / \
+        trapdoor spider / yellow wasp / \
         red wasp / giant mite / nothing w:100
 SUBST: X = xxxx^....0
 KFEAT: ^ = web / floor w:20

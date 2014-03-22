@@ -405,7 +405,7 @@ static const food_def Food_prop[NUM_FOODS] =
 {
     { FOOD_MEAT_RATION,  "meat ration",  5000,   500, -1500,  80, 4, FFL_NONE },
     { FOOD_SAUSAGE,      "sausage",      1200,   150,  -400,  40, 2, FFL_NONE },
-    { FOOD_CHUNK,        "chunk",        1000,   100,  -500, 100, 3, FFL_NONE },
+    { FOOD_CHUNK,        "chunk",        1000,   100,  -500,  50, 3, FFL_NONE },
     { FOOD_BEEF_JERKY,   "beef jerky",   1500,   200,  -200,  20, 2, FFL_NONE },
 
     { FOOD_BREAD_RATION, "bread ration", 4400, -1000,   500,  80, 4, FFL_NONE },
@@ -612,12 +612,6 @@ void set_item_stationary(item_def &item)
         item.plus2 = 1;
 }
 
-void remove_item_stationary(item_def &item)
-{
-    if (item.base_type == OBJ_MISSILES && item.sub_type == MI_THROWING_NET)
-        item.plus2 = 0;
-}
-
 bool item_is_stationary(const item_def &item)
 {
     return item.base_type == OBJ_MISSILES
@@ -788,128 +782,11 @@ bool fully_identified(const item_def& item)
 }
 
 //
-// Equipment race and description:
+// Equipment description:
 //
-iflags_t get_equip_race(const item_def &item)
-{
-    return item.flags & ISFLAG_RACIAL_MASK;
-}
-
 iflags_t get_equip_desc(const item_def &item)
 {
     return item.flags & ISFLAG_COSMETIC_MASK;
-}
-
-void set_equip_race(item_def &item, iflags_t flags)
-{
-    ASSERT((flags & ~ISFLAG_RACIAL_MASK) == 0);
-
-    // first check for base-sub pairs that can't ever have racial types
-    switch (item.base_type)
-    {
-    case OBJ_WEAPONS:
-        if (item.sub_type > WPN_MAX_RACIAL)
-            return;
-        break;
-
-    case OBJ_ARMOUR:
-        if (item.sub_type > ARM_MAX_RACIAL)
-            return;
-        break;
-
-    default:
-        return;
-    }
-
-    // check that item is appropriate for racial type
-    switch (flags)
-    {
-    case ISFLAG_ELVEN:
-        switch (item.base_type)
-        {
-        case OBJ_WEAPONS:
-            if ((weapon_skill(item) == SK_MACES_FLAILS
-                    && item.sub_type != WPN_WHIP)
-                || (weapon_skill(item) == SK_LONG_BLADES
-                    && item.sub_type != WPN_FALCHION
-                    && item.sub_type != WPN_LONG_SWORD
-                    && item.sub_type != WPN_SCIMITAR)
-                || weapon_skill(item) == SK_AXES
-                || (weapon_skill(item) == SK_POLEARMS
-                    && item.sub_type != WPN_SPEAR
-                    && item.sub_type != WPN_TRIDENT)
-                || item.sub_type == WPN_CROSSBOW)
-            {
-                return;
-            }
-            break;
-        case OBJ_ARMOUR:
-            if (item.sub_type == ARM_PLATE_ARMOUR || is_hard_helmet(item))
-                return;
-            break;
-        default:
-            break;
-        }
-        break;
-
-    case ISFLAG_DWARVEN:
-        switch (item.base_type)
-        {
-        case OBJ_WEAPONS:
-            if (item.sub_type == WPN_WHIP
-                || item.sub_type == WPN_CLUB
-                || item.sub_type == WPN_QUICK_BLADE
-                || (weapon_skill(item) == SK_LONG_BLADES
-                    && item.sub_type != WPN_FALCHION
-                    && item.sub_type != WPN_LONG_SWORD)
-                || weapon_skill(item) == SK_POLEARMS
-                || item.sub_type == WPN_BLOWGUN
-                || item.sub_type == WPN_BOW
-                || item.sub_type == WPN_LONGBOW)
-            {
-                return;
-            }
-            break;
-        case OBJ_ARMOUR:
-            if (item.sub_type == ARM_ROBE
-                || item.sub_type == ARM_LEATHER_ARMOUR
-                || get_armour_slot(item) == EQ_HELMET && !is_hard_helmet(item))
-            {
-                return;
-            }
-            break;
-        default:
-            break;
-        }
-        break;
-
-    case ISFLAG_ORCISH:
-        switch (item.base_type)
-        {
-        case OBJ_WEAPONS:
-            if (item.sub_type == WPN_QUICK_BLADE
-                || item.sub_type == WPN_LONGBOW)
-            {
-                return;
-            }
-            break;
-        case OBJ_ARMOUR:
-            if (get_armour_slot(item) == EQ_HELMET && !is_hard_helmet(item)
-                && item.sub_type != ARM_HAT)
-            {
-                return;
-            }
-            break;
-        default:
-            break;
-        }
-
-    default:
-        break;
-    }
-
-    item.flags &= ~ISFLAG_RACIAL_MASK; // delete previous
-    item.flags |= flags;
 }
 
 void set_equip_desc(item_def &item, iflags_t flags)
@@ -918,14 +795,6 @@ void set_equip_desc(item_def &item, iflags_t flags)
 
     item.flags &= ~ISFLAG_COSMETIC_MASK; // delete previous
     item.flags |= flags;
-}
-
-iflags_t get_species_race(species_type sp)
-{
-    return you.species == SP_DEEP_DWARF ? ISFLAG_DWARVEN :
-           player_genus(GENPC_ELVEN)    ? ISFLAG_ELVEN :
-           player_genus(GENPC_ORCISH)   ? ISFLAG_ORCISH
-                                        : 0;
 }
 
 bool is_helmet(const item_def& item)
@@ -1543,9 +1412,6 @@ bool convert2good(item_def &item)
     case WPN_DEMON_WHIP:    item.sub_type = WPN_SACRED_SCOURGE; break;
     case WPN_DEMON_TRIDENT: item.sub_type = WPN_TRISHULA; break;
     }
-
-    if (is_blessed(item))
-        item.flags &= ~ISFLAG_RACIAL_MASK;
 
     return true;
 }
@@ -2303,10 +2169,10 @@ int get_armour_res_magic(const item_def &arm, bool check_artp)
 
     // check for ego resistance
     if (get_armour_ego_type(arm) == SPARM_MAGIC_RESISTANCE)
-        res += 30;
+        res += 40;
 
     if (check_artp && is_artefact(arm))
-        res += artefact_wpn_property(arm, ARTP_MAGIC);
+        res += 40 * artefact_wpn_property(arm, ARTP_MAGIC);
 
     return res;
 }
@@ -2445,7 +2311,7 @@ int get_jewellery_res_magic(const item_def &ring, bool check_artp)
         res += 40;
 
     if (check_artp && is_artefact(ring))
-        res += artefact_wpn_property(ring, ARTP_MAGIC);
+        res += 40 * artefact_wpn_property(ring, ARTP_MAGIC);
 
     return res;
 }
@@ -2661,15 +2527,6 @@ int item_mass(const item_def &item)
 
     case OBJ_ARMOUR:
         unit_mass = Armour_prop[ Armour_index[item.sub_type] ].mass;
-
-        if (get_equip_race(item) == ISFLAG_ELVEN)
-        {
-            const int reduc = (unit_mass >= 25) ? unit_mass / 5 : 5;
-
-            // Truncate to the nearest 5 and reduce the item mass:
-            unit_mass -= ((reduc / 5) * 5);
-            unit_mass = max(unit_mass, 5);
-        }
         break;
 
     case OBJ_MISSILES:
@@ -2879,13 +2736,14 @@ void seen_item(const item_def &item)
     }
 }
 
-bool is_elemental_evoker(const item_def &item)
+bool is_xp_evoker(const item_def &item)
 {
     return item.base_type == OBJ_MISCELLANY
            && (item.sub_type == MISC_LAMP_OF_FIRE
                || item.sub_type == MISC_STONE_OF_TREMORS
                || item.sub_type == MISC_FAN_OF_GALES
-               || item.sub_type == MISC_PHIAL_OF_FLOODS);
+               || item.sub_type == MISC_PHIAL_OF_FLOODS
+               || item.sub_type == MISC_HORN_OF_GERYON);
 }
 
 bool evoker_is_charged(const item_def &item)

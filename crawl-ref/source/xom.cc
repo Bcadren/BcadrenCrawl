@@ -27,6 +27,7 @@
 #include "feature.h"
 #include "goditem.h"
 #include "item_use.h"
+#include "itemname.h"
 #include "itemprop.h"
 #include "items.h"
 #include "libutil.h"
@@ -102,11 +103,11 @@ static const spell_type _xom_tension_spells[] =
     SPELL_OLGREBS_TOXIC_RADIANCE, SPELL_FIRE_BRAND, SPELL_FREEZING_AURA,
     SPELL_POISON_WEAPON, SPELL_LETHAL_INFUSION, SPELL_EXCRUCIATING_WOUNDS,
     SPELL_WARP_BRAND, SPELL_TUKIMAS_DANCE, SPELL_SUMMON_BUTTERFLIES,
-    SPELL_SUMMON_SMALL_MAMMAL, SPELL_SUMMON_SCORPIONS, SPELL_SUMMON_SWARM,
+    SPELL_SUMMON_SMALL_MAMMAL, SPELL_SUMMON_SWARM,
     SPELL_BEASTLY_APPENDAGE, SPELL_SPIDER_FORM, SPELL_STATUE_FORM,
     SPELL_ICE_FORM, SPELL_DRAGON_FORM, SPELL_SHADOW_CREATURES,
     SPELL_SUMMON_HORRIBLE_THINGS, SPELL_CALL_CANINE_FAMILIAR,
-    SPELL_SUMMON_ICE_BEAST, SPELL_SUMMON_UGLY_THING,
+    SPELL_SUMMON_ICE_BEAST, SPELL_MONSTROUS_MENAGERIE,
     SPELL_CONJURE_BALL_LIGHTNING, SPELL_SUMMON_HYDRA, SPELL_SUMMON_DRAGON,
     SPELL_DEATH_CHANNEL, SPELL_NECROMUTATION, SPELL_CHAIN_OF_CHAOS
 };
@@ -287,7 +288,7 @@ void xom_is_stimulated(int maxinterestingness, const string& message,
 void xom_tick()
 {
     // Xom now ticks every action, not every 20 turns.
-    if (x_chance_in_y(1, 20))
+    if (one_chance_in(20))
     {
         // Xom semi-randomly drifts your piety.
         const string old_xom_favour = describe_xom_favour();
@@ -730,9 +731,7 @@ static void _xom_make_item(object_class_type base, int subtype, int power)
 {
     god_acting gdact(GOD_XOM);
 
-    int thing_created =
-        items(true, base, subtype, true, power, MAKE_ITEM_RANDOM_RACE,
-              0, 0, GOD_XOM);
+    int thing_created = items(true, base, subtype, true, power, 0, 0, 0, GOD_XOM);
 
     if (feat_destroys_item(grd(you.pos()), mitm[thing_created],
                            !silenced(you.pos())))
@@ -1058,6 +1057,17 @@ static bool _player_is_dead(bool soon = true)
         || soon && (you.strength() <= 0 || you.dex() <= 0 || you.intel() <= 0);
 }
 
+static void _note_potion_effect(potion_type pot)
+{
+    string potion_name = potion_type_name(static_cast<int>(pot));
+
+    string potion_msg = "potion effect ";
+
+    potion_msg += ("(" + potion_name + ")");
+
+    take_note(Note(NOTE_XOM_EFFECT, you.piety, -1, potion_msg.c_str()), true);
+}
+
 static int _xom_do_potion(bool debug = false)
 {
     if (debug)
@@ -1066,7 +1076,7 @@ static int _xom_do_potion(bool debug = false)
     potion_type pot = POT_CURING;
     while (true)
     {
-        pot = random_choose(POT_CURING, POT_HEAL_WOUNDS, POT_MAGIC, POT_SPEED,
+        pot = random_choose(POT_CURING, POT_HEAL_WOUNDS, POT_MAGIC, POT_HASTE,
                             POT_MIGHT, POT_AGILITY, POT_BRILLIANCE,
                             POT_INVISIBILITY, POT_BERSERK_RAGE, POT_EXPERIENCE,
                             -1);
@@ -1113,25 +1123,10 @@ static int _xom_do_potion(bool debug = false)
     if (pot == POT_INVISIBILITY)
         you.attribute[ATTR_INVIS_UNCANCELLABLE] = 1;
 
-    // Take a note.
-    string potion_msg = "potion effect ";
-    switch (pot)
-    {
-    case POT_CURING:        potion_msg += "(curing)"; break;
-    case POT_HEAL_WOUNDS:   potion_msg += "(heal wounds)"; break;
-    case POT_MAGIC:         potion_msg += "(magic)"; break;
-    case POT_SPEED:         potion_msg += "(speed)"; break;
-    case POT_MIGHT:         potion_msg += "(might)"; break;
-    case POT_AGILITY:       potion_msg += "(agility)"; break;
-    case POT_BRILLIANCE:    potion_msg += "(brilliance)"; break;
-    case POT_INVISIBILITY:  potion_msg += "(invisibility)"; break;
-    case POT_BERSERK_RAGE:  potion_msg += "(berserk)"; break;
-    case POT_EXPERIENCE:    potion_msg += "(experience)"; break;
-    default:                potion_msg += "(other)"; break;
-    }
-    take_note(Note(NOTE_XOM_EFFECT, you.piety, -1, potion_msg.c_str()), true);
+    _note_potion_effect(pot);
 
-    potion_effect(pot, 150, nullptr, false, false);
+    potion_effect(pot, 150, nullptr, false);
+
     level_change(); // potion_effect() doesn't do this anymore
 
     return XOM_GOOD_POTION;
@@ -1653,8 +1648,7 @@ static int _xom_snakes_to_sticks(int sever, bool debug = false)
                             : _xom_random_stickable(mi->hit_dice));
 
             int thing_created = items(0, base_type, sub_type, true,
-                                      mi->hit_dice / 3 - 1, MAKE_ITEM_NO_RACE,
-                                      0, -1, -1);
+                                      mi->hit_dice / 3 - 1, 0, 0, -1, -1);
 
             if (thing_created == NON_ITEM)
                 continue;
@@ -1804,6 +1798,14 @@ static int _xom_give_mutations(bool good, bool debug = false)
     return XOM_DID_NOTHING;
 }
 
+/**
+ * Have Xom throw divine lightning.  Only acts if hostiles are in LOS,
+ * but it may include the player as a victim.
+ * @param debug  If true, don't have Xom act, but return a value indicating
+ *               whether he would have acted.
+ * @returns      XOM_DID_NOTHING if Xom didn't act, XOM_GOOD_LIGHTNING
+ *               otherwise.
+ */
 static int _xom_throw_divine_lightning(bool debug = false)
 {
     if (!player_in_a_dangerous_place())
@@ -1865,7 +1867,7 @@ static int _xom_throw_divine_lightning(bool debug = false)
     if (you.escaped_death_cause == KILLED_BY_WILD_MAGIC
         && you.escaped_death_aux == "Xom's lightning strike")
     {
-        you.hp = 1;
+        set_hp(1);
         you.reset_escaped_death();
     }
 
@@ -1981,9 +1983,9 @@ static int _xom_change_scenery(bool debug = false)
         const int max_altars = max(1, random2(random2(14)));
         for (int tries = max_altars; tries > 0; --tries)
         {
-            if ((random_near_space(you.pos(), place)
-                    || random_near_space(you.pos(), place, true))
-                && grd(place) == DNGN_FLOOR && you.see_cell(place))
+            if ((random_near_space(&you, you.pos(), place, false)
+                    || random_near_space(&you, you.pos(), place, true))
+                && grd(place) == DNGN_FLOOR)
             {
                 if (debug)
                     return XOM_GOOD_SCENERY;
@@ -3653,7 +3655,7 @@ static void _handle_accidental_death(const int orig_hp,
     }
 
     if (pre_mut_hp <= 0)
-        you.hp = min(orig_hp, you.hp_max);
+        set_hp(min(orig_hp, you.hp_max));
 
     for (int i = 0; i < 3; ++i)
     {
@@ -3970,9 +3972,15 @@ static string _get_death_type_keyword(const kill_method_type killed_by)
     }
 }
 
-bool xom_saves_your_life(const int dam, const int death_source,
-                         const kill_method_type death_type, const char *aux,
-                         bool see_source)
+/**
+ * Have Xom maybe act to save your life.  There is both a flat chance
+ * and an additional chance based on tension that he will refuse to
+ * save you.
+ * @param death_type  The type of death that occurred.
+ * @param aux         Additional string describing this death.
+ * @returns           True if Xom saves your life, false otherwise.
+ */
+bool xom_saves_your_life(const kill_method_type death_type, const char *aux)
 {
     if (!you_worship(GOD_XOM) || _xom_feels_nasty())
         return false;
@@ -4004,7 +4012,7 @@ bool xom_saves_your_life(const int dam, const int death_source,
 
     // Give back some hp.
     if (you.hp < 1)
-        you.hp = 1 + random2(you.hp_max/4);
+        set_hp(1 + random2(you.hp_max/4));
 
     // Make sure all stats are at least 1.
     // XXX: This could lead to permanent stat gains.

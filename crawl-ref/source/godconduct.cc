@@ -337,6 +337,12 @@ bool did_god_conduct(conduct_type thing_done, int level, bool known,
             case GOD_BEOGH:
             case GOD_LUGONU:
             case GOD_DITHMENOS:
+                if (you_worship(GOD_DITHMENOS)
+                    && mons_class_flag(victim->type, M_SHADOW))
+                {
+                    break;
+                }
+
                 if (god_hates_attacking_friend(you.religion, victim))
                     break;
 
@@ -365,6 +371,12 @@ bool did_god_conduct(conduct_type thing_done, int level, bool known,
             case GOD_BEOGH:
             case GOD_LUGONU:
             case GOD_DITHMENOS:
+                if (you_worship(GOD_DITHMENOS)
+                    && mons_class_flag(victim->type, M_SHADOW))
+                {
+                    break;
+                }
+
                 if (god_hates_attacking_friend(you.religion, victim))
                     break;
 
@@ -394,6 +406,12 @@ bool did_god_conduct(conduct_type thing_done, int level, bool known,
             case GOD_BEOGH:
             case GOD_LUGONU:
             case GOD_DITHMENOS:
+                if (you_worship(GOD_DITHMENOS)
+                    && mons_class_flag(victim->type, M_SHADOW))
+                {
+                    break;
+                }
+
                 if (god_hates_attacking_friend(you.religion, victim))
                     break;
 
@@ -525,6 +543,12 @@ bool did_god_conduct(conduct_type thing_done, int level, bool known,
             case GOD_BEOGH:
             case GOD_LUGONU:
             case GOD_DITHMENOS:
+                if (you_worship(GOD_DITHMENOS)
+                    && mons_class_flag(victim->type, M_SHADOW))
+                {
+                    break;
+                }
+
                 if (god_hates_attacking_friend(you.religion, victim))
                     break;
 
@@ -1063,8 +1087,10 @@ bool did_god_conduct(conduct_type thing_done, int level, bool known,
             }
             if (you_worship(GOD_DITHMENOS))
             {
-                piety_change *= 2;
-                piety_denom *= 3;
+                // Full gains at full piety down to 2/3 at 6* piety.
+                // (piety_rank starts at 1, not 0.)
+                piety_change *= 25 - piety_rank();
+                piety_denom *= 24;
             }
         }
 
@@ -1163,7 +1189,7 @@ void set_attack_conducts(god_conduct_trigger conduct[3], const monster* mon,
     else if (mon->neutral())
         conduct[0].set(DID_ATTACK_NEUTRAL, 5, known, mon);
 
-    if (is_unchivalric_attack(&you, mon)
+    if (find_stab_type(&you, mon) != STAB_NO_STAB
         && (!_first_attack_conduct[midx]
             || _first_attack_was_unchivalric[midx]))
     {

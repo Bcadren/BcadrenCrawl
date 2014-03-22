@@ -327,7 +327,7 @@ class colour_bar
                && you.num_turns >= m_request_redraw_after;
     }
 
-    void draw(int ox, int oy, int val, int max_val, bool temp = false)
+    void draw(int ox, int oy, int val, int max_val, bool temp = false, int sub_val = 0)
     {
         ASSERT(val <= max_val);
         if (max_val <= 0)
@@ -338,9 +338,14 @@ class colour_bar
 
         const colour_t temp_colour = temperature_colour(temperature());
         const int width = crawl_view.hudsz.x - (ox - 1);
-        const int disp  = width * val / max_val;
-        const int old_disp = (m_old_disp < 0) ? disp : m_old_disp;
-        m_old_disp = disp;
+        const int sub_disp = (width * val / max_val);
+        int disp  = width * max(0, val - sub_val) / max_val;
+        const int old_disp = (m_old_disp < 0) ? sub_disp : m_old_disp;
+        m_old_disp = sub_disp;
+
+        // Always show at least one sliver of the sub-bar, if it exists
+        if (sub_val)
+            disp = max(0, min(sub_disp - 1, disp));
 
         CGOTOXY(ox, oy, GOTO_STAT);
 
@@ -353,7 +358,9 @@ class colour_bar
 
             if (cx < disp)
                 textcolor(BLACK + (temp) ? temp_colour * 16 : m_default * 16);
-            else if (old_disp > disp && cx < old_disp)
+            else if (cx < sub_disp)
+                textcolor(BLACK + YELLOW * 16);
+            else if (old_disp >= sub_disp && cx < old_disp)
                 textcolor(BLACK + m_change_neg * 16);
             putwch(' ');
 #else
@@ -365,6 +372,11 @@ class colour_bar
             else if (cx < disp)
             {
                 textcolor(m_change_pos);
+                putwch('=');
+            }
+            else if (cx < sub_disp)
+            {
+                textcolor(YELLOW);
                 putwch('=');
             }
             else if (cx < old_disp)
@@ -529,9 +541,11 @@ static void _print_stats_temperature(int x, int y)
 
 static void _print_stats_mp(int x, int y)
 {
+#if TAG_MAJOR_VERSION == 34
     if (you.species == SP_DJINNI)
         return;
 
+#endif
     // Calculate colour
     short mp_colour = HUD_VALUE_COLOUR;
 
@@ -572,6 +586,7 @@ static void _print_stats_mp(int x, int y)
     MP_Bar.draw(19, y, you.magic_points, you.max_magic_points);
 }
 
+#if TAG_MAJOR_VERSION == 34
 static void _print_stats_contam(int x, int y)
 {
     if (you.species != SP_DJINNI)
@@ -618,12 +633,14 @@ static void _print_stats_contam(int x, int y)
 #endif
     Contam_Bar.draw(19, y, contam, max_contam);
 }
-
+#endif
 static void _print_stats_hp(int x, int y)
 {
     int max_max_hp = get_real_hp(true, true);
+#if TAG_MAJOR_VERSION == 34
     if (you.species == SP_DJINNI)
         max_max_hp += get_real_mp(true);
+#endif
 
     // Calculate colour
     short hp_colour = HUD_VALUE_COLOUR;
@@ -647,10 +664,12 @@ static void _print_stats_hp(int x, int y)
     // Health: xxx/yyy (zzz)
     CGOTOXY(x, y, GOTO_STAT);
     textcolor(HUD_CAPTION_COLOUR);
+#if TAG_MAJOR_VERSION == 34
     if (you.species == SP_DJINNI)
         CPRINTF(max_max_hp != you.hp_max ? "EP: " : "Essence: ");
     else
-        CPRINTF(max_max_hp != you.hp_max ? "HP: " : "Health: ");
+#endif
+    CPRINTF(max_max_hp != you.hp_max ? "HP: " : "Health: ");
     textcolor(hp_colour);
     CPRINTF("%d", you.hp);
     if (!boosted)
@@ -668,17 +687,21 @@ static void _print_stats_hp(int x, int y)
 #ifdef USE_TILE_LOCAL
     if (tiles.is_using_small_layout())
     {
-        if (you.species != SP_DJINNI)
-            HP_Bar.vdraw(2, 10, you.hp, you.hp_max);
-        else
+#if TAG_MAJOR_VERSION == 34
+        if (you.species == SP_DJINNI)
             EP_Bar.vdraw(2, 10, you.hp, you.hp_max);
+        else
+#endif
+        HP_Bar.vdraw(2, 10, you.hp, you.hp_max);
     }
     else
 #endif
-    if (you.species != SP_DJINNI)
-        HP_Bar.draw(19, y, you.hp, you.hp_max);
-    else
+#if TAG_MAJOR_VERSION == 34
+    if (you.species == SP_DJINNI)
         EP_Bar.draw(19, y, you.hp, you.hp_max);
+    else
+#endif
+        HP_Bar.draw(19, y, you.hp, you.hp_max, false, you.hp - poison_survival());
 }
 
 static short _get_stat_colour(stat_type stat)
@@ -1019,6 +1042,10 @@ static void _get_status_lights(vector<status_light>& out)
         DUR_BARBS,
         DUR_POISON_VULN,
         DUR_PORTAL_PROJECTILE,
+        DUR_FORESTED,
+        DUR_DRAGON_CALL,
+        DUR_DRAGON_CALL_COOLDOWN,
+        DUR_ABJURATION_AURA,
     };
 
     status_info inf;
@@ -1245,6 +1272,13 @@ void print_stats(void)
     if (Temp_Bar.wants_redraw() && you.species == SP_LAVA_ORC)
         you.redraw_temperature = true;
 
+    // Poison display depends on regen rate, so should be redrawn every turn.
+    if (you.duration[DUR_POISONING])
+    {
+        you.redraw_hit_points = true;
+        you.redraw_status_flags |= REDRAW_POISONED;
+    }
+
 #ifdef USE_TILE_LOCAL
     bool has_changed = _need_stats_printed();
 #endif
@@ -1256,7 +1290,9 @@ void print_stats(void)
     }
     if (you.redraw_hit_points)   { you.redraw_hit_points = false;   _print_stats_hp (1, 3); }
     if (you.redraw_magic_points) { you.redraw_magic_points = false; _print_stats_mp (1, 4); }
+#if TAG_MAJOR_VERSION == 34
     _print_stats_contam(1, 4);
+#endif
     if (you.redraw_temperature)  { you.redraw_temperature = false;  _print_stats_temperature (1, temp_pos); }
     if (you.redraw_armour_class) { you.redraw_armour_class = false; _print_stats_ac (1, ac_pos); }
     if (you.redraw_evasion)      { you.redraw_evasion = false;      _print_stats_ev (1, ev_pos); }
@@ -1403,10 +1439,12 @@ void draw_border(void)
 
     //CGOTOXY(1, 3, GOTO_STAT); CPRINTF("Hp:");
     CGOTOXY(1, mp_pos, GOTO_STAT);
+#if TAG_MAJOR_VERSION == 34
     if (you.species == SP_DJINNI)
         CPRINTF("Contam:");
     else
-        CPRINTF("Magic:");
+#endif
+    CPRINTF("Magic:");
     CGOTOXY(1, ac_pos, GOTO_STAT); CPRINTF("AC:");
     CGOTOXY(1, ev_pos, GOTO_STAT); CPRINTF("EV:");
     CGOTOXY(1, sh_pos, GOTO_STAT); CPRINTF("SH:");
@@ -2478,7 +2516,6 @@ static string _status_mut_abilities(int sw)
         DUR_DIVINE_STAMINA,
         DUR_BERSERK,
         STATUS_AIRBORNE,
-        DUR_SLAYING,
         STATUS_MANUAL,
         STATUS_SAGE,
         DUR_MAGIC_SHIELD,
@@ -2522,6 +2559,9 @@ static string _status_mut_abilities(int sw)
         DUR_FROZEN,
         DUR_SAP_MAGIC,
         STATUS_MAGIC_SAPPED,
+        DUR_FORESTED,
+        DUR_DRAGON_CALL,
+        DUR_ABJURATION_AURA,
     };
 
     status_info inf;
@@ -2680,7 +2720,6 @@ static string _status_mut_abilities(int sw)
         mutations.push_back("permanent stasis");
         mutations.push_back("dig shafts and tunnels");
         mutations.push_back("four strong arms");
-        mutations.push_back("poison weakness");
         break;
 
     case SP_GARGOYLE:
@@ -2688,11 +2727,13 @@ static string _status_mut_abilities(int sw)
                        + max(0, you.experience_level - 7) * 2 / 5;
         break;
 
+#if TAG_MAJOR_VERSION == 34
     case SP_DJINNI:
         mutations.push_back("fire immunity");
         mutations.push_back("cold vulnerability");
         break;
 
+#endif
     default:
         break;
     }                           //end switch - innate abilities

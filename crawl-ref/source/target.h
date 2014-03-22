@@ -204,7 +204,7 @@ enum jump_block_reason
 class targetter_jump : public targetter
 {
 public:
-    targetter_jump(const actor* act, int range, bool clear_path = true,
+    targetter_jump(const actor* act, int r2, bool clear_path = true,
                    bool immobile = false);
 
     bool valid_aim(coord_def a);
@@ -234,6 +234,45 @@ public:
     aff_type is_affected(coord_def loc);
 private:
     explosion_map exp_map;
+};
+
+class targetter_cone : public targetter
+{
+public:
+    targetter_cone(const actor *act, int range);
+
+    bool valid_aim(coord_def a);
+    bool set_aim(coord_def a);
+    aff_type is_affected(coord_def loc);
+    map<coord_def, aff_type> zapped;
+    FixedVector< map<coord_def, aff_type>, LOS_RADIUS + 1 > sweep;
+private:
+    int range2;
+};
+
+#define SHOTGUN_BEAMS 11
+
+class targetter_shotgun : public targetter
+{
+public:
+    targetter_shotgun(const actor* act, int range);
+    bool valid_aim(coord_def a);
+    bool set_aim(coord_def a);
+    aff_type is_affected(coord_def loc);
+    FixedVector<ray_def, SHOTGUN_BEAMS> rays;
+    map<coord_def, int> zapped;
+private:
+    int range2;
+};
+
+class targetter_list : public targetter
+{
+public:
+    targetter_list(vector<coord_def> targets, coord_def center);
+    aff_type is_affected(coord_def loc);
+    bool valid_aim(coord_def a);
+private:
+    vector<coord_def> targets;
 };
 
 #endif

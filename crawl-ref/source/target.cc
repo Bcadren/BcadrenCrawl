@@ -14,6 +14,8 @@
 #include "spl-damage.h"
 #include "terrain.h"
 
+#include <math.h>
+
 #define notify_fail(x) (why_not = (x), false)
 
 static string _wallmsg(coord_def c)
@@ -570,9 +572,6 @@ bool targetter_cloud::set_aim(coord_def a)
             for (adjacent_iterator ai(c); ai; ++ai)
                 if (_cloudable(*ai) && !seen.count(*ai))
                 {
-                    if (agent && !cell_see_cell(*ai, agent->pos(), LOS_NO_TRANS))
-                        continue;
-
                     unsigned int d2 = d1 + ((*ai - c).abs() == 1 ? 5 : 7);
                     if (d2 >= queue.size())
                         queue.resize(d2 + 1);
@@ -881,14 +880,13 @@ aff_type targetter_spray::is_affected(coord_def loc)
     return affected;
 }
 
-targetter_jump::targetter_jump(const actor* act, int range, bool cp,
+targetter_jump::targetter_jump(const actor* act, int r2, bool cp,
                                bool imm) :
-    clear_path(cp), immobile(imm)
+    range2(r2), clear_path(cp), immobile(imm)
 {
     ASSERT(act);
     agent = act;
     origin = act->pos();
-    range2 = dist_range(range);
     jump_is_blocked = false;
 }
 
@@ -1067,7 +1065,7 @@ void targetter_jump::get_additional_sites(coord_def a)
     if (immobile)
     {
         const actor *victim = actor_at(a);
-        if (!victim || victim->invisible())
+        if (!victim || victim->invisible() || !victim->umbraed())
         {
             no_landing_reason = BLOCKED_NO_TARGET;
             return;
@@ -1168,4 +1166,185 @@ aff_type targetter_explosive_bolt::is_affected(coord_def loc)
     }
 
     return on_path ? AFF_TRACER : AFF_NO;
+}
+
+targetter_cone::targetter_cone(const actor *act, int range)
+{
+    ASSERT(act);
+    agent = act;
+    origin = act->pos();
+    aim = origin;
+    ASSERT_RANGE(range, 1 + 1, you.current_vision + 1);
+    range2 = sqr(range) + 1;
+}
+
+bool targetter_cone::valid_aim(coord_def a)
+{
+    if (a != origin && !cell_see_cell(origin, a, LOS_NO_TRANS))
+    {
+        // Scrying/glass/tree/grate.
+        if (agent->see_cell(a))
+            return notify_fail("There's something in the way.");
+        return notify_fail("You cannot see that place.");
+    }
+    if ((origin - a).abs() > range2)
+        return notify_fail("Out of range.");
+    return true;
+}
+
+// Ripped off from targetter_thunderbolt::set_aim.
+bool targetter_cone::set_aim(coord_def a)
+{
+    aim = a;
+    zapped.clear();
+    for (int i = 0; i < LOS_RADIUS + 1; i++)
+        sweep[i].clear();
+
+    if (a == origin)
+        return false;
+
+    const coord_def delta = a - origin;
+    const double arc = PI/4;
+    coord_def l, r;
+    l.x = origin.x + (cos(-arc) * delta.x - sin(-arc) * delta.y + 0.5);
+    l.y = origin.y + (sin(-arc) * delta.x + cos(-arc) * delta.y + 0.5);
+    r.x = origin.x + (cos( arc) * delta.x - sin( arc) * delta.y + 0.5);
+    r.y = origin.y + (sin( arc) * delta.x + cos( arc) * delta.y + 0.5);
+
+    coord_def p;
+
+    coord_def a1 = l - origin;
+    coord_def a2 = r - origin;
+    if (left_of(a2, a1))
+        swapv(a1, a2);
+
+    for (int x = -LOS_RADIUS; x <= LOS_RADIUS; ++x)
+        for (int y = -LOS_RADIUS; y <= LOS_RADIUS; ++y)
+        {
+            if (sqr(x) + sqr(y) > range2)
+                continue;
+            coord_def q(x, y);
+            if (left_of(a1, q) && left_of(q, a2))
+            {
+                (p = q) += origin;
+                if (zapped[p] <= 0
+                    && map_bounds(p)
+                    && opc_solid_see(p) < OPC_OPAQUE
+                    && cell_see_cell(origin, p, LOS_NO_TRANS))
+                {
+                    zapped[p] = AFF_YES;
+                    sweep[isqrt((origin - p).abs())][p] = AFF_YES;
+                }
+            }
+        }
+
+    zapped[origin] = AFF_NO;
+    sweep[0].clear();
+
+    return true;
+}
+
+aff_type targetter_cone::is_affected(coord_def loc)
+{
+    if (loc == aim)
+        return zapped[loc] ? AFF_YES : AFF_TRACER;
+
+    if ((loc - origin).abs() > range2)
+        return AFF_NO;
+
+    return zapped[loc];
+}
+
+targetter_shotgun::targetter_shotgun(const actor* act, int range)
+{
+    ASSERT(act);
+    agent = act;
+    origin = act->pos();
+    range2 = dist_range(range);
+}
+
+bool targetter_shotgun::valid_aim(coord_def a)
+{
+    if (a != origin && !cell_see_cell(origin, a, LOS_NO_TRANS))
+    {
+        if (agent->see_cell(a))
+            return notify_fail("There's something in the way.");
+        return notify_fail("You cannot see that place.");
+    }
+    if ((origin - a).abs() > range2)
+        return notify_fail("Out of range.");
+    return true;
+}
+
+bool targetter_shotgun::set_aim(coord_def a)
+{
+    zapped.clear();
+    rays.init(ray_def());
+
+    if (!targetter::set_aim(a))
+        return false;
+
+    ray_def orig_ray;
+    _make_ray(orig_ray, origin, a);
+    coord_def p;
+    bool hit = false;
+
+    const double spread_range = PI / 4.0;
+    for (int i = 0; i < SHOTGUN_BEAMS; i++)
+    {
+        hit = true;
+        double spread = -(spread_range / 2.0)
+                        + (spread_range * (double)i)
+                                        / (double)(SHOTGUN_BEAMS - 1);
+        rays[i].r.start = orig_ray.r.start;
+        rays[i].r.dir.x =
+             orig_ray.r.dir.x * cos(spread) + orig_ray.r.dir.y * sin(spread);
+        rays[i].r.dir.y =
+            -orig_ray.r.dir.x * sin(spread) + orig_ray.r.dir.y * cos(spread);
+        ray_def tempray = rays[i];
+        p = tempray.pos();
+        while ((origin - (p = tempray.pos())).abs() <= range2)
+        {
+            if (!map_bounds(p) || opc_solid_see(p) >= OPC_OPAQUE)
+                hit = false;
+            if (hit && p != origin)
+                zapped[p] = zapped[p] + 1;
+            tempray.advance();
+        }
+    }
+
+    zapped[origin] = 0;
+    return true;
+}
+
+aff_type targetter_shotgun::is_affected(coord_def loc)
+{
+    if ((loc - origin).abs() > range2)
+        return AFF_NO;
+
+    return (zapped[loc] >= SHOTGUN_BEAMS) ? AFF_YES :
+           (zapped[loc] > 0)              ? AFF_MAYBE
+                                          : AFF_NO;
+}
+
+targetter_list::targetter_list(vector<coord_def> target_list, coord_def center)
+{
+    targets = target_list;
+    origin = center;
+}
+
+aff_type targetter_list::is_affected(coord_def loc)
+{
+    for (unsigned int i = 0; i < targets.size(); ++i)
+    {
+        if (targets[i] == loc)
+            return AFF_YES;
+    }
+
+    return AFF_NO;
+}
+
+bool targetter_list::valid_aim(coord_def a)
+{
+    return true;
 }

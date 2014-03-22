@@ -776,14 +776,6 @@ char_choice_restriction job_allowed(species_type speci, job_type job)
             default:
                 return CC_RESTRICTED;
         }
-    case SP_DJINNI:
-        switch (job)
-        {
-            case JOB_CHAOS_KNIGHT:
-                return CC_UNRESTRICTED;
-            default:
-                return CC_RESTRICTED;
-        }
     case SP_LAVA_ORC:
         switch (job)
         {
@@ -878,6 +870,7 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
         return CC_BANNED;
 
     case WPN_SHORT_SWORD:
+    case WPN_CUTLASS:
         switch (ng.species)
         {
         case SP_NAGA:
@@ -888,9 +881,6 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
             // else fall through
         case SP_HIGH_ELF:
         case SP_DEEP_ELF:
-            // Sludge elves have bad aptitudes with short swords (-1), but
-            // are still better with them than any other starting weapon.
-        case SP_SLUDGE_ELF:
         case SP_HALFLING:
         case SP_KOBOLD:
         case SP_SPRIGGAN:
@@ -901,12 +891,12 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
             return CC_RESTRICTED;
         }
 
-        // Maces and hand axes usually share the same restrictions.
+        // Maces and axes usually share the same restrictions.
     case WPN_MACE:
+    case WPN_FLAIL:
         if (ng.species == SP_TROLL
             || ng.species == SP_OGRE
-            || ng.species == SP_GARGOYLE
-            || ng.species == SP_DJINNI)
+            || ng.species == SP_GARGOYLE)
         {
             return CC_UNRESTRICTED;
         }
@@ -914,6 +904,7 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
             return CC_RESTRICTED;
         // else fall-through
     case WPN_HAND_AXE:
+    case WPN_WAR_AXE:
         switch (ng.species)
         {
         case SP_HUMAN:
@@ -939,6 +930,7 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
         }
 
     case WPN_SPEAR:
+    case WPN_TRIDENT:
         switch (ng.species)
         {
         case SP_HUMAN:
@@ -946,7 +938,6 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
         case SP_LAVA_ORC:
         case SP_MERFOLK:
         case SP_NAGA:
-        case SP_OGRE:
         case SP_CENTAUR:
         case SP_MINOTAUR:
         case SP_TENGU:
@@ -955,24 +946,20 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
         case SP_MUMMY:
         case SP_OCTOPODE:
         case SP_BASE_DRACONIAN:
-        case SP_DJINNI:
         case SP_FORMICID:
         case SP_VINE_STALKER:
             return CC_UNRESTRICTED;
 
         case SP_SPRIGGAN:
-        case SP_HALFLING:
-        case SP_KOBOLD:
-            // Can't use them with a shield, terrible upgrade path;
-            // jobs with other benefits like Warper, Skald or godlies
-            // are better with two-handers.
-            if (ng.job == JOB_FIGHTER || ng.job == JOB_GLADIATOR)
+            // Can't use them with a shield.
+            if (ng.job == JOB_FIGHTER)
                 return CC_BANNED;
 
         default:
             return CC_RESTRICTED;
         }
     case WPN_FALCHION:
+    case WPN_LONG_SWORD:
         switch (ng.species)
         {
         case SP_HUMAN:
@@ -983,7 +970,6 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
         case SP_CENTAUR:
         case SP_MINOTAUR:
         case SP_HIGH_ELF:
-        case SP_SLUDGE_ELF:
         case SP_DEEP_DWARF:
         case SP_TENGU:
         case SP_DEMIGOD:
@@ -992,7 +978,6 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
         case SP_VAMPIRE:
         case SP_OCTOPODE:
         case SP_BASE_DRACONIAN:
-        case SP_DJINNI:
         case SP_FORMICID:
         case SP_VINE_STALKER:
             return CC_UNRESTRICTED;
@@ -1000,28 +985,6 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
         default:
             return CC_RESTRICTED;
         }
-
-    case WPN_TRIDENT:
-        if (ng.job != JOB_FIGHTER && ng.job != JOB_GLADIATOR
-            || species_size(ng.species, PSIZE_BODY) < SIZE_MEDIUM)
-        {
-            return CC_BANNED;
-        }
-
-        // Tridents are strictly better than spears, so unrestrict them
-        // for some species whose Polearm aptitudes are not too bad.
-        switch (ng.species)
-        {
-        case SP_DEEP_DWARF:
-        case SP_GHOUL:
-        case SP_VAMPIRE:
-            return CC_UNRESTRICTED;
-        default:
-            break;
-        }
-
-        // Both are polearms, right?
-        return weapon_restriction(WPN_SPEAR, ng);
 
     case WPN_QUARTERSTAFF:
         if (ng.job != JOB_GLADIATOR)
@@ -1039,9 +1002,7 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
         case SP_MINOTAUR:
         case SP_MUMMY:
         case SP_OCTOPODE:
-        case SP_SLUDGE_ELF:
         case SP_BASE_DRACONIAN:
-        case SP_DJINNI:
         case SP_FORMICID:
         case SP_GARGOYLE:
         case SP_VINE_STALKER:
@@ -1063,7 +1024,6 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
         case SP_LAVA_ORC:
         case SP_SPRIGGAN:
         case SP_TROLL:
-        case SP_SLUDGE_ELF:
             return CC_RESTRICTED;
         case SP_FELID:
             return CC_BANNED;
@@ -1081,9 +1041,8 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
         case SP_TROLL:
         case SP_HILL_ORC:
         case SP_LAVA_ORC:
-        case SP_SLUDGE_ELF:
-        case SP_DJINNI:
         case SP_FORMICID:
+        case SP_SPRIGGAN:
             return CC_RESTRICTED;
         case SP_FELID:
             return CC_BANNED;
@@ -1096,7 +1055,6 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
         {
         case SP_DEEP_ELF:
         case SP_HIGH_ELF:
-        case SP_SLUDGE_ELF:
         case SP_TENGU:
         case SP_MERFOLK:
         case SP_OGRE:
@@ -1115,7 +1073,6 @@ char_choice_restriction weapon_restriction(weapon_type wpn,
         switch (ng.species)
         {
         case SP_DEEP_DWARF:
-        case SP_DJINNI:
             return CC_RESTRICTED;
         case SP_FELID:
             return CC_BANNED;

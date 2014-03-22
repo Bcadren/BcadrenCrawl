@@ -13,8 +13,7 @@
 
 {{
 function bailey_portal(e, ptype, trowel)
-  local timeout_turns_long = crawl.random_range(2700, 3300)
-  local timeout_turns_short = timeout_turns_long/10;
+  local timeout_turns = crawl.random_range(600, 800)
 
   local messager =
     timed_msg {
@@ -39,8 +38,8 @@ function bailey_portal(e, ptype, trowel)
         disappear = "The portal closes with a thud.",
         entity = 'oriflamme',
         bailey_type = ptype,
-        turns = timeout_turns_long,
-        turns_short = timeout_turns_short,
+        turns = timeout_turns,
+        single_timed = true,
         floor = "stone_arch",
         feat_tile = "dngn_portal_bailey_gone",
         msg = messager })
@@ -70,78 +69,58 @@ end
 
 -- Axes.
 function axe_returning(e)
-  e.mons("generate_awake kobold ; tomahawk ego:returning /\
-          generate_awake goblin ; tomahawk ego:returning")
+  e.mons("generate_awake kobold ; tomahawk ego:returning ident:type q:4 | \
+                                  tomahawk ego:returning ident:type q:3 / \
+          generate_awake hobgoblin ; tomahawk ego:returning ident:type q:4 | \
+                                     tomahawk ego:returning ident:type q:3")
 end
 
 function kobold_axe_returning(e)
-  e.mons("generate_awake kobold ; tomahawk ego:returning")
+  e.mons("generate_awake kobold ; tomahawk ego:returning ident:type q:4 | \
+                                  tomahawk ego:returning ident:type q:3")
 end
 
 function easy_axe_fighter(e)
-  e.mons("w:3 orc warrior ; hand axe race:orcish w:6 | war axe race:orcish w:1 /\
-          w:7 gnoll ; hand axe w:6 | war axe w:1 /\
-          w:10 hobgoblin ; hand axe w:6 | war axe w:1 /\
-          w:10 orc ; hand axe race:orcish w:6 | war race:orcish axe w:1 /\
-          w:12 goblin ; hand axe w:6 | war axe w:1")
+  e.mons("w:3 orc warrior ; hand axe w:60 | war axe . ring mail / \
+          w:7 gnoll ; hand axe w:60 | war axe . leather armour / \
+          w:10 hobgoblin ; hand axe w:60 | war axe . leather armour / \
+          w:10 orc ; hand axe w:60 | war axe . leather armour / \
+          w:12 goblin ; hand axe w:60 | war axe . leather armour")
 end
 
 function hard_axe_fighter(e)
-  e.mons("w:8 orc warrior ; war axe race:orcish w:10  |\
-                            broad axe race:orcish w:2 |\
-                            battleaxe race:orcish w:1 /\
-          w:2 orc knight ;  war axe race:orcish w:10  |\
-                            broad axe race:orcish w:2 |\
-                            battleaxe race:orcish w:1")
+  e.mons("w:8 orc warrior ; war axe | broad axe w:2 | battleaxe w:1 . \
+                            ring mail | scale mail | chain mail | plate armour / \
+          w:2 orc knight ; war axe | broad axe w:2 | battleaxe w:1 . \
+                           ring mail | scale mail | chain mail | plate armour")
 end
 
 -- Polearms.
 function orc_with_polearm(e)
   e.mons("orc ; \
-          spear      | spear race:orcish |\
-          trident    | trident race:orcish |\
-          halberd    | halberd race:orcish .\
-          scale mail race:orcish  | scale mail |\
-          ring mail race:orcish   | ring mail |\
-          chain mail race:orcish  | chain mail")
+          spear | trident | halberd . \
+          ring mail | scale mail | chain mail")
 end
 
 function orc_warrior_with_polearm(e)
   e.mons("orc warrior ; \
-          spear w:5    | spear w:5 race:orcish |\
-          trident w:5  | trident w:5 race:orcish |\
-          halberd      | halberd race:orcish |\
-          glaive       | glaive race:orcish |\
-          bardiche w:1 | bardiche w:1 race:orcish .\
-          scale mail race:orcish    | scale mail |\
-          ring mail race:orcish     | ring mail |\
-          chain mail race:orcish    | chain mail |\
-          plate armour race:orcish  | plate armour |\
+          spear w:5 | trident w:5 | halberd | glaive | bardiche w:1 . \
+          ring mail | scale mail | chain mail | plate armour |\
           crystal plate armour w:1")
 end
 
 function orc_knight_with_polearm(e)
   e.mons("orc knight ; \
-          trident w:5  | trident w:5 race:orcish |\
-          halberd      | halberd race:orcish |\
-          glaive       | glaive race:orcish |\
-          bardiche w:1 | bardiche w:1 race:orcish .\
-          ring mail race:orcish     | ring mail |\
-          chain mail race:orcish    | chain mail |\
-          chain mail race:orcish    | chain mail |\
-          plate armour race:orcish  | plate armour |\
+          trident w:5 | halberd | glaive | bardiche w:1 . \
+          ring mail | scale mail | chain mail | plate armour | \
           crystal plate armour w:1")
 end
 
--- defined but not used, since the depth for the current entry vaults is 7-16
+-- defined but not used, since the depth for the current entry vaults is 7-14
 function orc_warlord_with_polearm(e)
   e.mons("orc warlord ; \
-          halberd      | halberd race:orcish |\
-          glaive       | glaive race:orcish |\
-          bardiche w:1 | bardiche w:1 race:orcish . \
-          chain mail race:orcish w:20 | chain mail w:20 |\
-          plate armour race:orcish    | plate armour |\
-          crystal plate armour w:1")
+          halberd | glaive | bardiche w:1 . \
+          chain mail w:20 | plate armour | crystal plate armour w:1")
 end
 
 }}
@@ -219,17 +198,19 @@ NAME:   enter_bailey_4
 WEIGHT: 5
 : local rnd = crawl.random2(2)
 : if rnd == 0 then
-MONS:   goblin ; hand axe / hobgoblin ; hand axe / orc ; hand axe race:orcish
-MONS:   goblin ; tomahawk ego:returning / hobgoblin ; tomahawk ego:returning /\
-        orc ; tomahawk ego:returning
+MONS:   goblin ; hand axe / hobgoblin ; hand axe / orc ; hand axe
+MONS:   goblin ; tomahawk ego:returning ident:type q:4 | \
+                 tomahawk ego:returning ident:type q:3 / \
+        hobgoblin ; tomahawk ego:returning ident:type q:4 | \
+                    tomahawk ego:returning ident:type q:3 / \
+        orc ; tomahawk ego:returning ident:type q:4 | \
+              tomahawk ego:returning ident:type q:3
+SUBST: 1 = 122
 :   bailey_portal_axe(_G)
 : elseif rnd == 1 then
-MONS:   goblin ; spear / hobgoblin ; spear / orc ; spear race:orcish
-MONS:   goblin ; spear / hobgoblin ; spear /\
-        orc ; spear race:orcish
+MONS:   goblin ; spear / hobgoblin ; spear / orc ; spear
 :   bailey_portal_polearm(_G)
 : end
-SUBST: 1 = 122
 KMASK: wW = no_monster_gen
 MAP
 ...........
@@ -246,7 +227,8 @@ ENDMAP
 NAME: enter_bailey_5
 : local rnd = crawl.random2(2)
 : if rnd == 0 then
-MONS: goblin ; tomahawk ego:returning
+MONS: goblin ; tomahawk ego:returning ident:type q:4 | \
+               tomahawk ego:returning ident:type q:3
 :   bailey_portal_axe(_G)
 : elseif rnd == 1 then
 MONS: goblin ; spear
@@ -306,7 +288,7 @@ MONS:   gnoll ; spear / goblin ; spear
 : end
 SUBST:  . = ...;!
 COLOUR: ; = red
-KITEM:  ! = potion of confusion w:2 ident:type
+KITEM:  ! = potion of confusion q:2 ident:type
 KFEAT:  ! = floor
 SUBST:  ; = .
 MAP
@@ -342,6 +324,37 @@ MAP
  ccnnncccccnnncccccc
  x.................@
  xxxxxxxxxxxxxxxxxxx
+ENDMAP
+
+NAME: lightli_bailey_entry_fortress
+WEIGHT: 1
+: local rnd = crawl.random2(2)
+: if rnd == 0 then
+MONS: orc ; tomahawk ego:returning ident:type q:3 | \
+            tomahawk ego:returning ident:type q:4 . hand axe
+MONS: gnoll ; hand axe / goblin ; hand axe
+:   bailey_portal_axe(_G)
+: elseif rnd == 1 then
+MONS: orc ; spear, gnoll ; spear / goblin ; spear
+:   bailey_portal_polearm(_G)
+: end
+KMASK: W = no_monster_gen
+MAP
+WWWWWWWWWWWWWWW
+Wccc.2.1.2.cccW
+WcccccccccccccW
+WcccccccccccccW
+W.ccccccccccc.W
+W2ccccccccccc2W
+W.ccccccccccc.W
+W1ccccccccccc1W
+W.ccccccccccc.W
+W2ccccccccccc2W
+W.ccccccccccc.W
+WcccccccccccccW
+WcccccvOvcccccW
+Wccc.2.1.2.cccW
+WWWWWWWWWWWWWWW
 ENDMAP
 
 # The actual portal vaults #####################################
@@ -383,7 +396,6 @@ ENDMAP
 #
 # Loot consists of approximately six good items.
 NAME:   bailey_axe_1
-WEIGHT: 10
 ORIENT: encompass
 TAGS:   bailey_axe no_rotate no_item_gen no_monster_gen no_pool_fixup
 #
@@ -404,14 +416,14 @@ KFEAT:  Z = teleport trap
 #
 # Traps are alarm on the entrance and alarm/net near the loot. Yes, I want
 # everyone to wake up.
-KFEAT: ~ = alarm trap / floor
+KFEAT: ~ = known alarm trap / floor
 #
 # There is only one way up. You have to pass near the axe-throwing kobolds
 # twice. This is intended. Teleportation traps ensure you won't get
 # stranded.
 NSUBST: s = 1:T / *:.
 NSUBST: t = 1:T / *:.
-KFEAT:  T = teleport trap
+KFEAT:  T = known teleport trap
 : bailey_setup(_G)
 MAP
   ccccccccc
@@ -456,17 +468,16 @@ ENDMAP
 #
 # Apart from weapons and armours left by the monsters, there are about 10
 # potions useful in battle. If those monsters drink them first, of course...
-# And there is always one stack of very good potions
+# Plus, there is always one stack of very good potions.
 NAME:   bailey_axe_2
 ORIENT: encompass
 TAGS:   bailey_axe no_rotate
-MONS:   generate_awake kobold ; tomahawk ego:returning /\
-        generate_awake goblin ; tomahawk ego:returning
-MONS:   gnoll ; halberd | halberd ego:electrocution
+: axe_returning(_G)
+MONS:   gnoll ; mundane halberd | halberd ego:electrocution ident:type
 MONS:   orc warrior / orc knight
 NSUBST: e = 1:e / *:d
 ITEM:   potion of curing / potion of heal wounds / potion of magic / nothing /\
-        potion of might w:5 / potion of speed w:2 / potion of berserk rage w:3
+        potion of might w:5 / potion of haste w:2 / potion of berserk rage w:3
 ITEM:   potion of experience w:30 / potion of cure mutation w:30 /\
         potion of beneficial mutation q:2 w:30
 : bailey_setup(_G)
@@ -495,17 +506,14 @@ ccc ccc ccccc ccc ccc
 ENDMAP
 
 ############################################################################
-# Another actual bailey.
-#
-# six good items
+# Another actual bailey. Six good items.
 NAME:   bailey_axe_3
-WEIGHT: 10
 ORIENT: encompass
 TAGS:   bailey_axe no_rotate no_item_gen no_monster_gen no_pool_fixup
 SUBST:  v : ccv
 ITEM:   any good_item
 KFEAT:  _ = altar_trog / altar_okawaru / altar_makhleb
-KFEAT:  T = teleport trap
+KFEAT:  T = known teleport trap
 #
 # Monsters defined in the header. Do not change order!
 : kobold_axe_returning(_G)
@@ -559,7 +567,6 @@ ENDMAP
 # Loots consists of six good items.
 #
 NAME:    bailey_axe_4
-WEIGHT:  10
 ORIENT:  encompass
 TAGS:    bailey_axe no_rotate no_item_gen no_monster_gen no_pool_fixup
 #
@@ -623,7 +630,6 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ENDMAP
 
 NAME:   bailey_axe_minmay_hex_keep
-WEIGHT: 10
 ORIENT: encompass
 TAGS:   bailey_axe no_item_gen no_monster_gen
 # Loot consists of 8 good potions and scrolls in the last outer room, with a
@@ -633,7 +639,7 @@ TAGS:   bailey_axe no_item_gen no_monster_gen
 # well... added the warlord in an attempt to make it more even.  --dpeg
 ITEM:   potion of curing / potion of heal wounds / potion of resistance w:5 / \
         potion of might w:5 / potion of brilliance w:5 / potion of agility w:5 / \
-        potion of magic w:5 / potion of speed w:5 / \
+        potion of magic w:5 / potion of haste w:5 / \
         scroll of teleportation / scroll of blinking / scroll of identify / \
         scroll of enchant weapon i w:2 / scroll of enchant weapon ii w:2 / \
         scroll of enchant weapon iii w:1 / scroll of enchant armour w:5
@@ -710,7 +716,6 @@ ENDMAP
 # orcs leave lying around. You can also see the three pieces from afar.
 #
 NAME:   bailey_polearm_1
-WEIGHT: 10
 ORIENT: encompass
 TAGS:   bailey_polearm no_rotate no_pool_fixup no_monster_gen
 NSUBST: D = 1:+ / *:c
@@ -720,13 +725,12 @@ NSUBST: E = 1:+ / *:c
 : orc_knight_with_polearm(_G)
 SUBST:  2 = 223.
 SUBST:  1 = 1 2:1 .
-ITEM:   good_item crystal plate armour / good_item plate armour race:orcish /\
+ITEM:   good_item crystal plate armour / good_item plate armour /\
         good_item gold dragon armour w:5 / good_item ice dragon armour w:5 /\
         good_item fire dragon armour w:5 / good_item steam dragon armour w:5
-# XXX: Which armour pieces can be orcish?
-ITEM:   good_item cloak race:orcish / good_item pair of gloves race:orcish /\
-        good_item helmet race:orcish / good_item pair of boots race:orcish /\
-        good_item large shield race:orcish / good_item shield race:orcish
+ITEM:   good_item cloak / good_item pair of gloves /\
+        good_item helmet / good_item pair of boots /\
+        good_item large shield / good_item shield
 : bailey_setup(_G)
 MAP
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -766,7 +770,8 @@ ENDMAP
 NAME:   bailey_polearm_2
 ORIENT: encompass
 TAGS:   bailey_polearm no_rotate no_pool_fixup no_monster_gen
-MONS:   orc warrior ; crossbow . bolt w:5 / orc ; crossbow . bolt
+MONS:   orc warrior w:5 ; crossbow . bolt . ring mail | scale mail / \
+        orc ; crossbow . bolt . ring mail | scale mail
 : orc_with_polearm(_G)
 : orc_warrior_with_polearm(_G)
 : orc_knight_with_polearm(_G)
@@ -774,14 +779,14 @@ MONS:   orc knight
 SUBST:  2 = 23
 NSUBST: 4 = 1:4 / *:3
 SUBST:  W : W..
-KFEAT:  T = teleport trap
+KFEAT:  T = known teleport trap
 SUBST:  X = I G C
 KFEAT:  C = altar_beogh
 ITEM:   manual of armour / manual of fighting / manual of shields /\
-        good_item bardiche race:orcish / good_item executioner's axe race:orcish
+        good_item bardiche / good_item executioner's axe
 ITEM:   potion of experience / scroll of acquirement /\
         scroll of enchant armour q:2 / scroll of enchant weapon III q:2 /\
-        legendary deck of wonders
+        legendary deck of wonders ident:type
 NSUBST: d = 1:e / *:d|
 : bailey_setup(_G)
 MAP
@@ -877,18 +882,19 @@ ENDMAP
 ############################################################################
 # Surrounded.
 # This one uses both missiles and polearms, with more emphasis on the
-# latter.  Loot is approximately six good items.
+# latter.  Loot is approximately seven good items.
 #
 NAME:   bailey_polearm_4
-WEIGHT: 10
 ORIENT: encompass
 TAGS:   bailey_polearm no_rotate no_item_gen no_monster_gen no_pool_fixup
-ITEM:   any good_item / nothing
-MONS:   orc warrior ; crossbow . bolt | halberd
+ITEM:   any good_item
+MONS:   orc warrior ; crossbow . bolt . ring mail | scale mail | chain mail / \
+        orc warrior ; halberd . ring mail | scale mail | chain mail
 : orc_with_polearm(_G)
 : orc_warrior_with_polearm(_G)
 : orc_knight_with_polearm(_G)
-SUBST:  1=112, 2=23, 3=34
+SUBST:  1 = 112, 2 = 23, 3 = 34
+NSUBST: d = 4:d / 2:. / * = d.
 : bailey_setup(_G)
 MAP
 ccccccccccccccccccccccccccccccc
@@ -915,11 +921,10 @@ ENDMAP
 # useful in battle. No special weapons and armours.
 #
 NAME:   bailey_polearm_5
-WEIGHT: 10
 ORIENT: encompass
 TAGS:   bailey_polearm no_item_gen no_monster_gen
 KITEM:  ! = potion of curing / potion of heal wounds / potion of might w:5 /\
-            potion of speed w:3 / potion of berserk rage w:2 /\
+            potion of haste w:3 / potion of berserk rage w:2 /\
             potion of invisibility w:3 / potion of experience w:1 /\
             potion of beneficial mutation w:1 / potion of resistance w:1
 KITEM:  ? = scroll of enchant weapon I / scroll of enchant weapon II /\
