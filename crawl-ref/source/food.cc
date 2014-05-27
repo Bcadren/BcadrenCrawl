@@ -1293,9 +1293,12 @@ bool eat_from_inventory()
 //         -2 for skip to inventory.
 int prompt_eat_chunks(bool only_auto)
 {
-    // Full herbivores cannot eat chunks.
-    if (player_mutation_level(MUT_HERBIVOROUS) == 3)
+    // Only ghouls can eat chunks, vampires have their own thing.
+    if (player_mutation_level(MUT_SAPROVOROUS) != 3
+        && you.species != SP_VAMPIRE)
+    {
         return 0;
+    }
 
     // If we *know* the player can eat chunks, doesn't have the gourmand
     // effect and isn't hungry, don't prompt for chunks.
@@ -2119,6 +2122,9 @@ bool can_ingest(int what_isit, int kindof_thing, bool suppress_msg,
             }
             else if (kindof_thing == FOOD_CHUNK)
             {
+                if (player_mutation_level(MUT_SAPROVOROUS) != 3)
+                    return false;
+
                 if (rotten && !_player_can_eat_rotten_meat(!suppress_msg))
                     return false;
 
