@@ -1035,20 +1035,25 @@ static void _give_starting_food()
         return;
 
     item_def item;
-    item.quantity = 1;
     if (you.species == SP_SPRIGGAN)
     {
+        item.quantity = 1;
+
         item.base_type = OBJ_POTIONS;
         item.sub_type  = POT_PORRIDGE;
     }
     else if (you.species == SP_VAMPIRE)
     {
+        item.quantity = 1;
+
         item.base_type = OBJ_POTIONS;
         item.sub_type  = POT_BLOOD;
         init_stack_blood_potions(item);
     }
     else
     {
+        item.quantity = 5;
+
         item.base_type = OBJ_FOOD;
         if (player_genus(GENPC_ORCISH) || you.species == SP_KOBOLD
             || you.species == SP_OGRE || you.species == SP_TROLL
@@ -1065,7 +1070,7 @@ static void _give_starting_food()
     if (player_mutation_level(MUT_FAST_METABOLISM)
         || you.char_class == JOB_HEALER)
     {
-        item.quantity = 2;
+        item.quantity *= 2;
     }
 
     const int slot = find_free_slot(item);
