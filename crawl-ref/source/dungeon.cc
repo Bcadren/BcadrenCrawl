@@ -1380,9 +1380,9 @@ static int _num_items_wanted(int absdepth0)
     if (branches[you.where_are_you].branch_flags & BFLAG_NO_ITEMS)
         return 0;
     else if (absdepth0 > 5 && one_chance_in(500 - 5 * absdepth0))
-        return 11 + random2avg(100, 2); // rich level!
+        return 10 + random2avg(90, 2); // rich level!
     else
-        return 3 + roll_dice(3, 12);
+        return 3 + roll_dice(3, 11);
 }
 
 static int _num_mons_wanted()
@@ -4007,9 +4007,7 @@ static void _builder_monsters()
 
 static object_class_type _floor_item_class_type()
 {
-    if (one_chance_in(16))
-        return OBJ_FOOD;     // don't starve players chunkless
-    else if (player_in_branch(BRANCH_ORC))
+    if (player_in_branch(BRANCH_ORC))
         return OBJ_GOLD;     // Lots of gold in the orcish mines.
     else
         return OBJ_RANDOM;
