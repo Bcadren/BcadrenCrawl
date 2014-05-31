@@ -16,28 +16,7 @@ function food_weight(e, top)
   end
 end
 }}
-##########################################################################
-# Guarantee at least some really minimal food supply.
-##########################################################################
 
-NAME:   first_bread
-DEPTH:  D:2-5
-CHANCE: 2500, 3333 (D:3), 5000 (D:4), 10000 (D:5)
-TAGS:   extra transparent
-ITEM:   bread ration no_mimic
-MAP
-d
-ENDMAP
-
-# Bit of a hack to handle carnivores suddenly needing permafood.
-NAME:   first_meat
-DEPTH:  D:2-5
-CHANCE: 2500, 3333 (D:3), 5000 (D:4), 10000 (D:5)
-TAGS:   extra transparent
-ITEM:   meat ration q:5 no_mimic
-MAP
-d
-ENDMAP
 ##########################################################################
 # Midgame food supply.
 #
