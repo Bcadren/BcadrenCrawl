@@ -4005,10 +4005,19 @@ static void _builder_monsters()
     }
 }
 
+static object_class_type _floor_item_class_type()
+{
+    if (one_chance_in(16))
+        return OBJ_FOOD;     // don't starve players chunkless
+    else if (player_in_branch(BRANCH_ORC))
+        return OBJ_GOLD;     // Lots of gold in the orcish mines.
+    else
+        return OBJ_RANDOM;
+}
+
 static void _builder_items()
 {
     int i = 0;
-    object_class_type specif_type = OBJ_RANDOM;
     int items_levels = env.absdepth0;
     int items_wanted = _num_items_wanted(items_levels);
 
@@ -4017,16 +4026,11 @@ static void _builder_items()
         items_levels *= 15;
         items_levels /= 10;
     }
-    else if (player_in_branch(BRANCH_ORC))
-        specif_type = OBJ_GOLD;     // Lots of gold in the orcish mines.
-
-    if (one_chance_in(16))
-        specif_type = OBJ_FOOD;     // don't starve players chunkless
 
     for (i = 0; i < items_wanted; i++)
     {
-        items(1, specif_type, OBJ_RANDOM, false, items_levels, 250,
-              MMT_NO_ITEM);
+        items(1, _floor_item_class_type(), OBJ_RANDOM, false, items_levels,
+                250, MMT_NO_ITEM);
     }
 }
 
