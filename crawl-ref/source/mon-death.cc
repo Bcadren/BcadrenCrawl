@@ -425,6 +425,17 @@ int place_monster_corpse(const monster* mons, bool silent, bool force)
     if (feat_is_wall(grd(mons->pos())))
         return -1;
 
+    if (mons_intel(mons) >= I_NORMAL
+        && mons_class_can_leave_corpse(mons->type)
+        && !you_worship(GOD_GOZAG)
+        && one_chance_in(4))
+    {
+        const int type = random_choose_weighted(1, FOOD_MEAT_RATION,
+                                                4, FOOD_BEEF_JERKY, 0);
+        int it = items(0, OBJ_FOOD, type, true, 0);
+        move_item_to_grid(&it, mons->pos(), !mons->swimming());
+    }
+
     // If we were told not to leave a corpse, don't.
     if (mons->props.exists("never_corpse"))
         return -1;
