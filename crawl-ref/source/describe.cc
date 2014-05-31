@@ -547,7 +547,10 @@ static string _randart_descrip(const item_def &item)
 
 static const char *trap_names[] =
 {
-    "dart", "arrow", "spear",
+#if TAG_MAJOR_VERSION == 34
+    "dart",
+#endif
+    "arrow", "spear",
     "teleport", "alarm", "blade",
     "bolt", "net", "Zot", "needle",
     "shaft", "passage", "pressure plate", "web",
@@ -560,7 +563,7 @@ string trap_name(trap_type trap)
 {
     COMPILE_CHECK(ARRAYSZ(trap_names) == NUM_TRAPS);
 
-    if (trap >= TRAP_DART && trap < NUM_TRAPS)
+    if (trap >= 0 && trap < NUM_TRAPS)
         return trap_names[trap];
     return "";
 }
@@ -4727,24 +4730,28 @@ void describe_god(god_type which_god, bool give_title)
         if (which_god == GOD_ZIN)
         {
             have_any = true;
-            const char *how = (you.piety >= 150) ? "carefully" :
-                              (you.piety >= 100) ? "often" :
-                              (you.piety >=  50) ? "sometimes" :
-                                                   "occasionally";
+            const char *how =
+                (you.piety >= piety_breakpoint(5)) ? "carefully" :
+                (you.piety >= piety_breakpoint(3)) ? "often" :
+                (you.piety >= piety_breakpoint(1)) ? "sometimes" :
+                                                     "occasionally";
 
             cprintf("%s %s shields you from chaos.\n",
                     uppercase_first(god_name(which_god)).c_str(), how);
         }
         else if (which_god == GOD_SHINING_ONE)
         {
-            have_any = true;
-            const char *how = (you.piety >= 150) ? "carefully" :
-                              (you.piety >= 100) ? "often" :
-                              (you.piety >=  50) ? "sometimes" :
-                                                   "occasionally";
+            if (you.piety >= piety_breakpoint(1))
+            {
+                have_any = true;
+                const char *how =
+                    (you.piety >= piety_breakpoint(5)) ? "carefully" :
+                    (you.piety >= piety_breakpoint(3)) ? "often" :
+                                                         "sometimes";
 
-            cprintf("%s %s shields you from negative energy.\n",
-                    uppercase_first(god_name(which_god)).c_str(), how);
+                cprintf("%s %s shields you from negative energy.\n",
+                        uppercase_first(god_name(which_god)).c_str(), how);
+            }
         }
         else if (which_god == GOD_TROG)
         {
@@ -4757,17 +4764,6 @@ void describe_god(god_type which_god, bool give_title)
         }
         else if (which_god == GOD_JIYVA)
         {
-            if (!player_under_penance())
-            {
-                have_any = true;
-                const char *how = (you.piety >= 150) ? "carefully" :
-                                  (you.piety >= 100) ? "often" :
-                                  (you.piety >=  50) ? "sometimes" :
-                                                       "occasionally";
-
-                cprintf("%s %s shields your consumables from destruction.\n",
-                        uppercase_first(god_name(which_god)).c_str(), how);
-            }
             if (you.piety >= piety_breakpoint(2))
             {
                 have_any = true;

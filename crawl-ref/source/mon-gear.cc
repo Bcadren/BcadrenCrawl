@@ -1517,10 +1517,21 @@ static void _give_weapon(monster* mon, int level, bool melee_only = false,
         item.base_type = OBJ_WEAPONS;
         if (one_chance_in(4))
             level = MAKE_GOOD_ITEM;
-        item.sub_type = random_choose_weighted(10, WPN_MORNINGSTAR, 10, WPN_FLAIL,
-                                                5, WPN_DIRE_FLAIL,   5, WPN_GREAT_MACE,
-                                                1, WPN_LAJATANG, 0);
+        item.sub_type = random_choose_weighted(10, WPN_MORNINGSTAR,
+                                               10, WPN_FLAIL,
+                                               5, WPN_DIRE_FLAIL,
+                                               5, WPN_GREAT_MACE,
+                                               1, WPN_LAJATANG,
+                                               0);
         break;
+
+        case MONS_IRON_DEVIL:
+            item.base_type = OBJ_WEAPONS;
+            item.sub_type = random_choose_weighted(1, WPN_MORNINGSTAR,
+                                                   1, WPN_DIRE_FLAIL,
+                                                   2, WPN_BATTLEAXE,
+                                                   1, WPN_GREAT_SWORD,
+                                                   0);
 
     default:
         break;
@@ -1676,7 +1687,7 @@ static void _give_ammo(monster* mon, int level, bool mons_summoned)
         case MONS_BIG_KOBOLD:
             if (x_chance_in_y(2, 5))
             {
-                weap_type  = MI_DART;
+                weap_type  = MI_STONE;
                 qty = 1 + random2(5);
             }
             break;

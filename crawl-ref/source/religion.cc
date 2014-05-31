@@ -2730,16 +2730,10 @@ void dock_piety(int piety_loss, int penance)
     }
 }
 
-// Scales a piety number, applying boosters (amulet of faith).
+// Scales a piety number, applying modifiers (faith, forlorn).
 int piety_scale(int piety)
 {
-    if (piety < 0)
-        return -piety_scale(-piety);
-
-    if (you.faith())
-        return piety + div_rand_round(piety, 3);
-
-    return piety;
+    return piety + (you.faith() * div_rand_round(piety, 3));
 }
 
 static void _gain_piety_point();
@@ -3564,7 +3558,7 @@ bool god_hates_attacking_friend(god_type god, const actor *fr)
     }
 }
 
-/*
+/**
  * Does this god accept items for sacrifice?
  *
  * @param god The god.
@@ -3601,7 +3595,7 @@ bool god_likes_items(god_type god, bool greedy_explore)
     }
 }
 
-/*
+/**
  * Does a god like a particular item for sacrifice?
  *
  * @param god The god.
@@ -3637,12 +3631,6 @@ bool god_likes_item(god_type god, const item_def& item)
     case GOD_BEOGH:
         return item.base_type == OBJ_CORPSES
                && mons_genus(item.mon_type) == MONS_ORC;
-
-    case GOD_NEMELEX_XOBEH:
-        return !is_deck(item)
-               && !item.is_critical()
-               && !item_is_rune(item)
-               && item.base_type != OBJ_GOLD;
 
     case GOD_ASHENZARI:
         return item.base_type == OBJ_SCROLLS

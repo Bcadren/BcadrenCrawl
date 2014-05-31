@@ -2074,14 +2074,13 @@ void handle_monster_move(monster* mons)
         && !mons_is_avatar(mons->type)
         && !mons->wont_attack() && gold > 0)
     {
-        for (int i = 0; i < gold; i++)
-            if (one_chance_in(20))
-            {
-                simple_monster_message(mons,
-                                       " is distracted by the nearby gold.");
-                mons->speed_increment -= non_move_energy;
-                return;
-            }
+        if (bernoulli(gold, 1/20.0))
+        {
+            simple_monster_message(mons,
+                    " is distracted by the nearby gold.");
+            mons->speed_increment -= non_move_energy;
+            return;
+        }
     }
 
     if (crawl_state.disables[DIS_MON_ACT] && _unfriendly_or_insane(mons))
@@ -2881,7 +2880,6 @@ static int _estimated_trap_damage(trap_type trap)
     switch (trap)
     {
         case TRAP_BLADE: return 10 + random2(30);
-        case TRAP_DART:  return random2(4);
         case TRAP_ARROW: return random2(7);
         case TRAP_SPEAR: return random2(10);
         case TRAP_BOLT:  return random2(13);

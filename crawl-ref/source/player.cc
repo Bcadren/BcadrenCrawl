@@ -2164,10 +2164,17 @@ int player_prot_life(bool calc_unid, bool temp, bool items)
         }
     }
 
-    // Same here.  Your piety status, and, hence, TSO's protection, is
+    // Same here. Your piety status, and, hence, TSO's protection, is
     // something you can more or less control.
-    if (you_worship(GOD_SHINING_ONE) && you.piety > pl * 50)
-        pl = you.piety / 50;
+    if (you_worship(GOD_SHINING_ONE))
+    {
+        if (you.piety >= piety_breakpoint(1))
+            pl++;
+        if (you.piety >= piety_breakpoint(3))
+            pl++;
+        if (you.piety >= piety_breakpoint(5))
+            pl++;
+    }
 
     if (temp)
     {
@@ -2641,7 +2648,7 @@ int player_shield_class()
         shield += base_shield * you.skill(SK_SHIELDS, 5) / 2;
         shield += base_shield * beogh_bonus * 10 / 6;
 
-        shield += item.plus * 100;
+        shield += item.plus * 200;
 
         if (item.sub_type == ARM_BUCKLER)
             stat = you.dex() * 38;
@@ -2677,9 +2684,9 @@ int player_shield_class()
     }
 
     // mutations
-    // +2, +4, +6
+    // +3, +6, +9
     shield += (player_mutation_level(MUT_LARGE_BONE_PLATES) > 0
-               ? player_mutation_level(MUT_LARGE_BONE_PLATES) * 200
+               ? player_mutation_level(MUT_LARGE_BONE_PLATES) * 300
                : 0);
 
     stat += qazlal_sh_boost() * 100;
@@ -3432,8 +3439,6 @@ void level_change(int source, const char* aux, bool skip_attribute_increase)
         // zot defence abilities; must also be updated in ability.cc when these levels are changed
         if (crawl_state.game_is_zotdef())
         {
-            if (you.experience_level == 1)
-                mprf(MSGCH_INTRINSIC_GAIN, "Your Zot abilities now extend through the making of dart traps.");
             if (you.experience_level == 2)
                 mprf(MSGCH_INTRINSIC_GAIN, "Your Zot abilities now extend through the making of oklob saplings.");
             if (you.experience_level == 3)
@@ -7145,7 +7150,7 @@ void player::confuse(actor *who, int str)
     confuse_player(str);
 }
 
-/*
+/**
  * Paralyse the player for str turns.
  *
  *  Duration is capped at 13.
@@ -8043,7 +8048,7 @@ void player::weaken(actor *attacker, int pow)
     increase_duration(DUR_WEAK, pow + random2(pow + 3), 50);
 }
 
-/*
+/**
  * Check if the player is about to die from flight/form expiration.
  *
  * Check whether the player is on a cell which would be deadly if not for some

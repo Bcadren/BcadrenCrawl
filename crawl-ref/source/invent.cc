@@ -19,7 +19,6 @@
 #include "artefact.h"
 #include "clua.h"
 #include "colour.h"
-#include "coord.h"  // for ASSERT_IN_BOUNDS
 #include "command.h"
 #include "decks.h"
 #include "describe.h"
@@ -38,7 +37,6 @@
 #include "stuff.h"
 #include "mon-util.h"
 #include "state.h"
-#include "terrain.h" // for actor_at
 #include "throw.h"
 
 #ifdef USE_TILE
@@ -84,13 +82,8 @@ InvEntry::InvEntry(const item_def &i, bool show_bg)
 
     if (item_is_stationary_net(i))
     {
-        // Stationary nets should not be in inventory etc.
-        ASSERT_IN_BOUNDS(i.pos);
-        actor * const a = actor_at(i.pos);
-        ASSERTM(a, "No actor under stationary net at (%d,%d)",
-                   i.pos.x, i.pos.y);
-
-        text += make_stringf(" (holding %s)", a->name(DESC_A).c_str());
+        text += make_stringf(" (holding %s)",
+                             net_holdee(i)->name(DESC_A).c_str());
     }
 
     if (i.base_type != OBJ_GOLD && in_inventory(i))
@@ -2061,15 +2054,16 @@ bool item_is_wieldable(const item_def &item)
               && item.sub_type == MISC_LANTERN_OF_SHADOWS;
 }
 
-/*
- * Return wether an item can be evoked.
+/**
+ * Return whether an item can be evoked.
+ *
  * @param item      The item to check
  * @param reach     Do weapons of reaching count?
- * @param known     When set it returns true for items of unknown type which
+ * @param known     When set, return true for items of unknown type which
  *                  might be evokable.
- * @param all_wands When set, it returns true for empty wands.
+ * @param all_wands When set, return true for empty wands.
  * @param msg       Whether we need to print a message.
- * @param equip     When disabled, ignore wield and meld requirements.
+ * @param equip     When false, ignore wield and meld requirements.
  */
 bool item_is_evokable(const item_def &item, bool reach, bool known,
                       bool all_wands, bool msg, bool equip)

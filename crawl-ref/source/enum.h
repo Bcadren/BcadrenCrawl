@@ -207,7 +207,9 @@ enum ability_type
     ABIL_MIN_ZOTDEF = ABIL_MAKE_FUNGUS,
     ABIL_MAKE_PLANT,
     ABIL_MAKE_OKLOB_SAPLING,
+#if TAG_MAJOR_VERSION == 34
     ABIL_MAKE_DART_TRAP,
+#endif
     ABIL_MAKE_ICE_STATUE,
     ABIL_MAKE_OCS,
     ABIL_MAKE_SILVER_STATUE,
@@ -1661,9 +1663,7 @@ enum duration_type
     DUR_TORNADO_COOLDOWN,
 #if TAG_MAJOR_VERSION == 34
     DUR_NAUSEA,
-#endif
     DUR_AMBROSIA,
-#if TAG_MAJOR_VERSION == 34
     DUR_TEMP_MUTATIONS,
 #endif
     DUR_DISJUNCTION,
@@ -3437,6 +3437,7 @@ enum mutation_type
     MUT_FREEZING_CLOUD_IMMUNITY,
     MUT_FLAME_CLOUD_IMMUNITY,
 #endif
+    MUT_FORLORN,
     NUM_MUTATIONS,
 
     RANDOM_MUTATION,
@@ -4208,7 +4209,9 @@ enum torment_source_type
 
 enum trap_type
 {
+#if TAG_MAJOR_VERSION == 34
     TRAP_DART,
+#endif
     TRAP_ARROW,
     TRAP_SPEAR,
     TRAP_TELEPORT,

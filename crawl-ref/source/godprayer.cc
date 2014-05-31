@@ -425,10 +425,10 @@ void pray()
 
     if (you_worship(GOD_XOM))
         mprf(MSGCH_GOD, "%s", getSpeakString("Xom prayer").c_str());
+    else if (you_worship(GOD_GOZAG))
+        mprf(MSGCH_GOD, "%s", getSpeakString("Gozag prayer").c_str());
     else if (player_under_penance())
         simple_god_message(" demands penance!");
-    if (you_worship(GOD_GOZAG))
-        mprf(MSGCH_GOD, "%s", getSpeakString("Gozag prayer").c_str());
     else
         mprf(MSGCH_PRAY, you.religion, "%s", god_prayer_reaction().c_str());
 
@@ -788,7 +788,7 @@ piety_gain_t sacrifice_item_stack(const item_def& item, int *js, int quantity)
     return relative_gain;
 }
 
-/*
+/**
  * Sacrifice the items at the player's location to the player's god.
  *
  * @returns True if an item was sacrificed, false otherwise.
@@ -860,21 +860,10 @@ static bool _offer_items()
     {
         ASSERT(disliked_item);
 
-        if (item_is_orb(*disliked_item))
-            simple_god_message(" wants the Orb's power used on the surface!");
-        else if (item_is_rune(*disliked_item))
-            simple_god_message(" wants the runes to be proudly displayed.");
-        // Zin was handled above, and the other gods don't care about
-        // sacrifices.
-        else if (god_likes_fresh_corpses(you.religion))
+        if (god_likes_fresh_corpses(you.religion))
             simple_god_message(" only cares about fresh corpses!");
         else if (you_worship(GOD_BEOGH))
             simple_god_message(" only cares about orcish remains!");
-        else if (you_worship(GOD_NEMELEX_XOBEH))
-            if (disliked_item->base_type == OBJ_GOLD)
-                simple_god_message(" does not care about gold!");
-            else
-                simple_god_message(" expects you to use your decks, not offer them!");
         else if (you_worship(GOD_ASHENZARI))
             simple_god_message(" can corrupt only scrolls of remove curse.");
     }

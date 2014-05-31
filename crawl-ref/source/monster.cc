@@ -281,7 +281,7 @@ bool monster::extra_balanced() const
     return extra_balanced_at(pos());
 }
 
-/*
+/**
  * Monster floundering conditions.
  *
  * Floundering reduces movement speed and can cause the monster to fumble
@@ -2049,7 +2049,7 @@ bool monster::pickup_weapon(item_def &item, int near, bool force)
     return false;
 }
 
-/*
+/**
  * Have a monster pick up a missile item.
  *
  * @param item The item to pick up.
@@ -2127,7 +2127,7 @@ bool monster::pickup_missile(item_def &item, int near, bool force)
 
         // Darts don't absolutely need a launcher - still allow upgrading.
         if (item.sub_type == miss->sub_type
-            && item.sub_type == MI_DART
+            && item.sub_type == MI_TOMAHAWK
             && (item.plus > miss->plus
                 || item.plus == miss->plus
                    && get_ammo_brand(*miss) == SPMSL_NORMAL
@@ -3334,7 +3334,7 @@ int monster::shield_bonus() const
         if (incapacitated())
             return 0;
 
-        int shld_c = property(*shld, PARM_AC) + shld->plus;
+        int shld_c = property(*shld, PARM_AC) + shld->plus * 2;
         shld_c = shld_c * 2 + (body_size(PSIZE_TORSO) - SIZE_MEDIUM)
                             * (shld->sub_type - ARM_LARGE_SHIELD);
         return random2avg(shld_c + hit_dice * 4 / 3, 2) / 2;
@@ -5452,7 +5452,7 @@ bool monster::can_drink_potion(potion_type ptype) const
     // These monsters cannot drink.
     if (is_skeletal() || is_insubstantial()
         || mons_species() == MONS_LICH || mons_genus(type) == MONS_MUMMY
-        || type == MONS_GASTRONOK)
+        || mons_species() == MONS_WIGHT || type == MONS_GASTRONOK)
     {
         return false;
     }
@@ -6079,19 +6079,22 @@ void monster::steal_item_from_player()
     }
 }
 
+/**
+ * Checks if the monster can pass through webs freely.
+ *
+ * Currently: spiders (including Arachne), moths, demonic crawlers,
+ * ghosts & other incorporeal monsters, and jelly monsters.
+ *
+ * @return Whether the monster is immune to webs.
+ */
 bool monster::is_web_immune() const
 {
-    // Spiders, Demonic crawlers
-    // Moths
-    // Ghosts and other incorporeals
-    // Oozes
-    // All 'I' (ice / sky beast)
     return mons_genus(type) == MONS_SPIDER
-           || type == MONS_ARACHNE
-           || is_insubstantial()
-           || mons_genus(type) == MONS_JELLY
-           || mons_genus(type) == MONS_DEMONIC_CRAWLER
-           || mons_genus(type) == MONS_MOTH;
+            || type == MONS_ARACHNE
+            || mons_genus(type) == MONS_MOTH
+            || mons_genus(type) == MONS_DEMONIC_CRAWLER
+            || is_insubstantial()
+            || mons_genus(type) == MONS_JELLY;
 }
 
 // Undead monsters have nightvision, as do all followers of Yredelemnul

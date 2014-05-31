@@ -37,6 +37,7 @@
 #include "quiver.h"
 #include "random.h"
 #include "shopping.h"
+#include "terrain.h"
 #include "xom.h"
 
 static iflags_t _full_ident_mask(const item_def& item);
@@ -367,9 +368,11 @@ struct missile_def
 static int Missile_index[NUM_MISSILES];
 static const missile_def Missile_prop[] =
 {
+#if TAG_MAJOR_VERSION == 34
+    { MI_DART,          "dart",          2,    3, true  },
+#endif
     { MI_NEEDLE,        "needle",        0,    1, false },
     { MI_STONE,         "stone",         2,    6, true  },
-    { MI_DART,          "dart",          2,    3, true  },
     { MI_ARROW,         "arrow",         7,    5, false },
     { MI_BOLT,          "bolt",          9,    5, false },
     { MI_LARGE_ROCK,    "large rock",   20,  600, true  },
@@ -635,7 +638,7 @@ void do_uncurse_item(item_def &item, bool inscribe, bool no_ash,
         ash_check_bondage();
 }
 
-/*
+/**
  * Make a net stationary (because it currently traps a victim).
  *
  * @param item The net item.
@@ -646,8 +649,8 @@ void set_net_stationary(item_def &item)
         item.plus2 = 1;
 }
 
-/*
- * Is the item stationary (unmovable)
+/**
+ * Is the item stationary (unmovable)?
  *
  * Currently only carrion and nets with a trapped victim are stationary.
  * @param item The item.
@@ -658,8 +661,8 @@ bool item_is_stationary(const item_def &item)
     return item.base_type == OBJ_CORPSES || item_is_stationary_net(item);
 }
 
-/*
- * Is the item a stationary net
+/**
+ * Is the item a stationary net?
  *
  * @param item The item.
  * @returns True iff the item is a stationary net.
@@ -668,6 +671,22 @@ bool item_is_stationary_net(const item_def &item)
 {
     return item.base_type == OBJ_MISSILES && item.sub_type == MI_THROWING_NET
         && item.plus2;
+}
+
+/**
+ * Get the actor held in a stationary net.
+ *
+ * @param net A stationary net item.
+ * @returns A pointer to the actor in the net, guaranteed to be non-null.
+ */
+actor *net_holdee(const item_def &net)
+{
+    ASSERT(item_is_stationary_net(net));
+    // Stationary nets should not be in inventory etc.
+    ASSERT_IN_BOUNDS(net.pos);
+    actor * const a = actor_at(net.pos);
+    ASSERTM(a, "No actor in stationary net at (%d,%d)", net.pos.x, net.pos.y);
+    return a;
 }
 
 static bool _in_shop(const item_def &item)
@@ -1711,8 +1730,10 @@ const char *ammo_name(const item_def &bow)
 bool has_launcher(const item_def &ammo)
 {
     ASSERT(ammo.base_type == OBJ_MISSILES);
-    return ammo.sub_type != MI_DART
-           && ammo.sub_type != MI_LARGE_ROCK
+    return ammo.sub_type != MI_LARGE_ROCK
+#if TAG_MAJOR_VERSION == 34
+           && ammo.sub_type != MI_DART
+#endif
            && ammo.sub_type != MI_JAVELIN
            && ammo.sub_type != MI_TOMAHAWK
            && ammo.sub_type != MI_THROWING_NET;
@@ -2460,7 +2481,7 @@ bool gives_resistance(const item_def &item)
     return false;
 }
 
-/*
+/**
  * Return the mass of an item (aum).
  *
  * @param item The item.

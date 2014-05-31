@@ -1027,6 +1027,16 @@ static const mutation_def mut_data[] =
   "wild magic"
 },
 
+{ MUT_FORLORN,                      3,  1,  true, false,
+    "forlorn",
+
+    {"You have difficulty communicating with the divine.","",""},
+    {"You feel forlorn.","",""},
+    {"You feel more spiritual.","",""},
+
+    "forlorn"
+},
+
 { MUT_STOCHASTIC_TORMENT_RESISTANCE,  0,  1, false, false,
   "50% torment resistance",
 
@@ -1393,9 +1403,9 @@ static const mutation_def mut_data[] =
 { MUT_LARGE_BONE_PLATES,              2,  3, false, true,
   "large bone plates",
 
-  {"You are partially covered in large bone plates (AC +2, SH +2).",
-   "You are mostly covered in large bone plates (AC +3, SH +4).",
-   "You are completely covered in large bone plates (AC +4, SH +6)."},
+  {"You are partially covered in large bone plates (AC +2, SH +3).",
+   "You are mostly covered in large bone plates (AC +3, SH +6).",
+   "You are completely covered in large bone plates (AC +4, SH +9)."},
 
   {"Large bone plates grow over parts of your arms.",
    "Large bone plates spread over more of your arms.",

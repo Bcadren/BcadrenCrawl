@@ -102,8 +102,6 @@ static tileidx_t _tileidx_trap(trap_type type)
 {
     switch (type)
     {
-    case TRAP_DART:
-        return TILE_DNGN_TRAP_DART;
     case TRAP_ARROW:
         return TILE_DNGN_TRAP_ARROW;
     case TRAP_SPEAR:
@@ -225,7 +223,7 @@ static tileidx_t _tileidx_feature_base(dungeon_feature_type feat)
     case DNGN_OPEN_DOOR:
         return TILE_DNGN_OPEN_DOOR;
     case DNGN_TRAP_MECHANICAL:
-        return TILE_DNGN_TRAP_DART;
+        return TILE_DNGN_TRAP_ARROW;
     case DNGN_TRAP_TELEPORT:
         return TILE_DNGN_TRAP_TELEPORT;
     case DNGN_TRAP_ALARM:
@@ -3155,17 +3153,6 @@ static tileidx_t _tileidx_missile_base(const item_def &item)
     case MI_STONE:        return TILE_MI_STONE;
     case MI_LARGE_ROCK:   return TILE_MI_LARGE_ROCK;
     case MI_THROWING_NET: return TILE_MI_THROWING_NET;
-
-    case MI_DART:
-        switch (brand)
-        {
-        default:             return TILE_MI_DART + 1;
-        case 0:              return TILE_MI_DART;
-        case SPMSL_POISONED: return TILE_MI_DART_POISONED;
-        case SPMSL_STEEL:    return TILE_MI_DART_STEEL;
-        case SPMSL_SILVER:   return TILE_MI_DART_SILVER;
-        }
-
     case MI_TOMAHAWK:
         switch (brand)
         {
@@ -4258,9 +4245,6 @@ tileidx_t tileidx_item_throw(const item_def &item, int dx, int dy)
                 break;
             case MI_BOLT:
                 ch = TILE_MI_BOLT0;
-                break;
-            case MI_DART:
-                ch = TILE_MI_DART0;
                 break;
             case MI_NEEDLE:
                 ch = TILE_MI_NEEDLE0;
@@ -5418,8 +5402,6 @@ tileidx_t tileidx_ability(const ability_type ability)
         return TILEG_ABILITY_ZOTDEF_PLANT;
     case ABIL_MAKE_OKLOB_SAPLING:
         return TILEG_ABILITY_ZOTDEF_OKLOB_SAPLING;
-    case ABIL_MAKE_DART_TRAP:
-        return TILEG_ABILITY_ZOTDEF_DART_TRAP;
     case ABIL_MAKE_ICE_STATUE:
         return TILEG_ABILITY_ZOTDEF_ICE_STATUE;
     case ABIL_MAKE_OCS:
