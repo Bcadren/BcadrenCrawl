@@ -72,6 +72,7 @@ bool god_hates_cannibalism(god_type god);
 bool god_hates_killing(god_type god, const monster* mon);
 bool god_likes_fresh_corpses(god_type god);
 bool god_likes_butchery(god_type god);
+bool god_disallows_corpsefood(monster_type mc, god_type god);
 bool god_likes_spell(spell_type spell, god_type god);
 bool god_hates_spell(spell_type spell, god_type god,
                      bool rod_spell = false);

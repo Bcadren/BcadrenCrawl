@@ -34,6 +34,8 @@ void set_hunger(int new_hunger_level, bool suppress_msg);
 
 void weapon_switch(int targ);
 
+bool monster_maybe_edible(monster_type mc);
+
 bool is_bad_food(const item_def &food);
 bool is_poisonous(const item_def &food);
 bool is_mutagenic(const item_def &food);

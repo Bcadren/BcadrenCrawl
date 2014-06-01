@@ -425,9 +425,9 @@ int place_monster_corpse(const monster* mons, bool silent, bool force)
     if (feat_is_wall(grd(mons->pos())))
         return -1;
 
-    if (mons_intel(mons) >= I_NORMAL
-        && mons_class_can_leave_corpse(mons->type)
-        && !you_worship(GOD_GOZAG)
+    if (mons_class_can_leave_corpse(mons->type)
+        && monster_maybe_edible(mons->type)
+        && !god_disallows_corpsefood(mons->type, you.religion)
         && one_chance_in(4))
     {
         const int type = random_choose_weighted(1, FOOD_MEAT_RATION,

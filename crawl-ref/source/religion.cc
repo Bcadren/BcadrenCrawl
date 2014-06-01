@@ -4188,6 +4188,36 @@ bool god_hates_cannibalism(god_type god)
     return is_good_god(god) || god == GOD_BEOGH;
 }
 
+/**
+ * Does your god allow food to be spawned from a corpse of a monster of this
+ * kind?
+ *
+ * Pretty close to food.cc's is_forbidden_food(), but that's probably going
+ * away...
+ *
+ * @param mc    The type of the monster to consider spawning food from
+ * @param god   The god whose opinions should be considered
+ * @return      Whether it's ok to spawn food from a corpse of this type
+ */
+bool god_disallows_corpsefood(monster_type mc, god_type god)
+{
+    if (god == GOD_GOZAG)
+        return true; // no corpsefood, only goldification!
+
+    if (god_hates_cannibalism(god) && is_player_same_genus(mc))
+        return true;
+
+    if (is_good_god(god) && mons_class_holiness(mc) == MH_HOLY)
+        return true;
+
+    // Zin doesn't like it if you eat beings with a soul.
+    if (god == GOD_ZIN && mons_class_intel(mc) >= I_NORMAL)
+        return true;
+
+    // Everything else is allowed.
+    return false;
+}
+
 bool god_hates_killing(god_type god, const monster* mon)
 {
     // Must be at least a creature of sorts.  Smacking down an enchanted

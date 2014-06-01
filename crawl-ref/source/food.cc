@@ -1848,6 +1848,21 @@ void nutrition_per_turn(const item_def &corpse, int feeding)
         lessen_hunger(food_value / duration, !start_feeding);
 }
 
+/**
+ * Will corpses from monsters of this type be potentially edible?
+ *
+ * For permafood-spawning purposes.
+ *
+ * @param mc    The type of monster being considered.
+ * @return      Whether the monster type is edible for the player.
+ */
+bool monster_maybe_edible(monster_type mc)
+{
+    const corpse_effect_type ce = mons_corpse_effect(mc);
+    return ce < CE_MUTAGEN
+           && (ce != CE_ROT || you.res_rotting(false));
+}
+
 bool is_bad_food(const item_def &food)
 {
     return is_poisonous(food) || is_mutagenic(food)
@@ -2137,8 +2152,10 @@ bool can_ingest(int what_isit, int kindof_thing, bool suppress_msg,
             else
             {
                 if (!suppress_msg)
+                {
                     mprf("Blech - you need %s!",
                          you.species == SP_VAMPIRE ? "blood" : "meat");
+                }
                 return false;
             }
         }
