@@ -1638,7 +1638,6 @@ unsigned int item_value(item_def item, bool ident)
                 case RING_REGENERATION:
                 case RING_WIZARDRY:
                 case AMU_GUARDIAN_SPIRIT:
-                case AMU_THE_GOURMAND:
                     valued += 300;
                     break;
 

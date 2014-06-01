@@ -255,11 +255,6 @@ bool actor::inaccuracy() const
     return wearing(EQ_AMULET, AMU_INACCURACY);
 }
 
-bool actor::gourmand(bool calc_unid, bool items) const
-{
-    return items && wearing(EQ_AMULET, AMU_THE_GOURMAND, calc_unid);
-}
-
 bool actor::res_corr(bool calc_unid, bool items) const
 {
     return items && wearing(EQ_AMULET, AMU_RESIST_CORROSION, calc_unid);

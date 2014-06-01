@@ -179,8 +179,8 @@ static const char* _jewellery_base_ability_string(int subtype)
     case AMU_CLARITY:            return "Clar";
     case AMU_WARDING:            return "Ward";
     case AMU_RESIST_CORROSION:   return "rCorr";
-    case AMU_THE_GOURMAND:       return "Gourm";
 #if TAG_MAJOR_VERSION == 34
+    case AMU_THE_GOURMAND:       return "Gourm";
     case AMU_CONSERVATION:       return "Cons";
     case AMU_CONTROLLED_FLIGHT:  return "cFly";
 #endif
@@ -400,9 +400,9 @@ static const char* _jewellery_base_ability_description(int subtype)
         return "It may prevent the melee attacks of summoned creatures.";
     case AMU_RESIST_CORROSION:
         return "It protects you from acid and corrosion.";
+#if TAG_MAJOR_VERSION == 34
     case AMU_THE_GOURMAND:
         return "It allows you to eat raw meat even when not hungry.";
-#if TAG_MAJOR_VERSION == 34
     case AMU_CONSERVATION:
         return "It protects your inventory from destruction.";
 #endif

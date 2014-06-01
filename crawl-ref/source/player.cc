@@ -1481,8 +1481,10 @@ int player_spell_levels()
 
 int player_likes_chunks(bool permanently)
 {
-    return you.gourmand(true, !permanently)
-           ? 3 : player_mutation_level(MUT_CARNIVOROUS);
+    if (player_mutation_level(MUT_GOURMAND))
+        return 3;
+    else
+        return player_mutation_level(MUT_CARNIVOROUS);
 }
 
 // If temp is set to false, temporary sources or resistance won't be counted.
@@ -4123,8 +4125,8 @@ bool player::gourmand(bool calc_unid, bool items) const
 {
     if (player_mutation_level(MUT_GOURMAND) > 0)
         return true;
-
-    return actor::gourmand(calc_unid, items);
+    else
+        return false;
 }
 
 bool player::stasis(bool calc_unid, bool items) const

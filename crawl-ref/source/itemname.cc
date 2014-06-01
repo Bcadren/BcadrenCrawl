@@ -755,8 +755,8 @@ static const char* jewellery_type_name(int jeweltype)
     case AMU_CLARITY:           return "amulet of clarity";
     case AMU_WARDING:           return "amulet of warding";
     case AMU_RESIST_CORROSION:  return "amulet of resist corrosion";
-    case AMU_THE_GOURMAND:      return "amulet of the gourmand";
 #if TAG_MAJOR_VERSION == 34
+    case AMU_THE_GOURMAND:      return "amulet of the gourmand";
     case AMU_CONSERVATION:      return "amulet of conservation";
     case AMU_CONTROLLED_FLIGHT: return "amulet of controlled flight";
 #endif
@@ -2334,7 +2334,9 @@ void check_item_knowledge(bool unknown_items)
             }
 
             if (i == OBJ_JEWELLERY
-                && (j == AMU_CONTROLLED_FLIGHT || j == AMU_CONSERVATION))
+                && (j == AMU_CONTROLLED_FLIGHT
+                    || j == AMU_CONSERVATION
+                    || j == AMU_THE_GOURMAND))
             {
                 continue;
             }
@@ -3402,15 +3404,6 @@ bool is_useless_item(const item_def &item, bool temp)
 
         case AMU_RESIST_CORROSION:
             return you.res_corr(false, false);
-
-        case AMU_THE_GOURMAND:
-            return player_likes_chunks(true) == 3
-                     && player_mutation_level(MUT_SAPROVOROUS) == 3
-                     && you.species != SP_GHOUL // makes clean chunks
-                                                // contaminated
-                   || player_mutation_level(MUT_GOURMAND) > 0
-                   || player_mutation_level(MUT_HERBIVOROUS) == 3
-                   || you.is_undead && you.species != SP_GHOUL;
 
         case AMU_FAITH:
             return you.species == SP_DEMIGOD && !you.religion;

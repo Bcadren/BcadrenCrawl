@@ -45,12 +45,6 @@ in the process.
 While the amulet is effective against most translocations, plane shifts such as
 banishment are beyond its ability to block.
 %%%%
-amulet of the gourmand
-
-This amulet allows its wearer to eat fresh raw meat when not hungry, and
-drastically increases nutrition gained from them. These effects on the wearer's
-digestion are cumulative over time and are initially small.
-%%%%
 amulet of warding
 
 This amulet repels some of the attacks of creatures which have been magically

@@ -1192,12 +1192,6 @@ static void _equip_jewellery_effect(item_def &item, bool unmeld,
              you_worship(GOD_NO_GOD) ? "strange " : "");
         break;
 
-    case AMU_THE_GOURMAND:
-        // What's this supposed to achieve? (jpeg)
-        you.duration[DUR_GOURMAND] = 0;
-        mpr("You feel a craving for the dungeon's cuisine.");
-        break;
-
     case AMU_GUARDIAN_SPIRIT:
         _spirit_shield_message(unmeld);
         break;
@@ -1357,10 +1351,6 @@ static void _unequip_jewellery_effect(item_def &item, bool mesg, bool meld,
 
     case RING_MAGICAL_POWER:
         canned_msg(MSG_MANA_DECREASE);
-        break;
-
-    case AMU_THE_GOURMAND:
-        you.duration[DUR_GOURMAND] = 0;
         break;
 
     case AMU_FAITH:

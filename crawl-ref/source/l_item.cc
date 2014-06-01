@@ -298,8 +298,8 @@ static const char *ring_types[] =
 static const char *amulet_types[] =
 {
     "rage", "clarity", "warding", "resist corrosion",
-    "gourmand",
 #if TAG_MAJOR_VERSION == 34
+    "gourmand",
     "conservation", "controlled flight",
 #endif
     "inaccuracy",
