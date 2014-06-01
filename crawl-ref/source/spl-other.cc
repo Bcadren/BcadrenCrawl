@@ -102,6 +102,50 @@ spret_type cast_sublimation_of_blood(int pow, bool fail)
 
     if (wielded == -1)
     {
+        for (int i = you.visible_igrd(you.pos()); i != NON_ITEM;
+             i = mitm[i].link)
+        {
+            item_def &item(mitm[i]);
+
+            if (item.base_type != OBJ_CORPSES || item.sub_type != CORPSE_BODY)
+                continue;
+            string prompt = "Sublimate " + item.name(DESC_A) + "?";
+            int ret = yesnoquit(prompt.c_str(), true, 'q');
+            if (ret == -1)
+            {
+                canned_msg(MSG_OK);
+                return SPRET_ABORT;
+            }
+            if (ret != 1)
+                continue;
+
+            fail_check();
+
+            mprf("%s crumbles to dust.", item.name(DESC_THE).c_str());
+
+            mpr("A flood of magical energy pours into your mind!");
+
+            // TODO: Possibly have this depend on the number of chunks?
+            inc_mp(5 + random2(2 + pow / 15));
+
+            if (mons_skeleton(item.mon_type) && one_chance_in(3))
+            {
+                turn_corpse_into_skeleton(item);
+                item_check(false);
+            }
+            else
+                dec_mitm_item_quantity(i, 1);
+
+            maybe_drop_monster_hide(item);
+
+            if (mons_genus(item.mon_type) == MONS_ORC)
+                did_god_conduct(DID_DESECRATE_ORCISH_REMAINS, 2);
+            if (mons_class_holiness(item.mon_type) == MH_HOLY)
+                did_god_conduct(DID_DESECRATE_HOLY_REMAINS, 2);
+
+            return SPRET_SUCCESS;
+        }
+
         if (you.duration[DUR_DEATHS_DOOR])
         {
             mpr("A conflicting enchantment prevents the spell from "
