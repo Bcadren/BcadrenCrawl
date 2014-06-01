@@ -413,17 +413,6 @@ static void _decrement_durations()
 {
     int delay = you.time_taken;
 
-    if (you.gourmand())
-    {
-        // Innate gourmand is always fully active.
-        if (player_mutation_level(MUT_GOURMAND) > 0)
-            you.duration[DUR_GOURMAND] = GOURMAND_MAX;
-        else if (you.duration[DUR_GOURMAND] < GOURMAND_MAX && coinflip())
-            you.duration[DUR_GOURMAND] += delay;
-    }
-    else
-        you.duration[DUR_GOURMAND] = 0;
-
     if (you.duration[DUR_ICEMAIL_DEPLETED] > 0)
     {
         if (delay > you.duration[DUR_ICEMAIL_DEPLETED])

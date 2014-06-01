@@ -346,7 +346,6 @@ static const duration_def duration_data[] =
     { DUR_DEMONIC_GUARDIAN, false, 0, "", "", "demonic guardian", "" },
     { DUR_POWERED_BY_DEATH, false, 0, "", "", "pbd", "" },
     { DUR_CONDENSATION_SHIELD, false, 0, "", "", "condensation shield", "" },
-    { DUR_GOURMAND, false, 0, "", "", "gourmand", "" },
     { DUR_REPEL_STAIRS_MOVE, false, 0, "", "", "repel stairs move", "" },
     { DUR_REPEL_STAIRS_CLIMB, false, 0, "", "", "repel stairs climb", "" },
     { DUR_COLOUR_SMOKE_TRAIL, false, 0, "", "", "coloured smoke trail", "" },
@@ -365,6 +364,7 @@ static const duration_def duration_data[] =
 
 #if TAG_MAJOR_VERSION == 34
     // And removed ones
+    { DUR_GOURMAND, false, 0, "", "", "gourmand", "" },
     { DUR_REPEL_MISSILES, false, 0, "", "", "old repel missiles", "" },
     { DUR_DEFLECT_MISSILES, false, 0, "", "", "old deflect missiles", "" },
     { DUR_JELLY_PRAYER, false, 0, "", "", "old jelly prayer", "" },

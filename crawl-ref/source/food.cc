@@ -1458,20 +1458,10 @@ static const char *_chunk_flavour_phrase(bool likes_chunks)
 
     if (likes_chunks)
         phrase = "tastes great.";
-    else
+    else if (player_mutation_level(MUT_GOURMAND))
     {
-        const int gourmand = you.duration[DUR_GOURMAND];
-        if (gourmand >= GOURMAND_MAX)
-        {
-            phrase = one_chance_in(1000) ? "tastes like chicken!"
-                                         : "tastes great.";
-        }
-        else if (gourmand > GOURMAND_MAX * 75 / 100)
-            phrase = "tastes very good.";
-        else if (gourmand > GOURMAND_MAX * 50 / 100)
-            phrase = "tastes good.";
-        else if (gourmand > GOURMAND_MAX * 25 / 100)
-            phrase = "is not very appetising.";
+        phrase = one_chance_in(1000) ? "tastes like chicken!"
+                                     : "tastes great.";
     }
 
     return phrase;
@@ -1496,12 +1486,6 @@ static int _apply_herbivore_nutrition_effects(int nutrition)
     return nutrition;
 }
 
-static int _apply_gourmand_nutrition_effects(int nutrition, int gourmand)
-{
-    return nutrition * (gourmand + GOURMAND_NUTRITION_BASE)
-                     / (GOURMAND_MAX + GOURMAND_NUTRITION_BASE);
-}
-
 static int _chunk_nutrition(int likes_chunks)
 {
     int nutrition = CHUNK_BASE_NUTRITION;
@@ -1512,18 +1496,7 @@ static int _chunk_nutrition(int likes_chunks)
                             : _apply_herbivore_nutrition_effects(nutrition);
     }
 
-    const int gourmand = you.gourmand() ? you.duration[DUR_GOURMAND] : 0;
-    const int effective_nutrition =
-        _apply_gourmand_nutrition_effects(nutrition, gourmand);
-
-#ifdef DEBUG_DIAGNOSTICS
-    const int epercent = effective_nutrition * 100 / nutrition;
-    mprf(MSGCH_DIAGNOSTICS,
-            "Gourmand factor: %d, chunk base: %d, effective: %d, %%: %d",
-                gourmand, nutrition, effective_nutrition, epercent);
-#endif
-
-    return _apply_herbivore_nutrition_effects(effective_nutrition);
+    return _apply_herbivore_nutrition_effects(nutrition);
 }
 
 static void _say_chunk_flavour(bool likes_chunks)
@@ -1560,19 +1533,9 @@ static int _contamination_ratio(corpse_effect_type chunk_effect)
         break;
     }
 
-    // The amulet of the gourmand will permit consumption of
-    // contaminated meat as though it were "clean" meat - level 3
-    // saprovores get rotting meat effect from clean chunks, since they
-    // love rotting meat.
+    // Trolls get clean meat effects from contaim meat.
     if (you.gourmand())
-    {
-        int left = GOURMAND_MAX - you.duration[DUR_GOURMAND];
-        // [dshaligram] Level 3 saprovores relish contaminated meat.
-        if (sapro == 3)
-            ratio = 1000 - (1000 - ratio) * left / GOURMAND_MAX;
-        else
-            ratio = ratio * left / GOURMAND_MAX;
-    }
+        ratio = 0;
 
     return ratio;
 }

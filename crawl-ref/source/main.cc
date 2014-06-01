@@ -1656,13 +1656,8 @@ static void _experience_check()
     msg::stream << "Play time: " << make_time_string(you.real_time)
                 << " (" << you.num_turns << " turns)"
                 << endl;
-#ifdef DEBUG_DIAGNOSTICS
-    if (you.gourmand())
-    {
-        mprf(MSGCH_DIAGNOSTICS, "Gourmand charge: %d",
-             you.duration[DUR_GOURMAND]);
-    }
 
+#ifdef DEBUG_DIAGNOSTICS
     mprf(MSGCH_DIAGNOSTICS, "Turns spent on this level: %d",
          env.turns_on_level);
 #endif
