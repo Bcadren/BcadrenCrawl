@@ -269,7 +269,7 @@ void stop_delay(bool stop_stair_travel, bool force_unsafe)
         // this to be stoppable, with partial food items implemented. -- bwr
         break;
 
-    case DELAY_FEED_VAMPIRE:
+    case DELAY_EAT_CORPSE:
     {
         mpr("You stop draining the corpse.");
 
@@ -379,7 +379,7 @@ static bool _is_butcher_delay(int delay)
 {
     return delay == DELAY_BUTCHER
            || delay == DELAY_BOTTLE_BLOOD
-           || delay == DELAY_FEED_VAMPIRE;
+           || delay == DELAY_EAT_CORPSE;
 }
 
 void handle_interrupted_swap()
@@ -464,7 +464,7 @@ bool is_being_drained(const item_def &item)
 
     const delay_queue_item &delay = you.delay_queue.front();
 
-    if (delay.type == DELAY_FEED_VAMPIRE)
+    if (delay.type == DELAY_EAT_CORPSE)
     {
         const item_def &corpse = mitm[ delay.parm2 ];
 
@@ -499,13 +499,13 @@ bool is_being_butchered(const item_def &item, bool just_first)
     return false;
 }
 
-bool is_vampire_feeding()
+bool is_eating_corpse()
 {
     if (!you_are_delayed())
         return false;
 
     const delay_queue_item &delay = you.delay_queue.front();
-    return delay.type == DELAY_FEED_VAMPIRE;
+    return delay.type == DELAY_EAT_CORPSE;
 }
 
 bool is_butchering()
@@ -642,7 +642,7 @@ void handle_delay()
 
     // First check cases where delay may no longer be valid:
     // XXX: need to handle passwall when monster digs -- bwr
-    if (delay.type == DELAY_FEED_VAMPIRE)
+    if (delay.type == DELAY_EAT_CORPSE)
     {
         // Vampires stop feeding if ...
         // * engorged ("alive")
@@ -821,19 +821,23 @@ void handle_delay()
             mprf(MSGCH_MULTITURN_ACTION, "You continue eating.");
             break;
 
-        case DELAY_FEED_VAMPIRE:
+        case DELAY_EAT_CORPSE:
         {
             item_def &corpse = (delay.parm1 ? you.inv[delay.parm2]
                                             : mitm[delay.parm2]);
             if (food_is_rotten(corpse))
             {
                 mprf(MSGCH_ROTTEN_MEAT, "This corpse has started to rot.");
-                _xom_check_corpse_waste();
-                stop_delay();
-                return;
+                if (!player_mutation_level(MUT_SAPROVOROUS))
+                {
+                    _xom_check_corpse_waste();
+                    stop_delay();
+                    return;
+                }
             }
-            mprf(MSGCH_MULTITURN_ACTION, "You continue drinking.");
-            vampire_nutrition_per_turn(corpse, 0);
+            mprf(MSGCH_MULTITURN_ACTION, "You continue %s.",
+                 you.species == SP_VAMPIRE ? "drinking" : "eating");
+            nutrition_per_turn(corpse, 0);
             break;
         }
 
@@ -894,9 +898,10 @@ static void _finish_delay(const delay_queue_item &delay)
             finished_eating_message(delay.parm2);
         break;
 
-    case DELAY_FEED_VAMPIRE:
+    case DELAY_EAT_CORPSE:
     {
-        mpr("You finish drinking.");
+        mprf("You finish %s.", you.species == SP_VAMPIRE ? "drinking"
+                                                         : "eating");
 
         did_god_conduct(DID_DRINK_BLOOD, 8);
 
@@ -906,11 +911,11 @@ static void _finish_delay(const delay_queue_item &delay)
         const bool was_orc = (mons_genus(item.mon_type) == MONS_ORC);
         const bool was_holy = (mons_class_holiness(item.mon_type) == MH_HOLY);
 
-        vampire_nutrition_per_turn(item, 1);
+        nutrition_per_turn(item, 1);
 
         // Don't try to apply delay end effects if
-        // vampire_nutrition_per_turn did a stop_delay already:
-        if (is_vampire_feeding())
+        // nutrition_per_turn did a stop_delay already:
+        if (is_eating_corpse())
         {
             const item_def corpse = item;
 
@@ -1832,7 +1837,7 @@ activity_interrupt_type get_activity_interrupt(const string &name)
 
 static const char *delay_names[] =
 {
-    "not_delayed", "eat", "vampire_feed", "armour_on", "armour_off",
+    "not_delayed", "eat", "eat_corpse", "armour_on", "armour_off",
     "jewellery_on", "memorise", "butcher", "bottle_blood", "weapon_swap",
     "passwall", "drop_item", "multidrop", "ascending_stairs",
     "descending_stairs",

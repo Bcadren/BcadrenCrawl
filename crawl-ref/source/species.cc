@@ -270,6 +270,11 @@ bool species_can_throw_large_rocks(species_type species)
            || species == SP_TROLL;
 }
 
+bool species_can_eat_corpses(species_type species)
+{
+    return species == SP_VAMPIRE || species == SP_GHOUL;
+}
+
 genus_type species_genus(species_type species)
 {
     switch (species)

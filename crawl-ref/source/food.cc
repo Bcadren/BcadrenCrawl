@@ -62,7 +62,7 @@ static int _contamination_ratio(corpse_effect_type chunk_effect);
 static void _eat_chunk(item_def& food);
 static void _eating(item_def &food);
 static void _describe_food_change(int hunger_increment);
-static bool _vampire_consume_corpse(int slot, bool invent);
+static bool _consume_corpse(int slot, bool invent);
 static void _heal_from_food(int hp_amt, bool unrot = false);
 
 /*
@@ -801,7 +801,7 @@ bool food_change(bool initial)
                 // Give more time because suddenly stopping flying can be fatal.
                 you.set_duration(DUR_TRANSFORMATION, 5);
             }
-            else if (newstate == HS_ENGORGED && is_vampire_feeding()) // Alive
+            else if (newstate == HS_ENGORGED && is_eating_corpse()) // Alive
             {
                 print_stats();
                 mpr("You can't stomach any more blood right now.");
@@ -914,10 +914,8 @@ bool eat_item(item_def &food)
 
     if (food.base_type == OBJ_CORPSES && food.sub_type == CORPSE_BODY)
     {
-        if (you.species != SP_VAMPIRE)
-            return false;
-
-        if (_vampire_consume_corpse(link, in_inventory(food)))
+        if (species_can_eat_corpses(you.species)
+            && _consume_corpse(link, in_inventory(food)))
         {
             you.turn_is_over = true;
             return true;
@@ -953,7 +951,7 @@ public:
     {
         ASSERT(food1->base_type == OBJ_CORPSES || food1->base_type == OBJ_FOOD);
         ASSERT(food2->base_type == OBJ_CORPSES || food2->base_type == OBJ_FOOD);
-        ASSERT(food1->base_type == food2->base_type);
+        // ASSERT(food1->base_type == food2->base_type);
 
         if (is_inedible(*food1))
             return false;
@@ -1018,8 +1016,13 @@ int eat_from_floor(bool skip_chunks)
         }
         else
         {
-            if (si->base_type != OBJ_FOOD)
+            if (si->base_type != OBJ_FOOD
+                && (!species_can_eat_corpses(you.species)
+                    || si->base_type != OBJ_CORPSES
+                    || si->sub_type != CORPSE_BODY))
+            {
                 continue;
+            }
 
             // Chunks should have been handled before.
             if (skip_chunks && si->sub_type == FOOD_CHUNK)
@@ -1749,11 +1752,11 @@ void finished_eating_message(int food_type)
 //    25               4           6
 //    30               5           7
 
-void vampire_nutrition_per_turn(const item_def &corpse, int feeding)
+void nutrition_per_turn(const item_def &corpse, int feeding)
 {
     const monster_type mons_type = corpse.mon_type;
-    const int chunk_type = _determine_chunk_effect(
-                                mons_corpse_effect(mons_type), false);
+    const corpse_effect_type chunk_type =
+        _determine_chunk_effect(mons_corpse_effect(mons_type), false);
 
     // Duration depends on corpse weight.
     const int max_chunks = get_max_corpse_chunks(mons_type);
@@ -1776,7 +1779,24 @@ void vampire_nutrition_per_turn(const item_def &corpse, int feeding)
     else if (feeding > 0)
         end_feeding = true;
 
-    switch (chunk_type)
+    if (you.species != SP_VAMPIRE)
+    {
+        int contam = _contamination_ratio(chunk_type);
+        if (start_feeding)
+        {
+            mprf("This %s flesh tastes %s!",
+                 chunk_type == CE_ROTTEN   ? "rotting"   : "raw",
+                 x_chance_in_y(contam, 1000) ? "delicious" : "good");
+        }
+        if (you.species == SP_GHOUL && end_feeding)
+        {
+            int hp_amt = 1 + random2(5) + random2(1 + you.experience_level);
+            if (!x_chance_in_y(contam + 4000, 5000))
+                hp_amt = 0;
+            _heal_from_food(hp_amt, !one_chance_in(4));
+        }
+    }
+    else switch (chunk_type)
     {
         case CE_CLEAN:
             if (start_feeding)
@@ -1818,6 +1838,7 @@ void vampire_nutrition_per_turn(const item_def &corpse, int feeding)
 
         case CE_POISONOUS:
         case CE_POISON_CONTAM:
+        case CE_ROTTEN:
         case CE_NOCORPSE:
             mprf(MSGCH_ERROR, "This blood (%d) tastes buggy!", chunk_type);
             return;
@@ -2109,14 +2130,15 @@ bool can_ingest(int what_isit, int kindof_thing, bool suppress_msg,
     }
 
     case OBJ_CORPSES:
-        if (you.species == SP_VAMPIRE)
+        if (you.species == SP_VAMPIRE || you.species == SP_GHOUL)
         {
             if (kindof_thing == CORPSE_BODY)
                 return true;
             else
             {
                 if (!suppress_msg)
-                    mpr("Blech - you need blood!");
+                    mprf("Blech - you need %s!",
+                         you.species == SP_VAMPIRE ? "blood" : "meat");
                 return false;
             }
         }
@@ -2223,9 +2245,9 @@ static corpse_effect_type _determine_chunk_effect(corpse_effect_type chunktype,
     return chunktype;
 }
 
-static bool _vampire_consume_corpse(int slot, bool invent)
+static bool _consume_corpse(int slot, bool invent)
 {
-    ASSERT(you.species == SP_VAMPIRE);
+    ASSERT(species_can_eat_corpses(you.species));
 
     item_def &corpse = (invent ? you.inv[slot]
                                : mitm[slot]);
@@ -2233,16 +2255,19 @@ static bool _vampire_consume_corpse(int slot, bool invent)
     ASSERT(corpse.base_type == OBJ_CORPSES);
     ASSERT(corpse.sub_type == CORPSE_BODY);
 
-    if (!mons_has_blood(corpse.mon_type))
+    if (you.species == SP_VAMPIRE)
     {
-        mpr("There is no blood in this body!");
-        return false;
-    }
+        if (!mons_has_blood(corpse.mon_type))
+        {
+            mpr("There is no blood in this body!");
+            return false;
+        }
 
-    if (food_is_rotten(corpse))
-    {
-        mpr("It's not fresh enough.");
-        return false;
+        if (food_is_rotten(corpse))
+        {
+            mpr("It's not fresh enough.");
+            return false;
+        }
     }
 
     // The delay for eating a chunk (mass 1000) is 2
@@ -2254,11 +2279,11 @@ static bool _vampire_consume_corpse(int slot, bool invent)
 
     // Get some nutrition right away, in case we're interrupted.
     // (-1 for the starting message.)
-    vampire_nutrition_per_turn(corpse, -1);
+    nutrition_per_turn(corpse, -1);
 
     // The draining delay doesn't have a start action, and we only need
     // the continue/finish messages if it takes longer than 1 turn.
-    start_delay(DELAY_FEED_VAMPIRE, duration, invent, slot);
+    start_delay(DELAY_EAT_CORPSE, duration, invent, slot);
 
     return true;
 }
