@@ -1102,7 +1102,13 @@ unsigned int item_value(item_def item, bool ident)
         }
 
         if (item_ident(item, ISFLAG_KNOW_PLUSES))
-            valued += 10 * item.plus + 50 * item.plus2;
+        {
+            // Blowguns have only plus, no plus2
+            if (item.sub_type == WPN_BLOWGUN)
+                valued += 50 * item.plus;
+            else
+                valued += 10 * item.plus + 50 * item.plus2;
+        }
 
         if (is_artefact(item))
         {
@@ -1791,8 +1797,10 @@ unsigned int item_value(item_def item, bool ident)
             valued = 150;
         else
             valued = 250;
+
+        // Both max charges and enchantment.
         if (item_ident(item, ISFLAG_KNOW_PLUSES))
-            valued += 50 * (item.plus2 / ROD_CHARGE_MULT);
+            valued += 50 * (item.plus2 / ROD_CHARGE_MULT + item.special);
         break;
 
     case OBJ_ORBS:

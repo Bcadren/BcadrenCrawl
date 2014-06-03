@@ -1283,8 +1283,7 @@ static string _describe_armour(const item_def &item, bool verbose)
             break;
 #if TAG_MAJOR_VERSION == 34
         case SPARM_PRESERVATION:
-            description += "It protects its wearer's possessions "
-                "from corrosion and destruction.";
+            description += "It does nothing special.";
             break;
 #endif
         case SPARM_REFLECTION:
@@ -3587,6 +3586,8 @@ static string _serpent_of_hell_flavour(monster_type m)
 void get_monster_db_desc(const monster_info& mi, describe_info &inf,
                          bool &has_stat_desc, bool force_seen)
 {
+    if (inf.title.empty())
+        inf.title = getMiscString(mi.common_name(DESC_DBNAME) + " title");
     if (inf.title.empty())
         inf.title = uppercase_first(mi.full_name(DESC_A, true)) + ".";
 

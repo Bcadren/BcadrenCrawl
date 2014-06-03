@@ -1187,8 +1187,6 @@ static tileidx_t _tileidx_monster_base(int type, bool in_water, int colour,
     // slugs ('j')
     case MONS_ELEPHANT_SLUG:
         return TILEP_MONS_ELEPHANT_SLUG;
-    case MONS_GIANT_SLUG:
-        return TILEP_MONS_GIANT_SLUG;
 
     // killer bees ('k')
     case MONS_KILLER_BEE:
@@ -3258,7 +3256,7 @@ static tileidx_t _tileidx_armour_base(const item_def &item)
 #endif
 
     case ARM_HELMET:
-        return _modrng(item.rnd, TILE_THELM_FIRST, TILE_THELM_LAST);
+        return TILE_THELM_HELM;
 
     case ARM_GLOVES:
         return TILE_ARM_GLOVES;
@@ -3564,8 +3562,6 @@ static tileidx_t _tileidx_corpse(const item_def &item)
     // slugs ('j')
     case MONS_ELEPHANT_SLUG:
         return TILE_CORPSE_ELEPHANT_SLUG;
-    case MONS_GIANT_SLUG:
-        return TILE_CORPSE_GIANT_SLUG;
 
     // bees ('k')
     case MONS_KILLER_BEE:
@@ -5611,6 +5607,25 @@ tileidx_t tileidx_enchant_equ(const item_def &item, tileidx_t tile, bool player)
     };
 
     const int etype = enchant_to_int(item);
+
+    if (tile == TILE_THELM_HELM)
+    {
+        switch (etype)
+        {
+            case 1:
+            case 2:
+            case 3:
+                tile = _modrng(item.rnd, TILE_THELM_EGO_FIRST, TILE_THELM_EGO_LAST);
+                break;
+            case 4:
+                tile = _modrng(item.rnd, TILE_THELM_ART_FIRST, TILE_THELM_ART_LAST);
+                break;
+            default:
+                tile = _modrng(item.rnd, TILE_THELM_FIRST, TILE_THELM_LAST);
+        }
+        return tile;
+    }
+
     int idx;
     if (player)
         idx = tile_player_count(tile) - 1;

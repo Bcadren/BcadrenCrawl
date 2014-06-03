@@ -873,12 +873,17 @@ void pickup_menu(int item_link)
 
     string pickup_warning;
     for (int i = 0, count = selected.size(); i < count; ++i)
-        for (int j = item_link; j != NON_ITEM; j = mitm[j].link)
+    {
+        // Moving the item might destroy it, in which case we can't
+        // rely on the link.
+        short next;
+        for (int j = item_link; j != NON_ITEM; j = next)
         {
+            next = mitm[j].link;
             if (&mitm[j] == selected[i].item)
             {
                 if (j == item_link)
-                    item_link = mitm[j].link;
+                    item_link = next;
 
                 int num_to_take = selected[i].quantity;
                 const bool take_all = (num_to_take == mitm[j].quantity);
@@ -907,6 +912,7 @@ void pickup_menu(int item_link)
                 }
             }
         }
+    }
 
     if (!pickup_warning.empty())
     {
@@ -3876,6 +3882,7 @@ item_info get_item_info(const item_def& item)
             ii.plus = item.plus;
         if (item_type_known(item))
             ii.special = item.special; // brand
+        ii.rnd = item.rnd; // used for appearance
         break;
     case OBJ_WANDS:
         if (item_type_known(item))

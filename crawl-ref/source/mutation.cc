@@ -52,8 +52,6 @@
 #include "viewchar.h"
 #include "xom.h"
 
-static int _body_covered();
-
 #include "mutation-data.h"
 
 static const body_facet_def _body_facets[] =
@@ -1222,7 +1220,9 @@ static int _handle_conflicting_mutations(mutation_type mutation,
                 case 1:
                     // If we have one of the pair, delete a level of the
                     // other, and that's it.
-                    //Temporary mutations can co-exist with things they would ordinarily conflict with
+                    //
+                    // Temporary mutations can co-exist with things they would
+                    // ordinarily conflict with
                     if (temp)
                         return 0;       // Allow conflicting transient mutations
                     else
