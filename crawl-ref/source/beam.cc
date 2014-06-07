@@ -806,7 +806,7 @@ void bolt::digging_wall_effect()
     case DNGN_CLEAR_ROCK_WALL:
     case DNGN_SLIMY_WALL:
     case DNGN_GRATE:
-        nuke_wall(pos());
+        destroy_wall(pos());
         if (!msg_generated)
         {
             if (!you.see_cell(pos()))
@@ -862,7 +862,7 @@ void bolt::fire_wall_effect()
     }
 
     // Destroy the wall.
-    nuke_wall(pos());
+    destroy_wall(pos());
     if (you.see_cell(pos()))
     {
         if (player_in_branch(BRANCH_SWAMP))
@@ -896,7 +896,7 @@ void bolt::elec_wall_effect()
     fire_wall_effect();
 }
 
-static bool _nuke_wall_msg(dungeon_feature_type feat, const coord_def& p)
+static bool _destroy_wall_msg(dungeon_feature_type feat, const coord_def& p)
 {
     const char *msg = nullptr;
     msg_channel_type chan = MSGCH_PLAIN;
@@ -915,8 +915,8 @@ static bool _nuke_wall_msg(dungeon_feature_type feat, const coord_def& p)
         // XXX: When silenced, features disappear without message.
         // XXX: For doors, we only issue a sound where the beam hit.
         //      If someone wants to improve on the door messaging,
-        //      probably best to merge _nuke_wall_msg back into
-        //      nuke_wall_effect. [rob]
+        //      probably best to merge _destroy_wall_msg back into
+        //      destroy_wall_effect. [rob]
         if (hear)
         {
             msg = "You hear a grinding noise.";
@@ -973,7 +973,7 @@ static bool _nuke_wall_msg(dungeon_feature_type feat, const coord_def& p)
         return false;
 }
 
-void bolt::nuke_wall_effect()
+void bolt::destroy_wall_effect()
 {
     if (env.markers.property_at(pos(), MAT_ANY, "veto_disintegrate") == "veto")
     {
@@ -992,7 +992,7 @@ void bolt::nuke_wall_effect()
     case DNGN_GRANITE_STATUE:
     case DNGN_ORCISH_IDOL:
     case DNGN_TREE:
-        nuke_wall(pos());
+        destroy_wall(pos());
         break;
 
     case DNGN_CLOSED_DOOR:
@@ -1003,7 +1003,7 @@ void bolt::nuke_wall_effect()
         find_connected_identical(pos(), doors);
         set<coord_def>::iterator it;
         for (it = doors.begin(); it != doors.end(); ++it)
-            nuke_wall(*it);
+            destroy_wall(*it);
         break;
     }
 
@@ -1012,7 +1012,7 @@ void bolt::nuke_wall_effect()
         return;
     }
 
-    obvious_effect = _nuke_wall_msg(feat, pos());
+    obvious_effect = _destroy_wall_msg(feat, pos());
 
     if (feat == DNGN_ORCISH_IDOL)
     {
@@ -1056,8 +1056,8 @@ void bolt::affect_wall()
         fire_wall_effect();
     else if (flavour == BEAM_ELECTRICITY)
         elec_wall_effect();
-    else if (flavour == BEAM_DISINTEGRATION || flavour == BEAM_NUKE)
-        nuke_wall_effect();
+    else if (flavour == BEAM_DISINTEGRATION || flavour == BEAM_DEVASTATION)
+        destroy_wall_effect();
 
     if (cell_is_solid(pos()))
         finish_beam();
@@ -2825,7 +2825,7 @@ maybe_bool bolt::affects_wall(dungeon_feature_type wall) const
         return is_superhot() ? MB_TRUE : MB_MAYBE;
 
     if (flavour == BEAM_DISINTEGRATION && damage.num >= 3
-        || flavour == BEAM_NUKE)
+        || flavour == BEAM_DEVASTATION)
     {
         if (feat_is_tree(wall))
             return MB_TRUE;
@@ -3019,7 +3019,7 @@ void bolt::internal_ouch(int dam)
         ouch(dam, beam_source, KILLED_BY_SPORE, aux_source.c_str(), true,
              source_name.empty() ? NULL : source_name.c_str());
     }
-    else if (flavour == BEAM_DISINTEGRATION || flavour == BEAM_NUKE)
+    else if (flavour == BEAM_DISINTEGRATION || flavour == BEAM_DEVASTATION)
     {
         ouch(dam, beam_source, KILLED_BY_DISINT, what, true,
              source_name.empty() ? NULL : source_name.c_str());
@@ -4022,7 +4022,7 @@ void bolt::affect_player()
     if (flavour == BEAM_MIASMA && hurted > 0)
         was_affected = miasma_player(get_source_name(), name);
 
-    if (flavour == BEAM_NUKE) // DISINTEGRATION already handled
+    if (flavour == BEAM_DEVASTATION) // DISINTEGRATION already handled
         blood_spray(you.pos(), MONS_PLAYER, hurted / 5);
 
     // Confusion effect for spore explosions
@@ -5111,9 +5111,13 @@ void bolt::affect_monster(monster* mon)
         else
         {
             killer_type ref_killer = thrower;
+            int kindex = /*beam_source_as_target()*/beam_source;
             if (!YOU_KILL(thrower) && reflector == NON_MONSTER)
+            {
                 ref_killer = KILL_YOU_MISSILE;
-            monster_die(mon, ref_killer, /*beam_source_as_target()*/beam_source);
+                kindex = YOU_FAULTLESS;
+            }
+            monster_die(mon, ref_killer, kindex);
         }
     }
 
@@ -5252,6 +5256,10 @@ bool ench_flavour_affects_monster(beam_type flavour, const monster* mon,
 
     case BEAM_DRAIN_MAGIC:
         rc = mons_antimagic_affected(mon);
+        break;
+
+    case BEAM_INNER_FLAME:
+        rc = !(mon->is_summoned() || mon->has_ench(ENCH_INNER_FLAME));
         break;
 
     default:
@@ -6325,7 +6333,7 @@ bool bolt::nasty_to(const monster* mon) const
     // The orbs are made of pure disintegration energy.  This also has the side
     // effect of not stopping us from firing further orbs when the previous one
     // is still flying.
-    if (flavour == BEAM_DISINTEGRATION || flavour == BEAM_NUKE)
+    if (flavour == BEAM_DISINTEGRATION || flavour == BEAM_DEVASTATION)
         return mon->type != MONS_ORB_OF_DESTRUCTION;
 
     // Take care of other non-enchantments.
@@ -6338,6 +6346,10 @@ bool bolt::nasty_to(const monster* mon) const
 
     // Positive effects.
     if (nice_to(mon))
+        return false;
+
+    // Co-aligned inner flame is fine.
+    if (flavour == BEAM_INNER_FLAME && mons_aligned(mon, agent()))
         return false;
 
     // Friendly and good neutral monsters don't mind being teleported.
@@ -6590,7 +6602,7 @@ static string _beam_type_name(beam_type type)
     case BEAM_FRAG:                  return "fragments";
     case BEAM_LAVA:                  return "magma";
     case BEAM_ICE:                   return "ice";
-    case BEAM_NUKE:                  return "nuke";
+    case BEAM_DEVASTATION:           return "devastation";
 #if TAG_MAJOR_VERSION == 34
     case BEAM_LIGHT:                 return "light";
 #endif

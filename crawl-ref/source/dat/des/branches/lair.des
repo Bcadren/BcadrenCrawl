@@ -168,7 +168,7 @@ ENDMAP
 # This could probably use some randomization.
 NAME:    david_lair_generic
 TAGS:    lair_entry
-MONS:    crocodile / sheep, worm
+MONS:    crocodile / sheep, goliath beetle
 MONS:    nothing / yak / weight:2 death yak, plant / fungus / w:20 nothing
 MONS:    elephant
 SHUFFLE: 12
@@ -555,7 +555,7 @@ DEPTH:   Lair:3-7
 SUBST:   % = %%%%%$$$**|
 MONS:    patrolling necromancer / necromancer
 SHUFFLE: 23
-MONS:    elephant slug zombie w:5 / nothing
+MONS:    elephant zombie w:2 / nothing
 MONS:    crocodile zombie / basilisk zombie / \
          komodo dragon zombie w:4 / nothing
 MAP
@@ -1678,9 +1678,9 @@ MAP
 ENDMAP
 
 # an altar to chei, and a few followers
-NAME:  kennysheep_slug_temple
+NAME:  kennysheep_beetle_temple
 DEPTH: Lair
-MONS:  worm / nothing
+MONS:  goliath beetle / nothing
 KFEAT: a = altar_cheibriados
 MAP
  @
@@ -2521,7 +2521,7 @@ PLACE:   Lair:$
 TAGS:    no_wall_fixup no_monster_gen no_rotate
 ORIENT:  southeast
 MONS:    plant
-MONS:    elephant slug / nothing, worm, brain worm
+MONS:    fire drake, worm, brain worm
 MONS:    giant leech, lindwurm, fire dragon / ice dragon
 KMONS:   8 = giant firefly
 SHUFFLE: ABC
@@ -2812,8 +2812,8 @@ KMONS:   9 = water moccasin
 KMONS:   0 = blink frog
 KMONS:   A = spiny frog
 KMONS:   B = black mamba
-KMONS:   C = worm
-KMONS:   D = elephant slug
+KMONS:   C = porcupine
+KMONS:   D = giant frog
 KMONS:   E = boring beetle
 KMONS:   F = boulder beetle
 KMONS:   G = sheep

@@ -31,6 +31,7 @@
 #include "fight.h"
 #include "food.h"
 #include "ghost.h"
+#include "godabil.h"
 #include "goditem.h"
 #include "godpassive.h"
 #include "invent.h"
@@ -4164,8 +4165,20 @@ static string _describe_favour(god_type which_god)
     {
         case 7:  return "A prized avatar of " + godname;
         case 6:  return "A favoured servant of " + godname + ".";
-        case 5:  return "A shining star in the eyes of " + godname + ".";
-        case 4:  return "A rising star in the eyes of " + godname + ".";
+        case 5:
+
+        if (you_worship(GOD_DITHMENOS))
+            return "A glorious shadow in the eyes of " + godname + ".";
+        else
+            return "A shining star in the eyes of " + godname + ".";
+
+        case 4:
+
+        if (you_worship(GOD_DITHMENOS))
+            return "A rising shadow in the eyes of " + godname + ".";
+        else
+            return "A rising star in the eyes of " + godname + ".";
+
         case 3:  return uppercase_first(godname) + " is most pleased with you.";
         case 2:  return uppercase_first(godname) + " is pleased with you.";
         default: return uppercase_first(godname) + " is noncommittal.";
@@ -4481,6 +4494,98 @@ static string _describe_ash_skill_boost()
     return desc.str();
 }
 
+// from dgn-overview.cc
+extern map<branch_type, set<level_id> > stair_level;
+
+static string _describe_branch_bribability()
+{
+    string ret = "You can bribe the following branches:\n";
+    vector<branch_type> targets;
+    size_t width = 0;
+    for (unsigned int i = 0; i < NUM_BRANCHES; i++)
+    {
+        const branch_type br = static_cast<branch_type>(i);
+        if (!gozag_branch_bribable(br))
+            continue;
+
+        // If you don't know the branch exists, don't list it;
+        // this mainly plugs info leaks about Lair branch structure.
+        if (!stair_level.count(br) && is_random_subbranch(br))
+            continue;
+
+        targets.push_back(br);
+        width = max(width, strlen(branches[i].longname));
+    }
+
+    for (unsigned int i = 0; i < targets.size(); i++)
+    {
+        string line(branches[targets[i]].longname);
+        line += string(width + 1 - strwidth(line), ' ');
+        // XXX: move this elsewhere?
+        switch (targets[i])
+        {
+            case BRANCH_ORC:
+                line += "(orcs)              ";
+                break;
+            case BRANCH_ELF:
+                line += "(elves)             ";
+                break;
+            case BRANCH_SNAKE:
+                line += "(nagas/salamanders) ";
+                break;
+            case BRANCH_SHOALS:
+                line += "(merfolk)           ";
+                break;
+            case BRANCH_VAULTS:
+                line += "(humans)            ";
+                break;
+            case BRANCH_ZOT:
+                line += "(draconians)        ";
+                break;
+            case BRANCH_COCYTUS:
+            case BRANCH_DIS:
+            case BRANCH_GEHENNA:
+            case BRANCH_TARTARUS:
+                line += "(demons)            ";
+                break;
+            default:
+                line += "(buggy)             ";
+                break;
+        }
+        line += "Susceptibility: ";
+        switch (gozag_branch_bribe_susceptibility(targets[i]))
+        {
+            case 0:
+                line += "none       ";
+                break;
+            case 1:
+                line += "very low   ";
+                break;
+            case 2:
+                line += "low        ";
+                break;
+            case 3:
+                line += "moderate   ";
+                break;
+            case 4:
+                line += "high       ";
+                break;
+            case 5:
+            default:
+                line += "very high  ";
+                break;
+        }
+        if (!branch_bribe[targets[i]])
+            line += "not bribed";
+        else
+            line += make_stringf("$%d", branch_bribe[targets[i]]);
+
+        ret += line + "\n";
+    }
+
+    return ret;
+}
+
 static void _detailed_god_description(god_type which_god)
 {
     clrscr();
@@ -4560,6 +4665,10 @@ static void _detailed_god_description(god_type which_god)
                          "cards' effects is governed by Evocations skill "
                          "instead of Invocations.";
             }
+            break;
+
+        case GOD_GOZAG:
+            broken = _describe_branch_bribability();
             break;
 
         default:
@@ -4871,8 +4980,12 @@ void describe_god(god_type which_god, bool give_title)
         // mv: No abilities (except divine protection) under penance
         if (!player_under_penance())
         {
+            vector<ability_type> abilities = get_god_abilities(true, true);
             for (int i = 0; i < MAX_GOD_ABILITIES; ++i)
-                if ((you_worship(GOD_GOZAG) || you.piety >= piety_breakpoint(i))
+                if ((you_worship(GOD_GOZAG)
+                     && you.gold >= get_gold_cost(abilities[i])
+                     || !you_worship(GOD_GOZAG)
+                        && you.piety >= piety_breakpoint(i))
                     && _print_god_abil_desc(which_god, i))
                 {
                     have_any = true;

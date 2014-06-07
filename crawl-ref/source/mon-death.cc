@@ -1001,6 +1001,9 @@ static void _setup_lightning_explosion(bolt & beam, const monster& origin)
     beam.noise_msg = "You hear a clap of thunder!";
     beam.colour    = LIGHTCYAN;
     beam.ex_size   = x_chance_in_y(origin.hit_dice, 24) ? 3 : 2;
+    // Don't credit the player for ally-summoned ball lightning explosions.
+    if (origin.summoner && origin.summoner != MID_PLAYER)
+            beam.thrower = KILL_MON;
 }
 
 static void _setup_prism_explosion(bolt& beam, const monster& origin)
@@ -1658,21 +1661,11 @@ int monster_die(monster* mons, killer_type killer,
             mprf(MSGCH_GOD, GOD_TROG,
                  "You feel the power of Trog in you as your rage grows.");
         }
-        else if (player_equip_unrand(UNRAND_BLOODLUST))
-        {
-            if (coinflip())
-            {
-                const int bonus = (2 + random2(4)) / 2;
-                you.increase_duration(DUR_BERSERK, bonus);
-                mpr("The necklace of Bloodlust glows a violent red.");
-            }
-        }
-        else if (you.wearing(EQ_AMULET, AMU_RAGE)
-                 && one_chance_in(30))
+        else if (player_equip_unrand(UNRAND_BLOODLUST) && coinflip())
         {
             const int bonus = (2 + random2(4)) / 2;
             you.increase_duration(DUR_BERSERK, bonus);
-            mpr("Your amulet glows a violent red.");
+            mpr("The necklace of Bloodlust glows a violent red.");
         }
     }
 
@@ -1877,7 +1870,8 @@ int monster_die(monster* mons, killer_type killer,
         case KILL_YOU_MISSILE:  // You kill by missile or beam.
         case KILL_YOU_CONF:     // You kill by confusion.
         {
-            const bool bad_kill    = god_hates_killing(you.religion, mons);
+            const bool bad_kill    = god_hates_killing(you.religion, mons)
+                                     && killer_index != YOU_FAULTLESS;
             const bool was_neutral = testbits(mons->flags, MF_WAS_NEUTRAL);
             const bool good_kill   = gives_xp && !created_friendly;
 
@@ -1968,7 +1962,7 @@ int monster_die(monster* mons, killer_type killer,
 
                 // Jiyva hates you killing slimes, but eyeballs
                 // mutation can confuse without you meaning it.
-                if (mons_is_slime(mons) && killer != KILL_YOU_CONF)
+                if (mons_is_slime(mons) && killer != KILL_YOU_CONF && bad_kill)
                 {
                     did_god_conduct(DID_KILL_SLIME, mons->hit_dice,
                                     true, mons);
@@ -2959,7 +2953,7 @@ string summoned_poof_msg(const monster* mons, const item_def &item)
  * Pikelness to be transferred through polymorph.
  *
  * @param mons    The monster to be checked.
- * @returns       True if the monster is Pikel, otherwise false.
+ * @return        True if the monster is Pikel, otherwise false.
 **/
 bool mons_is_pikel(monster* mons)
 {
@@ -3005,7 +2999,7 @@ void pikel_band_neutralise()
  * tracking through polymorph.
  *
  * @param mons    The monster to check.
- * @returns       True if Kirke, false otherwise.
+ * @return        True if Kirke, false otherwise.
 **/
 bool mons_is_kirke(monster* mons)
 {
@@ -3086,7 +3080,7 @@ void hogs_to_humans()
  * Tracks through type and original_name, thus tracking through polymorph.
  *
  * @param mons    The monster to check.
- * @returns       True if Dowan, otherwise false.
+ * @return        True if Dowan, otherwise false.
 **/
 bool mons_is_dowan(const monster* mons)
 {
@@ -3101,7 +3095,7 @@ bool mons_is_dowan(const monster* mons)
  * Tracks through type and original_name, thus tracking through polymorph.
  *
  * @param mons    The monster to check.
- * @returns       True if Duvessa, otherwise false.
+ * @return        True if Duvessa, otherwise false.
 **/
 bool mons_is_duvessa(const monster* mons)
 {
@@ -3118,7 +3112,7 @@ bool mons_is_duvessa(const monster* mons)
  * death function should be called for the monster in question.
  *
  * @param mons    The monster to check.
- * @returns       True if either Dowan or Duvessa, otherwise false.
+ * @return        True if either Dowan or Duvessa, otherwise false.
 **/
 bool mons_is_elven_twin(const monster* mons)
 {

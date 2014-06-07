@@ -666,7 +666,7 @@ static int _zp_cost(const ability_def& abil)
     return c;
 }
 
-static int _get_gold_cost(ability_type ability)
+int get_gold_cost(ability_type ability)
 {
     switch (ability)
     {
@@ -741,7 +741,7 @@ const string make_cost_description(ability_type ability)
 
     if (abil.flags & ABFLAG_GOLD)
     {
-        const int amount = _get_gold_cost(ability);
+        const int amount = get_gold_cost(ability);
         if (amount)
             ret += make_stringf(", %d Gold", amount);
         else
@@ -824,7 +824,7 @@ static const string _detailed_cost_description(ability_type ability)
     {
         have_cost = true;
         ret << "\nGold   : ";
-        int gold_amount = _get_gold_cost(ability);
+        int gold_amount = get_gold_cost(ability);
         if (gold_amount)
             ret << gold_amount;
         else
@@ -2303,7 +2303,7 @@ static bool _do_ability(const ability_def& abil)
         break;
 
     case ABIL_EVOKE_BERSERK:    // amulet of rage, randarts
-        go_berserk(true);
+        you.go_berserk(true);
         break;
 
     // Fly (tengu/drac) - permanent at high XL
@@ -2659,7 +2659,7 @@ static bool _do_ability(const ability_def& abil)
 
     case ABIL_TROG_BERSERK:
         // Trog abilities don't use or train invocations.
-        go_berserk(true);
+        you.go_berserk(true);
         break;
 
     case ABIL_TROG_REGEN_MR:
@@ -3306,7 +3306,7 @@ static void _add_talent(vector<talent>& vec, const ability_type ability,
  *                       be excluded.
  * @param include_unusable If true, abilities that are currently unusable will
  *                         be excluded.
- * @returns A vector of talent structs.
+ * @return  A vector of talent structs.
  */
 vector<talent> your_talents(bool check_confused, bool include_unusable)
 {

@@ -1157,6 +1157,9 @@ void behaviour_event(monster* mon, mon_event_type event, const actor *src,
 
     case ME_WHACK:
     case ME_ANNOY:
+        if (mon->has_ench(ENCH_GOLD_LUST))
+            mon->del_ench(ENCH_GOLD_LUST);
+
         // Will turn monster against <src>.
         // Orders to withdraw take precedence over interruptions
         if (mon->behaviour == BEH_WITHDRAW && src != &you)
@@ -1206,7 +1209,8 @@ void behaviour_event(monster* mon, mon_event_type event, const actor *src,
 
         if (src == &you
             && !mon->has_ench(ENCH_INSANE)
-            && !mons_is_avatar(mon->type))
+            && !mons_is_avatar(mon->type)
+            && mon->type != MONS_SPELLFORGED_SERVITOR)
         {
             mon->attitude = ATT_HOSTILE;
             breakCharm    = true;

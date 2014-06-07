@@ -3565,7 +3565,7 @@ bool god_hates_attacking_friend(god_type god, const actor *fr)
  * @param greedy_explore If true, the return value is based on whether
  *                       we should make explore greedy for items under
  *                       this god.
- * @returns True if the god accepts items for sacrifice, false otherwise.
+ * @return  True if the god accepts items for sacrifice, false otherwise.
 */
 bool god_likes_items(god_type god, bool greedy_explore)
 {
@@ -3600,7 +3600,7 @@ bool god_likes_items(god_type god, bool greedy_explore)
  *
  * @param god The god.
  * @param item The item.
- * @returns True if the god likes the item, false otherwise.
+ * @return  True if the god likes the item, false otherwise.
 */
 bool god_likes_item(god_type god, const item_def& item)
 {
@@ -4114,8 +4114,9 @@ void god_pitch(god_type which_god)
 
         for (int i = 0; i < MAX_GOD_ABILITIES; ++i)
         {
-            if (_abil_chg_message(god_gain_power_messages[you.religion][i],
-                                  "You can now %s.", i))
+            if (you.gold >= get_gold_cost(abilities[i])
+                && _abil_chg_message(god_gain_power_messages[you.religion][i],
+                                     "You have enough gold to %s.", i))
             {
                 needs_redraw = true;
             }
@@ -4338,6 +4339,8 @@ bool god_hates_ability(ability_type ability, god_type god)
         case ABIL_DELAYED_FIREBALL:
         case ABIL_HELLFIRE:
             return god == GOD_DITHMENOS;
+        case ABIL_EVOKE_BERSERK:
+            return god == GOD_CHEIBRIADOS;
         default:
             break;
     }

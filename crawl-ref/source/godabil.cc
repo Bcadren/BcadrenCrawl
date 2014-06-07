@@ -444,11 +444,11 @@ typedef FixedVector<int, NUM_RECITE_TYPES> recite_counts;
  *             which recitation types the monster is affected by, if any:
  *             eligibility[RECITE_FOO] is nonzero if the monster is affected
  *             by RECITE_FOO. Only modified if the function returns 0 or 1.
- * @returns -1 if the monster is already affected or of the wrong holiness.
+ * @return  -1 if the monster is already affected or of the wrong holiness.
  *          The eligibility vector is unchanged.
- * @returns 0 if the monster is otherwise ineligible for recite. The
+ * @return  0 if the monster is otherwise ineligible for recite. The
  *          eligibility vector is filled with zeros.
- * @returns 1 if the monster is eligible for recite. The eligibility vector
+ * @return  1 if the monster is eligible for recite. The eligibility vector
  *          indicates which types of recitation it is vulnerable to.
  */
 static int _zin_check_recite_to_single_monster(const monster *mon,
@@ -637,11 +637,11 @@ bool zin_check_able_to_recite(bool quiet)
  * @param[out] prayertype If non-null, receives the type of recitation to
  *             be used: either the only possible type, or the type chosen
  *             by the player.  Only modified when we return 1.
- * @returns 0 if no monsters were found, or if the player declined to choose
+ * @return  0 if no monsters were found, or if the player declined to choose
  *          a type of recitation, or if all the found monsters returned
  *          zero from _zin_check_recite_to_single_monster().
- * @returns 1 if an eligible audience was found.
- * @returns -1 if only an ineligible audience was found: no eligibile
+ * @return  1 if an eligible audience was found.
+ * @return  -1 if only an ineligible audience was found: no eligibile
  *          monsters, and at least one returned -1 from
  *          _zin_check_recite_to_single_monster().
  */
@@ -1804,7 +1804,7 @@ bool kiku_receive_corpses(int pow)
 /**
  * Destroy a corpse at the player's location
  *
- * @returns True if a corpse was destroyed, false otherwise.
+ * @return  True if a corpse was destroyed, false otherwise.
 */
 bool kiku_take_corpse()
 {
@@ -3881,7 +3881,7 @@ bool gozag_potion_petition()
     }
 
     ASSERT(you.gold >= faith_price);
-    you.gold -= faith_price;
+    you.del_gold(faith_price);
     you.attribute[ATTR_GOZAG_GOLD_USED] += faith_price;
     for (int j = 0; j < pots[keyin]->size(); j++)
     {
@@ -4093,7 +4093,7 @@ bool gozag_call_merchant()
 
     ASSERT(you.gold >= faith_cost);
 
-    you.gold -= faith_cost;
+    you.del_gold(faith_cost);
     you.attribute[ATTR_GOZAG_GOLD_USED] += faith_cost;
 
     const shop_type type =
@@ -4301,7 +4301,7 @@ branch_type gozag_bribable_branch(monster_type type)
     return NUM_BRANCHES;
 }
 
-static bool _gozag_branch_bribable(branch_type branch)
+bool gozag_branch_bribable(branch_type branch)
 {
     for (unsigned int i = 0; i < ARRAYSZ(mons_bribability); i++)
     {
@@ -4310,6 +4310,21 @@ static bool _gozag_branch_bribable(branch_type branch)
     }
 
     return false;
+}
+
+int gozag_branch_bribe_susceptibility(branch_type branch)
+{
+    int susceptibility = 0;
+    for (unsigned int i = 0; i < ARRAYSZ(mons_bribability); i++)
+    {
+        if (mons_bribability[i].branch == branch
+            && susceptibility < mons_bribability[i].susceptibility)
+        {
+            susceptibility = mons_bribability[i].susceptibility;
+        }
+    }
+
+    return susceptibility;
 }
 
 void gozag_deduct_bribe(branch_type br, int amount)
@@ -4341,7 +4356,7 @@ bool gozag_check_bribe_branch(bool quiet)
     {
         for (int i = 0; i < NUM_BRANCHES; ++i)
             if (branches[i].entry_stairs == grd(you.pos())
-                && _gozag_branch_bribable(static_cast<branch_type>(i)))
+                && gozag_branch_bribable(static_cast<branch_type>(i)))
             {
                 branch2 = static_cast<branch_type>(i);
                 break;
@@ -4353,9 +4368,9 @@ bool gozag_check_bribe_branch(bool quiet)
                         ? make_stringf("the denizens of %s",
                                        branches[branch2].longname)
                         : "";
-    if (!_gozag_branch_bribable(branch)
+    if (!gozag_branch_bribable(branch)
         && (branch2 == NUM_BRANCHES
-            || !_gozag_branch_bribable(branch2)))
+            || !gozag_branch_bribable(branch2)))
     {
         if (!quiet)
         {
@@ -4379,7 +4394,7 @@ bool gozag_bribe_branch()
     {
         for (int i = 0; i < NUM_BRANCHES; ++i)
             if (branches[i].entry_stairs == grd(you.pos())
-                && _gozag_branch_bribable(static_cast<branch_type>(i)))
+                && gozag_branch_bribable(static_cast<branch_type>(i)))
             {
                 string prompt =
                     make_stringf("Do you want to bribe the denizens of %s?",
@@ -4394,7 +4409,7 @@ bool gozag_bribe_branch()
     }
     string who = make_stringf("the denizens of %s",
                               branches[branch].longname);
-    if (!_gozag_branch_bribable(branch))
+    if (!gozag_branch_bribable(branch))
     {
         mprf("You can't bribe %s.", who.c_str());
         return false;
@@ -4406,7 +4421,7 @@ bool gozag_bribe_branch()
 
     if (prompted || yesno(prompt.c_str(), true, 'n'))
     {
-        you.gold -= bribe_amount;
+        you.del_gold(bribe_amount);
         you.attribute[ATTR_GOZAG_GOLD_USED] += bribe_amount;
         branch_bribe[branch] += bribe_amount;
         string msg = make_stringf(" spreads your bribe to %s!",
@@ -4575,7 +4590,7 @@ bool qazlal_upheaval(coord_def target, bool quiet)
                     || grd(pos) == DNGN_GRATE))
                 {
                     noisy(30, pos);
-                    nuke_wall(pos);
+                    destroy_wall(pos);
                     wall_count++;
                 }
                 break;

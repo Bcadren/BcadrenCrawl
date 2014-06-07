@@ -1184,10 +1184,6 @@ static tileidx_t _tileidx_monster_base(int type, bool in_water, int colour,
     case MONS_NATASHA:
         return TILEP_MONS_NATASHA;
 
-    // slugs ('j')
-    case MONS_ELEPHANT_SLUG:
-        return TILEP_MONS_ELEPHANT_SLUG;
-
     // killer bees ('k')
     case MONS_KILLER_BEE:
         return TILEP_MONS_KILLER_BEE;
@@ -2908,7 +2904,7 @@ tileidx_t tileidx_monster(const monster_info& mons)
         ch |= TILE_FLAG_PAIN_MIRROR;
     if (mons.is(MB_HASTED))
         ch |= TILE_FLAG_HASTED;
-    if (mons.is(MB_STRONG))
+    if (mons.is(MB_STRONG) || mons.is(MB_FRENZIED) || mons.is(MB_ROUSED))
         ch |= TILE_FLAG_MIGHT;
     if (mons.is(MB_PETRIFYING))
         ch |= TILE_FLAG_PETRIFYING;
@@ -2922,6 +2918,8 @@ tileidx_t tileidx_monster(const monster_info& mons)
         ch |= TILE_FLAG_PERM_SUMMON;
     if (mons.is(MB_DEATHS_DOOR))
         ch |= TILE_FLAG_DEATHS_DOOR;
+    if (mons.is(MB_WORD_OF_RECALL))
+        ch |= TILE_FLAG_RECALL;
 
     if (mons.attitude == ATT_FRIENDLY)
         ch |= TILE_FLAG_PET;

@@ -623,42 +623,8 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
         behaviour_event(this, ME_EVAL);
         break;
 
-    case ENCH_PERMA_BRIBED:
-        // Only demand further payment if you can see the player.
-        if (you_worship(GOD_GOZAG) && !props.exists(GOZAG_BRIBE_BROKEN_KEY))
-        {
-            if (!you.can_see(this))
-            {
-                add_ench(mon_enchant(ENCH_PERMA_BRIBED, 1, NULL,
-                                     20 * BASELINE_DELAY));
-                break;
-            }
-            else
-            {
-                string monname = name(DESC_THE);
-                const int cost =
-                    max(1, fuzz_value(exper_value(this), 15, 15) / 10);
-                mprf("%s demands further payment of %d gold.", monname.c_str(),
-                     cost);
-                if (you.gold >= cost)
-                {
-                    string prompt = make_stringf("Pay %s demand of %d gold?",
-                                                 apostrophise(monname).c_str(),
-                                                 cost);
-                    if (yesno(prompt.c_str(), false, 0))
-                    {
-                        mprf("%s seems mollified.", monname.c_str());
-                        you.gold -= cost;
-                        add_ench(ENCH_PERMA_BRIBED);
-                        break;
-                    }
-                }
-                else
-                    mpr("You cannot afford to meet that demand!");
-            }
-        }
-        // deliberate fall-through
     case ENCH_BRIBED:
+    case ENCH_PERMA_BRIBED:
         if (!quiet)
             simple_monster_message(this, " is no longer bribed.");
 
@@ -1023,6 +989,11 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
            simple_monster_message(this, " is no longer covered in acid.");
         break;
 
+    case ENCH_GOLD_LUST:
+        if (!quiet)
+           simple_monster_message(this, " is no longer distracted by gold.");
+        break;
+
     default:
         break;
     }
@@ -1133,7 +1104,7 @@ void monster::timeout_enchantments(int levels)
         case ENCH_FLAYED: case ENCH_BARBS:
         case ENCH_AGILE: case ENCH_FROZEN: case ENCH_EPHEMERAL_INFUSION:
         case ENCH_BLACK_MARK: case ENCH_SAP_MAGIC: case ENCH_BRIBED:
-        case ENCH_PERMA_BRIBED: case ENCH_CORROSION:
+        case ENCH_PERMA_BRIBED: case ENCH_CORROSION: case ENCH_GOLD_LUST:
             lose_ench_levels(i->second, levels);
             break;
 
@@ -1340,8 +1311,8 @@ void monster::apply_enchantment(const mon_enchant &me)
     case ENCH_FROZEN:
     case ENCH_EPHEMERAL_INFUSION:
     case ENCH_SAP_MAGIC:
-    case ENCH_PERMA_BRIBED:
     case ENCH_CORROSION:
+    case ENCH_GOLD_LUST:
     // case ENCH_ROLLING:
         decay_enchantment(en);
         break;
@@ -2228,7 +2199,7 @@ static const char *enchant_names[] =
     "poison_vuln", "icemail", "agile",
     "frozen", "ephemeral_infusion", "black_mark", "grand_avatar",
     "sap magic", "shroud", "phantom_mirror", "bribed", "permabribed",
-    "corrosion", "buggy",
+    "corrosion", "gold_lust", "buggy",
 };
 
 static const char *_mons_enchantment_name(enchant_type ench)
@@ -2495,9 +2466,6 @@ int mon_enchant::calc_duration(const monster* mons,
         break;
     case ENCH_FROZEN:
         cturn = 3 * BASELINE_DELAY;
-        break;
-    case ENCH_PERMA_BRIBED:
-        cturn = 10000 / _mod_speed(25, mons->speed);
         break;
     default:
         break;

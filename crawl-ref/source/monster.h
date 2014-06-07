@@ -182,6 +182,7 @@ public:
     bool is_patrolling() const;
     bool needs_abyss_transit() const;
     void set_transit(const level_id &destination);
+    bool is_trap_safe(const coord_def& where, bool just_check = false) const;
     bool find_place_to_live(bool near_player = false);
     bool find_home_near_place(const coord_def &c);
     bool find_home_near_player();
@@ -305,7 +306,7 @@ public:
     bool can_go_frenzy() const;
     bool can_go_berserk() const;
     bool can_jump() const;
-    void go_berserk(bool intentional, bool potion = false);
+    bool go_berserk(bool intentional, bool potion = false);
     bool go_frenzy(actor *source);
     bool berserk() const;
     bool berserk_or_insane() const;

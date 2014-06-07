@@ -16,6 +16,7 @@
 #include <sstream>
 #include <algorithm>
 
+#include "ability.h"
 #include "act-iter.h"
 #include "areas.h"
 #include "art-enum.h"
@@ -2406,7 +2407,7 @@ bool player_effectively_in_light_armour()
 // This function returns true if the player has a radically different
 // shape... minor changes like blade hands don't count, also note
 // that lich transformation doesn't change the character's shape
-// (so we end up with Naga-liches, Spiggan-liches, Minotaur-liches)
+// (so we end up with Naga-liches, Spriggan-liches, Minotaur-liches)
 // it just makes the character undead (with the benefits that implies). - bwr
 bool player_is_shapechanged()
 {
@@ -2628,6 +2629,12 @@ int player_wizardry()
            + you.wearing(EQ_STAFF, STAFF_WIZARDRY);
 }
 
+/**
+ * Calculate the SH value used internally.
+ *
+ * Exactly twice the value displayed to players, for legacy reasons.
+ * @return      The player's current SH value.
+ */
 int player_shield_class()
 {
     int shield = 0;
@@ -2686,14 +2693,25 @@ int player_shield_class()
     }
 
     // mutations
-    // +3, +6, +9
+    // +2, +4, +6 (displayed)
     shield += (player_mutation_level(MUT_LARGE_BONE_PLATES) > 0
-               ? player_mutation_level(MUT_LARGE_BONE_PLATES) * 300
+               ? player_mutation_level(MUT_LARGE_BONE_PLATES) * 200 + 200
                : 0);
 
     stat += qazlal_sh_boost() * 100;
 
     return (shield + stat + 50) / 100;
+}
+
+/**
+ * Calculate the SH value that should be displayed to players.
+ *
+ * Exactly half the internal value, for legacy reasons.
+ * @return      The SH value to be displayed.
+ */
+int player_displayed_shield_class()
+{
+    return player_shield_class() / 2;
 }
 
 bool player_sust_abil(bool calc_unid)
@@ -7081,8 +7099,11 @@ int player::hurt(const actor *agent, int amount, beam_type flavour,
         die("player::hurt() called for self-damage");
     }
 
-    if ((flavour == BEAM_NUKE || flavour == BEAM_DISINTEGRATION) && can_bleed())
+    if ((flavour == BEAM_DEVASTATION || flavour == BEAM_DISINTEGRATION)
+        && can_bleed())
+    {
         blood_spray(pos(), type, amount / 5);
+    }
 
     return amount;
 }
@@ -7935,6 +7956,26 @@ void player::set_gold(int amount)
         const int old_gold = gold;
         gold = amount;
         shopping_list.gold_changed(old_gold, gold);
+
+        // XXX: this might benefit from being in its own function
+        if (you_worship(GOD_GOZAG))
+        {
+            vector<ability_type> abilities = get_god_abilities(true, true);
+            for (int i = 0; i < MAX_GOD_ABILITIES; i++)
+            {
+                const int cost = get_gold_cost(abilities[i]);
+                if (gold >= cost && old_gold < cost)
+                {
+                    mprf(MSGCH_GOD, "You now have enough gold to %s.",
+                         god_gain_power_messages[you.religion][i]);
+                }
+                else if (old_gold >= cost && gold < cost)
+                {
+                    mprf(MSGCH_GOD, "You no longer have enough gold to %s.",
+                         god_gain_power_messages[you.religion][i]);
+                }
+            }
+        }
     }
 }
 
@@ -8144,7 +8185,7 @@ void count_action(caction_type type, int subtype)
 
 /**
  *   The player's radius of monster detection.
- *   @returns  the radius in which a player can detect monsters.
+ *   @return   the radius in which a player can detect monsters.
 **/
 int player_monster_detect_radius()
 {
@@ -8159,7 +8200,7 @@ int player_monster_detect_radius()
 
 /**
  * Return true if the player has the Orb of Zot.
- * @returns True if the player has the Orb, false otherwise.
+ * @return  True if the player has the Orb, false otherwise.
  */
 bool player_has_orb()
 {

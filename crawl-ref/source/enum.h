@@ -398,7 +398,7 @@ enum beam_type                  // bolt::flavour
     BEAM_FRAG,
     BEAM_LAVA,
     BEAM_ICE,
-    BEAM_NUKE,
+    BEAM_DEVASTATION,
 #if TAG_MAJOR_VERSION == 34
     BEAM_LIGHT,
 #endif
@@ -1853,6 +1853,7 @@ enum enchant_type
     ENCH_BRIBED,
     ENCH_PERMA_BRIBED,
     ENCH_CORROSION,
+    ENCH_GOLD_LUST,
     // Update enchantment names in mon-ench.cc when adding or removing
     // enchantments.
     NUM_ENCHANTMENTS
@@ -4564,6 +4565,7 @@ enum tile_flags ENUM_INT64
     TILE_FLAG_SUMMONED   = 0x800000000000ULL,
     TILE_FLAG_PERM_SUMMON= 0x1000000000000ULL,
     TILE_FLAG_DEATHS_DOOR = 0x2000000000000ULL,
+    TILE_FLAG_RECALL =     0x4000000000000ULL,
 
     // MDAM has 5 possibilities, so uses 3 bits.
     TILE_FLAG_MDAM_MASK  = 0x1C0000000ULL,

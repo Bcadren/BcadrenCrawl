@@ -1685,7 +1685,7 @@ const char *dungeon_feature_name(dungeon_feature_type rfeat)
     return dngn_feature_names[feat];
 }
 
-void nuke_wall(const coord_def& p)
+void destroy_wall(const coord_def& p)
 {
     if (!in_bounds(p))
         return;
@@ -1698,7 +1698,7 @@ void nuke_wall(const coord_def& p)
 
     _revert_terrain_to(p, (player_in_branch(BRANCH_SWAMP) ? DNGN_SHALLOW_WATER
                                                           : DNGN_FLOOR));
-    env.level_map_mask(p) |= MMT_NUKED;
+    env.level_map_mask(p) |= MMT_TURNED_TO_FLOOR;
 }
 
 /**

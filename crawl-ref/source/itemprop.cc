@@ -654,7 +654,7 @@ void set_net_stationary(item_def &item)
  *
  * Currently only carrion and nets with a trapped victim are stationary.
  * @param item The item.
- * @returns True iff the item is stationary.
+ * @return  True iff the item is stationary.
 */
 bool item_is_stationary(const item_def &item)
 {
@@ -665,7 +665,7 @@ bool item_is_stationary(const item_def &item)
  * Is the item a stationary net?
  *
  * @param item The item.
- * @returns True iff the item is a stationary net.
+ * @return  True iff the item is a stationary net.
 */
 bool item_is_stationary_net(const item_def &item)
 {
@@ -677,7 +677,7 @@ bool item_is_stationary_net(const item_def &item)
  * Get the actor held in a stationary net.
  *
  * @param net A stationary net item.
- * @returns A pointer to the actor in the net, guaranteed to be non-null.
+ * @return  A pointer to the actor in the net, guaranteed to be non-null.
  */
 actor *net_holdee(const item_def &net)
 {
@@ -981,7 +981,12 @@ bool hide2armour(item_def &item)
     return true;
 }
 
-// Return the enchantment limit of a piece of armour.
+/**
+ * Return the enchantment limit of a piece of armour.
+ *
+ * @param item      The item being considered.
+ * @return          The maximum enchantment the item can hold.
+ */
 int armour_max_enchant(const item_def &item)
 {
     ASSERT(item.base_type == OBJ_ARMOUR);
@@ -996,7 +1001,8 @@ int armour_max_enchant(const item_def &item)
         max_plus = property(item, PARM_AC);
     }
     else if (eq_slot == EQ_SHIELD)
-        max_plus = 3;
+        // 3 / 5 / 8 for bucklers/shields/lg. shields
+        max_plus = (property(item, PARM_AC) - 3)/2 + 3;
 
     return max_plus;
 }
@@ -1192,16 +1198,19 @@ bool is_enchantable_armour(const item_def &arm, bool uncurse, bool unknown)
         return false;
 
     // If we don't know the plusses, assume enchanting is possible.
-    if (unknown && !is_known_artefact(arm)
-        && !item_ident(arm, ISFLAG_KNOW_PLUSES))
-    {
+    if (unknown && !is_artefact(arm) && !item_ident(arm, ISFLAG_KNOW_PLUSES))
         return true;
-    }
 
     // Artefacts or highly enchanted armour cannot be enchanted, only
     // uncursed.
     if (is_artefact(arm) || arm.plus >= armour_max_enchant(arm))
-        return uncurse && arm.cursed() && !you_worship(GOD_ASHENZARI);
+    {
+        if (!uncurse || you_worship(GOD_ASHENZARI))
+            return false;
+        if (unknown && !item_ident(arm, ISFLAG_KNOW_CURSE))
+            return true;
+        return arm.cursed();
+    }
 
     return true;
 }
@@ -2485,7 +2494,7 @@ bool gives_resistance(const item_def &item)
  * Return the mass of an item (aum).
  *
  * @param item The item.
- * @returns The mass of the item.
+ * @return  The mass of the item.
 */
 int item_mass(const item_def &item)
 {

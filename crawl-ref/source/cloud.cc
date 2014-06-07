@@ -248,7 +248,7 @@ static void _spread_fire(const cloud_struct &cloud)
 
             if (you.see_cell(*ai))
                 mpr("The forest fire spreads!");
-            nuke_wall(*ai);
+            destroy_wall(*ai);
             _place_new_cloud(cloud.type, *ai, random2(30)+25, cloud.whose,
                               cloud.killer, cloud.source, cloud.spread_rate,
                               cloud.colour, cloud.name, cloud.tile, cloud.excl_rad);
@@ -273,6 +273,7 @@ static void _cloud_interacts_with_terrain(const cloud_struct &cloud)
             const coord_def p(*ai);
             if (in_bounds(p)
                 && feat_is_watery(grd(p))
+                && !cell_is_solid(p)
                 && env.cgrid(p) == EMPTY_CLOUD
                 && one_chance_in(7))
             {
@@ -353,7 +354,7 @@ void manage_clouds()
         if (cloud.type == CLOUD_NONE)
             continue;
 
-#if ASSERTS
+#ifdef ASSERTS
         if (cell_is_solid(cloud.pos))
         {
             die("cloud %s in %s at (%d,%d)", cloud_type_name(cloud.type).c_str(),

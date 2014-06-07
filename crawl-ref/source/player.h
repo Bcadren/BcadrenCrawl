@@ -563,7 +563,7 @@ public:
                         bool quiet = false) const;
     bool can_jump() const;
     bool can_jump(bool quiet) const;
-    void go_berserk(bool intentional, bool potion = false);
+    bool go_berserk(bool intentional, bool potion = false);
     bool berserk() const;
     bool has_lifeforce() const;
     bool can_mutate() const;
@@ -892,6 +892,7 @@ int player_res_magic(bool calc_unid = true, bool temp = true);
 bool player_control_teleport(bool temp = true);
 
 int player_shield_class();
+int player_displayed_shield_class();
 
 int player_spec_air();
 int player_spec_cold();
