@@ -770,7 +770,7 @@ bool food_change(bool initial)
         you.hunger_state = newstate;
         set_redraw_status(REDRAW_HUNGER);
 
-        if (newstate < HS_SATIATED)
+        if (newstate < HS_ENGORGED)
             interrupt_activity(AI_HUNGRY);
 
         if (you.species == SP_VAMPIRE)
@@ -1296,11 +1296,14 @@ bool eat_from_inventory()
 //         -2 for skip to inventory.
 int prompt_eat_chunks(bool only_auto)
 {
+    bool can_chunk = true;
+    bool auto_ration = false;
     // Only ghouls can eat chunks, vampires have their own thing.
     if (player_mutation_level(MUT_SAPROVOROUS) != 3
         && you.species != SP_VAMPIRE)
     {
-        return 0;
+        can_chunk = false;
+        auto_ration = true;
     }
 
     // If we *know* the player can eat chunks, doesn't have the gourmand
@@ -1308,7 +1311,7 @@ int prompt_eat_chunks(bool only_auto)
     if (you.species != SP_VAMPIRE
         && you.hunger_state >= HS_SATIATED + player_likes_chunks())
     {
-        return 0;
+        can_chunk = false;
     }
 
     bool found_valid = false;
@@ -1324,8 +1327,20 @@ int prompt_eat_chunks(bool only_auto)
             if (!mons_has_blood(si->mon_type))
                 continue;
         }
-        else if (si->base_type != OBJ_FOOD || si->sub_type != FOOD_CHUNK)
+        // Don't autoeat fruit - it is more tactically useful than other food
+        else if (si->base_type != OBJ_FOOD || si->sub_type == FOOD_FRUIT)
             continue;
+        else if (si->sub_type == FOOD_CHUNK && !can_chunk)
+            continue;
+        else if (si->sub_type != FOOD_CHUNK && !auto_ration)
+            continue;
+        // Don't autoeat fruit - it is more tactically useful than other food
+        else if (player_mutation_level(MUT_SAPROVOROUS) != 3)
+        {
+            int value = ::food_value(*si);
+            if ((you.hunger + value) > HUNGER_MAXIMUM)
+                continue;
+        }
 
         if (food_is_rotten(*si) && !_player_can_eat_rotten_meat())
             continue;
@@ -1353,8 +1368,19 @@ int prompt_eat_chunks(bool only_auto)
             if (!mons_has_blood(item->mon_type))
                 continue;
         }
-        else if (item->base_type != OBJ_FOOD || item->sub_type != FOOD_CHUNK)
+        // Don't autoeat fruit - it is more tactically useful than other food
+        else if (item->base_type != OBJ_FOOD || item->sub_type == FOOD_FRUIT)
             continue;
+        else if (item->sub_type == FOOD_CHUNK && !can_chunk)
+            continue;
+        else if (item->sub_type != FOOD_CHUNK && !auto_ration)
+            continue;
+        else if (player_mutation_level(MUT_SAPROVOROUS) != 3)
+        {
+            int value = ::food_value(*item);
+            if ((you.hunger + value) > HUNGER_MAXIMUM)
+                continue;
+        }
 
         if (food_is_rotten(*item) && !_player_can_eat_rotten_meat())
             continue;

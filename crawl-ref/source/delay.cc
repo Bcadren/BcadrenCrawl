@@ -1233,7 +1233,7 @@ static command_type _get_running_command()
 static bool _auto_eat(delay_type type)
 {
     return Options.auto_eat_chunks
-           && (you.hunger_state < HS_SATIATED)
+           && (you.hunger_state < HS_ENGORGED)
            && (type == DELAY_REST || type == DELAY_TRAVEL);
 }
 
@@ -1757,6 +1757,8 @@ bool interrupt_activity(activity_interrupt_type ai,
 
     // If we get hungry while traveling, let's try to auto-eat a chunk.
     if (ai == AI_HUNGRY && _auto_eat(delay) && prompt_eat_chunks(true) == 1)
+        return false;
+    if (ai == AI_HUNGRY && you.hunger_state > HS_HUNGRY)
         return false;
 
     dprf("Activity interrupt: %s", _activity_interrupt_name(ai));
