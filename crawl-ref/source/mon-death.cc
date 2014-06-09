@@ -428,11 +428,9 @@ int place_monster_corpse(const monster* mons, bool silent, bool force)
     if (mons_class_can_leave_corpse(mons->type)
         && monster_maybe_edible(mons->type)
         && !god_disallows_corpsefood(mons->type, you.religion)
-        && one_chance_in(4))
+        && one_chance_in(20))
     {
-        const int type = random_choose_weighted(1, FOOD_MEAT_RATION,
-                                                4, FOOD_BEEF_JERKY, 0);
-        int it = items(0, OBJ_FOOD, type, true, 0);
+        int it = items(0, OBJ_FOOD, FOOD_MEAT_RATION, true, 0);
         move_item_to_grid(&it, mons->pos(), !mons->swimming());
     }
 
