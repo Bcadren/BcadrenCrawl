@@ -2202,22 +2202,6 @@ bool monster::pickup_gold(item_def &item, int near)
     return pickup(item, MSLOT_GOLD, near);
 }
 
-bool monster::pickup_food(item_def &item, int near)
-{
-    // Chunks are used only for Simulacrum.
-    if (item.base_type == OBJ_FOOD
-        && item.sub_type == FOOD_CHUNK
-        && has_spell(SPELL_SIMULACRUM)
-        && mons_class_can_be_zombified(item.mon_type))
-    {
-        // If a Beoghite monster ever gets Simulacrum, please
-        // add monster type restrictions here.
-        return pickup(item, MSLOT_MISCELLANY, near);
-    }
-
-    return false;
-}
-
 bool monster::pickup_misc(item_def &item, int near)
 {
     // Never pick up the horn of Geryon or runes, except for mimics.
@@ -2323,8 +2307,6 @@ bool monster::pickup_item(item_def &item, int near, bool force)
         return pickup_armour(item, near, force);
     case OBJ_MISCELLANY:
         return pickup_misc(item, near);
-    case OBJ_FOOD:
-        return pickup_food(item, near);
     case OBJ_GOLD:
         return pickup_gold(item, near);
     case OBJ_JEWELLERY:
@@ -3526,6 +3508,10 @@ bool monster::is_evil(bool check_spells) const
     {
         return true;
     }
+
+    // They ride on top of evil monsters.
+    if (type == MONS_SPRIGGAN_RIDER)
+        return true;
 
     return false;
 }
@@ -5894,7 +5880,7 @@ void monster::react_to_damage(const actor *oppressor, int damage,
             if (!fly_died)
                 monster_drop_things(this, mons_aligned(oppressor, &you));
 
-            type = fly_died ? MONS_SPRIGGAN : MONS_FIREFLY;
+            type = fly_died ? MONS_SPRIGGAN : MONS_VAMPIRE_MOSQUITO;
             define_monster(this);
             hit_points = min(old_hp, hit_points);
             flags          = old_flags;
@@ -5905,7 +5891,7 @@ void monster::react_to_damage(const actor *oppressor, int damage,
             if (!old_name.empty())
                 mname = old_name;
 
-            mounted_kill(this, fly_died ? MONS_FIREFLY : MONS_SPRIGGAN,
+            mounted_kill(this, fly_died ? MONS_VAMPIRE_MOSQUITO : MONS_SPRIGGAN,
                 !oppressor ? KILL_MISC
                 : (oppressor->is_player())
                   ? KILL_YOU : KILL_MON,

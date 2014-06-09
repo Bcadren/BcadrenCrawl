@@ -567,7 +567,9 @@ enum branch_type                // you.where_are_you
     BRANCH_SPIDER,
     BRANCH_SLIME,
     BRANCH_VAULTS,
+#if TAG_MAJOR_VERSION == 34
     BRANCH_BLADE,
+#endif
     BRANCH_CRYPT,
     BRANCH_TOMB,
 #if TAG_MAJOR_VERSION > 34
@@ -1428,7 +1430,9 @@ enum dungeon_feature_type
     DNGN_ENTER_SLIME,
     DNGN_ENTER_VAULTS,
     DNGN_ENTER_CRYPT,
+#if TAG_MAJOR_VERSION == 34
     DNGN_ENTER_BLADE,
+#endif
     DNGN_ENTER_ZOT,
     DNGN_ENTER_TEMPLE,
     DNGN_ENTER_SNAKE,
@@ -1454,7 +1458,9 @@ enum dungeon_feature_type
     DNGN_RETURN_FROM_SLIME,
     DNGN_RETURN_FROM_VAULTS,
     DNGN_RETURN_FROM_CRYPT,
+#if TAG_MAJOR_VERSION == 34
     DNGN_RETURN_FROM_BLADE,
+#endif
     DNGN_RETURN_FROM_ZOT,
     DNGN_RETURN_FROM_TEMPLE,
     DNGN_RETURN_FROM_SNAKE,
@@ -2625,7 +2631,9 @@ enum monster_type                      // menv[].type
     MONS_SPRIGGAN_BERSERKER,
     MONS_SPRIGGAN_DEFENDER,
     MONS_SPRIGGAN_AIR_MAGE,
+#if TAG_MAJOR_VERSION == 34
     MONS_FIREFLY,
+#endif
     MONS_TENGU,
 #if TAG_MAJOR_VERSION > 34
     MONS_TENGU_WARRIOR,
@@ -4191,10 +4199,11 @@ enum stat_type
 enum targeting_type
 {
     DIR_NONE,
-    DIR_TARGET,        // smite targeting
-    DIR_DIR,           // needs a clear line to target
-    DIR_TARGET_OBJECT, // targets items
-    DIR_JUMP,          // a jump target
+    DIR_TARGET,         // smite targeting
+    DIR_DIR,            // needs a clear line to target
+    DIR_TARGET_OBJECT,  // targets items
+    DIR_MOVABLE_OBJECT, // skips corpses
+    DIR_JUMP,           // a jump target
 };
 
 enum torment_source_type

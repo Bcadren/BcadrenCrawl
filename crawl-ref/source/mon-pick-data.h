@@ -195,7 +195,6 @@ static const pop_entry pop_elf[] =
   {  6,  7,   10, UP,   MONS_DEEP_ELF_MASTER_ARCHER },
   { 0,0,0,FLAT,MONS_0 }
 };
-
 #if TAG_MAJOR_VERSION == 34
 static const pop_entry pop_dwarf[] =
 { // Dwarven Hall
@@ -214,17 +213,18 @@ static const pop_entry pop_dwarf[] =
   {  1,  1,    8, FLAT, MONS_PHANTASMAL_WARRIOR },
   { 0,0,0,FLAT,MONS_0 }
 };
+
+static const pop_entry pop_blade[] =
+{ // Hall of Blades
+  {  1,  1, 1000, FLAT, MONS_DANCING_WEAPON },
+  { 0,0,0,FLAT,MONS_0 }
+};
 #endif
 
 static const pop_entry pop_lair[] =
 { // Lair
-  {  1,  5,   89, DOWN, MONS_GIANT_NEWT },
-  { -4,  6,  514, SEMI, MONS_GIANT_GECKO },
   { -4,  6,  826, SEMI, MONS_IGUANA },
-  {  1,  6,  999, FLAT, MONS_BAT },
-  {  1,  6, 1000, FLAT, MONS_RAT },
   {  1,  6,  999, FLAT, MONS_QUOKKA },
-  { -4,  6,  826, SEMI, MONS_JACKAL },
   {  1,  7,  999, FLAT, MONS_PORCUPINE },
   { -3,  7,  690, SEMI, MONS_HOUND },
   {  1,  7,  999, FLAT, MONS_GIANT_FROG },
@@ -232,7 +232,6 @@ static const pop_entry pop_lair[] =
   {  1,  8,  923, FLAT, MONS_ADDER },
   { -2,  8,  749, SEMI, MONS_GREEN_RAT },
   {  1,  8,  981, FLAT, MONS_CROCODILE },
-  { -2,  8,  192, PEAK, MONS_GIANT_MITE },
   {  0,  6,   25, PEAK, MONS_SCORPION },
   {  0,  8,  258, SEMI, MONS_BASILISK },
   {  1,  8,  981, FLAT, MONS_WATER_MOCCASIN },
@@ -267,6 +266,7 @@ static const pop_entry pop_lair[] =
   {  8,  8,    1, FLAT, MONS_FIRE_CRAB },
   {  3,  8,  180, UP  , MONS_BORING_BEETLE },
   {  4,  8,   89, UP  , MONS_BOULDER_BEETLE },
+  {  1,  6, 3000, FLAT, MONS_NO_MONSTER }, // Roughly old D:1 chaff weight
   { 0,0,0,FLAT,MONS_0 }
 };
 
@@ -286,7 +286,7 @@ static const pop_entry pop_swamp[] =
   {  1,  5,  100, DOWN, MONS_KOMODO_DRAGON },
   {  1,  5,  826, FLAT, MONS_GIANT_LEECH },
   {  1,  5, 1000, FLAT, MONS_SPINY_FROG },
-  {  1,  5,  400, FLAT, MONS_SWAMP_DRAGON },
+  {  1,  5,  500, FLAT, MONS_SWAMP_DRAGON },
   {  1,  5,  192, FLAT, MONS_RED_WASP },
   {  1,  7,   40, PEAK, MONS_UGLY_THING },
   {  1,  5,  335, FLAT, MONS_INSUBSTANTIAL_WISP },
@@ -300,7 +300,6 @@ static const pop_entry pop_swamp[] =
   {  1,  6,  480, SEMI, MONS_SPRIGGAN_RIDER },
   {  3,  5,  525, UP,   MONS_SPRIGGAN_DRUID },
   {  2,  5,  435, UP,   MONS_THORN_HUNTER },
-  {  1,  5,  100, FLAT, MONS_FIREFLY },
   { 0,0,0,FLAT,MONS_0 }
 };
 
@@ -390,7 +389,7 @@ static const pop_entry pop_slime[] =
   {  1,  9,  300, SEMI, MONS_GREAT_ORB_OF_EYES },
   {  1,  6,  200, UP,   MONS_DEATH_OOZE },
   {  2,  6,  100, UP,   MONS_GIANT_ORANGE_BRAIN },
-  {  1,  6,  800, FLAT, MONS_NO_MONSTER },
+  {  1,  6,  800, FLAT, MONS_NO_MONSTER }, // Old ooze weight
   { 0,0,0,FLAT,MONS_0 }
 };
 
@@ -470,12 +469,6 @@ static const pop_entry pop_vaults[] =
   { 11, 12,   16, FLAT, MONS_DEEP_ELF_SORCERER },
   { 11, 12,   16, FLAT, MONS_DEEP_ELF_DEATH_MAGE },
   { 12, 12,   16, FLAT, MONS_ANCIENT_LICH },
-  { 0,0,0,FLAT,MONS_0 }
-};
-
-static const pop_entry pop_blade[] =
-{ // Hall of Blades
-  {  1,  1, 1000, FLAT, MONS_DANCING_WEAPON },
   { 0,0,0,FLAT,MONS_0 }
 };
 
@@ -747,7 +740,6 @@ static const pop_entry pop_forest[] =
   {  1,  7,  145, SEMI, MONS_DIRE_ELEPHANT },
   {  1,  5,   15, DOWN, MONS_YELLOW_WASP },
   {  1,  5,   30, FLAT, MONS_RED_WASP },
-  {  1,  9,  100, SEMI, MONS_FIREFLY },
   {  1,  6,   75, DOWN, MONS_REDBACK },
   {  2,  7,   35, SEMI, MONS_WOLF_SPIDER },
   {  1,  9,   75, SEMI, MONS_OKLOB_PLANT },
@@ -1139,7 +1131,9 @@ static const struct { const pop_entry *pop; int count; } population[] =
     POP(spider),
     POP(slime),
     POP(vaults),
+#if TAG_MAJOR_VERSION == 34
     POP(blade),
+#endif
     POP(crypt),
     POP(tomb),
 #if TAG_MAJOR_VERSION > 34
@@ -1247,7 +1241,9 @@ static const struct { const pop_entry *pop; int count; } population_zombie[] =
     POP(spider),
     POP(slime),
     POP(vaults),
+#if TAG_MAJOR_VERSION == 34
     POP(blade),
+#endif
     POP(generic_late_zombie),
     POP(generic_late_zombie),
 #if TAG_MAJOR_VERSION > 34
@@ -1357,7 +1353,9 @@ static const struct { const pop_entry *pop; int count; } population_water[] =
     POP(water_generic),
     POP(water_generic),
     POP(water_generic),
+#if TAG_MAJOR_VERSION == 34
     POP(water_generic),
+#endif
     POP(water_generic),
     POP(water_generic),
 #if TAG_MAJOR_VERSION > 34
@@ -1459,7 +1457,9 @@ static const struct { const pop_entry *pop; int count; } population_lava[] =
     POP(lava_generic),
     POP(lava_generic),
     POP(lava_generic),
+#if TAG_MAJOR_VERSION == 34
     POP(lava_generic),
+#endif
     POP(lava_generic),
     POP(lava_generic),
 #if TAG_MAJOR_VERSION > 34

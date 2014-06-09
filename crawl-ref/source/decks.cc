@@ -123,8 +123,8 @@ const deck_archetype deck_of_emergency[] =
 const deck_archetype deck_of_destruction[] =
 {
     { CARD_VITRIOL,  {5, 5, 5} },
-    { CARD_FLAME,    {5, 5, 5} },
-    { CARD_FROST,    {5, 5, 5} },
+    { CARD_CLOUD,    {5, 5, 5} },
+    { CARD_HAMMER,   {5, 5, 5} },
     { CARD_VENOM,    {5, 5, 5} },
     { CARD_FORTITUDE, {5, 5, 5} },
     { CARD_STORM,    {5, 5, 5} },
@@ -355,8 +355,8 @@ const char* card_name(card_type card)
     case CARD_WARPWRIGHT:      return "Warpwright";
     case CARD_SHAFT:           return "the Shaft";
     case CARD_VITRIOL:         return "Vitriol";
-    case CARD_FLAME:           return "Flame";
-    case CARD_FROST:           return "Frost";
+    case CARD_CLOUD:           return "Cloud";
+    case CARD_HAMMER:          return "the Hammer";
     case CARD_VENOM:           return "Venom";
     case CARD_STORM:           return "the Storm";
     case CARD_FORTITUDE:       return "Fortitude";
@@ -1835,11 +1835,13 @@ static void _damaging_card(card_type card, int power, deck_rarity_type rarity,
 
     dist target;
     zap_type ztype = ZAP_DEBUGGING_RAY;
-    const zap_type frostzaps[3]  = { ZAP_THROW_FROST, ZAP_THROW_ICICLE, ZAP_BOLT_OF_COLD };
+    const zap_type hammerzaps[3]  = { ZAP_STONE_ARROW, ZAP_IRON_SHOT,
+                                      ZAP_LEHUDIBS_CRYSTAL_SPEAR };
     const zap_type venomzaps[3]  = { ZAP_STING, ZAP_VENOM_BOLT,
                                      ZAP_POISON_ARROW };
     const zap_type painzaps[2]   = { ZAP_AGONY, ZAP_BOLT_OF_DRAINING };
-    const zap_type orbzaps[3]    = { ZAP_ISKENDERUNS_MYSTIC_BLAST, ZAP_IOOD, ZAP_IOOD };
+    const zap_type orbzaps[3]    = { ZAP_ISKENDERUNS_MYSTIC_BLAST, ZAP_IOOD,
+                                     ZAP_IOOD };
 
     switch (card)
     {
@@ -1847,9 +1849,9 @@ static void _damaging_card(card_type card, int power, deck_rarity_type rarity,
         ztype = ZAP_BREATHE_ACID;
         break;
 
-    case CARD_FROST:  ztype = frostzaps[power_level];  break;
-    case CARD_VENOM:  ztype = venomzaps[power_level];  break;
-    case CARD_ORB:    ztype = orbzaps[power_level];    break;
+    case CARD_HAMMER:  ztype = hammerzaps[power_level];  break;
+    case CARD_VENOM:   ztype = venomzaps[power_level];   break;
+    case CARD_ORB:     ztype = orbzaps[power_level];     break;
 
     case CARD_PAIN:
         if (power_level == 2)
@@ -2511,12 +2513,13 @@ static void _summon_flying(int power, deck_rarity_type rarity)
 
     const monster_type flytypes[] =
     {
-        MONS_BUTTERFLY, MONS_INSUBSTANTIAL_WISP, MONS_KILLER_BEE, MONS_FIREFLY,
+        MONS_BUTTERFLY, MONS_INSUBSTANTIAL_WISP, MONS_KILLER_BEE,
         MONS_VAMPIRE_MOSQUITO, MONS_YELLOW_WASP, MONS_RED_WASP
     };
+    const int num_flytypes = ARRAYSZ(flytypes);
 
     // Choose what kind of monster.
-    monster_type result = flytypes[random2(5) + power_level];
+    monster_type result = flytypes[random2(num_flytypes - 2) + power_level];
     const int how_many = 2 + random2(3) + power_level * 3;
     bool hostile_invis = false;
 
@@ -2701,7 +2704,7 @@ static void _alchemist_card(int power, deck_rarity_type rarity)
         canned_msg(MSG_NOTHING_HAPPENS);
 }
 
-static void _flame_card(int power, deck_rarity_type rarity)
+static void _cloud_card(int power, deck_rarity_type rarity)
 {
     const int power_level = _get_power_level(power, rarity);
     bool something_happened = false;
@@ -2725,7 +2728,8 @@ static void _flame_card(int power, deck_rarity_type rarity)
         if (make_cloud)
         {
             const int cloud_power = 5 + random2((power_level + 1) * 3);
-            place_cloud(CLOUD_FIRE, *di, cloud_power, &you);
+            place_cloud(coinflip() ? CLOUD_FIRE : CLOUD_COLD,
+                        *di, cloud_power, &you);
 
             if (you.see_cell(*di))
             something_happened = true;
@@ -2733,7 +2737,7 @@ static void _flame_card(int power, deck_rarity_type rarity)
     }
 
     if (something_happened)
-        mpr("Fire appears around you!");
+        mpr("Clouds appear around you!");
     else
         canned_msg(MSG_NOTHING_HAPPENS);
 }
@@ -2880,7 +2884,7 @@ void card_effect(card_type which_card, deck_rarity_type rarity,
     {
         // These card types will usually give this message in the targeting
         // prompt, and the cases where they don't are handled specially.
-        if (which_card != CARD_VITRIOL && which_card != CARD_FROST
+        if (which_card != CARD_VITRIOL && which_card != CARD_HAMMER
             && which_card != CARD_PAIN && which_card != CARD_VENOM
             && which_card != CARD_ORB)
         {
@@ -2936,7 +2940,7 @@ void card_effect(card_type which_card, deck_rarity_type rarity,
     case CARD_TORMENT:          torment(&you, TORMENT_CARDS, you.pos()); break;
     case CARD_ALCHEMIST:        _alchemist_card(power, rarity); break;
     case CARD_MERCENARY:        _mercenary_card(power, rarity); break;
-    case CARD_FLAME:            _flame_card(power, rarity); break;
+    case CARD_CLOUD:            _cloud_card(power, rarity); break;
     case CARD_FORTITUDE:        _fortitude_card(power, rarity); break;
     case CARD_STORM:            _storm_card(power, rarity); break;
     case CARD_ILLUSION:         _illusion_card(power, rarity); break;
@@ -2944,7 +2948,7 @@ void card_effect(card_type which_card, deck_rarity_type rarity,
 
     case CARD_VENOM:
     case CARD_VITRIOL:
-    case CARD_FROST:
+    case CARD_HAMMER:
     case CARD_PAIN:
     case CARD_ORB:
         _damaging_card(which_card, power, rarity, flags & CFLAG_DEALT);
