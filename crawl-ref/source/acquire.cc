@@ -878,6 +878,7 @@ static bool _skill_useless_with_god(int skill)
     case GOD_VEHUMET:
     case GOD_ASHENZARI:
     case GOD_JIYVA:
+    case GOD_GOZAG:
     case GOD_NO_GOD:
         return skill == SK_INVOCATIONS;
     default:
@@ -1352,14 +1353,9 @@ int acquirement_create_item(object_class_type class_wanted,
             case RING_INTELLIGENCE:
             case RING_DEXTERITY:
             case RING_EVASION:
+            case RING_SLAYING:
                 // Make sure plus is >= 1.
                 acq_item.plus = max(abs((int) acq_item.plus), 1);
-                break;
-
-            case RING_SLAYING:
-                // Two plusses to handle here, and accuracy can be +0.
-                acq_item.plus = abs(acq_item.plus);
-                acq_item.plus2 = max(abs((int) acq_item.plus2), 2);
                 break;
 
             case RING_LOUDNESS:
@@ -1385,22 +1381,12 @@ int acquirement_create_item(object_class_type class_wanted,
                     make_item_randart(acq_item, true);
             }
 
-            int plusmod = random2(4);
-            if (agent == GOD_TROG)
+            if (agent == GOD_TROG || agent == GOD_OKAWARU)
             {
-                // More damage, less accuracy.
-                acq_item.plus  -= plusmod;
-                acq_item.plus2 += plusmod;
+                if (agent == GOD_TROG)
+                    acq_item.plus += random2(3);
                 if (!is_artefact(acq_item))
-                    acq_item.plus = max(static_cast<int>(acq_item.plus), 0);
-            }
-            else if (agent == GOD_OKAWARU)
-            {
-                // More accuracy, less damage.
-                acq_item.plus  += plusmod;
-                acq_item.plus2 -= plusmod;
-                if (!is_artefact(acq_item))
-                    acq_item.plus2 = max(static_cast<int>(acq_item.plus2), 0);
+                    acq_item.plus = max(static_cast<int>(acq_item.plus), 1);
             }
         }
         else if (is_deck(acq_item))
@@ -1504,7 +1490,7 @@ bool acquirement(object_class_type class_wanted, int agent,
     while (class_wanted == OBJ_RANDOM)
     {
         ASSERT(!quiet);
-        mesclr();
+        clear_messages();
 
         string line;
         for (unsigned int i = 0; i < ARRAYSZ(acq_classes); i++)

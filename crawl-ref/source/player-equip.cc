@@ -26,6 +26,7 @@
 #include "spl-cast.h"
 #include "spl-miscast.h"
 #include "spl-summoning.h"
+#include "spl-wpnench.h"
 #include "state.h"
 #include "stuff.h"
 #include "transform.h"
@@ -504,7 +505,8 @@ static void _equip_weapon_effect(item_def& item, bool showMsgs, bool unmeld)
                     break;
 
                 case SPWPN_FREEZING:
-                    mpr("It glows with a cold blue light!");
+                    mpr(is_range_weapon(item) ? "It is covered in frost."
+                                              : "It glows with a cold blue light!");
                     break;
 
                 case SPWPN_HOLY_WRATH:
@@ -516,13 +518,6 @@ static void _equip_weapon_effect(item_def& item, bool showMsgs, bool unmeld)
                         mprf(MSGCH_SOUND, "You hear the crackle of electricity.");
                     else
                         mpr("You see sparks fly.");
-                    break;
-
-                case SPWPN_DRAGON_SLAYING:
-                    mpr(player_genus(GENPC_DRACONIAN)
-                        || you.form == TRAN_DRAGON
-                            ? "You feel a sudden desire to commit suicide."
-                            : "You feel a sudden desire to slay dragons!");
                     break;
 
                 case SPWPN_VENOM:
@@ -546,15 +541,7 @@ static void _equip_weapon_effect(item_def& item, bool showMsgs, bool unmeld)
                          you.hand_name(true).c_str());
                     break;
 
-                case SPWPN_FLAME:
-                    mpr("It bursts into flame!");
-                    break;
-
-                case SPWPN_FROST:
-                    mpr("It is covered in frost.");
-                    break;
-
-                case SPWPN_VAMPIRICISM:
+                case SPWPN_VAMPIRISM:
                     if (you.species == SP_VAMPIRE)
                     {
                         mpr("You feel a bloodthirsty glee!");
@@ -713,7 +700,7 @@ static void _unequip_weapon_effect(item_def& item, bool showMsgs, bool meld)
                 you.redraw_evasion = true;
                 break;
 
-            case SPWPN_VAMPIRICISM:
+            case SPWPN_VAMPIRISM:
                 if (showMsgs)
                 {
                     if (you.species == SP_VAMPIRE)
@@ -764,11 +751,9 @@ static void _unequip_weapon_effect(item_def& item, bool showMsgs, bool meld)
 
             if (you.duration[DUR_WEAPON_BRAND])
             {
-                you.duration[DUR_WEAPON_BRAND] = 0;
-                set_item_ego_type(item, OBJ_WEAPONS, SPWPN_NORMAL);
-
+                end_weapon_brand(item);
                 // We're letting this through even if hiding messages.
-                mpr("Your branding evaporates.");
+                mpr("Your temporary branding evaporates.");
             }
         }
     }
@@ -1104,7 +1089,7 @@ static void _remove_amulet_of_faith(item_def &item)
             you.attribute[ATTR_GOZAG_POTIONS] += 2;
             you.attribute[ATTR_GOZAG_SHOPS]   += 2;
 
-            simple_god_message(" adjusts your offered prices.");
+            simple_god_message(" increases your offered prices.");
             return;
         }
 
@@ -1179,7 +1164,7 @@ static void _equip_jewellery_effect(item_def &item, bool unmeld,
         break;
 
     case RING_TELEPORTATION:
-        if (crawl_state.game_is_sprint())
+        if (you.no_tele())
             mpr("You feel a slight, muted jump rush through you.");
         else
             // keep in sync with player_teleport
@@ -1190,6 +1175,8 @@ static void _equip_jewellery_effect(item_def &item, bool unmeld,
     case AMU_FAITH:
         mprf(MSGCH_GOD, "You feel a %ssurge of divine interest.",
              you_worship(GOD_NO_GOD) ? "strange " : "");
+        if (you_worship(GOD_GOZAG))
+            simple_god_message(" discounts your offered prices.");
         break;
 
     case AMU_GUARDIAN_SPIRIT:

@@ -966,7 +966,7 @@ bool did_god_conduct(conduct_type thing_done, int level, bool known,
             }
             else if (you_worship(GOD_NEMELEX_XOBEH))
             {
-                piety_change = 12;
+                piety_change = 14;
                 piety_denom = level;
                 retval = true;
             }
@@ -1126,7 +1126,7 @@ bool did_god_conduct(conduct_type thing_done, int level, bool known,
 #endif
     }
 
-    do_god_revenge(thing_done, victim);
+    do_god_revenge(thing_done);
 
     return retval;
 }
@@ -1178,7 +1178,7 @@ void set_attack_conducts(god_conduct_trigger conduct[3], const monster* mon,
         _first_attack_was_unchivalric.set(midx);
     }
 
-    if (mon->is_holy())
+    if (mon->is_holy() && !mon->is_illusion())
         conduct[2].set(DID_ATTACK_HOLY, mon->hit_dice, known, mon);
 
     _first_attack_conduct.set(midx);

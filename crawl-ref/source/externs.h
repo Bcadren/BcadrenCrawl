@@ -323,6 +323,7 @@ struct cloud_struct
     bool temporary() const { return excl_rad == -1; }
     int exclusion_radius() const { return excl_rad; }
 
+    actor *agent() const;
     void set_whose(kill_category _whose);
     void set_killer(killer_type _killer);
 
@@ -516,10 +517,10 @@ struct item_def
     object_class_type base_type:8; ///< basic class (eg OBJ_WEAPON)
     uint8_t        sub_type;       ///< type within that class (eg WPN_DAGGER)
 #pragma pack(push,2)
-    /// +to hit, charges, corpse mon id
+    /// +to hit/dam, charges, corpse mon id
     union { short plus; monster_type mon_type:16; };
 #pragma pack(pop)
-    short          plus2;          ///< +to dam, sub-sub type for boots/helms
+    short          plus2;          ///< sub-sub type for boots/helms, net wear
     int            special;        ///< special stuff
     colour_t       colour;         ///< item colour
     uint8_t        rnd;            ///< random number, used for tile choice

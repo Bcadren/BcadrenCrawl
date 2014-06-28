@@ -15,6 +15,7 @@
 #include "artefact.h"
 #include "colour.h"
 #include "coord.h"
+#include "dbg-scan.h"
 #include "decks.h"
 #include "describe.h"
 #include "dungeon.h"
@@ -63,11 +64,6 @@ bool got_curare_roll(const int item_level)
     return one_chance_in(item_level > 27 ? 6   :
                          item_level < 2  ? 15  :
                          (364 - 7 * item_level) / 25);
-}
-
-static bool _got_distortion_roll(const int item_level)
-{
-    return one_chance_in(25);
 }
 
 static int _exciting_colour()
@@ -752,55 +748,21 @@ static bool _is_boring_item(int type, int sub_type)
 
 static weapon_type _determine_weapon_subtype(int item_level)
 {
-    weapon_type rc = WPN_UNKNOWN;
-
-    const weapon_type common_subtypes[] =
-    {
-        WPN_SLING,
-        WPN_SPEAR,
-        WPN_HAND_AXE,
-        WPN_MACE,
-        WPN_DAGGER, WPN_DAGGER,
-        WPN_CLUB,
-        WPN_WHIP,
-        WPN_SHORT_SWORD
-    };
-
-    const weapon_type good_common_subtypes[] =
-    {
-        WPN_QUARTERSTAFF,
-        WPN_FALCHION,
-        WPN_LONG_SWORD,
-        WPN_WAR_AXE,
-        WPN_TRIDENT,
-        WPN_FLAIL,
-        WPN_CUTLASS,
-    };
-
-    const weapon_type rare_subtypes[] =
-    {
-        WPN_LAJATANG,
-        WPN_DEMON_WHIP,
-        WPN_DEMON_BLADE,
-        WPN_DEMON_TRIDENT,
-        WPN_BASTARD_SWORD,
-        WPN_EVENINGSTAR,
-        WPN_EXECUTIONERS_AXE,
-        WPN_QUICK_BLADE,
-        WPN_CLAYMORE,
-    };
-
     if (item_level > 6 && one_chance_in(30)
         && x_chance_in_y(10 + item_level, 100))
     {
-        rc = RANDOM_ELEMENT(rare_subtypes);
+        return random_choose(WPN_LAJATANG,
+                             WPN_DEMON_WHIP,
+                             WPN_DEMON_BLADE,
+                             WPN_DEMON_TRIDENT,
+                             WPN_BASTARD_SWORD,
+                             WPN_EVENINGSTAR,
+                             WPN_EXECUTIONERS_AXE,
+                             WPN_QUICK_BLADE,
+                             WPN_CLAYMORE,
+                             -1);
     }
-    else if (x_chance_in_y(20 - item_level, 20))
-        if (x_chance_in_y(7, item_level+7))
-            rc = RANDOM_ELEMENT(common_subtypes);
-        else
-            rc = RANDOM_ELEMENT(good_common_subtypes);
-    else
+    else if (x_chance_in_y(item_level, 20))
     {
         // Pick a weapon based on rarity.
         while (true)
@@ -808,13 +770,33 @@ static weapon_type _determine_weapon_subtype(int item_level)
             const int wpntype = random2(NUM_WEAPONS);
 
             if (x_chance_in_y(weapon_rarity(wpntype), 10))
-            {
-                rc = static_cast<weapon_type>(wpntype);
-                break;
-            }
+                return static_cast<weapon_type>(wpntype);
         }
     }
-    return rc;
+    else if (x_chance_in_y(item_level, item_level+7))
+    {
+        return random_choose(WPN_QUARTERSTAFF,
+                             WPN_FALCHION,
+                             WPN_LONG_SWORD,
+                             WPN_WAR_AXE,
+                             WPN_TRIDENT,
+                             WPN_FLAIL,
+                             WPN_CUTLASS,
+                             -1);
+    }
+    else
+    {
+        return random_choose(WPN_SLING,
+                             WPN_SPEAR,
+                             WPN_HAND_AXE,
+                             WPN_MACE,
+                             // Not worth _weighted for one doubled type.
+                             WPN_DAGGER, WPN_DAGGER,
+                             WPN_CLUB,
+                             WPN_WHIP,
+                             WPN_SHORT_SWORD,
+                             -1);
+    }
 }
 
 static bool _try_make_item_unrand(item_def& item, int force_type)
@@ -855,25 +837,15 @@ static bool _try_make_weapon_artefact(item_def& item, int force_type,
         // The rest are normal randarts.
         make_item_randart(item);
         // Mean enchantment +6.
-        item.plus  = 12 - biased_random2(7,2) - biased_random2(7,2) - biased_random2(7,2);
-        item.plus2 = 12 - biased_random2(7,2) - biased_random2(7,2) - biased_random2(7,2);
+        item.plus = 12 - biased_random2(7,2) - biased_random2(7,2) - biased_random2(7,2);
 
         if (one_chance_in(5))
         {
             do_curse_item(item);
-            item.plus  = 3 - random2(6);
-            item.plus2 = 3 - random2(6);
+            item.plus = 3 - random2(6);
         }
-        else if ((item.plus < 0
-                  || item.plus2 < 0 && item.sub_type != WPN_BLOWGUN)
-                 && !one_chance_in(3))
-        {
+        else if (item.plus < 0 && !one_chance_in(3))
             do_curse_item(item);
-        }
-
-        // No to-dam enchantment on blowguns.
-        if (item.sub_type == WPN_BLOWGUN)
-            item.plus2 = 0;
 
         if (get_weapon_brand(item) == SPWPN_HOLY_WRATH)
             item.flags &= (~ISFLAG_CURSED);
@@ -917,7 +889,7 @@ static brand_type _determine_weapon_brand(const item_def& item, int item_level)
                 rc = coinflip() ? SPWPN_FLAMING : SPWPN_FREEZING;
 
             if (one_chance_in(20))
-                rc = SPWPN_VAMPIRICISM;
+                rc = SPWPN_VAMPIRISM;
             // **** intentional fall through here ****
         case WPN_MACE:
         case WPN_GREAT_MACE:
@@ -930,7 +902,7 @@ static brand_type _determine_weapon_brand(const item_def& item, int item_level)
             if (one_chance_in(25))
                 rc = SPWPN_PAIN;
 
-            if (_got_distortion_roll(item_level))
+            if (one_chance_in(25))
                 rc = SPWPN_DISTORTION;
 
             if (one_chance_in(3) && (rc == SPWPN_NORMAL || one_chance_in(5)))
@@ -959,11 +931,11 @@ static brand_type _determine_weapon_brand(const item_def& item, int item_level)
             if (one_chance_in(25))
                 rc = SPWPN_ANTIMAGIC;
 
-            if (_got_distortion_roll(item_level))
+            if (one_chance_in(25))
                 rc = SPWPN_DISTORTION;
 
             if (one_chance_in(10))
-                rc = SPWPN_VAMPIRICISM;
+                rc = SPWPN_VAMPIRISM;
 
             if (one_chance_in(8))
                 rc = SPWPN_ELECTROCUTION;
@@ -1003,9 +975,9 @@ static brand_type _determine_weapon_brand(const item_def& item, int item_level)
                 rc = SPWPN_ANTIMAGIC;
 
             if (one_chance_in(10))
-                rc = SPWPN_VAMPIRICISM;
+                rc = SPWPN_VAMPIRISM;
 
-            if (_got_distortion_roll(item_level))
+            if (one_chance_in(25))
                 rc = SPWPN_DISTORTION;
 
             if (one_chance_in(5))
@@ -1045,9 +1017,9 @@ static brand_type _determine_weapon_brand(const item_def& item, int item_level)
                 rc = SPWPN_PAIN;
 
             if (one_chance_in(10))
-                rc = SPWPN_VAMPIRICISM;
+                rc = SPWPN_VAMPIRISM;
 
-            if (_got_distortion_roll(item_level))
+            if (one_chance_in(25))
                 rc = SPWPN_DISTORTION;
 
             if (one_chance_in(3) && (rc == SPWPN_NORMAL || one_chance_in(5)))
@@ -1073,11 +1045,11 @@ static brand_type _determine_weapon_brand(const item_def& item, int item_level)
             if (one_chance_in(10))
                 rc = SPWPN_PAIN;
 
-            if (_got_distortion_roll(item_level))
+            if (one_chance_in(25))
                 rc = SPWPN_DISTORTION;
 
             if (one_chance_in(10))
-                rc = SPWPN_VAMPIRICISM;
+                rc = SPWPN_VAMPIRISM;
 
             if (one_chance_in(8))
                 rc = SPWPN_DRAINING;
@@ -1111,9 +1083,9 @@ static brand_type _determine_weapon_brand(const item_def& item, int item_level)
                 rc = SPWPN_PAIN;
 
             if (one_chance_in(10))
-                rc = SPWPN_VAMPIRICISM;
+                rc = SPWPN_VAMPIRISM;
 
-            if (_got_distortion_roll(item_level))
+            if (one_chance_in(25))
                 rc = SPWPN_DISTORTION;
 
             if (one_chance_in(5) && (rc == SPWPN_NORMAL || one_chance_in(6)))
@@ -1124,9 +1096,6 @@ static brand_type _determine_weapon_brand(const item_def& item, int item_level)
 
             if (one_chance_in(6))
                 rc = SPWPN_VENOM;
-
-            if (one_chance_in(5))
-                rc = SPWPN_DRAGON_SLAYING;
             break;
 
         case WPN_SLING:
@@ -1136,19 +1105,13 @@ static brand_type _determine_weapon_brand(const item_def& item, int item_level)
         case WPN_SHORTBOW:
         case WPN_LONGBOW:
         case WPN_CROSSBOW:
-        {
-            const int tmp = random2(1000);
-            if (tmp < 480)
-                rc = SPWPN_FLAME;
-            else if (tmp < 730)
-                rc = SPWPN_FROST;
-            else if (tmp < 880)
-                rc = SPWPN_EVASION;
-            else if (tmp < 990)
-                rc = SPWPN_VORPAL;
-
+            rc = random_choose_weighted(48, SPWPN_FLAMING,
+                                        25, SPWPN_FREEZING,
+                                        15, SPWPN_EVASION,
+                                        11, SPWPN_VORPAL,
+                                         1, SPWPN_NORMAL,
+                                         0);
             break;
-        }
 
         case WPN_BLOWGUN:
             if (one_chance_in(30))
@@ -1166,7 +1129,7 @@ static brand_type _determine_weapon_brand(const item_def& item, int item_level)
             if (one_chance_in(30))
                 rc = SPWPN_PAIN;
 
-            if (_got_distortion_roll(item_level))
+            if (one_chance_in(25))
                 rc = SPWPN_DISTORTION;
 
             if (one_chance_in(10))
@@ -1187,14 +1150,14 @@ static brand_type _determine_weapon_brand(const item_def& item, int item_level)
                 rc = SPWPN_SPEED;
             else if (one_chance_in(12))
                 rc = SPWPN_PAIN;
-            else if (_got_distortion_roll(item_level))
+            else if (one_chance_in(25))
                 rc = SPWPN_DISTORTION;
             else if (one_chance_in(9))
                 rc = SPWPN_PROTECTION;
             else if (one_chance_in(6))
                 rc = SPWPN_ELECTROCUTION;
             else if (one_chance_in(5))
-                rc = SPWPN_VAMPIRICISM;
+                rc = SPWPN_VAMPIRISM;
             else if (one_chance_in(6))
                 rc = SPWPN_VENOM;
             else if (one_chance_in(8))
@@ -1208,7 +1171,7 @@ static brand_type _determine_weapon_brand(const item_def& item, int item_level)
                 rc = SPWPN_ANTIMAGIC;
 
             if (one_chance_in(5))       // 7.3%
-                rc = SPWPN_VAMPIRICISM;
+                rc = SPWPN_VAMPIRISM;
 
             if (one_chance_in(10))      // 4.0%
                 rc = SPWPN_PAIN;
@@ -1262,12 +1225,6 @@ bool is_weapon_brand_ok(int type, int brand, bool strict)
     if (type == WPN_QUICK_BLADE && brand == SPWPN_SPEED)
         return false;
 
-    if (weapon_skill(OBJ_WEAPONS, type) != SK_POLEARMS
-        && brand == SPWPN_DRAGON_SLAYING)
-    {
-        return false;
-    }
-
     if (type == WPN_BLOWGUN)
     {
         switch ((brand_type)brand)
@@ -1293,14 +1250,13 @@ bool is_weapon_brand_ok(int type, int brand, bool strict)
     case SPWPN_CHAOS:
     case SPWPN_HOLY_WRATH:
     case SPWPN_ELECTROCUTION:
+    case SPWPN_FLAMING:
+    case SPWPN_FREEZING:
         break;
 
     // Melee-only brands.
-    case SPWPN_FLAMING:
-    case SPWPN_FREEZING:
-    case SPWPN_DRAGON_SLAYING:
     case SPWPN_DRAINING:
-    case SPWPN_VAMPIRICISM:
+    case SPWPN_VAMPIRISM:
     case SPWPN_PAIN:
     case SPWPN_DISTORTION:
     case SPWPN_ANTIMAGIC:
@@ -1310,8 +1266,6 @@ bool is_weapon_brand_ok(int type, int brand, bool strict)
         break;
 
     // Ranged-only brands.
-    case SPWPN_FLAME:
-    case SPWPN_FROST:
     case SPWPN_PENETRATION:
     case SPWPN_EVASION:
         if (!is_range_weapon(item))
@@ -1323,6 +1277,9 @@ bool is_weapon_brand_ok(int type, int brand, bool strict)
     case SPWPN_RETURNING:
     case SPWPN_REACHING:
     case SPWPN_ORC_SLAYING:
+    case SPWPN_FLAME:
+    case SPWPN_FROST:
+    case SPWPN_DRAGON_SLAYING:
         return false;
 #endif
 
@@ -1411,8 +1368,7 @@ static void _generate_weapon_item(item_def& item, bool allow_uniques,
         _roll_weapon_type(item, item_level);
     }
 
-    item.plus  = 0;
-    item.plus2 = 0;
+    item.plus = 0;
 
     if (item_level < 0)
     {
@@ -1423,8 +1379,7 @@ static void _generate_weapon_item(item_def& item, bool allow_uniques,
             set_item_ego_type(item, OBJ_WEAPONS,
                 _determine_weapon_brand(item, 2 + 2 * env.absdepth0));
         }
-        item.plus  -= 1 + random2(3);
-        item.plus2 -= 1 + random2(3);
+        item.plus -= 1 + random2(3);
 
         if (item_level == ISPEC_BAD)
             do_curse_item(item);
@@ -1442,10 +1397,7 @@ static void _generate_weapon_item(item_def& item, bool allow_uniques,
 
         // if acquired item still not ego... enchant it up a bit.
         if (force_good && item.special == SPWPN_NORMAL)
-        {
-            item.plus  += 2 + random2(3);
-            item.plus2 += 2 + random2(3);
-        }
+            item.plus += 2 + random2(3);
 
         const int chance = (force_good ? 200 : item_level);
 
@@ -1454,16 +1406,7 @@ static void _generate_weapon_item(item_def& item, bool allow_uniques,
         {
             item.plus += random2(3);
 
-            if (random2(350) > 20 + chance)
-                break;
-        }
-
-        // Odd-looking, but this is how the algorithm compacts {dlb}.
-        for (int i = 0; i < 4; ++i)
-        {
-            item.plus2 += random2(3);
-
-            if (random2(500) > 50 + chance)
+            if (random2(425) > 35 + chance)
                 break;
         }
     }
@@ -1474,14 +1417,9 @@ static void _generate_weapon_item(item_def& item, bool allow_uniques,
             // Make a cursed item.
             do_curse_item(item);
             item.plus  -= random2(4);
-            item.plus2 -= random2(4);
             set_item_ego_type(item, OBJ_WEAPONS, SPWPN_NORMAL);
         }
     }
-
-    // No to-dam enchantment on blowguns.
-    if (item.sub_type == WPN_BLOWGUN)
-        item.plus2 = 0;
 }
 
 // Current list is based on dpeg's original post to the Wiki, found at the
@@ -2323,8 +2261,8 @@ static void _generate_scroll_item(item_def& item, int force_type,
         int tries = 500;
         do
         {
-            // total weight:    688  if depth_mod <4
-            //                  786  otherwise
+            // total weight:    735  if depth_mod <4
+            //                  846  otherwise
             //                  -103 in sprint
             item.sub_type = random_choose_weighted(
                 180, SCR_IDENTIFY,
@@ -2338,8 +2276,7 @@ static void _generate_scroll_item(item_def& item, int force_type,
                  33, SCR_RECHARGING,
                  33, SCR_BLINKING,
                  33, SCR_ENCHANT_ARMOUR,
-                 33, SCR_ENCHANT_WEAPON_I,
-                 33, SCR_ENCHANT_WEAPON_II,
+                 33, SCR_ENCHANT_WEAPON,
                  33, SCR_AMNESIA,
                  // [Cha] don't generate noise scrolls if in sprint
                  33, (crawl_state.game_is_sprint() ? NUM_SCROLLS : SCR_NOISE),
@@ -2349,7 +2286,6 @@ static void _generate_scroll_item(item_def& item, int force_type,
                  // Higher-level scrolls.
                  27, (depth_mod < 4 ? NUM_SCROLLS : SCR_VULNERABILITY),
                  14, (depth_mod < 4 ? NUM_SCROLLS : SCR_ACQUIREMENT),
-                 14, (depth_mod < 4 ? NUM_SCROLLS : SCR_ENCHANT_WEAPON_III),
                  14, (depth_mod < 4 ? NUM_SCROLLS : SCR_SUMMONING),
                  14, (depth_mod < 4 ? NUM_SCROLLS : SCR_SILENCE),
                  14, (depth_mod < 4 ? NUM_SCROLLS : SCR_BRAND_WEAPON),
@@ -2366,7 +2302,6 @@ static void _generate_scroll_item(item_def& item, int force_type,
 
     // determine quantity
     if (item.sub_type == SCR_BRAND_WEAPON
-        || item.sub_type == SCR_ENCHANT_WEAPON_III
         || item.sub_type == SCR_ACQUIREMENT
         || item.sub_type == SCR_TORMENT
         || item.sub_type == SCR_HOLY_WORD
@@ -2558,13 +2493,15 @@ static int _determine_ring_plus(int subtype)
 
     switch (subtype)
     {
+    case RING_SLAYING:
+        if (coinflip())
+            rc += random2(3);
     case RING_PROTECTION:
     case RING_STRENGTH:
-    case RING_SLAYING:
     case RING_EVASION:
     case RING_DEXTERITY:
     case RING_INTELLIGENCE:
-        if (one_chance_in(5))       // 20% of such rings are cursed {dlb}
+        if (one_chance_in(5)) // 20% of such rings are cursed {dlb}
         {
             rc = (coinflip() ? -2 : -3);
 
@@ -2572,7 +2509,7 @@ static int _determine_ring_plus(int subtype)
                 rc -= random2(4);
         }
         else
-            rc = 1 + (one_chance_in(3) ? random2(3) : random2avg(6, 2));
+            rc += 1 + (one_chance_in(3) ? random2(3) : random2avg(6, 2));
         break;
 
     default:
@@ -2617,41 +2554,10 @@ static void _generate_jewellery_item(item_def& item, bool allow_uniques,
                && --tries > 0);
     }
 
-    // Everything begins as uncursed, unenchanted jewellery {dlb}:
-    item.plus  = 0;
-    item.plus2 = 0;
-
     item.plus = _determine_ring_plus(item.sub_type);
+
     if (item.plus < 0)
         do_curse_item(item);
-
-    if (item.sub_type == RING_SLAYING) // requires plus2 too
-    {
-        if (item.cursed() && !one_chance_in(20))
-        {
-            item.plus2 = (coinflip() ? -2 : -3);
-            if (one_chance_in(3))
-                item.plus2 -= random2(4);
-        }
-        else
-        {
-            if (item.plus > 0)
-            {
-                item.plus = 2 + (one_chance_in(3) ? random2(4)
-                                                  : 1 + random2avg(5, 2));
-            }
-            item.plus2 = 2 + (one_chance_in(3) ? random2(4)
-                                               : 1 + random2avg(5, 2));
-
-            if (x_chance_in_y(9, 25))        // 36% of such rings {dlb}
-            {
-                // make "ring of damage"
-                do_uncurse_item(item, false);
-                item.plus   = 0;
-                item.plus2 += 2;
-            }
-        }
-    }
 
     // All jewellery base types should now work. - bwr
     if (item_level == ISPEC_RANDART
@@ -2820,6 +2726,10 @@ int items(bool allow_uniques,
         {
             make_item_unrandart(mitm[p], force_ego);
             ASSERT(mitm[p].is_valid());
+#ifdef DEBUG_DIAGNOSTICS
+            if (crawl_state.obj_stat_gen)
+                objstat_record_item(mitm[p]);
+#endif
             return p;
         }
         // the base item otherwise
@@ -2923,6 +2833,13 @@ int items(bool allow_uniques,
     // Set brand appearance.
     item_set_appearance(item);
 
+    // Squash plusses on boring equipment.
+    if ((item.base_type == OBJ_WEAPONS || item.base_type == OBJ_ARMOUR)
+        && item.plus > 0 && !get_equip_desc(item) && !is_artefact(item))
+    {
+        item.plus = 0;
+    }
+
     if (dont_place)
     {
         item.pos.reset();
@@ -2952,6 +2869,10 @@ int items(bool allow_uniques,
 
     // Note that item might be invalidated now, since p could have changed.
     ASSERT(mitm[p].is_valid());
+#ifdef DEBUG_DIAGNOSTICS
+    if (crawl_state.obj_stat_gen)
+        objstat_record_item(mitm[p]);
+#endif
     return p;
 }
 
@@ -3026,16 +2947,36 @@ static bool _weapon_is_visibly_special(const item_def &item)
     if (visibly_branded || is_artefact(item))
         return true;
 
-    if (item.is_mundane())
-        return false;
-
-    if (x_chance_in_y(item.plus - 2, 3) || x_chance_in_y(item.plus2 - 2, 3))
+    if (item.plus >= 3)
         return true;
 
     if (item.flags & ISFLAG_CURSED && one_chance_in(3))
         return true;
 
     return false;
+}
+
+/**
+ * Return the number of plusses required for a type of armour to glow.
+ * (From plus alone.)
+ *
+ * @param armour_type   The type of armour being considered.
+ * @return              The armour plus value required to be interesting.
+ */
+static int _armour_plus_threshold(equipment_type armour_type)
+{
+    switch (armour_type)
+    {
+        // body armour is very common; squelch most of it
+        case EQ_BODY_ARMOUR:
+            return 3;
+        // shields are fairly common
+        case EQ_SHIELD:
+            return 2;
+        // aux armour is relatively uncommon
+        default:
+            return 1;
+    }
 }
 
 static bool _armour_is_visibly_special(const item_def &item)
@@ -3052,7 +2993,7 @@ static bool _armour_is_visibly_special(const item_def &item)
     if (item.is_mundane())
         return false;
 
-    if (x_chance_in_y(item.plus - 2, 3))
+    if (item.plus >= _armour_plus_threshold(get_armour_slot(item)))
         return true;
 
     if (item.flags & ISFLAG_CURSED && one_chance_in(3))
@@ -3267,7 +3208,8 @@ void makeitem_tests()
         if (item.special == SPWPN_ORC_SLAYING
             || item.special == SPWPN_REACHING
             || item.special == SPWPN_RETURNING
-            || item.special == SPWPN_CONFUSE)
+            || item.special == SPWPN_CONFUSE
+            || item.special == SPWPN_DRAGON_SLAYING)
         {
             item.special = SPWPN_FORBID_BRAND;
         }

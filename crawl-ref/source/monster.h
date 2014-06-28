@@ -240,6 +240,7 @@ public:
     item_def *mslot_item(mon_inv_type sl) const;
     item_def *weapon(int which_attack = -1) const;
     item_def *launcher();
+    item_def *melee_weapon() const;
     item_def *missiles();
     item_def *shield() const;
 
@@ -276,6 +277,7 @@ public:
     bool      unequip(item_def &item, int slot, int near = -1,
                       bool force = false);
     void      steal_item_from_player();
+    item_def* take_item(int steal_what, int mslot);
 
     bool      can_use_missile(const item_def &item) const;
 
@@ -325,12 +327,13 @@ public:
 
     mon_holy_type holiness() const;
     bool undead_or_demonic() const;
+    bool holy_wrath_susceptible() const;
     bool is_holy(bool check_spells = true) const;
     bool is_unholy(bool check_spells = true) const;
     bool is_evil(bool check_spells = true) const;
-    bool is_unclean(bool check_spells = true) const;
-    bool is_known_chaotic() const;
-    bool is_chaotic() const;
+    int how_unclean(bool check_god = true) const;
+    int known_chaos(bool check_spells_god = false) const;
+    int how_chaotic(bool check_spells_god = false) const;
     bool is_artificial() const;
     bool is_unbreathing() const;
     bool is_insubstantial() const;
@@ -393,6 +396,8 @@ public:
     bool petrified() const;
     bool petrifying() const;
     bool liquefied_ground() const;
+    int natural_regen_rate() const;
+    int off_level_regen_rate() const;
 
     bool friendly() const;
     bool neutral() const;
@@ -432,6 +437,7 @@ public:
     void confuse(actor *, int strength);
     bool drain_exp(actor *, bool quiet = false, int pow = 3);
     bool rot(actor *, int amount, int immediate = 0, bool quiet = false);
+    void splash_with_acid(const actor* evildoer);
     int hurt(const actor *attacker, int amount,
              beam_type flavour = BEAM_MISSILE,
              bool cleanup_dead = true,
@@ -441,6 +447,7 @@ public:
     void blink(bool allow_partial_control = true);
     void teleport(bool right_now = false,
                   bool wizard_tele = false);
+    bool shift(coord_def p = coord_def(0, 0));
     void suicide(int hp = -1);
 
     void hibernate(int power = 0);
@@ -487,6 +494,7 @@ public:
     void bind_spell_flags();
     void calc_speed();
     bool attempt_escape(int attempts = 1);
+    void struggle_against_net();
     bool has_usable_tentacle() const;
 
     bool check_clarity(bool silent) const;
@@ -499,6 +507,7 @@ public:
     bool is_parent_monster_of(const monster* mons) const;
     bool is_child_tentacle_segment() const;
 
+    bool is_illusion() const;
     bool is_divine_companion() const;
     bool is_projectile() const;
     // Jumping spiders (jump instead of blink)

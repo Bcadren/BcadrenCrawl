@@ -37,7 +37,6 @@
 #include "misc.h"
 #include "mon-death.h"
 #include "mon-place.h"
-#include "mon-stuff.h"
 #include "mon-util.h"
 #include "notes.h"
 #include "ouch.h"
@@ -84,21 +83,38 @@ equipment_type beastly_slot(int mut)
     }
 }
 
-enum mut_total
+static bool _mut_has_use(const mutation_def &mut, mut_use_type use)
 {
-    MT_GOOD,
-    MT_BAD,
-    NUM_MT
-};
+    return mut.uses & MFLAG(use);
+}
+
+#define MUT_BAD(mut) _mut_has_use((mut), MU_USE_BAD)
+#define MUT_GOOD(mut) _mut_has_use((mut), MU_USE_GOOD)
+
+static int _mut_weight(const mutation_def &mut, mut_use_type use)
+{
+    switch (use)
+    {
+        case MU_USE_JIYVA:
+        case MU_USE_QAZLAL:
+        case MU_USE_XOM:
+        case MU_USE_CORRUPT:
+            return 1;
+        case MU_USE_GOOD:
+        case MU_USE_BAD:
+        default:
+            return mut.weight;
+    }
+}
 
 static int mut_index[NUM_MUTATIONS];
-static int total_rarity[NUM_MT];
+static int total_weight[NUM_MU_USE];
 
 void init_mut_index()
 {
     for (int i = 0; i < NUM_MUTATIONS; ++i)
         mut_index[i] = -1;
-    memset(total_rarity, 0, sizeof(total_rarity));
+    memset(total_weight, 0, sizeof(total_weight));
 
     for (unsigned int i = 0; i < ARRAYSZ(mut_data); ++i)
     {
@@ -106,7 +122,9 @@ void init_mut_index()
         ASSERT_RANGE(mut, 0, NUM_MUTATIONS);
         ASSERT(mut_index[mut] == -1);
         mut_index[mut] = i;
-        total_rarity[mut_data[i].bad ? MT_BAD : MT_GOOD] += mut_data[i].rarity;
+        for (int mt = MU_USE_MIN; mt < NUM_MU_USE; mt++)
+            if (_mut_has_use(mut_data[i], (mut_use_type)mt))
+                total_weight[mt] += _mut_weight(mut_data[i], (mut_use_type)mt);
     }
 }
 
@@ -931,17 +949,18 @@ void display_mutations()
 
 static int _calc_mutation_amusement_value(mutation_type which_mutation)
 {
-    int amusement = 12 * (11 - get_mutation_def(which_mutation).rarity);
+    int amusement = 12 * (11 - get_mutation_def(which_mutation).weight);
 
-    if (mut_data[which_mutation].bad == MT_GOOD)
+    if (MUT_GOOD(mut_data[which_mutation]))
         amusement /= 2;
-    else if (mut_data[which_mutation].bad == MT_BAD)
+    else if (MUT_BAD(mut_data[which_mutation]))
         amusement *= 2;
+    // currently is only ever one of these, but maybe that'll change?
 
     return amusement;
 }
 
-static bool _accept_mutation(mutation_type mutat, bool ignore_rarity = false)
+static bool _accept_mutation(mutation_type mutat, bool ignore_weight = false)
 {
     if (!_is_valid_mutation(mutat))
         return false;
@@ -954,25 +973,36 @@ static bool _accept_mutation(mutation_type mutat, bool ignore_rarity = false)
     if (you.mutation[mutat] >= mdef.levels)
         return false;
 
-    if (ignore_rarity)
+    if (ignore_weight)
         return true;
 
-    const int rarity = mdef.rarity + you.innate_mutation[mutat];
+    const int weight = mdef.weight + you.innate_mutation[mutat];
 
-    // Low rarity means unlikely to choose it.
-    return x_chance_in_y(rarity, 10);
+    // Low weight means unlikely to choose it.
+    return x_chance_in_y(weight, 10);
+}
+
+static mutation_type _get_mut_with_use(mut_use_type mt)
+{
+    int cweight = random2(total_weight[mt]);
+    for (unsigned i = 0; i < ARRAYSZ(mut_data); ++i)
+    {
+        if (!_mut_has_use(mut_data[i], mt))
+            continue;
+
+        cweight -= _mut_weight(mut_data[i], mt);
+        if (cweight >= 0)
+            continue;
+
+        return mut_data[i].mutation;
+    }
+
+    die("Error while selecting mutations");
 }
 
 static mutation_type _get_random_slime_mutation()
 {
-    const mutation_type slime_muts[] =
-    {
-        MUT_GELATINOUS_BODY, MUT_EYEBALLS, MUT_TRANSLUCENT_SKIN,
-        MUT_PSEUDOPODS, MUT_ACIDIC_BITE, MUT_TENDRILS,
-        MUT_JELLY_GROWTH, MUT_JELLY_MISSILE
-    };
-
-    return RANDOM_ELEMENT(slime_muts);
+    return _get_mut_with_use(MU_USE_JIYVA);
 }
 
 static mutation_type _delete_random_slime_mutation()
@@ -998,21 +1028,11 @@ static mutation_type _delete_random_slime_mutation()
 
 static bool _is_slime_mutation(mutation_type m)
 {
-    return m == MUT_GELATINOUS_BODY || m == MUT_EYEBALLS
-           || m == MUT_TRANSLUCENT_SKIN || m == MUT_PSEUDOPODS
-           || m == MUT_ACIDIC_BITE || m == MUT_TENDRILS
-           || m == MUT_JELLY_GROWTH || m == MUT_JELLY_MISSILE;
+    return _mut_has_use(mut_data[mut_index[m]], MU_USE_JIYVA);
 }
 
 static mutation_type _get_random_xom_mutation()
 {
-    const mutation_type bad_muts[] =
-    {
-        MUT_WEAK,          MUT_DOPEY,
-        MUT_CLUMSY,        MUT_DEFORMED,      MUT_SCREAM,
-        MUT_DETERIORATION, MUT_BLURRY_VISION, MUT_FRAIL
-    };
-
     mutation_type mutat = NUM_MUTATIONS;
 
     do
@@ -1022,7 +1042,7 @@ static mutation_type _get_random_xom_mutation()
         if (one_chance_in(1000))
             return NUM_MUTATIONS;
         else if (one_chance_in(5))
-            mutat = RANDOM_ELEMENT(bad_muts);
+            mutat = _get_mut_with_use(MU_USE_XOM);
     }
     while (!_accept_mutation(mutat, false));
 
@@ -1031,74 +1051,43 @@ static mutation_type _get_random_xom_mutation()
 
 static mutation_type _get_random_corrupt_mutation()
 {
-    const mutation_type corrupt_muts[] =
-    {
-        MUT_DEFORMED,      MUT_DETERIORATION, MUT_BLURRY_VISION,
-        MUT_SLOW_HEALING,  MUT_FRAIL,         MUT_LOW_MAGIC,
-        MUT_HEAT_VULNERABILITY,
-        MUT_COLD_VULNERABILITY,
-        MUT_FAST_METABOLISM
-    };
-
-    return RANDOM_ELEMENT(corrupt_muts);
+    return _get_mut_with_use(MU_USE_CORRUPT);
 }
 
 static mutation_type _get_random_qazlal_mutation()
 {
-    const mutation_type qazlal_muts[] =
-    {
-        MUT_HEAT_VULNERABILITY,
-        MUT_COLD_VULNERABILITY,
-        MUT_SHOCK_VULNERABILITY,
-        MUT_DEFORMED // in lieu of other ways to nuke AC
-    };
-
-    return RANDOM_ELEMENT(qazlal_muts);
+    return _get_mut_with_use(MU_USE_QAZLAL);
 }
 
 static mutation_type _get_random_mutation(mutation_type mutclass)
 {
-    mut_total mt;
+    mut_use_type mt;
     switch (mutclass)
     {
         case RANDOM_MUTATION:
             // maintain an arbitrary ratio of good to bad muts to allow easier
             // weight changes within categories - 60% good seems to be about
             // where things are right now
-            mt = x_chance_in_y(3, 5) ? MT_GOOD : MT_BAD;
+            mt = x_chance_in_y(3, 5) ? MU_USE_GOOD : MU_USE_BAD;
             break;
         case RANDOM_BAD_MUTATION:
-            mt = MT_BAD;
+            mt = MU_USE_BAD;
             break;
         case RANDOM_GOOD_MUTATION:
-            mt = MT_GOOD;
+            mt = MU_USE_GOOD;
             break;
         default:
             die("invalid mutation class: %d", mutclass);
     }
 
-    int tries = 0;
-retry:
-
-    int cweight = random2(total_rarity[mt]);
-    for (unsigned i = 0; i < ARRAYSZ(mut_data); ++i)
+    for (int attempt = 0; attempt < 100; ++attempt)
     {
-        // if the mut's badness isn't the kind we're looking for, skip it.
-        if (mut_data[i].bad != (mt == MT_BAD)) // sorry :(
-            continue;
-
-        if ((cweight -= mut_data[i].rarity) >= 0)
-            continue;
-
-        if (_accept_mutation(mut_data[i].mutation, true))
-            return mut_data[i].mutation;
-
-        if (tries++ > 100)
-            return NUM_MUTATIONS;
-        goto retry;
+        mutation_type mut = _get_mut_with_use(mt);
+        if (_accept_mutation(mut, true))
+            return mut;
     }
 
-    die("mutation total changed???");
+    return NUM_MUTATIONS;
 }
 
 // Tries to give you the mutation by deleting a conflicting
@@ -1124,6 +1113,7 @@ static int _handle_conflicting_mutations(mutation_type mutation,
         { MUT_SLOW_HEALING,        MUT_NO_DEVICE_HEAL,       1},
         { MUT_ROBUST,              MUT_FRAIL,                1},
         { MUT_HIGH_MAGIC,          MUT_LOW_MAGIC,            1},
+        { MUT_WILD_MAGIC,          MUT_PLACID_MAGIC,         1},
         { MUT_CARNIVOROUS,         MUT_HERBIVOROUS,          1},
         { MUT_SLOW_METABOLISM,     MUT_FAST_METABOLISM,      1},
         { MUT_REGENERATION,        MUT_SLOW_HEALING,         1},
@@ -1696,7 +1686,6 @@ bool mutate(mutation_type which_mutation, const string &reason, bool failMsg,
             break;
         }
 
-        // Amusement value will be 12 * (11-rarity) * Xom's-sense-of-humor.
         xom_is_stimulated(_calc_mutation_amusement_value(mutat));
 
         if (!temporary)
@@ -1888,12 +1877,14 @@ bool delete_mutation(mutation_type which_mutation, const string &reason,
 
             const mutation_def& mdef = get_mutation_def(mutat);
 
-            if (random2(10) >= mdef.rarity && !_is_slime_mutation(mutat))
+            if (random2(10) >= mdef.weight && !_is_slime_mutation(mutat))
                 continue;
 
             const bool mismatch =
-                (which_mutation == RANDOM_GOOD_MUTATION && mdef.bad)
-                    || (which_mutation == RANDOM_BAD_MUTATION && !mdef.bad);
+                (which_mutation == RANDOM_GOOD_MUTATION
+                 && MUT_BAD(mdef))
+                    || (which_mutation == RANDOM_BAD_MUTATION
+                        && MUT_GOOD(mdef));
 
             if (mismatch && (disallow_mismatch || !one_chance_in(10)))
                 continue;
@@ -2040,7 +2031,7 @@ string mutation_desc(mutation_type mut, int level, bool colour)
 
     if (colour)
     {
-        const char* colourname = (mdef.bad ? "red" : "lightgrey");
+        const char* colourname = (MUT_BAD(mdef) ? "red" : "lightgrey");
         const bool permanent   = (you.innate_mutation[mut] > 0);
 
         if (innate_upgrade)
@@ -2394,6 +2385,8 @@ bool perma_mutate(mutation_type which_mut, int how_much, const string &reason)
             // in question is one less than the cap, we are permafying a
             // temporary mutation. This fails to produce any output normally.
             mprf(MSGCH_MUTATION, "Your mutations feel more permanent.");
+            take_note(Note(NOTE_PERM_MUTATION, which_mut,
+                           you.mutation[which_mut], reason.c_str()));
         }
         else if (you.mutation[which_mut] < cap
             && !mutate(which_mut, reason, false, true, false, false, true))
@@ -2425,7 +2418,11 @@ int how_mutated(bool all, bool levels)
                 continue;
 
             if (levels)
+            {
                 j += you.mutation[i];
+                if (!all)
+                    j -= you.innate_mutation[i];
+            }
             else
                 j++;
         }

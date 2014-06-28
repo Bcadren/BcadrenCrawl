@@ -52,7 +52,6 @@
 #include "mon-death.h"
 #include "mon-util.h"
 #include "mon-place.h"
-#include "mon-stuff.h"
 #include "mutation.h"
 #include "notes.h"
 #include "player.h"
@@ -78,7 +77,7 @@ static NORETURN void _end_game(scorefile_entry &se);
 static void _maybe_melt_player_enchantments(beam_type flavour, int damage)
 {
     if (flavour == BEAM_FIRE || flavour == BEAM_LAVA
-        || flavour == BEAM_HELLFIRE || flavour == BEAM_NAPALM
+        || flavour == BEAM_HELLFIRE || flavour == BEAM_STICKY_FLAME
         || flavour == BEAM_STEAM)
     {
         if (you.duration[DUR_CONDENSATION_SHIELD] > 0)
@@ -446,8 +445,8 @@ void expose_player_to_element(beam_type flavour, int strength, bool slow_cold_bl
     {
         mprf(MSGCH_WARN, "The flames go out!");
         you.duration[DUR_LIQUID_FLAMES] = 0;
-        you.props.erase("napalmer");
-        you.props.erase("napalm_aux");
+        you.props.erase("sticky_flame_source");
+        you.props.erase("sticky_flame_aux");
     }
 }
 

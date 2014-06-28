@@ -93,7 +93,7 @@
 #include "mon-act.h"
 #include "mon-abil.h"
 #include "mon-cast.h"
-#include "mon-stuff.h"
+#include "mon-place.h"
 #include "mon-transit.h"
 #include "mon-util.h"
 #include "mutation.h"
@@ -534,10 +534,19 @@ static void _show_commandline_options_help()
     puts("  -arena \"<monster list> v <monster list> arena:<arena map>\"");
 #ifdef DEBUG_DIAGNOSTICS
     puts("");
-    puts("  -test            run all test cases in test/ except test/big/");
-    puts("  -test foo,bar    run only tests \"foo\" and \"bar\"");
-    puts("  -test list       list available tests");
-    puts("  -script <name>   run script matching <name> in ./scripts");
+    puts("  -test               run all test cases in test/ except test/big/");
+    puts("  -test foo,bar       run only tests \"foo\" and \"bar\"");
+    puts("  -test list          list available tests");
+    puts("  -script <name>      run script matching <name> in ./scripts");
+    puts("  -mapstat [<levels>] run map stats on the given range of levels");
+    puts("      Defaults to entire dungeon; level ranges follow des DEPTH "
+         "syntax.");
+    puts("      Examples: Lair:2- and '!Pan,!Abyss'");
+    puts("  -objstat [<levels>] run monster and item stats on the given range "
+         "of levels");
+    puts("      Defaults to entire dungeon; same level syntax as -mapstat.");
+    puts("  -iters <num>        For -mapstat and -objstat, set the number of "
+         "iterations");
 #endif
     puts("");
     puts("Miscellaneous options:");
@@ -666,6 +675,8 @@ static void _set_removed_types_as_identified()
     you.type_ids[OBJ_POTIONS][POT_GAIN_DEXTERITY] = ID_KNOWN_TYPE;
     you.type_ids[OBJ_POTIONS][POT_GAIN_INTELLIGENCE] = ID_KNOWN_TYPE;
     you.type_ids[OBJ_POTIONS][POT_WATER] = ID_KNOWN_TYPE;
+    you.type_ids[OBJ_SCROLLS][SCR_ENCHANT_WEAPON_II] = ID_KNOWN_TYPE;
+    you.type_ids[OBJ_SCROLLS][SCR_ENCHANT_WEAPON_III] = ID_KNOWN_TYPE;
 #endif
     // not generated, but the enum value is still used
     you.type_ids[OBJ_POTIONS][POT_SLOWING] = ID_KNOWN_TYPE;
@@ -1015,7 +1026,6 @@ static bool _cmd_is_repeatable(command_type cmd, bool is_again = false)
 
     // Miscellaneous non-repeatable commands.
     case CMD_TOGGLE_AUTOPICKUP:
-    case CMD_TOGGLE_FRIENDLY_PICKUP:
     case CMD_TOGGLE_TRAVEL_SPEED:
     case CMD_ADJUST_INVENTORY:
     case CMD_QUIVER_ITEM:
@@ -1663,34 +1673,6 @@ static void _experience_check()
 #endif
 }
 
-static void _print_friendly_pickup_setting(bool was_changed)
-{
-    string now = (was_changed? "now " : "");
-
-    if (you.friendly_pickup == FRIENDLY_PICKUP_NONE)
-    {
-        mprf("Your intelligent allies are %sforbidden to pick up anything at all.",
-             now.c_str());
-    }
-    else if (you.friendly_pickup == FRIENDLY_PICKUP_FRIEND)
-    {
-        mprf("Your intelligent allies may %sonly pick up items dropped by allies.",
-             now.c_str());
-    }
-    else if (you.friendly_pickup == FRIENDLY_PICKUP_PLAYER)
-    {
-        mprf("Your intelligent allies may %sonly pick up items dropped by you "
-             "and your allies.", now.c_str());
-    }
-    else if (you.friendly_pickup == FRIENDLY_PICKUP_ALL)
-    {
-        mprf("Your intelligent allies may %spick up anything they need.",
-             now.c_str());
-    }
-    else
-        mprf(MSGCH_ERROR, "Your allies%s are collecting bugs!", now.c_str());
-}
-
 static void _do_remove_armour()
 {
     if (you.species == SP_FELID)
@@ -1708,33 +1690,6 @@ static void _do_remove_armour()
     int index = 0;
     if (armour_prompt("Take off which item?", &index, OPER_TAKEOFF))
         takeoff_armour(index);
-}
-
-static void _toggle_friendly_pickup()
-{
-    // Toggle pickup mode for friendlies.
-    _print_friendly_pickup_setting(false);
-
-    mprf(MSGCH_PROMPT, "Change to (d)efault, (n)othing, (f)riend-dropped, "
-                       "(p)layer, or (a)ll? ");
-
-    int type;
-    {
-        cursor_control con(true);
-        type = toalower(getchm(KMC_DEFAULT));
-    }
-
-    switch (type)
-    {
-    case 'd': you.friendly_pickup = Options.default_friendly_pickup; break;
-    case 'n': you.friendly_pickup = FRIENDLY_PICKUP_NONE; break;
-    case 'f': you.friendly_pickup = FRIENDLY_PICKUP_FRIEND; break;
-    case 'p': you.friendly_pickup = FRIENDLY_PICKUP_PLAYER; break;
-    case 'a': you.friendly_pickup = FRIENDLY_PICKUP_ALL; break;
-    default: canned_msg(MSG_OK); return;
-    }
-
-    _print_friendly_pickup_setting(true);
 }
 
 static void _toggle_travel_speed()
@@ -1923,8 +1878,8 @@ void process_command(command_type cmd)
         mprf("Autopickup is now %s.", Options.autopickup_on > 0 ? "on" : "off");
         break;
 
-    case CMD_TOGGLE_FRIENDLY_PICKUP:     _toggle_friendly_pickup(); break;
     case CMD_TOGGLE_VIEWPORT_MONSTER_HP: toggle_viewport_monster_hp(); break;
+    case CMD_TOGGLE_VIEWPORT_WEAPONS: toggle_viewport_weapons(); break;
     case CMD_TOGGLE_TRAVEL_SPEED:        _toggle_travel_speed(); break;
 
         // Map commands.
@@ -2319,9 +2274,10 @@ void world_reacts()
 
     fire_final_effects();
 
-    if (crawl_state.viewport_monster_hp)
+    if (crawl_state.viewport_monster_hp || crawl_state.viewport_weapons)
     {
         crawl_state.viewport_monster_hp = false;
+        crawl_state.viewport_weapons = false;
         viewwindow();
     }
 
@@ -2514,9 +2470,9 @@ static keycode_type _get_next_keycode()
     mouse_control mc(MOUSE_MODE_COMMAND);
     keyin = unmangle_direction_keys(getch_with_command_macros());
 
-    // This is the main mesclr() with Option.clear_messages.
+    // This is the main clear_messages() with Option.clear_messages.
     if (!is_synthetic_key(keyin))
-        mesclr();
+        clear_messages();
 
     return keyin;
 }
@@ -2779,160 +2735,7 @@ static void _open_door(coord_def move, bool check_confused)
         return;
     }
 
-    // Finally, open the closed door!
-    set<coord_def> all_door;
-    find_connected_identical(doorpos, all_door);
-    const char *adj, *noun;
-    get_door_description(all_door.size(), &adj, &noun);
-
-    const string door_desc_adj  =
-        env.markers.property_at(doorpos, MAT_ANY, "door_description_adjective");
-    const string door_desc_noun =
-        env.markers.property_at(doorpos, MAT_ANY, "door_description_noun");
-    if (!door_desc_adj.empty())
-        adj = door_desc_adj.c_str();
-    if (!door_desc_noun.empty())
-        noun = door_desc_noun.c_str();
-
-    if (!(check_confused && you.confused()))
-    {
-        string door_open_prompt =
-            env.markers.property_at(doorpos, MAT_ANY, "door_open_prompt");
-
-        bool ignore_exclude = false;
-
-        if (!door_open_prompt.empty())
-        {
-            door_open_prompt += " (y/N)";
-            if (!yesno(door_open_prompt.c_str(), true, 'n', true, false))
-            {
-                if (is_exclude_root(doorpos))
-                    canned_msg(MSG_OK);
-                else
-                {
-                    if (yesno("Put travel exclusion on door? (Y/n)",
-                              true, 'y'))
-                    {
-                        // Zero radius exclusion right on top of door.
-                        set_exclude(doorpos, 0);
-                    }
-                }
-                interrupt_activity(AI_FORCE_INTERRUPT);
-                return;
-            }
-            ignore_exclude = true;
-        }
-
-        if (!ignore_exclude && is_exclude_root(doorpos))
-        {
-            string prompt = make_stringf("This %s%s is marked as excluded! "
-                                         "Open it anyway?", adj, noun);
-
-            if (!yesno(prompt.c_str(), true, 'n', true, false))
-            {
-                canned_msg(MSG_OK);
-                interrupt_activity(AI_FORCE_INTERRUPT);
-                return;
-            }
-        }
-    }
-
-    int skill = you.dex() + you.skill_rdiv(SK_STEALTH);
-
-    string berserk_open = env.markers.property_at(doorpos, MAT_ANY,
-                                                  "door_berserk_verb_open");
-    string berserk_adjective = env.markers.property_at(doorpos, MAT_ANY,
-                                                       "door_berserk_adjective");
-    string door_open_creak = env.markers.property_at(doorpos, MAT_ANY,
-                                                     "door_noisy_verb_open");
-    string door_airborne = env.markers.property_at(doorpos, MAT_ANY,
-                                                   "door_airborne_verb_open");
-    string door_open_verb = env.markers.property_at(doorpos, MAT_ANY,
-                                                    "door_verb_open");
-
-    if (you.berserk())
-    {
-        // XXX: Better flavour for larger doors?
-        if (silenced(you.pos()))
-        {
-            if (!berserk_open.empty())
-            {
-                berserk_open += ".";
-                mprf(berserk_open.c_str(), adj, noun);
-            }
-            else
-                mprf("The %s%s flies open!", adj, noun);
-        }
-        else
-        {
-            if (!berserk_open.empty())
-            {
-                if (!berserk_adjective.empty())
-                    berserk_open += " " + berserk_adjective;
-                else
-                    berserk_open += ".";
-                mprf(MSGCH_SOUND, berserk_open.c_str(), adj, noun);
-            }
-            else
-                mprf(MSGCH_SOUND, "The %s%s flies open with a bang!", adj, noun);
-            noisy(15, you.pos());
-        }
-    }
-    else if (one_chance_in(skill) && !silenced(you.pos()))
-    {
-        if (!door_open_creak.empty())
-            mprf(MSGCH_SOUND, door_open_creak.c_str(), adj, noun);
-        else
-        {
-            mprf(MSGCH_SOUND, "As you open the %s%s, it creaks loudly!",
-                 adj, noun);
-        }
-        noisy(10, you.pos());
-    }
-    else
-    {
-        const char* verb;
-        if (you.airborne())
-        {
-            if (!door_airborne.empty())
-                verb = door_airborne.c_str();
-            else
-                verb = "You reach down and open the %s%s.";
-        }
-        else
-        {
-            if (!door_open_verb.empty())
-               verb = door_open_verb.c_str();
-            else
-               verb = "You open the %s%s.";
-        }
-
-        mprf(verb, adj, noun);
-    }
-
-    vector<coord_def> excludes;
-    for (set<coord_def>::iterator i = all_door.begin(); i != all_door.end(); ++i)
-    {
-        const coord_def& dc = *i;
-        // Even if some of the door is out of LOS, we want the entire
-        // door to be updated.  Hitting this case requires a really big
-        // door!
-        if (env.map_knowledge(dc).seen())
-        {
-            env.map_knowledge(dc).set_feature(DNGN_OPEN_DOOR);
-#ifdef USE_TILE
-            env.tile_bk_bg(dc) = TILE_DNGN_OPEN_DOOR;
-#endif
-        }
-        grd(dc) = DNGN_OPEN_DOOR;
-        set_terrain_changed(dc);
-        dungeon_events.fire_position_event(DET_DOOR_OPENED, dc);
-        if (is_excluded(dc))
-            excludes.push_back(dc);
-    }
-
-    update_exclusion_los(excludes);
-    viewwindow();
+    player_open_door(doorpos, check_confused);
 
     you.turn_is_over = true;
 }
@@ -3238,6 +3041,41 @@ static void _move_player(int move_x, int move_y)
     _move_player(coord_def(move_x, move_y));
 }
 
+// Swap monster to this location.  Player is swapped elsewhere.
+static void _swap_places(monster* mons, const coord_def &loc)
+{
+    ASSERT(map_bounds(loc));
+    ASSERT(monster_habitable_grid(mons, grd(loc)));
+
+    if (monster_at(loc))
+    {
+        if (mons->type == MONS_WANDERING_MUSHROOM
+            && monster_at(loc)->type == MONS_TOADSTOOL)
+        {
+            monster_swaps_places(mons, loc - mons->pos());
+            return;
+        }
+        else
+        {
+            mpr("Something prevents you from swapping places.");
+            return;
+        }
+    }
+
+    mpr("You swap places.");
+
+    mgrd(mons->pos()) = NON_MONSTER;
+
+    const coord_def old_loc = mons->pos();
+    mons->moveto(loc);
+    mons->apply_location_effects(old_loc);
+
+    if (mons->alive())
+        mgrd(mons->pos()) = mons->mindex();
+
+    return;
+}
+
 static void _move_player(coord_def move)
 {
     ASSERT(!crawl_state.game_is_arena() && !crawl_state.arena_suspended);
@@ -3322,6 +3160,16 @@ static void _move_player(coord_def move)
                 canned_msg(MSG_OK);
                 return;
             }
+        }
+
+        if (you.form == TRAN_TREE)
+        {
+            // Don't choose a random location to try to attack into - allows
+            // abuse, since trying to move (not attack) takes no time, and
+            // shouldn't. Just force confused trees to use ctrl.
+            mpr("You cannot move. (Use ctrl+direction to attack without "
+                "moving)");
+            return;
         }
 
         if (!one_chance_in(3))
@@ -3565,7 +3413,7 @@ static void _move_player(coord_def move)
         }
 
         if (swap)
-            swap_places(targ_monst, mon_swap_dest);
+            _swap_places(targ_monst, mon_swap_dest);
         else if (you.duration[DUR_COLOUR_SMOKE_TRAIL])
         {
             check_place_cloud(CLOUD_MAGIC_TRAIL, you.pos(),
@@ -3581,7 +3429,9 @@ static void _move_player(coord_def move)
         you.stop_constricting_all(true);
         you.stop_being_constricted();
 
-        move_player_to_grid(targ, true);
+        // Don't trigger traps when confusion causes no move.
+        if (you.pos() != targ)
+            move_player_to_grid(targ, true);
 
         if (you.duration[DUR_BARBS])
         {

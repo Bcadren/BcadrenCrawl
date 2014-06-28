@@ -49,7 +49,7 @@
 #include "mon-death.h"
 #include "mon-ench.h"
 #include "mon-place.h"
-#include "mon-stuff.h"
+#include "mon-poly.h"
 #include "mon-util.h"
 #include "mutation.h"
 #include "ouch.h"
@@ -496,26 +496,6 @@ bool bolt::can_affect_actor(const actor *act) const
     return !act->submerged();
 }
 
-// Affect actor in wall unless it can shield itself using the wall.
-// The wall will always shield the actor if the beam bounces off the
-// wall.
-bool bolt::can_affect_wall_actor(const actor *act) const
-{
-    if (!can_affect_actor(act))
-        return false;
-
-    if (is_enchantment())
-        return true;
-
-    if (!is_explosion && !is_big_cloud)
-        return true;
-
-    if (is_bouncy(grd(act->pos())))
-        return false;
-
-    return false;
-}
-
 static beam_type _chaos_beam_flavour(bolt* beam)
 {
     beam_type flavour;
@@ -529,7 +509,7 @@ static beam_type _chaos_beam_flavour(bolt* beam)
             10, BEAM_NEG,
             10, BEAM_ACID,
             10, BEAM_HELLFIRE,
-            10, BEAM_NAPALM,
+            10, BEAM_STICKY_FLAME,
             10, BEAM_SLOW,
             10, BEAM_HASTE,
             10, BEAM_MIGHT,
@@ -680,7 +660,7 @@ void bolt::apply_beam_conducts()
             break;
         case BEAM_FIRE:
         case BEAM_HOLY_FLAME:
-        case BEAM_NAPALM:
+        case BEAM_STICKY_FLAME:
             did_god_conduct(DID_FIRE,
                             is_beam || is_explosion ? 6 + random2(3)
                                                     : 2 + random2(3),
@@ -881,8 +861,12 @@ void bolt::fire_wall_effect()
         did_god_conduct(DID_PLANT_KILLED_BY_SERVANT, 1, god_cares());
     ASSERT(agent());
     // Trees do not burn so readily in a wet environment
-    if (player_in_branch(BRANCH_SWAMP))
+    if (player_in_branch(BRANCH_SWAMP)
+        // And you shouldn't get tons of penance from an unid'd wand of fire
+        || (you_worship(GOD_DITHMENOS) && !player_under_penance()))
+    {
         place_cloud(CLOUD_FIRE, pos(), random2(12)+5, agent());
+    }
     else
         place_cloud(CLOUD_FOREST_FIRE, pos(), random2(30)+25, agent());
     obvious_effect = true;
@@ -1166,27 +1150,13 @@ void bolt::affect_cell()
     const coord_def old_pos = pos();
     const bool was_solid = cell_is_solid(pos());
 
-    if (was_solid)
+    // Note that this can change the ray position and the solidity
+    // of the wall.
+    if (was_solid && hit_wall())
     {
-        // Some special casing.
-        if (actor *act = actor_at(pos()))
-        {
-            if (can_affect_wall_actor(act))
-                affect_actor(act);
-            else if (!is_tracer && you.can_see(act))
-            {
-                mprf("The %s protects %s from harm.",
-                     raw_feature_description(act->pos()).c_str(),
-                     act->name(DESC_THE).c_str());
-            }
-        }
-
-        // Note that this can change the ray position and the solidity
-        // of the wall.
-        if (hit_wall())
-            // Beam ended due to hitting wall, so don't hit the player
-            // or monster with the regressed beam.
-            return;
+        // Beam ended due to hitting wall, so don't hit the player
+        // or monster with the regressed beam.
+        return;
     }
 
     // If the player can ever walk through walls, this will need
@@ -1576,7 +1546,7 @@ int mons_adjust_flavoured(monster* mons, bolt &pbolt, int hurted,
             }
         }
         else if (res <= 0 && doFlavouredEffects)
-            splash_monster_with_acid(mons, pbolt.agent());
+            mons->splash_with_acid(pbolt.agent());
         break;
     }
 
@@ -1789,7 +1759,8 @@ int mons_adjust_flavoured(monster* mons, bolt &pbolt, int hurted,
         break;
 
     case BEAM_ENSNARE:
-        ensnare(mons);
+        if (doFlavouredEffects)
+            ensnare(mons);
         break;
 
     case BEAM_GHOSTLY_FLAME:
@@ -2181,7 +2152,7 @@ bool curare_actor(actor* source, actor* target, int levels, string name,
 int silver_damages_victim(actor* victim, int damage, string &dmg_msg)
 {
     int ret = 0;
-    if (victim->is_chaotic()
+    if (victim->how_chaotic()
         || victim->is_player() && player_is_shapechanged())
     {
         ret = damage * 3 / 4;
@@ -3227,7 +3198,7 @@ bool bolt::harmless_to_player() const
     case BEAM_FIRE:
     case BEAM_HELLFIRE:
     case BEAM_HOLY_FLAME:
-    case BEAM_NAPALM:
+    case BEAM_STICKY_FLAME:
         return you.species == SP_DJINNI;
 #endif
 
@@ -5507,7 +5478,7 @@ mon_resist_type bolt::apply_enchantment_to_monster(monster* mon)
         {
             // No KILL_YOU_CONF, or we get "You heal ..."
             if (cast_healing(3 + damage.roll(), 3 + damage.num * damage.size,
-                             false, mon->pos()) > 0)
+                             false, mon->pos()) == SPRET_SUCCESS)
             {
                 obvious_effect = true;
             }
@@ -5758,7 +5729,6 @@ mon_resist_type bolt::apply_enchantment_to_monster(monster* mon)
                     mon->props["tile_num"].get_short() = random2(256);
                     break;
                 case MONS_WRETCHED_STAR:
-                case MONS_PULSATING_LUMP:
                 case MONS_CHAOS_SPAWN:
                     break;
                 default:
@@ -6591,7 +6561,7 @@ static string _beam_type_name(beam_type type)
     case BEAM_SPORE:                 return "spores";
     case BEAM_POISON_ARROW:          return "poison arrow";
     case BEAM_HELLFIRE:              return "hellfire";
-    case BEAM_NAPALM:                return "sticky fire";
+    case BEAM_STICKY_FLAME:          return "sticky fire";
     case BEAM_STEAM:                 return "steam";
     case BEAM_ENERGY:                return "energy";
     case BEAM_HOLY:                  return "holy energy";
@@ -6632,8 +6602,8 @@ static string _beam_type_name(beam_type type)
     case BEAM_BERSERK:               return "berserk";
     case BEAM_VISUAL:                return "visual effects";
     case BEAM_TORMENT_DAMAGE:        return "torment damage";
-    case BEAM_DEVOUR_FOOD:           return "devour food";
 #if TAG_MAJOR_VERSION == 34
+    case BEAM_DEVOUR_FOOD:           return "devour food";
     case BEAM_GLOOM:                 return "gloom";
 #endif
     case BEAM_INK:                   return "ink";

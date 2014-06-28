@@ -1421,6 +1421,17 @@ had devoured the whole meal and were on the wing once more, far out at sea. All
 they left was an intolerable stench.”
     -Apollonius Rhodius, Argonautica 2. 179 — 434
 %%%%
+hell hound
+
+“About her middle round
+ A cry of Hell-hounds never-ceasing barked
+ With wide Cerberean mouths full loud, and rung
+ A hideous peal; yet, when they list, would creep,
+ If aught disturbed their noise, into her womb,
+ And kennel there; yet there still barked and howled
+ Within unseen.”
+    -John Milton, _Paradise Lost_, Book II, l. 653-659. 1667.
+%%%%
 hell knight
 
 “Ok, let’s review. It’s up to the fair young maiden to rescue the dragon from
@@ -1970,14 +1981,6 @@ program bug
 woodpecker that came along would destroy civilization.”
     -Gerald Weinberg, Weinberg’s Second Law
 %%%%
-pulsating lump
-
-“Doom!
- He finds that in a sudden scrimmage,
- And lies, an unsightly lump on the sodden grass …
- An image that shall take long to pass!”
-    -Ford Madox Hueffer, “Antwerp”. 1915.
-%%%%
 quarterstaff
 
 “Then Robin he unbuckled his belt,
@@ -2252,15 +2255,7 @@ scroll of enchant armour
 
 <scroll>
 %%%%
-scroll of enchant weapon i
-
-<scroll>
-%%%%
-scroll of enchant weapon ii
-
-<scroll>
-%%%%
-scroll of enchant weapon iii
+scroll of enchant weapon
 
 <scroll>
 %%%%

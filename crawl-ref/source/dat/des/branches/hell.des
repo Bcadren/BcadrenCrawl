@@ -64,7 +64,7 @@ default-depth: Depths, D:21-
 # it also acts as the backup entrance and the entrance for encompass vault
 # placements.
 NAME:   hell_entry
-TAGS:   allow_dup can_overwrite replace_portal transparent fallback_enter_hell
+TAGS:   allow_dup overwrite_floor_cell replace_portal transparent fallback_enter_hell
 WEIGHT: 50
 : hell_entry_feature(_G, 'O')
 MAP
@@ -221,10 +221,8 @@ xxbbbbGbbbbbGdbbbxx
  xxbG1bbbbbbb1Gbxx
   xbbbbG1b1Gbbbbx
   xxxbbbbb%bbbxxx
-    xxxbdbbbxxx
-    xxxv===vxxx
-    xxxH...Ixxx
-    xx@@@@@@@xx
+    xxxHdbbIxxx
+    xxxv+++vxxx
 ENDMAP
 
 ###############################################################################
@@ -410,7 +408,7 @@ ENDMAP
 NAME:   pf_dread_powers_of_hell
 TAGS:   transparent uniq_hell_entry_geh
 WEIGHT: 2
-KMONS:  i = crimson imp ; wand of flame
+KMONS:  i = crimson imp ; wand of flame ident:type
 TILE:   c = dngn_stone_wall_red
 COLOUR: c = red
 FTILE:  'iO = floor_infernal_blank

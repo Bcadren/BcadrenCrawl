@@ -42,13 +42,13 @@
 #include "mon-death.h"
 #include "mon-place.h"
 #include "mon-speak.h"
-#include "mon-stuff.h"
 #include "options.h"
 #include "player-equip.h"
 #include "player-stats.h"
 #include "religion.h"
 #include "shout.h"
 #include "spl-util.h"
+#include "spl-wpnench.h"
 #include "spl-zap.h"
 #include "state.h"
 #include "stuff.h"
@@ -218,9 +218,15 @@ spret_type cast_summon_swarm(int pow, god_type god, bool fail)
 
         // If you worship a good god, don't summon an evil/unclean
         // swarmer (in this case, the vampire mosquito).
+        const int MAX_TRIES = 100;
+        int tries = 0;
         do
             mon = RANDOM_ELEMENT(swarmers);
-        while (player_will_anger_monster(mon));
+        while (player_will_anger_monster(mon) && ++tries < MAX_TRIES);
+
+        // If twenty tries wasn't enough, it's never going to work.
+        if (tries >= MAX_TRIES)
+            break;
 
         if (create_monster(
                 mgen_data(mon, BEH_FRIENDLY, &you,
@@ -807,18 +813,19 @@ static void _animate_weapon(int pow, actor* target, bool force_friendly)
 {
     bool target_is_player = target == &you;
     item_def* wpn = target->weapon();
-    item_def cp = *wpn;
     if (target_is_player)
     {
-        // Clear temp branding so we don't brand permanently.
+        // Clear temp branding so we don't change the brand permanently.
         if (you.duration[DUR_WEAPON_BRAND])
         {
-            set_item_ego_type(cp, OBJ_WEAPONS, SPWPN_NORMAL);
+            ASSERT(you.weapon());
+            end_weapon_brand(*wpn);
+        }
 
         // Mark weapon as "thrown", so we'll autopickup it later.
-        }
-        cp.flags |= ISFLAG_THROWN;
+        wpn->flags |= ISFLAG_THROWN;
     }
+    item_def cp = *wpn;
     // Self-casting haunts yourself!
     const bool friendly = force_friendly || !target_is_player;
     const int dur = min(2 + (random2(pow) / 5), 6);
@@ -834,6 +841,13 @@ static void _animate_weapon(int pow, actor* target, bool force_friendly)
     mg.props[TUKIMA_POWER] = pow;
 
     monster *mons = create_monster(mg);
+
+    if (!mons)
+    {
+        mprf("%s twitches for a moment.",
+             _get_item_desc(wpn, target_is_player).c_str());
+        return;
+    }
 
     // Don't haunt yourself if the weapon is friendly
     if (!force_friendly)
@@ -1346,7 +1360,7 @@ spret_type cast_summon_horrible_things(int pow, god_type god, bool fail)
     {
         // if someone deletes the db, no message is ok
         mpr(getMiscString("SHT_int_loss").c_str());
-        lose_stat(STAT_INT, 1 + random2(3), false, "summoning horrible things");
+        lose_stat(STAT_INT, 1 + random2(2), false, "summoning horrible things");
     }
 
     int num_abominations = random_range(2, 4) + x_chance_in_y(pow, 200);
@@ -2028,13 +2042,14 @@ spret_type cast_simulacrum(int pow, god_type god, bool fail)
     fail_check();
     canned_msg(MSG_ANIMATE_REMAINS);
 
+    item_def& corpse = mitm[co];
     // How many simulacra can this particular monster give at maximum.
-    int num_sim  = 1 + random2(mons_weight(mitm[co].mon_type) / 150);
+    int num_sim  = 1 + random2(mons_weight(corpse.mon_type) / 150);
     num_sim  = stepdown_value(num_sim, 4, 4, 12, 12);
 
     mgen_data mg(MONS_SIMULACRUM, BEH_FRIENDLY, &you, 0, SPELL_SIMULACRUM,
                  you.pos(), MHITYOU, MG_FORCE_BEH | MG_AUTOFOE, god,
-                 mitm[co].mon_type);
+                 corpse.mon_type);
 
     // Can't create more than the max for the monster.
     int how_many = min(8, 4 + random2(pow) / 20);
@@ -2053,7 +2068,10 @@ spret_type cast_simulacrum(int pow, god_type god, bool fail)
     }
 
     if (count)
-        turn_corpse_into_skeleton(mitm[co]);
+    {
+        if (!turn_corpse_into_skeleton(corpse))
+            butcher_corpse(corpse, MB_FALSE, false);
+    }
     else
         canned_msg(MSG_NOTHING_HAPPENS);
 

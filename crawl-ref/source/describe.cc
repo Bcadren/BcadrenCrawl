@@ -47,7 +47,6 @@
 #include "message.h"
 #include "mon-book.h"
 #include "mon-chimera.h"
-#include "mon-stuff.h"
 #include "mon-util.h"
 #include "output.h"
 #include "player.h"
@@ -247,8 +246,7 @@ static vector<string> _randart_propnames(const item_def& item,
         { "Str",    ARTP_STRENGTH,              0 },
         { "Dex",    ARTP_DEXTERITY,             0 },
         { "Int",    ARTP_INTELLIGENCE,          0 },
-        { "Acc",    ARTP_ACCURACY,              0 },
-        { "Dam",    ARTP_DAMAGE,                0 },
+        { "Slay",   ARTP_SLAYING,               0 },
 
         // Qualitative attributes (and Stealth)
         { "SInv",   ARTP_EYESIGHT,              2 },
@@ -445,10 +443,8 @@ static string _randart_descrip(const item_def &item)
         { ARTP_STRENGTH, "It affects your strength (%d).", false},
         { ARTP_INTELLIGENCE, "It affects your intelligence (%d).", false},
         { ARTP_DEXTERITY, "It affects your dexterity (%d).", false},
-        { ARTP_ACCURACY, "It affects your accuracy with ranged weapons and "
-                         "melee attacks (%d).", false},
-        { ARTP_DAMAGE, "It affects your damage with ranged weapons and melee "
-                       "attacks (%d).", false},
+        { ARTP_SLAYING, "It affects your accuracy and damage with ranged "
+                        "weapons and melee attacks (%d).", false},
         { ARTP_FIRE, "fire", true},
         { ARTP_COLD, "cold", true},
         { ARTP_ELECTRICITY, "It insulates you from electricity.", false},
@@ -552,11 +548,15 @@ static const char *trap_names[] =
     "dart",
 #endif
     "arrow", "spear",
-    "teleport", "alarm", "blade",
+#if TAG_MAJOR_VERSION > 34
+    "teleport",
+#endif
+    "permanent teleport",
+    "alarm", "blade",
     "bolt", "net", "Zot", "needle",
     "shaft", "passage", "pressure plate", "web",
 #if TAG_MAJOR_VERSION == 34
-    "gas",
+    "gas", "teleport",
 #endif
 };
 
@@ -567,6 +567,25 @@ string trap_name(trap_type trap)
     if (trap >= 0 && trap < NUM_TRAPS)
         return trap_names[trap];
     return "";
+}
+
+string full_trap_name(trap_type trap)
+{
+    string basename = trap_name(trap);
+    switch (trap)
+    {
+    case TRAP_GOLUBRIA:
+        return basename + " of Golubria";
+    case TRAP_PLATE:
+    case TRAP_WEB:
+    case TRAP_SHAFT:
+#if TAG_MAJOR_VERSION == 34
+    case TRAP_GAS:
+#endif
+        return basename;
+    default:
+        return basename + " trap";
+    }
 }
 
 int str_to_trap(const string &s)
@@ -860,21 +879,37 @@ static string _describe_weapon(const item_def &item, bool verbose)
         switch (spec_ench)
         {
         case SPWPN_FLAMING:
-            description += "It emits flame when wielded, causing extra "
-                "injury to most foes and up to double damage against "
-                "particularly susceptible opponents.";
-            if (damtype == DVORP_SLICING || damtype == DVORP_CHOPPING)
+            if (is_range_weapon(item))
             {
-                description += " Big, fiery blades are also staple armaments "
-                    "of hydra-hunters.";
+                description += "It turns projectiles fired from it into "
+                    "bolts of flame.";
+            }
+            else
+            {
+                description += "It emits flame when wielded, causing extra "
+                    "injury to most foes and up to double damage against "
+                    "particularly susceptible opponents.";
+                if (damtype == DVORP_SLICING || damtype == DVORP_CHOPPING)
+                {
+                    description += " Big, fiery blades are also staple armaments "
+                        "of hydra-hunters.";
+                }
             }
             break;
         case SPWPN_FREEZING:
-            description += "It has been specially enchanted to freeze "
-                "those struck by it, causing extra injury to most foes "
-                "and up to double damage against particularly "
-                "susceptible opponents. It can also slow down "
-                "cold-blooded creatures.";
+            if (is_range_weapon(item))
+            {
+                description += "It turns projectiles fired from it into "
+                    "bolts of frost.";
+            }
+            else
+            {
+                description += "It has been specially enchanted to freeze "
+                    "those struck by it, causing extra injury to most foes "
+                    "and up to double damage against particularly "
+                    "susceptible opponents. It can also slow down "
+                    "cold-blooded creatures.";
+            }
             break;
         case SPWPN_HOLY_WRATH:
             description += "It has been blessed by the Shining One to "
@@ -893,10 +928,6 @@ static string _describe_weapon(const item_def &item, bool verbose)
                     "discharge some electrical energy and cause terrible "
                     "harm.";
             }
-            break;
-        case SPWPN_DRAGON_SLAYING:
-            description += "This legendary weapon is deadly to all "
-                "dragonkind.";
             break;
         case SPWPN_VENOM:
             if (is_range_weapon(item))
@@ -931,14 +962,6 @@ static string _describe_weapon(const item_def &item, bool verbose)
                     "enemies.";
             }
             break;
-        case SPWPN_FLAME:
-            description += "It turns projectiles fired from it into "
-                "bolts of flame.";
-            break;
-        case SPWPN_FROST:
-            description += "It turns projectiles fired from it into "
-                "bolts of frost.";
-            break;
         case SPWPN_CHAOS:
             if (is_range_weapon(item))
             {
@@ -952,7 +975,7 @@ static string _describe_weapon(const item_def &item, bool verbose)
                     "different, random effect.";
             }
             break;
-        case SPWPN_VAMPIRICISM:
+        case SPWPN_VAMPIRISM:
             description += "It inflicts no extra harm, but heals its "
                 "wielder somewhat when it strikes a living foe.";
             break;
@@ -979,6 +1002,19 @@ static string _describe_weapon(const item_def &item, bool verbose)
                     "spellcasters and certain magical creatures (including "
                     "the wielder).";
             break;
+        }
+    }
+
+    if (you.duration[DUR_WEAPON_BRAND] && &item == you.weapon())
+    {
+        description += "\nIt is temporarily rebranded; it is actually a";
+        if ((int) you.props["orig brand"] == SPWPN_NORMAL)
+            description += "n unbranded weapon.";
+        else
+        {
+            description += " weapon of "
+                        + ego_type_string(item, false, you.props["orig brand"])
+                        + ".";
         }
     }
 
@@ -1020,20 +1056,12 @@ static string _describe_weapon(const item_def &item, bool verbose)
 
     if (!is_artefact(item))
     {
-        if (item_ident(item, ISFLAG_KNOW_PLUSES)
-            && item.plus >= MAX_WPN_ENCHANT && item.plus2 >= MAX_WPN_ENCHANT)
-        {
+        if (item_ident(item, ISFLAG_KNOW_PLUSES) && item.plus >= MAX_WPN_ENCHANT)
             description += "\nIt cannot be enchanted further.";
-        }
         else
         {
             description += "\nIt can be maximally enchanted to +";
             _append_value(description, MAX_WPN_ENCHANT, false);
-            if (item.sub_type != WPN_BLOWGUN)
-            {
-                description += ", +";
-                _append_value(description, MAX_WPN_ENCHANT, false);
-            }
             description += ".";
         }
     }
@@ -1354,8 +1382,7 @@ static string _describe_jewellery(const item_def &item, bool verbose)
         && item_ident(item, ISFLAG_KNOW_PLUSES))
     {
         // Explicit description of ring power.
-        if (item.plus != 0
-            || item.sub_type == RING_SLAYING && item.plus2 != 0)
+        if (item.plus != 0)
         {
             switch (item.sub_type)
             {
@@ -1390,21 +1417,10 @@ static string _describe_jewellery(const item_def &item, bool verbose)
                 break;
 
             case RING_SLAYING:
-                if (item.plus != 0)
-                {
-                    description += "\nIt affects your accuracy with ranged "
-                                   "weapons and melee attacks (";
-                    _append_value(description, item.plus, true);
-                    description += ").";
-                }
-
-                if (item.plus2 != 0)
-                {
-                    description += "\nIt affects your damage with ranged "
-                                   "weapons and melee attacks (";
-                    _append_value(description, item.plus2, true);
-                    description += ").";
-                }
+                description += "\nIt affects your accuracy and damage "
+                               "with ranged weapons and melee attacks (";
+                _append_value(description, item.plus, true);
+                description += ").";
                 break;
 
             default:
@@ -1855,22 +1871,6 @@ string get_item_description(const item_def &item, bool verbose,
                 if (you.species != SP_GHOUL)
                     description << "\n\nEating this meat will cause rotting.";
                 break;
-            case CE_CONTAMINATED:
-                if (player_mutation_level(MUT_SAPROVOROUS) < 3)
-                {
-                    description << "\n\nMeat like this tastes awful and "
-                                   "provides far less nutrition.";
-                }
-                break;
-            case CE_POISON_CONTAM:
-                description << "\n\nThis meat is poisonous";
-                if (player_mutation_level(MUT_SAPROVOROUS) < 3)
-                {
-                    description << " and provides less nutrition even for the "
-                                   "poison-resistant";
-                }
-                description << ".";
-                break;
             default:
                 break;
             }
@@ -2241,7 +2241,7 @@ static bool _describe_spells(const item_def &item)
     const int c = getchm();
     if (c < 'a' || c > 'h')     //jmf: was 'g', but 8=h
     {
-        mesclr();
+        clear_messages();
         return false;
     }
 
@@ -3113,7 +3113,7 @@ static const char* _describe_attack_flavour(attack_flavour flavour)
     case AF_KLOWN:           return "cause random powerful effects";
     case AF_DISTORT:         return "cause wild translocation effects";
     case AF_RAGE:            return "cause berserking";
-    case AF_NAPALM:          return "apply sticky flame";
+    case AF_STICKY_FLAME:    return "apply sticky flame";
     case AF_CHAOS:           return "cause unpredictable effects";
     case AF_STEAL:           return "steal items";
     case AF_CRUSH:           return "constrict";

@@ -3,12 +3,14 @@
 
 enum armour_type
 {
-    ARM_ROBE,
+    ARM_ROBE, // order of mundane armour matters to _upgrade_body_armour
+    ARM_FIRST_MUNDANE_BODY = ARM_ROBE,
     ARM_LEATHER_ARMOUR,
     ARM_RING_MAIL,
     ARM_SCALE_MAIL,
     ARM_CHAIN_MAIL,
     ARM_PLATE_ARMOUR,
+    ARM_LAST_MUNDANE_BODY = ARM_PLATE_ARMOUR,
 
     ARM_CLOAK,
 
@@ -23,8 +25,10 @@ enum armour_type
     ARM_BOOTS,
 
     ARM_BUCKLER, // order of shields matters
+    ARM_FIRST_SHIELD = ARM_BUCKLER,
     ARM_SHIELD,
     ARM_LARGE_SHIELD,
+    ARM_LAST_SHIELD = ARM_LARGE_SHIELD,
 
     ARM_CRYSTAL_PLATE_ARMOUR,
     ARM_MIN_UNBRANDED = ARM_CRYSTAL_PLATE_ARMOUR,
@@ -79,16 +83,18 @@ enum brand_type // item_def.special
     SPWPN_ELECTROCUTION,
 #if TAG_MAJOR_VERSION == 34
     SPWPN_ORC_SLAYING,
-#endif
     SPWPN_DRAGON_SLAYING,
+#endif
     SPWPN_VENOM,
     SPWPN_PROTECTION,
     SPWPN_DRAINING,
     SPWPN_SPEED,
     SPWPN_VORPAL,
+#if TAG_MAJOR_VERSION == 34
     SPWPN_FLAME,   // ranged, only
     SPWPN_FROST,   // ranged, only
-    SPWPN_VAMPIRICISM,
+#endif
+    SPWPN_VAMPIRISM,
     SPWPN_PAIN,
     SPWPN_ANTIMAGIC,
     SPWPN_DISTORTION,
@@ -291,7 +297,7 @@ enum scroll_type
     SCR_NOISE,
     SCR_REMOVE_CURSE,
     SCR_SUMMONING,
-    SCR_ENCHANT_WEAPON_I,
+    SCR_ENCHANT_WEAPON,
     SCR_ENCHANT_ARMOUR,
     SCR_TORMENT,
     SCR_RANDOM_USELESSNESS,
@@ -302,10 +308,14 @@ enum scroll_type
     SCR_MAGIC_MAPPING,
     SCR_FOG,
     SCR_ACQUIREMENT,
+#if TAG_MAJOR_VERSION == 34
     SCR_ENCHANT_WEAPON_II,
+#endif
     SCR_BRAND_WEAPON,
     SCR_RECHARGING,
+#if TAG_MAJOR_VERSION == 34
     SCR_ENCHANT_WEAPON_III,
+#endif
     SCR_HOLY_WORD,
     SCR_VULNERABILITY,
     SCR_SILENCE,

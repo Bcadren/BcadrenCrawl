@@ -34,10 +34,10 @@
 #include "menu.h"
 #include "misc.h"
 #include "message.h"
+#include "mon-behv.h"
 #include "mon-cast.h"
 #include "mon-place.h"
 #include "mon-project.h"
-#include "mon-stuff.h"
 #include "mon-util.h"
 #include "mutation.h"
 #include "ouch.h"
@@ -383,6 +383,7 @@ int spell_fail(spell_type spell)
     }
 
     chance2 += 7 * player_mutation_level(MUT_WILD_MAGIC);
+    chance2 -= 7 * player_mutation_level(MUT_PLACID_MAGIC);
 
     if (player_equip_unrand(UNRAND_HIGH_COUNCIL))
         chance2 += 7;
@@ -454,8 +455,8 @@ int calc_spell_power(spell_type spell, bool apply_intel, bool fail_rate_check,
         // Wild magic boosts spell power but decreases success rate.
         if (!fail_rate_check)
         {
-            power *= 10 + 5 * player_mutation_level(MUT_WILD_MAGIC);
-            power /= 10;
+            power *= (10 + 5 * player_mutation_level(MUT_WILD_MAGIC));
+            power /= (10 + 5 * player_mutation_level(MUT_PLACID_MAGIC));
         }
 
         // Augmentation boosts spell power at high HP.
@@ -645,7 +646,7 @@ bool cast_a_spell(bool check_range, spell_type spell)
             if (isaalpha(keyin) || key_is_escape(keyin))
                 break;
             else
-                mesclr();
+                clear_messages();
 
             keyin = 0;
 #else
@@ -691,7 +692,7 @@ bool cast_a_spell(bool check_range, spell_type spell)
                 if (isaalpha(keyin) || key_is_escape(keyin))
                     break;
                 else
-                    mesclr();
+                    clear_messages();
 
                 keyin = 0;
             }
@@ -1785,14 +1786,10 @@ static spret_type _do_cast(spell_type spell, int powc,
 
     // XXX: I don't think any call to healing goes through here. --rla
     case SPELL_MINOR_HEALING:
-        if (cast_healing(5, 5) < 0)
-            return SPRET_ABORT;
-        break;
+        return cast_healing(5, 5);
 
     case SPELL_MAJOR_HEALING:
-        if (cast_healing(25, 25) < 0)
-            return SPRET_ABORT;
-        break;
+        return cast_healing(25, 25);
 
     // Self-enchantments. (Spells that can only affect the player.)
     // Resistances.

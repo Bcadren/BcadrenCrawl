@@ -28,7 +28,6 @@
 #include "misc.h"
 #include "mon-death.h"
 #include "mon-util.h"
-#include "mon-stuff.h"
 #include "notes.h"
 #include "options.h"
 #include "player.h"
@@ -1513,7 +1512,7 @@ bool convert2bad(item_def &item)
     return true;
 }
 
-bool is_brandable_weapon(const item_def &wpn, bool allow_ranged)
+bool is_brandable_weapon(const item_def &wpn, bool allow_ranged, bool divine)
 {
     if (wpn.base_type != OBJ_WEAPONS)
         return false;
@@ -1527,11 +1526,10 @@ bool is_brandable_weapon(const item_def &wpn, bool allow_ranged)
         return false;
     }
 
-    if (you.duration[DUR_WEAPON_BRAND] != 0
-        && you.weapon() == &wpn)
-    {
+    // Only gods can rebrand blessed weapons, and they revert back to their
+    // old base type in the process.
+    if (is_blessed(wpn) && !divine)
         return false;
-    }
 
     return true;
 }
@@ -1837,32 +1835,30 @@ bool item_is_spellbook(const item_def &item)
 //
 // Ring functions:
 
-// Returns number of pluses on jewellery (always none for amulets yet).
-int ring_has_pluses(const item_def &item)
+// Returns whether jewellery has plusses.
+bool ring_has_pluses(const item_def &item)
 {
     ASSERT(item.base_type == OBJ_JEWELLERY);
 
-    // not known -> no pluses
+    // not known -> no plusses
     if (!item_type_known(item))
-        return 0;
+        return false;
 
     switch (item.sub_type)
     {
     case RING_SLAYING:
-        return 2;
-
     case RING_PROTECTION:
     case RING_EVASION:
     case RING_STRENGTH:
     case RING_INTELLIGENCE:
     case RING_DEXTERITY:
-        return 1;
+        return true;
 
     default:
         break;
     }
 
-    return 0;
+    return false;
 }
 
 // Returns true if having two rings of the same type on at the same
@@ -2593,6 +2589,36 @@ int item_mass(const item_def &item)
     return (unit_mass > 0) ? unit_mass : 0;
 }
 
+bool is_item_jelly_edible(const item_def &item)
+{
+    // Don't eat artefacts.
+    if (is_artefact(item))
+        return false;
+
+    // Don't eat mimics.
+    if (item.flags & ISFLAG_MIMIC)
+        return false;
+
+    // Shouldn't eat stone things
+    //   - but what about wands and rings?
+    if (item.base_type == OBJ_MISSILES
+        && (item.sub_type == MI_STONE || item.sub_type == MI_LARGE_ROCK))
+    {
+        return false;
+    }
+
+    // Don't eat special game items.
+    if (item.base_type == OBJ_ORBS
+        || (item.base_type == OBJ_MISCELLANY
+            && (item.sub_type == MISC_RUNE_OF_ZOT
+                || item.sub_type == MISC_HORN_OF_GERYON)))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 equipment_type get_item_slot(const item_def& item)
 {
     return get_item_slot(item.base_type, item.sub_type);
@@ -2701,6 +2727,7 @@ void seen_item(const item_def &item)
     }
 
     // major hack.  Deconstify should be safe here, but it's still repulsive.
+    ((item_def*)&item)->flags |= ISFLAG_SEEN;
     if (you_worship(GOD_ASHENZARI))
         ((item_def*)&item)->flags |= ISFLAG_KNOW_CURSE;
     if (item.base_type == OBJ_GOLD && !item.plus)

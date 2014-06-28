@@ -17,7 +17,6 @@
 #include "itemname.h"
 #include "itemprop.h"
 #include "libutil.h"
-#include "mon-stuff.h"
 #include "mon-util.h"
 #include "options.h"
 #include "player.h"
@@ -108,6 +107,8 @@ static tileidx_t _tileidx_trap(trap_type type)
         return TILE_DNGN_TRAP_SPEAR;
     case TRAP_TELEPORT:
         return TILE_DNGN_TRAP_TELEPORT;
+    case TRAP_TELEPORT_PERMANENT:
+        return TILE_DNGN_TRAP_TELEPORT_PERMANENT;
     case TRAP_ALARM:
         return TILE_DNGN_TRAP_ALARM;
     case TRAP_BLADE:
@@ -536,6 +537,7 @@ tileidx_t tileidx_feature(const coord_def &gc)
     }
 
     case DNGN_TRAP_MECHANICAL:
+    case DNGN_TRAP_TELEPORT:
         return _tileidx_trap(env.map_knowledge(gc).trap());
 
     case DNGN_TRAP_WEB:
@@ -910,9 +912,9 @@ static tileidx_t _tileidx_monster_zombified(const monster_info& mon)
         }
         // else fall-through
     case MON_SHAPE_QUADRUPED_TAILLESS:
-        if (mons_base_char(subtype) == 'F')
+        if (mons_genus(subtype) == MONS_GIANT_FROG || mons_genus(subtype) == MONS_BLINK_FROG)
             z_tile = TILEP_MONS_ZOMBIE_TOAD;
-        else if (subtype == MONS_FIRE_CRAB || subtype == MONS_APOCALYPSE_CRAB)
+        else if (mons_genus(subtype) == MONS_CRAB)
             z_tile = TILEP_MONS_ZOMBIE_CRAB;
         else if (subtype == MONS_SNAPPING_TURTLE || subtype == MONS_ALLIGATOR_SNAPPING_TURTLE)
             z_tile = TILEP_MONS_ZOMBIE_TURTLE;
@@ -1382,6 +1384,8 @@ static tileidx_t _tileidx_monster_base(int type, bool in_water, int colour,
         return TILEP_MONS_SWAMP_WORM;
     case MONS_GIANT_LEECH:
         return TILEP_MONS_GIANT_LEECH;
+    case MONS_TORPOR_SNAIL:
+        return TILEP_MONS_TORPOR_SNAIL;
 
     // small abominations ('x')
     case MONS_UNSEEN_HORROR:
@@ -1592,10 +1596,6 @@ static tileidx_t _tileidx_monster_base(int type, bool in_water, int colour,
     case MONS_SLIME_CREATURE:
     case MONS_MERGED_SLIME_CREATURE:
         return _mon_clamp(TILEP_MONS_SLIME_CREATURE, number - 1);
-    case MONS_PULSATING_LUMP:
-        return TILEP_MONS_PULSATING_LUMP;
-    case MONS_BROWN_OOZE:
-        return TILEP_MONS_BROWN_OOZE;
     case MONS_AZURE_JELLY:
         return TILEP_MONS_AZURE_JELLY;
     case MONS_DEATH_OOZE:
@@ -3390,7 +3390,7 @@ static tileidx_t _tileidx_food(const item_def &item)
     {
     case FOOD_MEAT_RATION:  return TILE_FOOD_MEAT_RATION;
     case FOOD_BREAD_RATION: return TILE_FOOD_BREAD_RATION;
-    case FOOD_FRUIT:        return TILE_FOOD_FRUIT;
+    case FOOD_FRUIT:        return _modrng(item.rnd, TILE_FOOD_FRUIT_FIRST, TILE_FOOD_FRUIT_LAST);
     case FOOD_ROYAL_JELLY:  return TILE_FOOD_ROYAL_JELLY;
     case FOOD_PIZZA:        return TILE_FOOD_PIZZA;
     case FOOD_BEEF_JERKY:   return TILE_FOOD_BEEF_JERKY;
@@ -3692,7 +3692,7 @@ static tileidx_t _tileidx_corpse(const item_def &item)
         return ugly_corpse_tile + colour_offset;
     }
 
-    // worms ('w')
+    // worms and gastropods ('w')
     case MONS_WORM:
         return TILE_CORPSE_WORM;
     case MONS_BRAIN_WORM:
@@ -3701,6 +3701,8 @@ static tileidx_t _tileidx_corpse(const item_def &item)
         return TILE_CORPSE_SWAMP_WORM;
     case MONS_GIANT_LEECH:
         return TILE_CORPSE_GIANT_LEECH;
+    case MONS_TORPOR_SNAIL:
+        return TILE_CORPSE_TORPOR_SNAIL;
 
     // flying insects ('y')
     case MONS_VAMPIRE_MOSQUITO:
@@ -5199,7 +5201,7 @@ tileidx_t tileidx_ability(const ability_type ability)
     case ABIL_EVOKE_TELEPORT_CONTROL:
         return TILEG_ABILITY_EVOKE_TELEPORT_CONTROL;
     case ABIL_EVOKE_BLINK:
-        return TILEG_ABILITY_EVOKE_BLINK;
+        return TILEG_ABILITY_BLINK;
     case ABIL_EVOKE_TURN_INVISIBLE:
         return TILEG_ABILITY_EVOKE_INVISIBILITY;
     case ABIL_EVOKE_TURN_VISIBLE:
@@ -5207,7 +5209,7 @@ tileidx_t tileidx_ability(const ability_type ability)
     case ABIL_EVOKE_FLIGHT:
         return TILEG_ABILITY_EVOKE_FLIGHT;
     case ABIL_EVOKE_JUMP:
-        return TILEG_ABILITY_EVOKE_JUMP;
+        return TILEG_ABILITY_JUMP;
     case ABIL_EVOKE_FOG:
         return TILEG_ABILITY_EVOKE_FOG;
 
@@ -5319,6 +5321,8 @@ tileidx_t tileidx_ability(const ability_type ability)
     case ABIL_NEMELEX_STACK_FIVE:
         return TILEG_ABILITY_NEMELEX_STACK_FIVE;
     // Beogh
+    case ABIL_BEOGH_GIFT_ITEM:
+        return TILEG_ABILITY_BEOGH_GIFT_ITEM;
     case ABIL_BEOGH_SMITING:
         return TILEG_ABILITY_BEOGH_SMITE;
     case ABIL_BEOGH_RECALL_ORCISH_FOLLOWERS:

@@ -122,15 +122,6 @@ int actor::skill_rdiv(skill_type sk, int mult, int div) const
     return div_rand_round(skill(sk, mult * 256), div * 256);
 }
 
-int actor::res_holy_fire() const
-{
-    if (is_evil() || is_unholy())
-        return -1;
-    else if (is_holy())
-        return 3;
-    return 0;
-}
-
 int actor::check_res_magic(int power)
 {
     const int mrs = res_magic();
@@ -299,8 +290,16 @@ int actor::faith(bool calc_unid, bool items) const
         net_faith++;
 
     if (is_player() && player_mutation_level(MUT_FORLORN))
+    {
         net_faith--;
 
+        // Ignore gods which don't use piety.
+        if (!you_worship(GOD_XOM) && !you_worship(GOD_GOZAG))
+        {
+            // 133 means 1/6 piety gain at max piety.
+            net_faith -= div_rand_round(you.piety, 133);
+        }
+    }
     return net_faith;
 }
 
@@ -681,25 +680,25 @@ void actor::handle_constriction()
         damage = defender->hurt(this, damage, BEAM_MISSILE, false);
         DIAG_ONLY(const int infdam = damage);
 
-        string exclams;
+        string exclamations;
         if (damage <= 0 && is_player()
             && you.can_see(defender))
         {
-            exclams = ", but do no damage.";
+            exclamations = ", but do no damage.";
         }
         else if (damage < HIT_WEAK)
-            exclams = ".";
+            exclamations = ".";
         else if (damage < HIT_MED)
-            exclams = "!";
+            exclamations = "!";
         else if (damage < HIT_STRONG)
-            exclams = "!!";
+            exclamations = "!!";
         else
         {
             int tmpdamage = damage;
-            exclams = "!!!";
+            exclamations = "!!!";
             while (tmpdamage >= 2*HIT_STRONG)
             {
-                exclams += "!";
+                exclamations += "!";
                 tmpdamage >>= 1;
             }
         }
@@ -716,7 +715,7 @@ void actor::handle_constriction()
 #else
                  "",
 #endif
-                 exclams.c_str());
+                 exclamations.c_str());
         }
         else if (you.can_see(defender) || defender->is_player())
         {
@@ -728,7 +727,7 @@ void actor::handle_constriction()
 #else
                  "",
 #endif
-                 exclams.c_str());
+                 exclamations.c_str());
         }
 
         dprf("constrict at: %s df: %s base %d dur %d ac %d tsc %d inf %d",

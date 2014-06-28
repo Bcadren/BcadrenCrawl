@@ -97,7 +97,7 @@ int get_vorpal_type(const item_def &item) PURE;
 int get_damage_type(const item_def &item) PURE;
 int single_damage_type(const item_def &item) PURE;
 
-bool is_brandable_weapon(const item_def &wpn, bool allow_ranged);
+bool is_brandable_weapon(const item_def &wpn, bool allow_ranged, bool divine = false);
 
 int weapon_str_weight(const item_def &wpn) PURE;
 
@@ -135,7 +135,7 @@ bool is_xp_evoker(const item_def &item);
 bool evoker_is_charged(const item_def &item);
 
 // ring functions:
-int  ring_has_pluses(const item_def &item) PURE;
+bool ring_has_pluses(const item_def &item) PURE;
 bool ring_has_stackable_effect(const item_def &item) PURE;
 
 // food functions:
@@ -172,6 +172,7 @@ int property(const item_def &item, int prop_type) PURE;
 bool gives_ability(const item_def &item) PURE;
 bool gives_resistance(const item_def &item) PURE;
 int item_mass(const item_def &item) PURE;
+bool is_item_jelly_edible(const item_def &item);
 equipment_type get_item_slot(object_class_type type, int sub_type) IMMUTABLE;
 equipment_type get_item_slot(const item_def &item) PURE;
 

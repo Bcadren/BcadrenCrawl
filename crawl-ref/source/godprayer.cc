@@ -30,6 +30,7 @@
 #include "shopping.h"
 #include "skills2.h"
 #include "state.h"
+#include "spl-wpnench.h"
 #include "stuff.h"
 #include "terrain.h"
 #include "unwind.h"
@@ -83,7 +84,7 @@ string god_prayer_reaction()
 static bool _bless_weapon(god_type god, brand_type brand, int colour)
 {
     int item_slot = prompt_invent_item("Brand which weapon?", MT_INVLIST,
-                                       OSEL_BRANDABLE_WEAPON, true, true, false);
+                                       OSEL_BLESSABLE_WEAPON, true, true, false);
 
     if (item_slot == PROMPT_NOTHING || item_slot == PROMPT_ABORT)
         return false;
@@ -91,7 +92,7 @@ static bool _bless_weapon(god_type god, brand_type brand, int colour)
     item_def& wpn(you.inv[item_slot]);
 
     // Only TSO allows blessing ranged weapons.
-    if (!is_brandable_weapon(wpn, brand == SPWPN_HOLY_WRATH))
+    if (!is_brandable_weapon(wpn, brand == SPWPN_HOLY_WRATH, true))
         return false;
 
     string prompt = "Do you wish to have " + wpn.name(DESC_YOUR)
@@ -110,7 +111,11 @@ static bool _bless_weapon(god_type god, brand_type brand, int colour)
         return false;
     }
 
-    you.duration[DUR_WEAPON_BRAND] = 0;     // just in case
+    if (you.duration[DUR_WEAPON_BRAND]) // just in case
+    {
+        ASSERT(you.weapon());
+        end_weapon_brand(*you.weapon());
+    }
 
     string old_name = wpn.name(DESC_A);
     set_equip_desc(wpn, ISFLAG_GLOWING);
@@ -119,7 +124,8 @@ static bool _bless_weapon(god_type god, brand_type brand, int colour)
 
     const bool is_cursed = wpn.cursed();
 
-    enchant_weapon(wpn, 1 + random2(2), 1 + random2(2), 0);
+    enchant_weapon(wpn, true);
+    enchant_weapon(wpn, true);
 
     if (is_cursed)
         do_uncurse_item(wpn, false);
@@ -252,10 +258,8 @@ static bool _altar_prayer()
         int thing_created = items(1, OBJ_BOOKS, BOOK_NECRONOMICON, true, 1,
                                   0, 0, 0, you.religion);
 
-        if (thing_created == NON_ITEM)
+        if (thing_created == NON_ITEM || !move_item_to_grid(&thing_created, you.pos()))
             return false;
-
-        move_item_to_grid(&thing_created, you.pos());
 
         simple_god_message(" grants you a gift!");
         more();
@@ -326,7 +330,7 @@ static bool _altar_prayer()
         simple_god_message(
             " will protect you from an element of your choice.");
         more();
-        mesclr();
+        clear_messages();
         mpr_nojoin(MSGCH_PLAIN, "[a] Fire  (rF+)");
         mpr_nojoin(MSGCH_PLAIN, "[b] Ice   (rC+)");
         mpr_nojoin(MSGCH_PLAIN, "[c] Air   (rElec)");
@@ -402,6 +406,17 @@ void pray()
 
     if (you_worship(GOD_NO_GOD))
     {
+        if (env.level_state & LSTATE_BEOGH && can_convert_to_beogh())
+        {
+            you.turn_is_over = true;
+            // But if we don't convert then god_pitch
+            // makes it not take a turn after all.
+            god_pitch(GOD_BEOGH);
+            if (you_worship(GOD_BEOGH))
+                spare_beogh_convert();
+            return;
+        }
+
         const mon_holy_type holi = you.holiness();
 
         mprf(MSGCH_PRAY,

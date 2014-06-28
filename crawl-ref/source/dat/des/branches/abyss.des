@@ -48,7 +48,7 @@ default-depth: Depths, D:21-
 
 # This one is the backup and the one used in encompass vaults.
 NAME: abyss_entry
-TAGS: allow_dup can_overwrite replace_portal transparent fallback_enter_abyss
+TAGS: allow_dup overwrite_floor_cell replace_portal transparent fallback_enter_abyss
 WEIGHT: 50
 : abyss_entry(_G, 'O')
 MAP
@@ -1513,6 +1513,7 @@ TAGS:    abyss_rune unrand transparent
 KMONS:   O = apocalypse crab / nothing
 KMONS:   1P = apocalypse crab
 KMONS:   2 = fire crab
+KMONS:   3 = ghost crab
 KITEM:   OP = abyssal rune of Zot
 KFEAT:   O1Pw = W
 SHUFFLE: O1/O1/Pw
@@ -1529,7 +1530,7 @@ MAP
  ..cc.....cc..
  ..c.......c..
  .ccc.....ccc.
- .c2.......2c.
+ .c2.......3c.
  .ccc.....ccc.
  .............
 ENDMAP
@@ -1847,7 +1848,7 @@ NAME:   evilmike_abyss_exit_16
 TAGS:   abyss_exit
 NSUBST: . = 1:O / *:.
 SUBST:  c = cbx, . = .....12
-MONS:   slime creature, pulsating lump / brown ooze
+MONS:   slime creature, ooze / jelly
 : init_abyss_exit(_G, "O")
 MAP
 c+c+c+c+c+c

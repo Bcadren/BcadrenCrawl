@@ -40,7 +40,7 @@
 #include "mon-behv.h"
 #include "mon-death.h"
 #include "mon-place.h"
-#include "mon-stuff.h"
+#include "mon-poly.h"
 #include "mon-util.h"
 #include "mutation.h"
 #include "notes.h"
@@ -956,7 +956,7 @@ static bool _choose_chaos_upgrade(const monster* mon)
             // If the launcher alters its ammo, then branding the
             // monster's ammo won't be an upgrade.
             int brand = get_weapon_brand(item);
-            if (brand == SPWPN_FLAME || brand == SPWPN_FROST
+            if (brand == SPWPN_FLAMING || brand == SPWPN_FREEZING
                 || brand == SPWPN_VENOM)
             {
                 special_launcher = true;
@@ -1014,8 +1014,8 @@ static void _do_chaos_upgrade(item_def &item, const monster* mon)
             item.flags |= ISFLAG_GLOWING;
 
         // Make the pluses more like a randomly generated ego item.
-        item.plus  += random2(5);
-        item.plus2 += random2(5);
+        if (item.base_type == OBJ_WEAPONS)
+            item.plus  += random2(5);
     }
 }
 
@@ -1414,7 +1414,7 @@ static int _xom_swap_weapons(bool debug = false)
             && !(weapon.flags & ISFLAG_SUMMONED)
             && you.can_wield(weapon, true) && mi->can_wield(*wpn, true)
             && get_weapon_brand(weapon) != SPWPN_DISTORTION
-            && (get_weapon_brand(weapon) != SPWPN_VAMPIRICISM
+            && (get_weapon_brand(weapon) != SPWPN_VAMPIRISM
                 || you.is_undead || you.hunger_state >= HS_FULL)
             && (!is_artefact(weapon) || _art_is_safe(weapon)))
         {

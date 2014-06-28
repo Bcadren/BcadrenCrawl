@@ -114,7 +114,6 @@ public:
 
   undead_state_type is_undead;
 
-  int  friendly_pickup;       // pickup setting for allies
   bool dead; // ... but pending revival
   int lives;
   int deaths;
@@ -610,16 +609,16 @@ public:
 
     mon_holy_type holiness() const;
     bool undead_or_demonic() const;
+    bool holy_wrath_susceptible() const;
     bool is_holy(bool spells = true) const;
     bool is_unholy(bool spells = true) const;
     bool is_evil(bool spells = true) const;
-    bool is_chaotic() const;
+    int how_chaotic(bool check_spells_god) const;
     bool is_artificial() const;
     bool is_unbreathing() const;
     bool is_insubstantial() const;
     int res_acid(bool calc_unid = true) const;
     int res_fire() const;
-    int res_holy_fire() const;
     int res_steam() const;
     int res_cold() const;
     int res_elec() const;
@@ -810,6 +809,8 @@ bool check_moveto_exclusion(const coord_def& p,
 bool check_moveto_trap(const coord_def& p, const string &move_verb = "step",
         bool *prompted = nullptr);
 
+bool swap_check(monster* mons, coord_def &loc, bool quiet = false);
+
 void move_player_to_grid(const coord_def& p, bool stepped);
 
 bool is_map_persistent();
@@ -915,7 +916,7 @@ int player_teleport(bool calc_unid = true);
 
 int player_monster_detect_radius();
 
-int slaying_bonus(weapon_property_type which_affected, bool ranged = false);
+int slaying_bonus(bool ranged = false);
 
 unsigned int exp_needed(int lev, int exp_apt = -99);
 bool will_gain_life(int lev);
@@ -1013,6 +1014,7 @@ bool flight_allowed(bool quiet = false);
 void fly_player(int pow, bool already_flying = false);
 void float_player();
 bool land_player(bool quiet = false);
+void player_open_door(coord_def doorpos, bool check_confused);
 
 void dec_disease_player(int delay);
 

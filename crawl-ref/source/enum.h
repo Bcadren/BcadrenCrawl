@@ -163,6 +163,7 @@ enum ability_type
     // Beogh
     ABIL_BEOGH_SMITING = 1120,
     ABIL_BEOGH_RECALL_ORCISH_FOLLOWERS,
+    ABIL_BEOGH_GIFT_ITEM,
     // Jiyva
     ABIL_JIYVA_CALL_JELLY = 1130,
     ABIL_JIYVA_JELLY_PARALYSE,
@@ -283,7 +284,7 @@ enum attribute_type
     ATTR_CARD_COUNTDOWN,
     ATTR_BANISHMENT_IMMUNITY,   // banishment immunity until
     ATTR_DELAYED_FIREBALL,      // bwr: reserve fireballs
-    ATTR_HELD,                  // caught in a net
+    ATTR_HELD,                  // caught in a net or web
     ATTR_ABYSS_ENTOURAGE,       // maximum number of hostile monsters in
                                 // sight of the player while in the Abyss.
     ATTR_DIVINE_VIGOUR,         // strength of Ely's Divine Vigour
@@ -391,7 +392,7 @@ enum beam_type                  // bolt::flavour
     BEAM_SPORE,
     BEAM_POISON_ARROW,
     BEAM_HELLFIRE,
-    BEAM_NAPALM,
+    BEAM_STICKY_FLAME,
     BEAM_STEAM,
     BEAM_ENERGY,
     BEAM_HOLY,
@@ -473,7 +474,9 @@ enum beam_type                  // bolt::flavour
 
     BEAM_TORMENT_DAMAGE,          // Pseudo-beam for damage flavour.
     BEAM_FIRST_PSEUDO = BEAM_TORMENT_DAMAGE,
+#if TAG_MAJOR_VERSION == 34
     BEAM_DEVOUR_FOOD,             // Pseudo-beam for harpies' devouring food.
+#endif
 
     NUM_BEAMS
 };
@@ -751,8 +754,8 @@ enum command_type
     CMD_GO_UPSTAIRS,
     CMD_GO_DOWNSTAIRS,
     CMD_TOGGLE_AUTOPICKUP,
-    CMD_TOGGLE_FRIENDLY_PICKUP,
     CMD_TOGGLE_VIEWPORT_MONSTER_HP,
+    CMD_TOGGLE_VIEWPORT_WEAPONS,
     CMD_TOGGLE_TRAVEL_SPEED,
     CMD_PICKUP,
     CMD_PICKUP_QUANTITY,
@@ -1593,7 +1596,9 @@ enum duration_type
     DUR_DEATHS_DOOR,
     DUR_FIRE_SHIELD,
 
-    DUR_BUILDING_RAGE,          // countdown to starting berserk
+#if TAG_MAJOR_VERSION == 34
+    DUR_BUILDING_RAGE,
+#endif
     DUR_EXHAUSTED,              // fatigue counter for berserk
 
     DUR_LIQUID_FLAMES,
@@ -1919,7 +1924,9 @@ enum equipment_type
     EQ_STAFF            = 100,         // weapon with base_type OBJ_STAVES
     EQ_RINGS,                          // check both rings
     EQ_RINGS_PLUS,                     // check both rings and sum plus
+#if TAG_MAJOR_VERSION == 34
     EQ_RINGS_PLUS2,                    // check both rings and sum plus2
+#endif
     EQ_ALL_ARMOUR,                     // check all armour types
 };
 
@@ -2069,9 +2076,7 @@ enum item_status_flag_type  // per item flags: ie. ident status, cursed status
     ISFLAG_NOTED_ID          = 0x08000000,
     ISFLAG_NOTED_GET         = 0x10000000,
 
-#if TAG_MAJOR_VERSION == 34
-    ISFLAG_UNUSED            = 0x20000000,  // was ISFLAG_BEEN_IN_INV
-#endif
+    ISFLAG_SEEN              = 0x20000000,  // has it been seen
     ISFLAG_SUMMONED          = 0x40000000,  // Item generated on a summon
     ISFLAG_DROPPED_BY_ALLY   = 0x80000000,  // Item was dropped by an ally
 };
@@ -2165,8 +2170,8 @@ enum killer_type                       // monster_die(), thing_thrown
     KILL_YOU_CONF,                     // died while confused as caused by you
     KILL_MISCAST,                      // as a result of a spell miscast
     KILL_MISC,                         // any miscellaneous killing
-    KILL_RESET,                        // ???
-    KILL_DISMISSED,                    // ???
+    KILL_RESET,                        // excised from existence
+    KILL_DISMISSED,                    // like KILL_RESET, but drops inventory
     KILL_BANISHED,                     // monsters what got banished
     KILL_UNSUMMONED,                   // summoned monsters whose timers ran out
     KILL_TIMEOUT,                      // non-summoned monsters whose times ran out
@@ -2337,6 +2342,8 @@ enum monster_type                      // menv[].type
 #if TAG_MAJOR_VERSION == 34
     MONS_GIANT_SLUG,
     MONS_AGATE_SNAIL,
+#else
+    MONS_TORPOR_SNAIL,
 #endif
     MONS_ELEPHANT_SLUG,
     MONS_GIANT_LEECH,
@@ -2399,15 +2406,17 @@ enum monster_type                      // menv[].type
 
     MONS_OOZE,
     MONS_JELLY,
-    MONS_BROWN_OOZE,
 #if TAG_MAJOR_VERSION == 34
+    MONS_BROWN_OOZE,
     MONS_GIANT_AMOEBA,
 #endif
     MONS_AZURE_JELLY,
     MONS_DEATH_OOZE,
     MONS_ACID_BLOB,
     MONS_SLIME_CREATURE,
+#if TAG_MAJOR_VERSION == 34
     MONS_PULSATING_LUMP,
+#endif
     MONS_GIANT_EYEBALL,
     MONS_EYE_OF_DRAINING,
     MONS_SHINING_EYE,
@@ -2426,6 +2435,9 @@ enum monster_type                      // menv[].type
 #if TAG_MAJOR_VERSION == 34
     MONS_HOMUNCULUS,
     MONS_SOUPLING,
+#else
+    MONS_GHOST_CRAB,
+    MONS_CRAB,
 #endif
 
     MONS_BUTTERFLY,
@@ -3196,6 +3208,9 @@ enum monster_type                      // menv[].type
     MONS_GUARDIAN_GOLEM,
     MONS_SPELLFORGED_SERVITOR,
     MONS_OCTOPODE_CRUSHER,
+    MONS_CRAB,
+    MONS_GHOST_CRAB,
+    MONS_TORPOR_SNAIL,
 #endif
 
     NUM_MONSTERS,               // used for polymorph
@@ -3447,6 +3462,7 @@ enum mutation_type
     MUT_FLAME_CLOUD_IMMUNITY,
 #endif
     MUT_FORLORN,
+    MUT_PLACID_MAGIC,
     NUM_MUTATIONS,
 
     RANDOM_MUTATION,
@@ -3605,8 +3621,10 @@ enum artefact_prop_type
     ARTP_METABOLISM,
 #endif
     ARTP_MUTAGENIC,
+#if TAG_MAJOR_VERSION == 34
     ARTP_ACCURACY,
-    ARTP_DAMAGE,
+#endif
+    ARTP_SLAYING,
     ARTP_CURSED,
     ARTP_STEALTH,
     ARTP_MAGICAL_POWER,
@@ -4224,7 +4242,10 @@ enum trap_type
 #endif
     TRAP_ARROW,
     TRAP_SPEAR,
+#if TAG_MAJOR_VERSION > 34
     TRAP_TELEPORT,
+#endif
+    TRAP_TELEPORT_PERMANENT,
     TRAP_ALARM,
     TRAP_BLADE,
     TRAP_BOLT,
@@ -4237,6 +4258,7 @@ enum trap_type
     TRAP_WEB,
 #if TAG_MAJOR_VERSION == 34
     TRAP_GAS,
+    TRAP_TELEPORT,
 #endif
     NUM_TRAPS,
     TRAP_MAX_REGULAR = TRAP_SHAFT,
@@ -4261,14 +4283,6 @@ enum unique_item_status_type
     UNIQ_NOT_EXISTS = 0,
     UNIQ_EXISTS = 1,
     UNIQ_LOST_IN_ABYSS = 2,
-};
-
-enum friendly_pickup_type
-{
-    FRIENDLY_PICKUP_NONE = 0,
-    FRIENDLY_PICKUP_FRIEND,
-    FRIENDLY_PICKUP_PLAYER,
-    FRIENDLY_PICKUP_ALL,
 };
 
 enum zap_type

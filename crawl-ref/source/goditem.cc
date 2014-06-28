@@ -207,7 +207,7 @@ bool is_evil_item(const item_def& item)
         const int item_brand = get_weapon_brand(item);
         return item_brand == SPWPN_DRAINING
                || item_brand == SPWPN_PAIN
-               || item_brand == SPWPN_VAMPIRICISM
+               || item_brand == SPWPN_VAMPIRISM
                || item_brand == SPWPN_REAPING;
         }
         break;
@@ -456,7 +456,7 @@ bool is_fiery_item(const item_def& item)
     case OBJ_WEAPONS:
         {
         const int item_brand = get_weapon_brand(item);
-        if (item_brand == SPWPN_FLAMING || item_brand == SPWPN_FLAME)
+        if (item_brand == SPWPN_FLAMING)
             return true;
         }
         break;

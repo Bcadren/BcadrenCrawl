@@ -29,6 +29,7 @@
 #include "mon-behv.h"
 #include "mon-clone.h"
 #include "mon-death.h"
+#include "mon-poly.h"
 #include "monster.h"
 #include "libutil.h"
 #include "player.h"
@@ -217,8 +218,7 @@ int attack::calc_to_hit(bool random)
         }
 
         // slaying bonus
-        mhit += slaying_bonus(PWPN_HIT,
-                              wpn_skill == SK_THROWING
+        mhit += slaying_bonus(wpn_skill == SK_THROWING
                               || (weapon && is_range_weapon(*weapon)
                                          && using_weapon()));
 
@@ -258,7 +258,7 @@ int attack::calc_to_hit(bool random)
             mhit += mitm[jewellery].plus;
         }
 
-        mhit += attacker->scan_artefacts(ARTP_ACCURACY);
+        mhit += attacker->scan_artefacts(ARTP_SLAYING);
 
         if (using_weapon() && weapon->base_type == OBJ_RODS)
             mhit += weapon->special;
@@ -904,7 +904,7 @@ brand_type attack::random_chaos_brand()
                     10, SPWPN_VENOM,
                     10, SPWPN_CHAOS,
                      5, SPWPN_DRAINING,
-                     5, SPWPN_VAMPIRICISM,
+                     5, SPWPN_VAMPIRISM,
                      5, SPWPN_HOLY_WRATH,
                      5, SPWPN_ANTIMAGIC,
                      2, SPWPN_CONFUSE,
@@ -929,7 +929,7 @@ brand_type attack::random_chaos_brand()
             if (defender->holiness() == MH_UNDEAD)
                 susceptible = false;
             break;
-        case SPWPN_VAMPIRICISM:
+        case SPWPN_VAMPIRISM:
             if (defender->is_summoned())
             {
                 susceptible = false;
@@ -941,11 +941,8 @@ brand_type attack::random_chaos_brand()
                 susceptible = false;
             break;
         case SPWPN_HOLY_WRATH:
-            if (defender->holiness() != MH_UNDEAD
-                && defender->holiness() != MH_DEMONIC)
-            {
+            if (!defender->holy_wrath_susceptible())
                 susceptible = false;
-            }
             break;
         case SPWPN_CONFUSE:
             if (defender->holiness() == MH_NONLIVING
@@ -980,12 +977,9 @@ brand_type attack::random_chaos_brand()
     case SPWPN_VENOM:           brand_name += "venom"; break;
     case SPWPN_DRAINING:        brand_name += "draining"; break;
     case SPWPN_DISTORTION:      brand_name += "distortion"; break;
-    case SPWPN_VAMPIRICISM:     brand_name += "vampiricism"; break;
+    case SPWPN_VAMPIRISM:     brand_name += "vampirism"; break;
     case SPWPN_VORPAL:          brand_name += "vorpal"; break;
     case SPWPN_ANTIMAGIC:       brand_name += "antimagic"; break;
-    // ranged weapon brands
-    case SPWPN_FLAME:           brand_name += "flame"; break;
-    case SPWPN_FROST:           brand_name += "frost"; break;
 
     // both ranged and non-ranged
     case SPWPN_CHAOS:           brand_name += "chaos"; break;
@@ -1313,6 +1307,18 @@ int attack::player_apply_misc_modifiers(int damage)
     return damage;
 }
 
+/**
+ * Get the damage bonus from a weapon's enchantment.
+ */
+int attack::get_weapon_plus()
+{
+    if (weapon->base_type == OBJ_RODS)
+        return weapon->special;
+    if (weapon->sub_type == WPN_BLOWGUN)
+        return 0;
+    return weapon->plus;
+}
+
 // Slaying and weapon enchantment. Apply this for slaying even if not
 // using a weapon to attack.
 int attack::player_apply_slaying_bonuses(int damage, bool aux)
@@ -1320,16 +1326,11 @@ int attack::player_apply_slaying_bonuses(int damage, bool aux)
     int damage_plus = 0;
     if (!aux && using_weapon())
     {
-        damage_plus = weapon->plus2;
-
-        if (weapon->base_type == OBJ_RODS)
-            damage_plus = weapon->special;
-
+        damage_plus = get_weapon_plus();
         if (you.duration[DUR_CORROSION])
             damage_plus -= 3 * you.props["corrosion_amount"].get_int();
     }
-    damage_plus += slaying_bonus(PWPN_DAMAGE,
-                                 !weapon && wpn_skill == SK_THROWING
+    damage_plus += slaying_bonus(!weapon && wpn_skill == SK_THROWING
                                  || (weapon && is_range_weapon(*weapon)
                                             && using_weapon()));
 
@@ -1459,21 +1460,17 @@ int attack::calc_damage()
 
             int wpn_damage_plus = 0;
             if (weapon) // can be 0 for throwing projectiles
-            {
-                wpn_damage_plus = (weapon->base_type == OBJ_RODS)
-                                  ? weapon->special
-                                  : weapon->plus2;
-            }
+                wpn_damage_plus = get_weapon_plus();
 
             const int jewellery = attacker->as_monster()->inv[MSLOT_JEWELLERY];
             if (jewellery != NON_ITEM
                 && mitm[jewellery].base_type == OBJ_JEWELLERY
                 && mitm[jewellery].sub_type == RING_SLAYING)
             {
-                wpn_damage_plus += mitm[jewellery].plus2;
+                wpn_damage_plus += mitm[jewellery].plus;
             }
 
-            wpn_damage_plus += attacker->scan_artefacts(ARTP_DAMAGE);
+            wpn_damage_plus += attacker->scan_artefacts(ARTP_SLAYING);
 
             if (wpn_damage_plus >= 0)
                 damage += random2(wpn_damage_plus);
@@ -1641,8 +1638,7 @@ bool attack::apply_damage_brand(const char *what)
     brand = damage_brand == SPWPN_CHAOS ? random_chaos_brand() : damage_brand;
 
     if (brand != SPWPN_FLAMING && brand != SPWPN_FREEZING
-        && brand != SPWPN_FLAME && brand != SPWPN_FROST
-        && brand != SPWPN_ELECTROCUTION && brand != SPWPN_VAMPIRICISM
+        && brand != SPWPN_ELECTROCUTION && brand != SPWPN_VAMPIRISM
         && !defender->alive())
     {
         // Most brands have no extra effects on just killed enemies, and the
@@ -1652,10 +1648,8 @@ bool attack::apply_damage_brand(const char *what)
 
     if (!damage_done
         && (brand == SPWPN_FLAMING || brand == SPWPN_FREEZING
-            || brand == SPWPN_FLAME || brand == SPWPN_FROST
-            || brand == SPWPN_HOLY_WRATH || brand == SPWPN_DRAGON_SLAYING
-            || brand == SPWPN_VORPAL || brand == SPWPN_VAMPIRICISM
-            || brand == SPWPN_ANTIMAGIC))
+            || brand == SPWPN_HOLY_WRATH || brand == SPWPN_ANTIMAGIC
+            || brand == SPWPN_VORPAL || brand == SPWPN_VAMPIRISM))
     {
         // These brands require some regular damage to function.
         return false;
@@ -1664,7 +1658,6 @@ bool attack::apply_damage_brand(const char *what)
     switch (brand)
     {
     case SPWPN_FLAMING:
-    case SPWPN_FLAME:
         calc_elemental_brand_damage(BEAM_FIRE, defender->res_fire(),
                                     defender->is_icy() ? "melt" : "burn",
                                     what);
@@ -1673,14 +1666,13 @@ bool attack::apply_damage_brand(const char *what)
         break;
 
     case SPWPN_FREEZING:
-    case SPWPN_FROST:
         calc_elemental_brand_damage(BEAM_COLD, defender->res_cold(), "freeze",
                                     what);
         defender->expose_to_element(BEAM_COLD, 2);
         break;
 
     case SPWPN_HOLY_WRATH:
-        if (defender->undead_or_demonic())
+        if (defender->holy_wrath_susceptible())
             special_damage = 1 + (random2(damage_done * 15) / 10);
 
         if (special_damage && defender_visible)
@@ -1707,22 +1699,6 @@ bool attack::apply_damage_brand(const char *what)
             special_damage_flavour = BEAM_ELECTRICITY;
         }
 
-        break;
-
-    case SPWPN_DRAGON_SLAYING:
-        if (is_dragonkind(defender))
-        {
-            special_damage = 1 + random2(3*damage_done/2);
-            if (defender_visible)
-            {
-                special_damage_message =
-                    make_stringf(
-                        "%s %s%s",
-                        defender->name(DESC_THE).c_str(),
-                        defender->conj_verb("convulse").c_str(),
-                        attack_strength_punctuation(special_damage).c_str());
-            }
-        }
         break;
 
     case SPWPN_VENOM:
@@ -1761,7 +1737,7 @@ bool attack::apply_damage_brand(const char *what)
         // Note: Leaving special_damage_message empty because there isn't one.
         break;
 
-    case SPWPN_VAMPIRICISM:
+    case SPWPN_VAMPIRISM:
     {
         if (x_chance_in_y(defender->res_negative_energy(), 3))
             break;

@@ -25,6 +25,7 @@
 #include "fineff.h"
 #include "godpassive.h"
 #include "godprayer.h"
+#include "hints.h"
 #include "itemname.h"
 #include "itemprop.h"
 #include "items.h"
@@ -48,6 +49,7 @@
 #include "random.h"
 #include "religion.h"
 #include "shopping.h" // for item values
+#include "shout.h"
 #include "spl-book.h"
 #include "spl-clouds.h"
 #include "spl-damage.h"
@@ -59,10 +61,9 @@
 #include "teleport.h"
 #include "terrain.h"
 #include "throw.h"
-#include "hints.h"
+#include "traps.h"
 #include "view.h"
 #include "viewchar.h"
-#include "shout.h"
 
 static bool _handle_pickup(monster* mons);
 static void _mons_in_cloud(monster* mons);
@@ -91,7 +92,7 @@ static int _compass_idx(const coord_def& mov)
 
 static inline bool _mons_natural_regen_roll(monster* mons)
 {
-    const int regen_rate = mons_natural_regen_rate(mons);
+    const int regen_rate = mons->natural_regen_rate();
     return x_chance_in_y(regen_rate, 25);
 }
 
@@ -861,11 +862,23 @@ static bool _handle_evoke_equipment(monster* mons, bolt & beem)
     return rc;
 }
 
+/**
+ * Check whether this monster can make a reaching attack, and do so if
+ * they can.
+ *
+ * @param mons The monster who might be reaching.
+ * @return Whether they attempted a reaching attack. False if the monster
+ *         doesn't have a reaching weapon, the foe isn't hostile, the foe
+ *         is too near or too far, etc.
+ */
 static bool _handle_reaching(monster* mons)
 {
     bool       ret = false;
     const reach_type range = mons->reach_range();
     actor *foe = mons->get_foe();
+
+    if (mons->caught())
+        return false;
 
     if (!foe || range <= REACH_NONE)
         return false;
@@ -1239,7 +1252,6 @@ static bool _handle_rod(monster *mons, bolt &beem)
     bool was_visible = you.can_see(mons);
 
     bool check_validity   = true;
-    bool is_direct_effect = false;
     spell_type mzap       = SPELL_NO_SPELL;
     int rate              = 0;
 
@@ -1314,32 +1326,18 @@ static bool _handle_rod(monster *mons, bolt &beem)
         zap = mons_should_fire(beem);
     }
 
-    if (is_direct_effect)
-    {
-        actor* foe = mons->get_foe();
-        if (!foe)
-            return false;
-        _rod_fired_pre(mons);
-        direct_effect(mons, mzap, beem, foe);
-        return _rod_fired_post(mons, rod, weapon, beem, rate, was_visible);
-    }
-    else if (mzap == SPELL_THUNDERBOLT)
+    if (zap)
     {
         _rod_fired_pre(mons);
-        cast_thunderbolt(mons, power, beem.target);
-        return _rod_fired_post(mons, rod, weapon, beem, rate, was_visible);
-    }
-    else if (mzap == SPELL_CLOUD_CONE)
-    {
-        _rod_fired_pre(mons);
-        cast_cloud_cone(mons, power, beem.target);
-        return _rod_fired_post(mons, rod, weapon, beem, rate, was_visible);
-    }
-    else if (zap)
-    {
-        _rod_fired_pre(mons);
-        beem.is_tracer = false;
-        beem.fire();
+        if (mzap == SPELL_THUNDERBOLT)
+            cast_thunderbolt(mons, power, beem.target);
+        else if (mzap == SPELL_CLOUD_CONE)
+            cast_cloud_cone(mons, power, beem.target);
+        else
+        {
+            beem.is_tracer = false;
+            beem.fire();
+        }
         return _rod_fired_post(mons, rod, weapon, beem, rate, was_visible);
     }
 
@@ -1505,7 +1503,8 @@ bool handle_throw(monster* mons, bolt & beem, bool teleport, bool check_only)
 {
     // Yes, there is a logic to this ordering {dlb}:
     if (mons->incapacitated()
-        || mons->submerged())
+        || mons->submerged()
+        || mons->caught())
     {
         return false;
     }
@@ -1696,7 +1695,9 @@ static void _pre_monster_move(monster* mons)
         }
     }
 
-    if (mons->summoner && mons->is_summoned())
+    int sumtype = 0;
+    if (mons->summoner && (mons->is_summoned(NULL, &sumtype)
+                           || sumtype == MON_SUMM_CLONE))
     {
         const actor * const summoner = actor_by_mid(mons->summoner);
         if ((!summoner || !summoner->alive()) && mons->del_ench(ENCH_ABJ))
@@ -2113,13 +2114,12 @@ void handle_monster_move(monster* mons)
         && (mons_itemuse(mons) >= MONUSE_WEAPONS_ARMOUR
             || mons_itemeat(mons) != MONEAT_NOTHING))
     {
-        // Keep neutral, charmed, summoned monsters from picking up stuff.
-        // Same for friendlies if friendly_pickup is set to "none".
+        // Keep neutral, charmed, summoned, and friendly monsters from
+        // picking up stuff.
         if ((!mons->neutral() && !mons->has_ench(ENCH_CHARM)
              || (you_worship(GOD_JIYVA) && mons_is_slime(mons)))
             && !mons->is_summoned() && !mons->is_perm_summoned()
-            && (!mons->friendly()
-                || you.friendly_pickup != FRIENDLY_PICKUP_NONE))
+            && !mons->friendly())
         {
             if (_handle_pickup(mons))
             {
@@ -2423,6 +2423,148 @@ void handle_monster_move(monster* mons)
     }
 }
 
+/**
+ * Let trapped monsters struggle against nets, webs, etc.
+ */
+void monster::struggle_against_net()
+{
+    if (is_stationary() || cannot_act() || asleep())
+        return;
+
+    if (props.exists(NEWLY_TRAPPED_KEY))
+    {
+        props.erase(NEWLY_TRAPPED_KEY);
+        return; // don't try to escape on the same turn you were trapped!
+    }
+
+    int net = get_trapping_net(pos(), true);
+
+    if (net == NON_ITEM)
+    {
+        trap_def *trap = find_trap(pos());
+        if (trap && trap->type == TRAP_WEB)
+        {
+
+            if (coinflip())
+            {
+                if (mons_near(this) && !visible_to(&you))
+                    mpr("Something you can't see is thrashing in a web.");
+                else
+                {
+                    simple_monster_message(this,
+                                           " struggles to get unstuck from the web.");
+                }
+                return;
+            }
+            maybe_destroy_web(this);
+        }
+        del_ench(ENCH_HELD);
+        return;
+    }
+
+    // Handled in handle_pickup().
+    if (mons_eats_items(this))
+        return;
+
+    // The enchantment doubles as the durability of a net
+    // the more corroded it gets, the more easily it will break.
+    const int hold = mitm[net].plus; // This will usually be negative.
+    const int mon_size = body_size(PSIZE_BODY);
+
+    // Smaller monsters can escape more quickly.
+    if (mon_size < random2(SIZE_BIG)  // BIG = 5
+        && !berserk_or_insane() && type != MONS_DANCING_WEAPON)
+    {
+        if (mons_near(this) && !visible_to(&you))
+            mpr("Something wriggles in the net.");
+        else
+            simple_monster_message(this, " struggles to escape the net.");
+
+        // Confused monsters have trouble finding the exit.
+        if (has_ench(ENCH_CONFUSION) && !one_chance_in(5))
+            return;
+
+        decay_enchantment(ENCH_HELD, 2*(NUM_SIZE_LEVELS - mon_size) - hold);
+
+        // Frayed nets are easier to escape.
+        if (mon_size <= -(hold-1)/2)
+            decay_enchantment(ENCH_HELD, (NUM_SIZE_LEVELS - mon_size));
+    }
+    else // Large (and above) monsters always thrash the net and destroy it
+    {    // e.g. ogre, large zombie (large); centaur, naga, hydra (big).
+
+        if (mons_near(this) && !visible_to(&you))
+            mpr("Something wriggles in the net.");
+        else
+            simple_monster_message(this, " struggles against the net.");
+
+        // Confused monsters more likely to struggle without result.
+        if (has_ench(ENCH_CONFUSION) && one_chance_in(3))
+            return;
+
+        // Nets get destroyed more quickly for larger monsters
+        // and if already strongly frayed.
+        int damage = 0;
+
+        // tiny: 1/6, little: 2/5, small: 3/4, medium and above: always
+        if (x_chance_in_y(mon_size + 1, SIZE_GIANT - mon_size))
+            damage++;
+
+        // Handled specially to make up for its small size.
+        if (type == MONS_DANCING_WEAPON)
+        {
+            damage += one_chance_in(3);
+
+            if (can_cut_meat(mitm[inv[MSLOT_WEAPON]]))
+                damage++;
+        }
+
+        // Extra damage for large (50%) and big (always).
+        if (mon_size == SIZE_BIG || mon_size == SIZE_LARGE && coinflip())
+            damage++;
+
+        // overall damage per struggle:
+        // tiny   -> 1/6
+        // little -> 2/5
+        // small  -> 3/4
+        // medium -> 1
+        // large  -> 1,5
+        // big    -> 2
+
+        // extra damage if already damaged
+        if (random2(body_size(PSIZE_BODY) - hold + 1) >= 4)
+            damage++;
+
+        // Berserking doubles damage dealt.
+        if (berserk())
+            damage *= 2;
+
+        // Faster monsters can damage the net more often per
+        // time period.
+        if (speed != 0)
+            damage = div_rand_round(damage * speed, 10);
+
+        mitm[net].plus -= damage;
+
+        if (mitm[net].plus < -7)
+        {
+            if (mons_near(this))
+            {
+                if (visible_to(&you))
+                {
+                    mprf("The net rips apart, and %s comes free!",
+                         name(DESC_THE).c_str());
+                }
+                else
+                    mpr("All of a sudden the net rips apart!");
+            }
+            destroy_item(net);
+
+            del_ench(ENCH_HELD, true);
+        }
+    }
+}
+
 static void _post_monster_move(monster* mons)
 {
     if (invalid_monster(mons))
@@ -2430,8 +2572,14 @@ static void _post_monster_move(monster* mons)
 
     mons->handle_constriction();
 
+    if (mons->has_ench(ENCH_HELD))
+        mons->struggle_against_net();
+
     if (mons->type == MONS_ANCIENT_ZYME)
         ancient_zyme_sicken(mons);
+
+    if (mons->type == MONS_TORPOR_SNAIL)
+        torpor_snail_slow(mons);
 
     if (mons->type == MONS_ASMODEUS)
     {
@@ -2691,7 +2839,8 @@ static bool _monster_eat_item(monster* mons, bool nearby)
 
             if (mons->caught() && item_is_stationary_net(*si))
             {
-                mons->del_ench(ENCH_HELD, true);
+                // We don't want to mulch the net just yet.
+                mons->del_ench(ENCH_HELD, true, false);
                 eaten_net = true;
             }
         }

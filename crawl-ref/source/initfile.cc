@@ -772,7 +772,6 @@ void game_options::reset_options()
 
     autopickup_on    = 1;
     autopickup_starting_ammo = true;
-    default_friendly_pickup = FRIENDLY_PICKUP_FRIEND;
     default_manual_training = false;
 
     show_newturn_mark = true;
@@ -802,6 +801,7 @@ void game_options::reset_options()
     travel_open_doors      = true;
     easy_unequip           = true;
     equip_unequip          = false;
+    jewellery_prompt       = false;
     confirm_butcher        = CONFIRM_AUTO;
     chunks_autopickup      = true;
     prompt_for_swap        = true;
@@ -2405,17 +2405,6 @@ void game_options::read_option_line(const string &str, bool runscript)
             autopickup_on = 0;
     }
     else BOOL_OPTION(autopickup_starting_ammo);
-    else if (key == "default_friendly_pickup")
-    {
-        if (field == "none")
-            default_friendly_pickup = FRIENDLY_PICKUP_NONE;
-        else if (field == "friend")
-            default_friendly_pickup = FRIENDLY_PICKUP_FRIEND;
-        else if (field == "player")
-            default_friendly_pickup = FRIENDLY_PICKUP_PLAYER;
-        else if (field == "all")
-            default_friendly_pickup = FRIENDLY_PICKUP_ALL;
-    }
     else if (key == "default_manual_training")
     {
         if (_read_bool(field, true))
@@ -2452,6 +2441,7 @@ void game_options::read_option_line(const string &str, bool runscript)
     else BOOL_OPTION(travel_open_doors);
     else BOOL_OPTION(easy_unequip);
     else BOOL_OPTION(equip_unequip);
+    else BOOL_OPTION(jewellery_prompt);
     else BOOL_OPTION_NAMED("easy_armour", easy_unequip);
     else BOOL_OPTION_NAMED("easy_armor", easy_unequip);
     else if (key == "confirm_butcher")
@@ -3863,6 +3853,8 @@ enum commandline_option_type
     CLO_MORGUE,
     CLO_MACRO,
     CLO_MAPSTAT,
+    CLO_OBJSTAT,
+    CLO_ITERATIONS,
     CLO_ARENA,
     CLO_DUMP_MAPS,
     CLO_TEST,
@@ -3897,8 +3889,8 @@ static const char *cmd_ops[] =
 {
     "scores", "name", "species", "background", "plain", "dir", "rc",
     "rcdir", "tscores", "vscores", "scorefile", "morgue", "macro",
-    "mapstat", "arena", "dump-maps", "test", "script", "builddb",
-    "help", "version", "seed", "save-version", "sprint",
+    "mapstat", "objstat", "iters", "arena", "dump-maps", "test", "script",
+    "builddb", "help", "version", "seed", "save-version", "sprint",
     "extra-opt-first", "extra-opt-last", "sprint-map", "edit-save",
     "print-charset", "zotdef", "tutorial", "wizard", "no-save",
     "gdb", "no-gdb", "nogdb",
@@ -4334,6 +4326,7 @@ bool parse_args(int argc, char **argv, bool rc_only)
     SysEnv.crawl_exe = get_base_filename(argv[0]);
 
     SysEnv.rcdirs.clear();
+    SysEnv.map_gen_iters = 0;
 
     if (argc < 2)           // no args!
         return true;
@@ -4447,12 +4440,36 @@ bool parse_args(int argc, char **argv, bool rc_only)
             break;
 
         case CLO_MAPSTAT:
+        case CLO_OBJSTAT:
 #ifdef DEBUG_DIAGNOSTICS
-            crawl_state.map_stat_gen = true;
-            SysEnv.map_gen_iters = 100;
-            if (!next_is_param)
-                ;
-            else if (isadigit(*next_arg))
+            if (o == CLO_MAPSTAT)
+                crawl_state.map_stat_gen = true;
+            else
+                crawl_state.obj_stat_gen = true;
+
+            if (!SysEnv.map_gen_iters)
+                SysEnv.map_gen_iters = 100;
+            if (next_is_param)
+            {
+                SysEnv.map_gen_range.reset(new depth_ranges);
+                *SysEnv.map_gen_range =
+                    depth_ranges::parse_depth_ranges(next_arg);
+                nextUsed = true;
+            }
+            break;
+#else
+            fprintf(stderr, "mapstat and objstat are available only in "
+                    "DEBUG_DIAGNOSTICS builds.\n");
+            end(1);
+#endif
+        case CLO_ITERATIONS:
+#ifdef DEBUG_DIAGNOSTICS
+            if (!next_is_param || !isadigit(*next_arg))
+            {
+                fprintf(stderr, "Integer argument required for -%s\n", arg);
+                end(1);
+            }
+            else
             {
                 SysEnv.map_gen_iters = atoi(next_arg);
                 if (SysEnv.map_gen_iters < 1)
@@ -4461,18 +4478,12 @@ bool parse_args(int argc, char **argv, bool rc_only)
                     SysEnv.map_gen_iters = 10000;
                 nextUsed = true;
             }
-            else
-            {
-                SysEnv.map_gen_range.reset(new depth_ranges);
-                *SysEnv.map_gen_range = depth_ranges::parse_depth_ranges(next_arg);
-                nextUsed = true;
-            }
-
-            break;
 #else
-            fprintf(stderr, "mapstat is available only in DEBUG_DIAGNOSTICS builds.\n");
+            fprintf(stderr, "mapstat and objstat are available only in "
+                    "DEBUG_DIAGNOSTICS builds.\n");
             end(1);
 #endif
+            break;
 
         case CLO_ARENA:
             if (!rc_only)

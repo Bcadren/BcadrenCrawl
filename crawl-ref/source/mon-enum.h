@@ -15,9 +15,7 @@ enum corpse_effect_type
 {
     CE_NOCORPSE,
     CE_CLEAN,
-    CE_CONTAMINATED,
     CE_POISONOUS,
-    CE_POISON_CONTAM,
     CE_ROT,
     CE_MUTAGEN,
     CE_ROTTEN,
@@ -103,7 +101,7 @@ enum attack_flavour
     AF_KLOWN,
     AF_DISTORT,
     AF_RAGE,
-    AF_NAPALM,
+    AF_STICKY_FLAME,
     AF_CHAOS,
     AF_STEAL,
 #if TAG_MAJOR_VERSION == 34

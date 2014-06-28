@@ -735,13 +735,12 @@ bool is_valid_border_feat(dungeon_feature_type feat)
 // Other features can be defined as mimic in vaults.
 bool is_valid_mimic_feat(dungeon_feature_type feat)
 {
-    // Don't risk trapping the player inside a portal vault, don't destroy
-    // runed doors either.
-    if (feat == DNGN_RUNED_DOOR
+    // Don't risk trapping the player inside a portal vault.
+    if (feat >= DNGN_EXIT_FIRST_PORTAL && feat <= DNGN_EXIT_LAST_PORTAL
 #if TAG_MAJOR_VERSION == 34
         || feat == DNGN_EXIT_PORTAL_VAULT
 #endif
-        || feat >= DNGN_EXIT_FIRST_PORTAL && feat <= DNGN_EXIT_LAST_PORTAL)
+        )
     {
         return false;
     }
@@ -756,22 +755,10 @@ bool is_valid_mimic_feat(dungeon_feature_type feat)
     if (feat_is_portal(feat) || feat_is_gate(feat))
         return true;
 
-    if (feat_is_stone_stair(feat) || feat_is_escape_hatch(feat)
-        || feat_is_branch_stairs(feat))
-    {
-        return true;
-    }
-
-    if (feat_is_fountain(feat))
-        return true;
-
-    if (feat_is_door(feat))
+    if (feat_is_stone_stair(feat) || feat_is_branch_stairs(feat))
         return true;
 
     if (feat == DNGN_ENTER_SHOP)
-        return true;
-
-    if (feat_is_statue_or_idol(feat))
         return true;
 
     return false;
@@ -1379,7 +1366,7 @@ bool fall_into_a_pool(const coord_def& entry,
                                       : "programming rift");
 
     more();
-    mesclr();
+    clear_messages();
     if (terrain == DNGN_LAVA)
     {
         mpr("The lava burns you to a cinder!");
