@@ -5,7 +5,7 @@
 
 #include "AppHdr.h"
 
-#include "bless.h"
+#include "godblessing.h"
 
 #include "artefact.h"   // if_artefact()
 #include "env.h"        // mitm
@@ -110,15 +110,15 @@ static int _orc_weapon_gift_type(monster_type mon_type)
  * Give a weapon to an orc that doesn't have one.
  *
  * @param[in] orc    The orc to give a weapon to.
+ * @param weapon_type  What weapon type to give the orc.
  */
-static void _gift_weapon_to_orc(monster* orc, int force_type = NUM_WEAPONS)
+static void _gift_weapon_to_orc(monster* orc, int weapon_type)
 {
+    ASSERT(weapon_type != NUM_WEAPONS);
+
     item_def weapon;
     weapon.base_type = OBJ_WEAPONS;
-    if (force_type == NUM_WEAPONS)
-        weapon.sub_type = _orc_weapon_gift_type(orc->type);
-    else
-        weapon.sub_type = force_type;
+    weapon.sub_type = weapon_type;
     weapon.quantity = 1;
     set_ident_flags(weapon, ISFLAG_IDENT_MASK);
     give_specific_item(orc, weapon);
@@ -262,7 +262,7 @@ static string _beogh_bless_weapon(monster* mon)
     const item_def* wpn_ptr = mon->melee_weapon();
     if (wpn_ptr == NULL)
     {
-        _gift_weapon_to_orc(mon);
+        _gift_weapon_to_orc(mon, _orc_weapon_gift_type(mon->type));
         if (mon->weapon() != NULL)
             return "armament";
 
@@ -333,7 +333,7 @@ static void _gift_armour_to_orc(monster* orc, bool shield = false)
 /**
  * Attempt to bless a follower's armour.
  *
- * @param[in] follower      The follower whose armour should be blessed.
+ * @param[in] mon           The follower whose armour should be blessed.
  * @return                  The type of blessing; may be empty.
  */
 static string _beogh_bless_armour(monster* mon)
@@ -505,11 +505,11 @@ static string _tso_bless_weapon(monster* mon)
  * @param[in] follower      The follower whose armour should be blessed.
  * @return                  The type of blessing; may be empty.
  */
-static string _tso_bless_armour(monster* mon)
+static string _tso_bless_armour(monster* follower)
 {
     // Pick either a monster's armour or its shield.
-    const int armour = mon->inv[MSLOT_ARMOUR];
-    const int shield = mon->inv[MSLOT_SHIELD];
+    const int armour = follower->inv[MSLOT_ARMOUR];
+    const int shield = follower->inv[MSLOT_SHIELD];
     if (armour == NON_ITEM && shield == NON_ITEM)
     {
         dprf("Can't bless the armour of a naked follower!");
@@ -673,7 +673,7 @@ static string _bless_with_healing(monster* follower)
  *
  * @param[in] follower  The follower being blessed.
  * @param god           The god doing the blessing.
- * @param message       The blessing being delivered.
+ * @param blessing      The blessing being delivered.
  */
 static void _display_god_blessing(monster* follower, god_type god,
                                   string blessing)

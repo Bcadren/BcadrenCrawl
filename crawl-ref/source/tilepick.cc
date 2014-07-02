@@ -861,7 +861,9 @@ static tileidx_t _tileidx_monster_zombified(const monster_info& mon)
         z_tile = TILEP_MONS_ZOMBIE_NAGA;
         break;
     case MON_SHAPE_QUADRUPED_WINGED:
-        if (mons_genus(subtype) != MONS_DRAGON && mons_genus(subtype) != MONS_WYVERN)
+        if (mons_genus(subtype) != MONS_DRAGON
+            && mons_genus(subtype) != MONS_WYVERN
+            && mons_genus(subtype) != MONS_DRAKE)
         {
             if (mons_genus(subtype) == MONS_GRIFFON)
                 z_tile = TILEP_MONS_ZOMBIE_GRIFFON;
@@ -1784,8 +1786,6 @@ static tileidx_t _tileidx_monster_base(int type, bool in_water, int colour,
         return TILEP_MONS_SIMULACRUM_LARGE;
 
     // water monsters
-    case MONS_BIG_FISH:
-        return TILEP_MONS_BIG_FISH;
     case MONS_ELECTRIC_EEL:
         return TILEP_MONS_ELECTRIC_EEL;
     case MONS_SHARK:
@@ -3911,8 +3911,6 @@ static tileidx_t _tileidx_corpse(const item_def &item)
         return TILE_CORPSE_TORTUROUS_DEMONSPAWN;
 
     // water monsters
-    case MONS_BIG_FISH:
-        return TILE_CORPSE_BIG_FISH;
     case MONS_ELECTRIC_EEL:
         return TILE_CORPSE_ELECTRIC_EEL;
     case MONS_SHARK:

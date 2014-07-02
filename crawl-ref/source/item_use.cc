@@ -12,6 +12,7 @@
 #include "areas.h"
 #include "art-enum.h"
 #include "artefact.h"
+#include "butcher.h"
 #include "cloud.h"
 #include "colour.h"
 #include "coordit.h"
@@ -45,6 +46,7 @@
 #include "potion.h"
 #include "random.h"
 #include "religion.h"
+#include "rot.h"
 #include "shout.h"
 #include "skills.h"
 #include "skills2.h"
@@ -1980,7 +1982,7 @@ static void _vampire_corpse_help()
     if (you.species != SP_VAMPIRE)
         return;
 
-    if (check_blood_corpses_on_ground() || count_corpses_in_pack(true) > 0)
+    if (check_blood_corpses_on_ground())
         mpr("Use <w>e</w> to drain blood from corpses.");
 }
 
@@ -2165,9 +2167,9 @@ static void _rebrand_weapon(item_def& wpn)
             new_brand = random_choose_weighted(
                                     30, SPWPN_FLAMING,
                                     30, SPWPN_FREEZING,
+                                    25, SPWPN_VORPAL,
                                     20, SPWPN_VENOM,
                                     15, SPWPN_DRAINING,
-                                    15, SPWPN_VORPAL,
                                     15, SPWPN_ELECTROCUTION,
                                     12, SPWPN_PROTECTION,
                                     8, SPWPN_VAMPIRISM,

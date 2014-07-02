@@ -10,6 +10,7 @@
 #include "externs.h"
 
 #include "act-iter.h"
+#include "butcher.h"
 #include "coord.h"
 #include "delay.h"
 #include "env.h"
@@ -29,6 +30,7 @@
 #include "player-stats.h"
 #include "potion.h"
 #include "religion.h"
+#include "rot.h"
 #include "spl-util.h"
 #include "stuff.h"
 #include "terrain.h"

@@ -166,7 +166,6 @@ moth_of_wrath MONS_MOTH_OF_WRATH
 
 ## Aquatics (';')
 %sdir mon/aquatic
-big_fish MONS_BIG_FISH
 electric_eel MONS_ELECTRIC_EEL
 shark MONS_SHARK
 %rim 1
@@ -1003,7 +1002,7 @@ murray MONS_MURRAY
 
 ## Sprint specials
 %sdir mon/sprint
-succubus MONS_SUCCUBUS
+dimme MONS_DIMME
 %rim 0
 orb_of_ice MONS_ORB_OF_ICE
 orb_of_electricity MONS_ORB_OF_ELECTRICITY

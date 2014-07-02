@@ -775,7 +775,6 @@ void game_options::reset_options()
     default_manual_training = false;
 
     show_newturn_mark = true;
-    show_gold_turns = true;
     show_game_turns = true;
 
     game = newgame_def();
@@ -917,8 +916,7 @@ void game_options::reset_options()
     dump_item_origin_price = -1;
     dump_book_spells       = true;
 
-    pickup_menu            = true;
-    pickup_menu_limit      = 4;
+    pickup_menu_limit      = 1;
 
     flush_input[ FLUSH_ON_FAILURE ]     = true;
     flush_input[ FLUSH_BEFORE_COMMAND ] = false;
@@ -2614,7 +2612,6 @@ void game_options::read_option_line(const string &str, bool runscript)
         morgue_dir = field;
 #endif
     else BOOL_OPTION(show_newturn_mark);
-    else BOOL_OPTION(show_gold_turns);
     else BOOL_OPTION(show_game_turns);
     else INT_OPTION(hp_warning, 0, 100);
     else INT_OPTION_NAMED("mp_warning", magic_point_warning, 0, 100);
@@ -3400,7 +3397,6 @@ void game_options::read_option_line(const string &str, bool runscript)
     else BOOL_OPTION(dump_book_spells);
     else if (key == "darken_beyond_range")
         darken_beyond_range = _read_bool(field, darken_beyond_range);
-    else BOOL_OPTION(pickup_menu);
     else INT_OPTION(pickup_menu_limit, INT_MIN, INT_MAX);
     else if (key == "additional_macro_file")
     {

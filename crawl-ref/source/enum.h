@@ -2282,6 +2282,7 @@ enum targ_mode_type
     TARG_HOSTILE_SUBMERGED, // Target hostiles including submerged ones
     TARG_EVOLVABLE_PLANTS,  // Targeting mode for Fedhas' evolution
     TARG_HOSTILE_UNDEAD,    // For dispel undead
+    TARG_BEOGH_GIFTABLE,    // For Beogh followers who can be given gifts
     TARG_NUM_MODES
 };
 
@@ -2769,8 +2770,8 @@ enum monster_type                      // menv[].type
 #endif
 
     // Water monsters:
-    MONS_BIG_FISH,
 #if TAG_MAJOR_VERSION == 34
+    MONS_BIG_FISH,
     MONS_GIANT_GOLDFISH,
 #endif
     MONS_ELECTRIC_EEL,

@@ -12,6 +12,7 @@
 #include "artefact.h"
 #include "attitude-change.h"
 #include "beam.h"
+#include "bloodspatter.h"
 #include "cloud.h"
 #include "coordit.h"
 #include "database.h"
@@ -34,7 +35,6 @@
 #include "kills.h"
 #include "libutil.h"
 #include "makeitem.h"
-#include "misc.h"
 #include "mon-abil.h"
 #include "mon-act.h"
 #include "mon-behv.h"
@@ -49,6 +49,7 @@
 #include "mgen_data.h"
 #include "random.h"
 #include "religion.h"
+#include "rot.h"
 #include "shopping.h"
 #include "spl-damage.h"
 #include "spl-monench.h"
@@ -6221,7 +6222,7 @@ void monster::steal_item_from_player()
         else
         {
             // Else create a new item for this pile of gold.
-            const int idx = items(0, OBJ_GOLD, OBJ_RANDOM, true, 0, 0);
+            const int idx = items(0, OBJ_GOLD, OBJ_RANDOM, true, 0);
             if (idx == NON_ITEM)
                 return;
 
@@ -6450,8 +6451,11 @@ bool monster::check_clarity(bool silent) const
 
 bool monster::stasis(bool calc_unid, bool items) const
 {
-    if (mons_genus(type) == MONS_FORMICID)
+    if (mons_genus(type) == MONS_FORMICID
+        || type == MONS_PLAYER_GHOST && ghost->species == SP_FORMICID)
+    {
         return true;
+    }
 
     return actor::stasis(calc_unid, items);
 }

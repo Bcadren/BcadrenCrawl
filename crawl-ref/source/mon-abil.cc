@@ -12,6 +12,7 @@
 #include "act-iter.h"
 #include "arena.h"
 #include "beam.h"
+#include "bloodspatter.h"
 #include "colour.h"
 #include "coordit.h"
 #include "delay.h"
@@ -4192,7 +4193,7 @@ bool mon_special_ability(monster* mons, bolt & beem)
             if (foe && !feat_is_water(grd(foe->pos())))
             {
                 coord_def spot;
-                if (find_habitable_spot_near(foe->pos(), MONS_BIG_FISH, 3, false, spot)
+                if (find_habitable_spot_near(foe->pos(), MONS_ELECTRIC_EEL, 3, false, spot)
                     && foe->pos().distance_from(spot)
                      < foe->pos().distance_from(mons->pos()))
                 {
@@ -4765,8 +4766,12 @@ void torpor_snail_slow(monster* mons)
 {
     // XXX: might be nice to refactor together with ancient_zyme_sicken().
 
-    if (is_sanctuary(mons->pos()))
+    if (is_sanctuary(mons->pos())
+        || mons->attitude != ATT_HOSTILE
+        || mons->has_ench(ENCH_CHARM))
+    {
         return;
+    }
 
     if (!is_sanctuary(you.pos())
         && !you.stasis()
@@ -5040,8 +5045,12 @@ static int _throw_site_score(actor *thrower, actor *victim, coord_def site)
             score += open_site_score;
 
         monster *mons = monster_at(*ai);
-        if (mons && !mons->friendly() && mons != tmons)
+        if (mons && !mons->friendly()
+            && mons != tmons
+            && !mons_is_firewood(mons))
+        {
             score += sqr(mons_threat_level(mons) + 2);
+        }
     }
     return score;
 }

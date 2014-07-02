@@ -21,6 +21,7 @@
 #include "areas.h"
 #include "art-enum.h"
 #include "branch.h"
+#include "bloodspatter.h"
 #ifdef DGL_WHEREIS
  #include "chardump.h"
 #endif
@@ -329,7 +330,7 @@ bool swap_check(monster* mons, coord_def &loc, bool quiet)
 {
     loc = you.pos();
 
-    if (you.form == TRAN_TREE)
+    if (you.is_stationary())
         return false;
 
     // Don't move onto dangerous terrain.
