@@ -4582,21 +4582,24 @@ monster *monster_by_mid(mid_t m)
 
 bool mons_is_tentacle_head(monster_type mc)
 {
-    return mc == MONS_KRAKEN || mc == MONS_TENTACLED_STARSPAWN;
+    return mc == MONS_KRAKEN || mc == MONS_TENTACLED_STARSPAWN
+        || mc == MONS_MNOLEG;
 }
 
 bool mons_is_child_tentacle(monster_type mc)
 {
     return mc == MONS_KRAKEN_TENTACLE
         || mc == MONS_STARSPAWN_TENTACLE
-        || mc == MONS_SNAPLASHER_VINE;
+        || mc == MONS_SNAPLASHER_VINE
+        || mc == MONS_MNOLEG_ELDRITCH_TENTACLE;
 }
 
 bool mons_is_child_tentacle_segment(monster_type mc)
 {
     return mc == MONS_KRAKEN_TENTACLE_SEGMENT
         || mc == MONS_STARSPAWN_TENTACLE_SEGMENT
-        || mc == MONS_SNAPLASHER_VINE_SEGMENT;
+        || mc == MONS_SNAPLASHER_VINE_SEGMENT
+        || mc == MONS_MNOLEG_ELDRITCH_TENTACLE_SEGMENT;
 }
 
 bool mons_is_tentacle(monster_type mc)
@@ -4690,6 +4693,10 @@ monster_type mons_tentacle_parent_type(const monster* mons)
             return MONS_ELDRITCH_TENTACLE;
         case MONS_SNAPLASHER_VINE_SEGMENT:
             return MONS_SNAPLASHER_VINE;
+        case MONS_MNOLEG_ELDRITCH_TENTACLE:
+            return MONS_MNOLEG;
+        case MONS_MNOLEG_ELDRITCH_TENTACLE_SEGMENT:
+            return MONS_MNOLEG_ELDRITCH_TENTACLE;
         default:
             return MONS_PROGRAM_BUG;
     }
@@ -4699,20 +4706,24 @@ monster_type mons_tentacle_child_type(const monster* mons)
 {
     switch (mons_base_type(mons))
     {
-        case MONS_KRAKEN:
-            return MONS_KRAKEN_TENTACLE;
-        case MONS_KRAKEN_TENTACLE:
-            return MONS_KRAKEN_TENTACLE_SEGMENT;
-        case MONS_TENTACLED_STARSPAWN:
-            return MONS_STARSPAWN_TENTACLE;
-        case MONS_STARSPAWN_TENTACLE:
-            return MONS_STARSPAWN_TENTACLE_SEGMENT;
-        case MONS_ELDRITCH_TENTACLE:
-            return MONS_ELDRITCH_TENTACLE_SEGMENT;
-        case MONS_SNAPLASHER_VINE:
-            return MONS_SNAPLASHER_VINE_SEGMENT;
-        default:
-            return MONS_PROGRAM_BUG;
+    case MONS_KRAKEN:
+        return MONS_KRAKEN_TENTACLE;
+    case MONS_KRAKEN_TENTACLE:
+        return MONS_KRAKEN_TENTACLE_SEGMENT;
+    case MONS_TENTACLED_STARSPAWN:
+        return MONS_STARSPAWN_TENTACLE;
+    case MONS_STARSPAWN_TENTACLE:
+        return MONS_STARSPAWN_TENTACLE_SEGMENT;
+    case MONS_ELDRITCH_TENTACLE:
+        return MONS_ELDRITCH_TENTACLE_SEGMENT;
+    case MONS_SNAPLASHER_VINE:
+        return MONS_SNAPLASHER_VINE_SEGMENT;
+    case MONS_MNOLEG:
+        return MONS_MNOLEG_ELDRITCH_TENTACLE;
+    case MONS_MNOLEG_ELDRITCH_TENTACLE:
+        return MONS_MNOLEG_ELDRITCH_TENTACLE_SEGMENT;
+    default:
+        return MONS_PROGRAM_BUG;
     }
 }
 
