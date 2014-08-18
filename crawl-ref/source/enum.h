@@ -2963,8 +2963,8 @@ enum monster_type                      // menv[].type
     // the four Pan lords, order must match runes
     MONS_MNOLEG,
 #if TAG_MAJOR_VERSION > 34
-    MONS_MNOLEG_ELDRITCH_TENTACLE,
-    MONS_MNOLEG_ELDRITCH_TENTACLE_SEGMENT,
+    MONS_MNOLEG_TENTACLE,
+    MONS_MNOLEG_TENTACLE_SEGMENT,
 #endif
     MONS_LOM_LOBON,
     MONS_CEREBOV,
@@ -3219,8 +3219,8 @@ enum monster_type                      // menv[].type
     MONS_CRAB,
     MONS_GHOST_CRAB,
     MONS_TORPOR_SNAIL,
-    MONS_MNOLEG_ELDRITCH_TENTACLE,
-    MONS_MNOLEG_ELDRITCH_TENTACLE_SEGMENT,
+    MONS_MNOLEG_TENTACLE,
+    MONS_MNOLEG_TENTACLE_SEGMENT,
 #endif
 
     NUM_MONSTERS,               // used for polymorph
