@@ -126,9 +126,9 @@ void wizard_level_travel(bool down)
     }
 
     if (down)
-        down_stairs(stairs);
+        down_stairs(stairs, false, true);
     else
-        up_stairs(stairs);
+        up_stairs(stairs, true);
 }
 
 static void _wizard_go_to_level(const level_pos &pos)
@@ -179,7 +179,7 @@ void wizard_interlevel_travel()
 {
     string name;
     const level_pos pos =
-        prompt_translevel_target(TPF_ALLOW_UPDOWN | TPF_SHOW_ALL_BRANCHES, name).p;
+        prompt_translevel_target(TPF_ALLOW_UPDOWN | TPF_SHOW_ALL_BRANCHES, name);
 
     if (pos.id.depth < 1 || pos.id.depth > brdepth[pos.id.branch])
     {
