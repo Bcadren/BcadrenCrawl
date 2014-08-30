@@ -39,7 +39,7 @@
 #include "spl-book.h"
 #include "spl-util.h"
 #include "stash.h"
-#include "strings.h"
+#include "stringutil.h"
 #include "terrain.h"
 #include "unicode.h"
 
@@ -1200,7 +1200,7 @@ static void _debug_acquirement_stats(FILE *ostat)
             "intelligence",
             "ponderous",
             "flight",
-            "magic reistance",
+            "magic resistance",
             "protection",
             "stealth",
             "resistance",

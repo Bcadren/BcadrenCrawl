@@ -48,7 +48,7 @@
 #include "stairs.h"
 #include "stash.h"
 #include "state.h"
-#include "strings.h"
+#include "stringutil.h"
 #include "tags.h"
 #include "terrain.h"
 #include "traps.h"
@@ -209,8 +209,7 @@ static inline bool _is_safe_cloud(const coord_def& c)
     // We can also safely run through smoke, or any of our own clouds if
     // following Qazlal.
     return !is_damaging_cloud(ctype, true)
-           || you_worship(GOD_QAZLAL)
-              && !player_under_penance()
+           || in_good_standing(GOD_QAZLAL)
               && YOU_KILL(env.map_knowledge(c).cloudinfo()->killer);
 }
 
@@ -1798,7 +1797,9 @@ void find_travel_pos(const coord_def& youpos,
     run_mode_type rmode = (move_x && move_y) ? RMODE_TRAVEL
                                              : RMODE_NOT_RUNNING;
 
-    const coord_def dest = tp.pathfind(rmode, true);
+    coord_def dest = tp.pathfind(rmode, false);
+    if (dest.origin())
+        dest = tp.pathfind(rmode, true);
     coord_def new_dest = dest;
 
     if (grd(dest) == DNGN_RUNED_DOOR)

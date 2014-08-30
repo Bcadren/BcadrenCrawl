@@ -48,7 +48,7 @@
 #include "shopping.h"
 #include "stash.h"
 #include "state.h"
-#include "strings.h"
+#include "stringutil.h"
 #include "terrain.h"
 #include "tiledef-dngn.h"
 #include "tileview.h"
@@ -177,13 +177,11 @@ static int _abyssal_rune_roll()
 {
     if (you.runes[RUNE_ABYSSAL] || you.depth < ABYSSAL_RUNE_MIN_LEVEL)
         return -1;
-    const bool lugonu_favoured =
-        (you_worship(GOD_LUGONU) && !player_under_penance()
-         && you.piety >= piety_breakpoint(4));
+    const bool lugonu_favoured = in_good_standing(GOD_LUGONU, 4);
 
     const double depth = you.depth + lugonu_favoured;
-    const int divisor = 2 * brdepth[BRANCH_ABYSS] - 2;
-    return (int) pow(100.0, depth/divisor);
+
+    return (int) pow(100.0, depth/(1 + brdepth[BRANCH_ABYSS]));
 }
 
 static void _abyss_fixup_vault(const vault_placement *vp)

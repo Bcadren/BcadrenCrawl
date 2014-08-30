@@ -31,7 +31,7 @@
 #include "skill_menu.h"
 #include "spl-goditem.h"
 #include "spl-miscast.h"
-#include "strings.h"
+#include "stringutil.h"
 #include "terrain.h"
 #include "transform.h"
 #include "xom.h"
@@ -301,6 +301,7 @@ bool potion_effect(potion_type pot_eff, int pow, item_def *potion, bool was_know
 
     case POT_CANCELLATION:
         debuff_player();
+        mpr("You feel magically purged.");
         break;
 
     case POT_CONFUSION:

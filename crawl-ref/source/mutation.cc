@@ -48,7 +48,7 @@
 #include "random.h"
 #include "skills2.h"
 #include "state.h"
-#include "strings.h"
+#include "stringutil.h"
 #include "transform.h"
 #include "unicode.h"
 #include "viewchar.h"
@@ -2498,15 +2498,10 @@ void check_monster_detect()
             const monster_type remembered_monster = cell.monster();
             if (remembered_monster != mon->type)
             {
-                monster_type mc = MONS_SENSED;
+                const monster_type mc = mon->friendly() ? MONS_SENSED_FRIENDLY
+                      : in_good_standing(GOD_ASHENZARI) ? ash_monster_tier(mon)
+                                                        : MONS_SENSED;
 
-                if (mon->friendly())
-                    mc = MONS_SENSED_FRIENDLY;
-                else if (you_worship(GOD_ASHENZARI)
-                         && !player_under_penance())
-                {
-                    mc = ash_monster_tier(mon);
-                }
                 env.map_knowledge(*ri).set_detected_monster(mc);
 
                 // Don't bother warning the player (or interrupting

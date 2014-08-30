@@ -68,7 +68,7 @@
 #include "spl-selfench.h"
 #include "spl-other.h"
 #include "state.h"
-#include "strings.h"
+#include "stringutil.h"
 #include "transform.h"
 #include "tutorial.h"
 #include "view.h"
@@ -329,7 +329,7 @@ int check_your_resists(int hurted, beam_type flavour, string source,
     {
         if (you.holiness() == MH_UNDEAD)
         {
-            if (doEffects)
+            if (doEffects && hurted > 0)
             {
                 you.heal(roll_dice(2, 9));
                 mpr("You are bolstered by the flame.");

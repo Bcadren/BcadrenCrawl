@@ -18,8 +18,8 @@ Gods
     temporarily neutral or incite them to join you.
   - Duplication: one non-artefact item can be duplicated at an altar.
 
-Stone Soup 0.15
---------------------------------------------
+Stone Soup 0.15 (20140828)
+--------------------------
 * New god: Qazlal Stormbringer.
 * Nemelex Xobeh and decks in general have had many changes.
 * Ranged combat has been rewritten from the ground up.
@@ -307,6 +307,15 @@ Interface
   instead of the player race one.
 * Ability and spell icons have been reworked.
 * There are status lights for Might, Agility, and Brilliance.
+
+Stone Soup 0.14.2 (20140827)
+----------------------------
+* More crash fixes.
+* Some text fixes.
+* Transformations no longer allow the character to wield too-large weapons.
+* The tutorial skill screen now allows skills to be toggled again.
+* Artefact and non-artefact rings are now distinguished properly when swapping
+  rings.
 
 Stone Soup 0.14.1 (20140428)
 ----------------------------

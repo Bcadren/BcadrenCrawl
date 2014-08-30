@@ -50,7 +50,7 @@
 #include "species.h"
 #include "spl-book.h"
 #include "state.h"
-#include "strings.h"
+#include "stringutil.h"
 #include "env.h"
 #include "tags.h"
 #include "terrain.h"
@@ -1415,9 +1415,7 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
                 "it. You can view its properties from your <w>%</w>nventory</console>"
              << "<tiles>. You can click on it to put it on, and click a second time "
                 "remove it again. By clicking on it with your <w>right mouse "
-                "button</w> you can view its properties</tiles>"
-             << ", though often magic is necessary to reveal its true "
-                "nature.";
+                "button</w> you can view its properties</tiles>.";
         cmd.push_back(CMD_WEAR_JEWELLERY);
         cmd.push_back(CMD_REMOVE_JEWELLERY);
         cmd.push_back(CMD_DISPLAY_INVENTORY);
@@ -1521,8 +1519,7 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
 
 #ifdef USE_TILE
         text << "\nAlternatively, clicking on your <w>left mouse button</w> "
-                "while pressing the <w>Shift key</w> will let you follow any "
-                "stairs you're standing on.";
+                "will let you follow any stairs you're standing on.";
 #endif
         break;
 
@@ -1546,10 +1543,9 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
                 "quickly leave a level with <w>%</w> and <w>%</w>, "
                 "respectively"
 #ifdef USE_TILE
-                " (or by using your <w>left mouse button</w> in combination "
-                "with the <w>Shift key</w>)"
+                " (or by using your <w>left mouse button</w>)"
 #endif
-                ", but will usually be unable to return right away.";
+                ", but you will usually be unable to return right away.";
         cmd.push_back(CMD_GO_UPSTAIRS);
         cmd.push_back(CMD_GO_DOWNSTAIRS);
         break;
@@ -1727,8 +1723,7 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
 #endif
                 "is a shop. You can enter it by typing <w>%</w> or <w>%</w>"
 #ifdef USE_TILE
-                ", or by pressing <w>Shift</w> and clicking on it with your "
-                "<w>left mouse button</w> "
+                ", or by clicking on it with your <w>left mouse button</w> "
 #endif
                 "while standing on the square.";
         cmd.push_back(CMD_GO_UPSTAIRS);
@@ -2030,9 +2025,6 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
             cmd.push_back(CMD_SEARCH_STASHES);
             cmd.push_back(CMD_SEARCH_STASHES);
         }
-
-        text << "\n\nBe warned that items that you leave on the floor can "
-                "be picked up and used by monsters.";
         break;
 
     case HINT_ROTTEN_FOOD:
@@ -3965,8 +3957,7 @@ static void _hints_describe_feature(int x, int y)
                  "press <w><<</w> while standing on the upstairs.";
 #ifdef USE_TILE
          ostr << " In Tiles, you can achieve the same, in either direction, "
-                 "by clicking the <w>left mouse button</w> while pressing "
-                 "<w>Shift</w>. ";
+                 "by clicking the <w>left mouse button</w>.";
 #endif
 
          if (is_unknown_stair(where))
@@ -3997,8 +3988,7 @@ static void _hints_describe_feature(int x, int y)
                  "downstairs.";
 #ifdef USE_TILE
          ostr << " In Tiles, you can perform either action simply by "
-                 "clicking the <w>left mouse button</w> while pressing "
-                 "<w>Shift</w> instead. ";
+                 "clicking the <w>left mouse button</w> instead.";
 #endif
          if (is_unknown_stair(where))
          {

@@ -38,7 +38,7 @@
 #include "spl-miscast.h"
 #include "spl-util.h"
 #include "state.h"
-#include "strings.h"
+#include "stringutil.h"
 #include "stepdown.h"
 
 #include "xom.h"
@@ -133,7 +133,10 @@ bool attack::handle_phase_damaged()
             return false;
     }
 
-    return true;
+    // It's okay if a monster took lethal damage, but we should stop
+    // the combat if it was already reset (e.g. a spectral weapon that
+    // took damage and then noticed that its caster is gone).
+    return defender->is_player() || !invalid_monster(defender->as_monster());
 }
 
 bool attack::handle_phase_killed()
@@ -1666,14 +1669,12 @@ bool attack::apply_damage_brand(const char *what)
         calc_elemental_brand_damage(BEAM_FIRE, defender->res_fire(),
                                     defender->is_icy() ? "melt" : "burn",
                                     what);
-        defender->expose_to_element(BEAM_FIRE);
         attacker->god_conduct(DID_FIRE, 1);
         break;
 
     case SPWPN_FREEZING:
         calc_elemental_brand_damage(BEAM_COLD, defender->res_cold(), "freeze",
                                     what);
-        defender->expose_to_element(BEAM_COLD, 2);
         break;
 
     case SPWPN_HOLY_WRATH:
@@ -1866,21 +1867,25 @@ bool attack::apply_damage_brand(const char *what)
         break;
     }
 
-    if (damage_brand == SPWPN_CHAOS && brand != SPWPN_CHAOS && !ret
-        && miscast_level == -1 && one_chance_in(20))
+    if (damage_brand == SPWPN_CHAOS)
     {
-        miscast_level  = 0;
-        miscast_type   = SPTYP_RANDOM;
-        miscast_target = coinflip() ? attacker : defender;
+        if (brand != SPWPN_CHAOS && !ret
+            && miscast_level == -1 && one_chance_in(20))
+        {
+            miscast_level  = 0;
+            miscast_type   = SPTYP_RANDOM;
+            miscast_target = coinflip() ? attacker : defender;
+        }
+
+        if (responsible->is_player())
+        {
+            // If your god objects to using chaos, then it makes the
+            // brand obvious.
+            if (did_god_conduct(DID_CHAOS, 2 + random2(3), brand_was_known))
+                obvious_effect = true;
+        }
     }
 
-    if (responsible->is_player() && damage_brand == SPWPN_CHAOS)
-    {
-        // If your god objects to using chaos, then it makes the
-        // brand obvious.
-        if (did_god_conduct(DID_CHAOS, 2 + random2(3), brand_was_known))
-            obvious_effect = true;
-    }
     if (!obvious_effect)
         obvious_effect = !special_damage_message.empty();
 
@@ -1897,6 +1902,20 @@ bool attack::apply_damage_brand(const char *what)
 
     if (special_damage > 0)
         inflict_damage(special_damage, special_damage_flavour);
+
+    if (defender->alive())
+        switch (brand)
+        {
+        case SPWPN_FLAMING:
+            defender->expose_to_element(BEAM_FIRE);
+            break;
+
+        case SPWPN_FREEZING:
+            defender->expose_to_element(BEAM_COLD, 2);
+            break;
+        default:
+            break;
+        }
 
     if (obvious_effect && attacker_visible && using_weapon())
     {

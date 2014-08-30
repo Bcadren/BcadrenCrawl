@@ -22,7 +22,7 @@
 #include "monster.h"
 #include "player.h"
 #include "random.h"
-#include "strings.h"
+#include "stringutil.h"
 #include "teleport.h"
 #include "traps.h"
 
@@ -352,7 +352,7 @@ int ranged_attack::weapon_damage()
     }
     if (using_weapon())
         dam += property(*weapon, PWPN_DAMAGE);
-    else
+    else if (attacker->is_player())
         dam += calc_base_unarmed_damage();
 
     return dam;
@@ -426,6 +426,7 @@ bool ranged_attack::apply_damage_brand(const char *what)
     if (attacker->type != MONS_NESSOS
         && projectile->base_type == OBJ_MISSILES
         && get_ammo_brand(*projectile) != SPMSL_NORMAL
+        && get_ammo_brand(*projectile) != SPMSL_PENETRATION
         && (brand == SPWPN_FLAMING
             || brand == SPWPN_FREEZING
             || brand == SPWPN_HOLY_WRATH

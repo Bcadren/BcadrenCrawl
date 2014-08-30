@@ -53,7 +53,7 @@
 #include "env.h"
 #include "areas.h"
 #include "stash.h"
-#include "strings.h"
+#include "stringutil.h"
 #include "target.h"
 #ifdef USE_TILE
  #include "tileview.h"
@@ -3678,9 +3678,10 @@ static void _debug_describe_feature_at(const coord_def &where)
                              vp.size.x, vp.size.y);
     }
 
+    ucs_t ch = get_cell_glyph(where).ch;
     dprf("(%d,%d): %s - %s (%d/%s)%s%s%s%s map: %x",
          where.x, where.y,
-         stringize_glyph(get_cell_glyph(where).ch).c_str(),
+         ch == '<' ? "<<" : stringize_glyph(ch).c_str(),
          feature_desc.c_str(),
          feat,
          dungeon_feature_name(feat),

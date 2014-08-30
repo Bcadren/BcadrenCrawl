@@ -29,9 +29,13 @@
 #include "prompt.h"
 #include "religion.h"
 #include "state.h"
-#include "strings.h"
+#include "stringutil.h"
 #include "view.h"
 #include "xom.h"
+
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
 
 void cio_cleanup()
 {
