@@ -519,6 +519,12 @@ An enchanted fan inhabited by benevolent air spirits. Swinging the fan
 unleashes a blast of wind around the bearer and sets the spirits free to sweep
 away the bearer's enemies.
 %%%%
+figurine of a ziggurat
+
+A small figurine made of some strange material, shaped like a stepped pyramid.
+It seems incredibly detailed, as if it were a vast building had been shrunken
+by incomprehensible magics and not just a model.
+%%%%
 fire dragon armour
 
 Armour made from the scales of a fire-breathing dragon. It provides great

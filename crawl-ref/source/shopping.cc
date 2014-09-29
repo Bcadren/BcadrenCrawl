@@ -1693,6 +1693,7 @@ unsigned int item_value(item_def item, bool ident)
             break;
 
         case MISC_HORN_OF_GERYON:
+        case MISC_ZIGGURAT:
             valued += 5000;
             break;
 

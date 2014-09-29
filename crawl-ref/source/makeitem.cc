@@ -573,6 +573,10 @@ void item_colour(item_def &item)
             item.colour = WHITE;
             break;
 
+        case MISC_ZIGGURAT:
+            item.colour = ETC_BONE;
+            break;
+
         case MISC_RUNE_OF_ZOT:
             switch (item.plus)
             {
@@ -2577,6 +2581,7 @@ static void _generate_misc_item(item_def& item, int force_type, int force_ego)
              || item.sub_type == MISC_HORN_OF_GERYON
              || item.sub_type == MISC_DECK_OF_PUNISHMENT
              || item.sub_type == MISC_QUAD_DAMAGE
+             || item.sub_type == MISC_ZIGGURAT
 #if TAG_MAJOR_VERSION == 34
              || item.sub_type == MISC_BUGGY_EBONY_CASKET
              || item.sub_type == MISC_BOTTLED_EFREET
