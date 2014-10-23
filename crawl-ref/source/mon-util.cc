@@ -3661,6 +3661,7 @@ static gender_type _mons_class_gender(monster_type mc)
         switch (mc)
         {
         case MONS_JESSICA:
+        case MONS_ROBIN:
         case MONS_PSYCHE:
         case MONS_JOSEPHINE:
         case MONS_AGNES:
@@ -3777,6 +3778,9 @@ bool monster_shover(const monster* m)
 
     // Geryon really profits from *not* pushing past hell beasts.
     if (m->type == MONS_GERYON)
+        return false;
+    // Likewise, Robin and her mob.
+    if (m->type == MONS_ROBIN)
         return false;
 
     // no dumb creatures pushing, aside from jellies, which just kind of ooze.

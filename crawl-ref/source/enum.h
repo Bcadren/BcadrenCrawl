@@ -3017,6 +3017,7 @@ enum monster_type                      // menv[].type
     MONS_ASTERION,
     MONS_NATASHA,
     MONS_VASHNIA,
+    MONS_ROBIN,
 #endif
     // Sprint uniques:
     MONS_CHUCK,
@@ -3195,6 +3196,8 @@ enum monster_type                      // menv[].type
     MONS_USHABTI,
     MONS_DEATH_SCARAB,
     MONS_ANUBIS_GUARD,
+
+    MONS_ROBIN,
 #endif
 
     NUM_MONSTERS,               // used for polymorph
@@ -4251,6 +4254,7 @@ enum spell_type
     SPELL_DEATH_RATTLE,
     SPELL_SUMMON_SCARABS,
     SPELL_HUNTING_CRY,
+    SPELL_GOBLIN_TOSS,
     NUM_SPELLS
 };
 

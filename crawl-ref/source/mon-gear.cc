@@ -220,8 +220,8 @@ static item_def* make_item_for_monster(
     object_class_type base,
     int subtype,
     int level,
-    int allow_uniques,
-    iflags_t flags);
+    int allow_uniques = 0,
+    iflags_t flags = 0);
 
 static void _give_weapon(monster* mon, int level, bool melee_only = false,
                          bool give_aux_melee = true, bool spectral_orcs = false,
@@ -280,6 +280,19 @@ static void _give_weapon(monster* mon, int level, bool melee_only = false,
             item.base_type = OBJ_WEAPONS;
             item.sub_type  = WPN_CLUB;
         }
+        break;
+
+    case MONS_ROBIN:
+        item.base_type = OBJ_WEAPONS;
+        item.sub_type  = random_choose_weighted(35, WPN_CLUB,
+                                                30, WPN_DAGGER,
+                                                30, WPN_SPEAR,
+                                                20, WPN_SHORT_SWORD,
+                                                20, WPN_MACE,
+                                                15, WPN_WHIP,
+                                                10, WPN_TRIDENT,
+                                                10, WPN_FALCHION,
+                                                0);
         break;
 
     case MONS_GOBLIN:
@@ -1788,8 +1801,8 @@ static item_def* make_item_for_monster(
     object_class_type base,
     int subtype,
     int level,
-    int allow_uniques = 0,
-    iflags_t flags = 0)
+    int allow_uniques,
+    iflags_t flags)
 {
     const int bp = get_mitm_slot();
     if (bp == NON_ITEM)
@@ -2327,6 +2340,11 @@ static void _give_armour(monster* mon, int level, bool spectral_orcs, bool merc)
         item.base_type = OBJ_ARMOUR;
         item.sub_type  = ARM_ROBE;
         break;
+
+case MONS_ROBIN:
+    item.base_type = OBJ_ARMOUR;
+    item.sub_type  = ARM_ANIMAL_SKIN;
+    break;
 
     case MONS_DRACONIAN_SHIFTER:
     case MONS_DRACONIAN_SCORCHER:
