@@ -603,6 +603,12 @@ string describe_mutations(bool center_title)
         break;
     }
 
+    case SP_LACERTILIAN:
+        result += "You have a strong connection with the divine.\n";
+        result += "You may change religions without suffering divine wrath.\n";
+        have_any = true;
+        break;
+
     default:
         break;
     }
@@ -1338,8 +1344,9 @@ bool physiology_mutation_conflict(mutation_type mutat)
     if (you.species == SP_GARGOYLE && mutat == MUT_POISON_RESISTANCE)
         return true;
 
-    // Can't worship gods.
-    if (you.species == SP_DEMIGOD && mutat == MUT_FORLORN)
+    // Can't worship gods or perma-faithed.
+    if ((you.species == SP_DEMIGOD || you.species == SP_LACERTILIAN)
+        && mutat == MUT_FORLORN)
         return true;
 
     equipment_type eq_type = EQ_NONE;

@@ -75,6 +75,11 @@ Kobold
 Small, mischievous and a little fragile, but multi-talented. They can and will
 eat any meat.
 %%%%
+Lacertilian
+
+Reptilian humanoids famed for their devotion to the gods. They gain piety
+quickly, and can change religions without incurring divine wrath.
+%%%%
 Merfolk
 
 Half fish, half human, Merfolk are citizens of both water and land. They are

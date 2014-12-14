@@ -2418,6 +2418,9 @@ enum monster_type                      // menv[].type
     MONS_BABY_ALLIGATOR,
     MONS_ALLIGATOR,
     MONS_CROCODILE,
+#if TAG_MAJOR_VERSION > 34
+    MONS_LACERTILIAN,
+#endif
     MONS_HYDRA,
     MONS_SHEEP,
     MONS_YAK,
@@ -3303,6 +3306,8 @@ enum monster_type                      // menv[].type
 
     MONS_SHARD_SHRIKE,
     MONS_SINGULARITY,
+
+    MONS_LACERTILIAN,
 #endif
 
     NUM_MONSTERS,               // used for polymorph
@@ -3961,7 +3966,8 @@ enum species_type
     SP_GARGOYLE,
     SP_FORMICID,
     SP_VINE_STALKER,
-    LAST_VALID_SPECIES = SP_VINE_STALKER,
+    SP_LACERTILIAN,
+    LAST_VALID_SPECIES = SP_LACERTILIAN,
 // The high scores viewer still needs enums for removed species.
     SP_ELF,                            // (placeholder)
     SP_HILL_DWARF,                     // (placeholder)

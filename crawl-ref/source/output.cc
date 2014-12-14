@@ -2768,6 +2768,10 @@ static string _status_mut_abilities(int sw)
                        + max(0, you.experience_level - 7) * 2 / 5;
         break;
 
+    case SP_LACERTILIAN:
+        mutations.emplace_back("strong connection with the divine");
+        break;
+
 #if TAG_MAJOR_VERSION == 34
     case SP_DJINNI:
         mutations.emplace_back("fire immunity");

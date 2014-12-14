@@ -690,6 +690,7 @@ public:
     bool res_corr(bool calc_unid = true, bool items = true) const;
     bool clarity(bool calc_unid = true, bool items = true) const;
     bool stasis(bool calc_unid = true, bool items = true) const;
+    int faith(bool calc_unid = true, bool items = true) const;
 
     flight_type flight_mode() const;
     bool cancellable_flight() const;

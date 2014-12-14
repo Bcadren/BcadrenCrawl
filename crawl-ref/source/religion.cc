@@ -1319,8 +1319,11 @@ static void _inc_penance(int val)
     _inc_penance(you.religion, val);
 }
 
-static void _set_penance(god_type god, int val)
+static void _set_penance(god_type god, int val, bool excommunicated = 0)
 {
+    if (excommunicated && you.species == SP_LACERTILIAN)
+        // no penance for swapping gods
+        return;
     you.penance[god] = val;
 }
 
@@ -2775,7 +2778,9 @@ void excommunication(god_type new_god, bool immediate)
     if (god_hates_your_god(old_god, new_god))
     {
         simple_god_message(
-            make_stringf(" does not appreciate desertion%s!",
+            make_stringf(" %s desertion%s!",
+                         you.species == SP_LACERTILIAN ? "grudgingly accepts your"
+                                                       : "does not appreciate",
                          _god_hates_your_god_reaction(old_god, new_god).c_str()).c_str(),
             old_god);
     }
@@ -2783,13 +2788,13 @@ void excommunication(god_type new_god, bool immediate)
     switch (old_god)
     {
     case GOD_XOM:
-        _set_penance(old_god, 50);
+        _set_penance(old_god, 50, 1);
         break;
 
     case GOD_KIKUBAAQUDGHA:
         mprf(MSGCH_GOD, old_god, "You sense decay."); // in the state of Denmark
         add_daction(DACT_ROT_CORPSES);
-        _set_penance(old_god, 30);
+        _set_penance(old_god, 30, 1);
         break;
 
     case GOD_YREDELEMNUL:
@@ -2801,17 +2806,17 @@ void excommunication(god_type new_god, bool immediate)
             add_daction(DACT_ALLY_YRED_SLAVE);
             remove_all_companions(GOD_YREDELEMNUL);
         }
-        _set_penance(old_god, 30);
+        _set_penance(old_god, 30, 1);
         break;
 
     case GOD_VEHUMET:
         you.vehumet_gifts.clear();
         you.duration[DUR_VEHUMET_GIFT] = 0;
-        _set_penance(old_god, 25);
+        _set_penance(old_god, 25, 1);
         break;
 
     case GOD_MAKHLEB:
-        _set_penance(old_god, 25);
+        _set_penance(old_god, 25, 1);
         add_daction(DACT_ALLY_MAKHLEB);
         break;
 
@@ -2821,7 +2826,7 @@ void excommunication(god_type new_god, bool immediate)
 
         add_daction(DACT_ALLY_TROG);
 
-        _set_penance(old_god, 50);
+        _set_penance(old_god, 50, 1);
         break;
 
     case GOD_BEOGH:
@@ -2840,20 +2845,20 @@ void excommunication(god_type new_god, bool immediate)
 
         env.level_state |= LSTATE_BEOGH;
 
-        _set_penance(old_god, 50);
+        _set_penance(old_god, 50, 1);
         break;
 
     case GOD_SIF_MUNA:
-        _set_penance(old_god, 50);
+        _set_penance(old_god, 50, 1);
         break;
 
     case GOD_NEMELEX_XOBEH:
         nemelex_shuffle_decks();
-        _set_penance(old_god, 150); // Nemelex penance is special
+        _set_penance(old_god, 150, 1); // Nemelex penance is special
         break;
 
     case GOD_LUGONU:
-        _set_penance(old_god, 50);
+        _set_penance(old_god, 50, 1);
         break;
 
     case GOD_SHINING_ONE:
@@ -2874,7 +2879,7 @@ void excommunication(god_type new_god, bool immediate)
         else
             add_daction(DACT_HOLY_PETS_GO_NEUTRAL);
 
-        _set_penance(old_god, 30);
+        _set_penance(old_god, 30, 1);
         break;
 
     case GOD_ZIN:
@@ -2889,7 +2894,7 @@ void excommunication(god_type new_god, bool immediate)
         if (!is_good_god(new_god))
             add_daction(DACT_ALLY_HOLY);
 
-        _set_penance(old_god, 25);
+        _set_penance(old_god, 25, 1);
         break;
 
     case GOD_ELYVILON:
@@ -2902,7 +2907,7 @@ void excommunication(god_type new_god, bool immediate)
         if (!is_good_god(new_god))
             add_daction(DACT_ALLY_HOLY);
 
-        _set_penance(old_god, 30);
+        _set_penance(old_god, 30, 1);
         break;
 
     case GOD_JIYVA:
@@ -2915,7 +2920,7 @@ void excommunication(god_type new_god, bool immediate)
             add_daction(DACT_ALLY_SLIME);
         }
 
-        _set_penance(old_god, 30);
+        _set_penance(old_god, 30, 1);
         break;
 
     case GOD_FEDHAS:
@@ -2924,7 +2929,7 @@ void excommunication(god_type new_god, bool immediate)
             mprf(MSGCH_MONSTER_ENCHANT, "The plants of the dungeon turn on you.");
             add_daction(DACT_ALLY_PLANT);
         }
-        _set_penance(old_god, 30);
+        _set_penance(old_god, 30, 1);
         break;
 
     case GOD_ASHENZARI:
@@ -2934,7 +2939,7 @@ void excommunication(god_type new_god, bool immediate)
         you.exp_docked = exp_needed(min<int>(you.max_level, 27)  + 1)
                        - exp_needed(min<int>(you.max_level, 27));
         you.exp_docked_total = you.exp_docked;
-        _set_penance(old_god, 50);
+        _set_penance(old_god, 50, 1);
         break;
 
     case GOD_DITHMENOS:
@@ -2943,7 +2948,7 @@ void excommunication(god_type new_god, bool immediate)
             mprf(MSGCH_GOD, old_god, "Your aura of darkness fades away.");
             invalidate_agrid(true);
         }
-        _set_penance(old_god, 25);
+        _set_penance(old_god, 25, 1);
         break;
 
     case GOD_GOZAG:
@@ -2958,7 +2963,7 @@ void excommunication(god_type new_god, bool immediate)
             branch_bribe[it->id] = 0;
         add_daction(DACT_BRIBE_TIMEOUT);
         add_daction(DACT_REMOVE_GOZAG_SHOPS);
-        _set_penance(old_god, 25);
+        _set_penance(old_god, 25, 1);
         break;
 
     case GOD_QAZLAL:
@@ -2990,12 +2995,12 @@ void excommunication(god_type new_god, bool immediate)
             you.duration[DUR_QAZLAL_AC] = 0;
             you.redraw_armour_class = true;
         }
-        _set_penance(old_god, 25);
+        _set_penance(old_god, 25, 1);
         break;
 
     case GOD_CHEIBRIADOS:
     default:
-        _set_penance(old_god, 25);
+        _set_penance(old_god, 25, 1);
         break;
     }
 
@@ -3406,7 +3411,8 @@ void join_religion(god_type which_god, bool immediate)
                    + god_name(you.religion) + ".");
 
     simple_god_message(
-        make_stringf(" welcomes you%s!",
+        make_stringf("%s welcomes you%s!",
+                     you.species == SP_LACERTILIAN ? " proudly" : "",
                      you.worshipped[which_god] ? " back" : "").c_str());
     if (!immediate)
         more();

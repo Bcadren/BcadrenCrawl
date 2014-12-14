@@ -810,6 +810,19 @@ char_choice_restriction job_allowed(species_type speci, job_type job)
             default:
                 return CC_RESTRICTED;
         }
+    case SP_LACERTILIAN:
+        switch (job)
+        {
+            case JOB_MONK:
+            case JOB_BERSERKER:
+            case JOB_ABYSSAL_KNIGHT:
+            case JOB_HEALER:
+            case JOB_TRANSMUTER:
+            case JOB_ENCHANTER:
+                return CC_UNRESTRICTED;
+            default:
+                return CC_RESTRICTED;
+        }
     default:
         return CC_BANNED;
     }

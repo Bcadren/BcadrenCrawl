@@ -1059,6 +1059,9 @@ static void _unequip_armour_effect(item_def& item, bool meld,
 
 static void _remove_amulet_of_faith(item_def &item)
 {
+    if (you.species == SP_LACERTILIAN)
+        return;
+
     if (you_worship(GOD_RU))
     {
         // next sacrifice is going to be delaaaayed.

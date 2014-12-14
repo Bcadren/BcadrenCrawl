@@ -290,15 +290,8 @@ bool actor::clarity(bool calc_unid, bool items) const
 
 int actor::faith(bool calc_unid, bool items) const
 {
-    int net_faith = 0;
-
-    if (items && wearing(EQ_AMULET, AMU_FAITH, calc_unid))
-        net_faith++;
-
-    if (is_player() && player_mutation_level(MUT_FORLORN))
-        net_faith--;
-
-    return net_faith;
+    return (items && wearing(EQ_AMULET, AMU_FAITH, calc_unid)) ?
+            1 : 0;
 }
 
 bool actor::warding(bool calc_unid, bool items) const

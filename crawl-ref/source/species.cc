@@ -24,6 +24,7 @@ static species_type species_order[] =
     SP_MERFOLK,        SP_MINOTAUR,
     SP_TENGU,          SP_BASE_DRACONIAN,
     SP_GARGOYLE,       SP_FORMICID,
+    SP_LACERTILIAN,
     // mostly human shape but made of a strange substance
     SP_VINE_STALKER,
     // celestial species
@@ -63,7 +64,7 @@ static const char * Species_Abbrev_List[NUM_SPECIES] =
 #if TAG_MAJOR_VERSION == 34
       "Dj", "LO",
 #endif
-      "Gr", "Fo", "VS",
+      "Gr", "Fo", "VS", "La",
       // placeholders
       "El", "HD", "OM", "GE", "Gn", "MD",
 #if TAG_MAJOR_VERSION > 34
@@ -204,6 +205,7 @@ string species_name(species_type speci, bool genus, bool adj)
         case SP_TENGU:    res = "Tengu";    break;
         case SP_GARGOYLE: res = "Gargoyle"; break;
         case SP_FORMICID: res = "Formicid"; break;
+        case SP_LACERTILIAN: res = "Lacertilian"; break;
 
         case SP_VINE_STALKER:
             res = (adj ? "Vine" : genus ? "Vine" : "Vine Stalker");
@@ -475,6 +477,8 @@ monster_type player_species_to_mons_species(species_type species)
         return MONS_FORMICID;
     case SP_VINE_STALKER:
         return MONS_VINE_STALKER;
+    case SP_LACERTILIAN:
+        return MONS_LACERTILIAN;
     case SP_ELF:
     case SP_HILL_DWARF:
     case SP_MOUNTAIN_DWARF:
@@ -584,6 +588,7 @@ int species_exp_modifier(species_type species)
     case SP_VAMPIRE:
     case SP_TROLL:
     case SP_DEMONSPAWN:
+    case SP_LACERTILIAN:
 #if TAG_MAJOR_VERSION == 34
     case SP_DJINNI:
     case SP_LAVA_ORC:
@@ -617,6 +622,7 @@ int species_hp_modifier(species_type species)
 #endif
     case SP_HALFLING:
     case SP_OCTOPODE:
+    case SP_LACERTILIAN:
         return -1;
     default:
         return 0;
@@ -657,6 +663,7 @@ int species_mp_modifier(species_type species)
         return -2;
     case SP_CENTAUR:
     case SP_GHOUL:
+    case SP_LACERTILIAN:
         return -1;
     default:
         return 0;

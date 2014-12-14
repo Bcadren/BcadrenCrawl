@@ -3375,6 +3375,17 @@ void level_change(bool skip_attribute_increase)
                     perma_mutate(MUT_REGENERATION, 1, "vine stalker growth");
                 break;
 
+            case SP_LACERTILIAN:
+                if (!(you.experience_level % 4) && !skip_attribute_increase)
+                    modify_stat(STAT_RANDOM, 1, false, "level gain");
+
+                if (you.experience_level == 7)
+                    perma_mutate(MUT_CAMOUFLAGE, 1, "lacertilian growth");
+
+                if (you.experience_level == 14)
+                    perma_mutate(MUT_CAMOUFLAGE, 1, "lacertilian growth");
+                break;
+
             default:
                 break;
             }
@@ -4093,6 +4104,18 @@ bool player::stasis(bool calc_unid, bool items) const
         return true;
 
     return actor::stasis(calc_unid, items);
+}
+
+int player::faith(bool calc_unid, bool items) const
+{
+    int net_faith = actor::faith(calc_unid, items);
+
+    if (species == SP_LACERTILIAN)
+        net_faith = 1;
+    if (player_mutation_level(MUT_FORLORN))
+        net_faith--;
+
+    return net_faith;
 }
 
 unsigned int exp_needed(int lev, int exp_apt)
@@ -7493,6 +7516,7 @@ int player::has_tail(bool allow_tran) const
 
     // XXX: Do merfolk in water belong under allow_tran?
     if (player_genus(GENPC_DRACONIAN)
+        || species == SP_LACERTILIAN
         || fishtail
         || player_mutation_level(MUT_STINGER, allow_tran))
     {
