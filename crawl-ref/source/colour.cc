@@ -658,6 +658,12 @@ void init_element_colours()
                             60,  WHITE,
                             60,  BROWN,
                         0));
+    add_element_colour(_create_random_element_colour_calc(
+                            ETC_PAKELLAS, "pakellas",
+                            40,  LIGHTGREEN,
+                            40,  LIGHTMAGENTA,
+                            40,  LIGHTCYAN,
+                        0));
     // redefined by Lua later
     add_element_colour(new element_colour_calc(
                             ETC_DISCO, "disco", _etc_random

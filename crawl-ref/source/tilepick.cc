@@ -448,6 +448,8 @@ static tileidx_t _tileidx_feature_base(dungeon_feature_type feat)
         return TILE_DNGN_ALTAR_QAZLAL;
     case DNGN_ALTAR_RU:
         return TILE_DNGN_ALTAR_RU;
+    case DNGN_ALTAR_PAKELLAS:
+        return TILE_DNGN_ALTAR_PAKELLAS;
     case DNGN_FOUNTAIN_BLUE:
         return TILE_DNGN_BLUE_FOUNTAIN;
     case DNGN_FOUNTAIN_SPARKLING:
@@ -5465,6 +5467,15 @@ tileidx_t tileidx_ability(const ability_type ability)
         return TILEG_ABILITY_RU_SACRIFICE_HAND;
     case ABIL_RU_REJECT_SACRIFICES:
         return TILEG_ABILITY_RU_REJECT_SACRIFICES;
+    // Pakellas
+    case ABIL_PAKELLAS_MINOR_DEVICE_SURGE:
+        return TILEG_ABIL_PAKELLAS_MINOR_DEVICE_SURGE;
+    case ABIL_PAKELLAS_QUICK_CHARGE:
+        return TILEG_ABIL_PAKELLAS_QUICK_CHARGE;
+    case ABIL_PAKELLAS_DEVICE_SURGE:
+        return TILEG_ABIL_PAKELLAS_DEVICE_SURGE;
+    case ABIL_PAKELLAS_MAJOR_DEVICE_SURGE:
+        return TILEG_ABIL_PAKELLAS_MAJOR_DEVICE_SURGE;
 
     // General divine (pseudo) abilities.
     case ABIL_RENOUNCE_RELIGION:

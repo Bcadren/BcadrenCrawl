@@ -464,6 +464,7 @@ static int _god_altars[][2] =
     { GOD_GOZAG, DNGN_ALTAR_GOZAG },
     { GOD_QAZLAL, DNGN_ALTAR_QAZLAL },
     { GOD_RU, DNGN_ALTAR_RU },
+    { GOD_PAKELLAS, DNGN_ALTAR_PAKELLAS },
 };
 
 COMPILE_CHECK(ARRAYSZ(_god_altars) == NUM_GODS - 1);
