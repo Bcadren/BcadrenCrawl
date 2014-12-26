@@ -17,6 +17,7 @@
 #include "english.h"
 #include "env.h"
 #include "food.h"
+#include "godwrath.h"
 #include "item_use.h"
 #include "itemprop.h"
 #include "mapmark.h"
@@ -1650,7 +1651,7 @@ void MiscastEffect::_divination_you(int severity)
                     )
             {
                 drain_mp(3 + random2(10));
-                mprf(MSGCH_WARN, "You suddenly feel drained of magical energy!");
+                canned_msg(MSG_MAGIC_DRAIN);
             }
             break;
         }
@@ -1670,7 +1671,7 @@ void MiscastEffect::_divination_you(int severity)
                     )
             {
                 drain_mp(5 + random2(20));
-                mprf(MSGCH_WARN, "You suddenly feel drained of magical energy!");
+                canned_msg(MSG_MAGIC_DRAIN);
             }
             break;
         case 1:
@@ -3250,34 +3251,13 @@ void MiscastEffect::_zot()
             if (you.magic_points > 0)
             {
                 dec_mp(10 + random2(21));
-                mprf(MSGCH_WARN, "You suddenly feel drained of magical energy!");
+                canned_msg(MSG_MAGIC_DRAIN);
             }
             break;
         case 10:
-        {
-            vector<string> wands;
-            for (int i = 0; i < ENDOFPACK; ++i)
-            {
-                if (!you.inv[i].defined())
-                    continue;
-
-                if (you.inv[i].base_type == OBJ_WANDS)
-                {
-                    const int charges = you.inv[i].plus;
-                    if (charges > 0 && coinflip())
-                    {
-                        you.inv[i].plus -= min(1 + random2(wand_charge_value(you.inv[i].sub_type)), charges);
-                        // Display new number of charges when messaging.
-                        wands.push_back(you.inv[i].name(DESC_PLAIN));
-                    }
-                }
-            }
-            if (!wands.empty())
-                mpr_comma_separated_list("Magical energy is drained from your ", wands);
-            else
+            if (!drain_wands())
                 do_msg(); // For canned_msg(MSG_NOTHING_HAPPENS)
             break;
-        }
         case 11:
             _lose_stat(STAT_RANDOM, 1 + random2avg((coinflip() ? 7 : 4), 2));
             break;

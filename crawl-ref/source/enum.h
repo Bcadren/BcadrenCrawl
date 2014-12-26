@@ -765,6 +765,7 @@ enum canned_message_type
     MSG_CANNOT_MOVE,
     MSG_YOU_DIE,
     MSG_GHOSTLY_OUTLINE,
+    MSG_MAGIC_DRAIN,
 };
 
 enum char_set_type

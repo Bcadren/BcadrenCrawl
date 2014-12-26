@@ -33,6 +33,7 @@
 #include "godabil.h"
 #include "godconduct.h"
 #include "godprayer.h"
+#include "godwrath.h"
 #include "hints.h"
 #include "invent.h"
 #include "items.h"
@@ -2373,11 +2374,15 @@ static spret_type _do_ability(const ability_def& abil, bool fail)
     case ABIL_EVOKE_BLINK:      // randarts
     case ABIL_BLINK:            // mutation
         fail_check();
+        if (!you_worship(GOD_PAKELLAS) && you.penance[GOD_PAKELLAS])
+            pakellas_evoke_backfire(SPELL_BLINK);
         random_blink(true);
         break;
 
     case ABIL_EVOKE_BERSERK:    // amulet of rage, randarts
         fail_check();
+        if (!you_worship(GOD_PAKELLAS) && you.penance[GOD_PAKELLAS])
+            pakellas_evoke_backfire(SPELL_BERSERKER_RAGE);
         you.go_berserk(true);
         break;
 
@@ -2407,6 +2412,9 @@ static spret_type _do_ability(const ability_def& abil, bool fail)
 
     case ABIL_EVOKE_TURN_INVISIBLE:     // ring, cloaks, randarts
         fail_check();
+        if (!you_worship(GOD_PAKELLAS) && you.penance[GOD_PAKELLAS])
+            pakellas_evoke_backfire(SPELL_INVISIBILITY);
+        surge_power(you.spec_evoke());
         potionlike_effect(POT_INVISIBILITY,
                           player_adjust_evoc_power(
                               you.skill(SK_EVOCATIONS, 2) + 5));
@@ -2434,6 +2442,8 @@ static spret_type _do_ability(const ability_def& abil, bool fail)
         }
         else
         {
+            if (!you_worship(GOD_PAKELLAS) && you.penance[GOD_PAKELLAS])
+                pakellas_evoke_backfire(SPELL_FLY);
             surge_power(you.spec_evoke());
             fly_player(
                 player_adjust_evoc_power(you.skill(SK_EVOCATIONS, 2) + 30));
@@ -2447,6 +2457,8 @@ static spret_type _do_ability(const ability_def& abil, bool fail)
 
     case ABIL_EVOKE_TELEPORT_CONTROL:
         fail_check();
+        if (!you_worship(GOD_PAKELLAS) && you.penance[GOD_PAKELLAS])
+            pakellas_evoke_backfire(SPELL_CONTROL_TELEPORT);
         surge_power(you.spec_evoke());
         cast_teleport_control(
             player_adjust_evoc_power(30 + you.skill(SK_EVOCATIONS, 2)), false);

@@ -1670,6 +1670,9 @@ void canned_msg(canned_message_type which_message)
         case MSG_GHOSTLY_OUTLINE:
             mpr("You see a ghostly outline there, and the spell fizzles.");
             break;
+        case MSG_MAGIC_DRAIN:
+            mprf(MSGCH_WARN, "You suddenly feel drained of magical energy!");
+            break;
     }
 }
 

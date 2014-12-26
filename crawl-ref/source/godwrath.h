@@ -13,4 +13,8 @@ void beogh_idol_revenge();
 
 void gozag_incite(monster *mon);
 int gozag_goldify(const item_def &it, int quant_got, bool quiet = false);
+
+void pakellas_evoke_backfire(spell_type spell);
+
+bool drain_wands();
 #endif
