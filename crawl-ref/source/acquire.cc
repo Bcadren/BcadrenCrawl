@@ -589,8 +589,11 @@ static int _acquirement_jewellery_subtype(bool /*divine*/, int & /*quantity*/)
     return result;
 }
 
-static bool _want_rod()
+static bool _want_rod(int agent)
 {
+    if (agent == GOD_PAKELLAS)
+        return true;
+
     // First look at skills to determine whether the player gets a rod.
     int spell_skills = 0;
     for (int i = SK_SPELLCASTING; i <= SK_LAST_MAGIC; i++)
@@ -668,15 +671,16 @@ static int _acquirement_rod_subtype(bool /*divine*/, int & /*quantity*/)
 
 /**
  * Return a miscellaneous evokable item for acquirement.
+ * @param divine Whether this acquirement is divine in nature.
  * @return   The item type chosen.
  */
-static int _acquirement_misc_subtype(bool /*divine*/, int & /*quantity*/)
+static int _acquirement_misc_subtype(bool divine, int & /*quantity*/)
 {
     // Total weight if none have been seen is 100.
     int result = random_choose_weighted(           // Decks given lowest weight.
-                                                   1, MISC_DECK_OF_WONDERS,
-                                                   2, MISC_DECK_OF_CHANGES,
-                                                   2, MISC_DECK_OF_DEFENCE,
+    (divine ?                                 1  : 0), MISC_DECK_OF_WONDERS,
+    (divine ?                                 2  : 0), MISC_DECK_OF_CHANGES,
+    (divine ?                                 2  : 0), MISC_DECK_OF_DEFENCE,
                                                    // The player might want
                                                    // multiple of these.
     (you.seen_misc[MISC_LAMP_OF_FIRE] ?       8 : 15), MISC_LAMP_OF_FIRE,
@@ -699,7 +703,7 @@ static int _acquirement_misc_subtype(bool /*divine*/, int & /*quantity*/)
     // invocations if we haven't seen one.
     int skills = you.skills[SK_EVOCATIONS]
         * max(you.skills[SK_SPELLCASTING], you.skills[SK_INVOCATIONS]);
-    if (x_chance_in_y(skills, MAX_SKILL_LEVEL * MAX_SKILL_LEVEL)
+    if (!divine && x_chance_in_y(skills, MAX_SKILL_LEVEL * MAX_SKILL_LEVEL)
         && !you.seen_misc[MISC_CRYSTAL_BALL_OF_ENERGY])
     {
         result = MISC_CRYSTAL_BALL_OF_ENERGY;
@@ -813,7 +817,7 @@ static int _find_acquirement_subtype(object_class_type &class_wanted,
     {
         // Staves and rods have a common acquirement class.
         if (class_wanted == OBJ_STAVES || class_wanted == OBJ_RODS)
-            class_wanted = _want_rod() ? OBJ_RODS : OBJ_STAVES;
+            class_wanted = _want_rod(agent) ? OBJ_RODS : OBJ_STAVES;
 
         // Vampires acquire blood, not food.
         if (class_wanted == OBJ_FOOD && you.species == SP_VAMPIRE)
@@ -1165,7 +1169,7 @@ int acquirement_create_item(object_class_type class_wanted,
     ASSERT(class_wanted != OBJ_RANDOM);
 
     const bool divine = (agent == GOD_OKAWARU || agent == GOD_XOM
-                         || agent == GOD_TROG);
+                         || agent == GOD_TROG || agent == GOD_PAKELLAS);
     int thing_created = NON_ITEM;
     int quant = 1;
 #define ITEM_LEVEL (divine ? MAKE_GIFT_ITEM : MAKE_GOOD_ITEM)
@@ -1286,6 +1290,21 @@ int acquirement_create_item(object_class_type class_wanted,
                 || is_unrandom_artefact(acq_item, UNRAND_TROG)
                 || is_unrandom_artefact(acq_item, UNRAND_WUCAD_MU)
                 || is_unrandom_artefact(acq_item, UNRAND_MAJIN))
+            {
+                destroy_item(thing_created, true);
+                thing_created = NON_ITEM;
+                continue;
+            }
+        }
+
+        // Pakellas doesn't gift decks (that's Nemelex's turf).
+        // The crystal ball case should be handled elsewhere, but just in
+        // case, it's also handled here.
+        if (agent == GOD_PAKELLAS)
+        {
+            if (acq_item.base_type == OBJ_MISCELLANY
+                && (is_deck(acq_item)
+                    || acq_item.sub_type == MISC_CRYSTAL_BALL_OF_ENERGY))
             {
                 destroy_item(thing_created, true);
                 thing_created = NON_ITEM;
