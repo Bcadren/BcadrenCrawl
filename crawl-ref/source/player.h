@@ -698,6 +698,7 @@ public:
     bool gourmand(bool calc_unid = true, bool items = true) const;
     bool res_corr(bool calc_unid = true, bool items = true) const;
     bool clarity(bool calc_unid = true, bool items = true) const;
+    int spec_evoke(bool calc_unid = true, bool items = true) const;
     bool stasis(bool calc_unid = true, bool items = true) const;
 
     flight_type flight_mode() const;
