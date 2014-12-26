@@ -82,7 +82,7 @@ static void _autoinscribe_item(item_def& item);
 static void _autoinscribe_floor_items();
 static void _autoinscribe_inventory();
 static void _multidrop(vector<SelItem> tmp_items);
-static bool _merge_items_into_inv(const item_def &it, int quant_got,
+static bool _merge_items_into_inv(item_def &it, int quant_got,
                                   char &inv_slot, bool quiet);
 
 static bool will_autopickup   = false;
@@ -1397,6 +1397,9 @@ bool is_stackable_item(const item_def &item)
     if (item.is_type(OBJ_MISCELLANY, MISC_PHANTOM_MIRROR))
         return true;
 
+    if (is_xp_evoker(item))
+        return true;
+
     return false;
 }
 
@@ -1486,6 +1489,8 @@ void merge_item_stacks(const item_def &source, item_def &dest, int quant)
 
     if (is_perishable_stack(source) && is_perishable_stack(dest))
         merge_perishable_stacks(source, dest, quant);
+    if (is_xp_evoker(source) && is_xp_evoker(dest))
+        dest.evoker_debt += source.evoker_debt;
     if (source.base_type == OBJ_GOLD) // Gozag
         dest.special = max(source.special, dest.special);
 }
@@ -1671,9 +1676,16 @@ static bool _put_item_in_inv(item_def& it, int quant_got, bool quiet, bool& put_
     {
         put_in_inv = true;
         // if you succeeded, actually reduce the number in the original stack
-        if (is_perishable_stack(it) && quant_got != it.quantity)
-            for (int i = 0; i < quant_got; i++)
-                remove_oldest_perishable_item(it);
+        if (quant_got != it.quantity)
+        {
+            if (is_perishable_stack(it))
+                for (int i = 0; i < quant_got; i++)
+                    remove_oldest_perishable_item(it);
+
+            // updating the stack in inventory is handled in the merge call
+            if (is_xp_evoker(it))
+                (void)remove_newest_xp_evoker(it, quant_got);
+        }
 
         // cleanup items that ended up in an inventory slot (not gold, etc)
         if (inv_slot != -1)
@@ -1905,7 +1917,7 @@ item_def *auto_assign_item_slot(item_def& item)
  * @param quiet           Suppresses pickup messages.
  * @return                The inventory slot the item was placed in.
  */
-static int _place_item_in_free_slot(const item_def &it, int quant_got,
+static int _place_item_in_free_slot(item_def &it, int quant_got,
                                     bool quiet)
 {
     int freeslot = find_free_slot(it);
@@ -1931,9 +1943,14 @@ static int _place_item_in_free_slot(const item_def &it, int quant_got,
 
     note_inscribe_item(item);
 
-    // avoid blood potion timer/stack size mismatch
-    if (is_perishable_stack(it) && quant_got != it.quantity)
-        remove_newest_perishable_item(item);
+    if (quant_got != it.quantity)
+    {
+        // avoid blood potion timer/stack size mismatch
+        if (is_perishable_stack(it))
+            remove_newest_perishable_item(item);
+        if (is_xp_evoker(it))
+            it.evoker_debt = remove_oldest_xp_evoker(item, quant_got);
+    }
 
     if (crawl_state.game_is_hints())
     {
@@ -1969,7 +1986,7 @@ static int _place_item_in_free_slot(const item_def &it, int quant_got,
  *              item pickup failure) aren't printed.
  * @return Whether something was successfully picked up.
  */
-static bool _merge_items_into_inv(const item_def &it, int quant_got,
+static bool _merge_items_into_inv(item_def &it, int quant_got,
                                   char &inv_slot, bool quiet)
 {
     inv_slot = -1;
@@ -2202,7 +2219,7 @@ void move_item_stack_to_grid(const coord_def& from, const coord_def& to)
 }
 
 // Returns false if no items could be dropped.
-bool copy_item_to_grid(const item_def &item, const coord_def& p,
+bool copy_item_to_grid(item_def &item, const coord_def& p,
                         int quant_drop, bool mark_dropped, bool silent)
 {
     ASSERT_IN_BOUNDS(p);
@@ -2232,6 +2249,11 @@ bool copy_item_to_grid(const item_def &item, const coord_def& p,
             if (items_stack(item, *si))
             {
                 item_def copy = item;
+                if (is_xp_evoker(item))
+                {
+                    copy.evoker_debt = remove_newest_xp_evoker(item,
+                                                               quant_drop);
+                }
                 merge_item_stacks(copy, *si, quant_drop);
                 inc_mitm_item_quantity(si->index(), quant_drop);
 
@@ -2273,11 +2295,17 @@ bool copy_item_to_grid(const item_def &item, const coord_def& p,
     }
 
     move_item_to_grid(&new_item_idx, p, true);
-    if (is_perishable_stack(item) && item.quantity != quant_drop)
+    if (item.quantity != quant_drop)
     {
-        // In the case of a partial drop, since only the oldest items have
-        // been dropped, remove the newest ones.
-        remove_newest_perishable_item(new_item);
+        if (is_perishable_stack(item))
+        {
+            // In the case of a partial drop, since only the oldest items have
+            // been dropped, remove the newest ones.
+            remove_newest_perishable_item(new_item);
+        }
+
+        if (is_xp_evoker(item))
+            new_item.evoker_debt = remove_newest_xp_evoker(item, quant_drop);
     }
 
     return true;
@@ -2427,12 +2455,15 @@ bool drop_item(int item_dropped, int quant_drop)
 
     feat_destroys_item(my_grid, you.inv[item_dropped], !quiet);
 
-    if (is_perishable_stack(you.inv[item_dropped])
-        && you.inv[item_dropped].quantity != quant_drop)
+    if (you.inv[item_dropped].quantity != quant_drop)
     {
-        // Oldest potions have been dropped.
-        for (int i = 0; i < quant_drop; i++)
-            remove_oldest_perishable_item(you.inv[item_dropped]);
+        if (is_perishable_stack(you.inv[item_dropped]))
+        {
+            // Oldest potions have been dropped.
+            for (int i = 0; i < quant_drop; i++)
+                remove_oldest_perishable_item(you.inv[item_dropped]);
+        }
+        // XP evoker has been handled in copy_item_to_grid
     }
 
     dec_inv_item_quantity(item_dropped, quant_drop);
@@ -4737,10 +4768,6 @@ item_info get_item_info(const item_def& item)
         if (ii.sub_type == MISC_DECK_UNKNOWN)
             ii.deck_rarity = item.deck_rarity;
 
-        // Preserve inert/charged state but not the actual numbers.
-        if (is_xp_evoker(item))
-            ii.evoker_debt = !!item.evoker_debt;
-
         if (is_deck(item))
         {
             ii.deck_rarity = item.deck_rarity;
@@ -4784,6 +4811,14 @@ item_info get_item_info(const item_def& item)
             ii.props["cards"] = info_cards;
             ii.props["card_flags"] = info_card_flags;
         }
+
+        // Copying the exact number here would leak info about how charged
+        // the evokers are; instead, let's give the evoker debt as the
+        // number of inert evokers.
+        // If the scale mismatch turns out to be an issue, we can scale by
+        // XP_EVOKE_DEBT.
+        if (is_xp_evoker(item))
+            ii.evoker_debt = num_xp_evokers_inert(item);
         break;
     case OBJ_GOLD:
         ii.special = item.special;
