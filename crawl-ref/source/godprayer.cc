@@ -308,6 +308,61 @@ static bool _altar_prayer()
         return false;
     }
 
+    // Pakellas supercharges a wand or a rod.
+    else if (can_do_capstone_ability(GOD_PAKELLAS))
+    {
+        simple_god_message(" will supercharge a wand or rod.");
+        more();
+
+        int item_slot = prompt_invent_item("Supercharge what?", MT_INVLIST,
+                                           OSEL_SUPERCHARGE, true, true, false);
+
+        if (item_slot == PROMPT_NOTHING || item_slot == PROMPT_ABORT)
+            return false;
+
+        item_def& wand(you.inv[item_slot]);
+
+        string prompt = "Do you wish to have " + wand.name(DESC_YOUR)
+                           + " supercharged?";
+
+        if (!yesno(prompt.c_str(), true, 'n'))
+        {
+            canned_msg(MSG_OK);
+            return false;
+        }
+
+        if (wand.base_type == OBJ_RODS)
+        {
+            wand.charge_cap = wand.charges =
+                (MAX_ROD_CHARGE + 1) * ROD_CHARGE_MULT;
+            wand.rod_plus = MAX_WPN_ENCHANT + 1;
+        }
+        else
+        {
+            set_ident_flags(wand, ISFLAG_KNOW_PLUSES);
+            wand.charges    = 4 * wand_charge_value(wand.sub_type);
+            wand.used_count = ZAPCOUNT_RECHARGED;
+        }
+
+        you.wield_change = true;
+        you.one_time_ability_used.set(GOD_PAKELLAS);
+
+        take_note(Note(NOTE_ID_ITEM, 0, 0, wand.name(DESC_A).c_str(),
+                  "supercharged by Pakellas"));
+
+        mprf(MSGCH_GOD, "Your %s glows brightly!",
+             wand.name(DESC_QUALNAME).c_str());
+
+        flash_view(UA_PLAYER, LIGHTGREEN);
+
+        simple_god_message(" booms: Use this gift wisely!");
+
+#ifndef USE_TILE_LOCAL
+        // Allow extra time for the flash to linger.
+        delay(1000);
+#endif
+    }
+
     // None of above are true, nothing happens.
     return false;
 }

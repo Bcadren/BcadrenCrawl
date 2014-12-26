@@ -2566,6 +2566,9 @@ static void _gain_piety_point()
 
                     you.one_time_ability_used.set(you.religion);
                     break;
+                case GOD_PAKELLAS:
+                    simple_god_message(" will now supercharge a wand or rod... once.");
+                    break;
                 default:
                     break;
             }
@@ -2684,6 +2687,11 @@ void lose_piety(int pgn)
                 {
                     simple_god_message(
                         " is no longer ready to corrupt your weapon.");
+                }
+                else if (you_worship(GOD_PAKELLAS))
+                {
+                    simple_god_message(
+                        " is no longer ready to supercharge a wand or rod.");
                 }
             }
         }
