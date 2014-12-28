@@ -1468,6 +1468,12 @@ enum dungeon_feature_type
     DNGN_TRAP_TELEPORT,
     DNGN_TRAP_SHAFT,
     DNGN_TRAP_WEB,
+#if TAG_MAJOR_VERSION > 34
+    DNGN_TRAP_ALARM,
+    DNGN_TRAP_ZOT,
+    DNGN_PASSAGE_OF_GOLUBRIA,
+    DNGN_TRAP_SHADOW,
+#endif
     DNGN_UNDISCOVERED_TRAP,
 
     DNGN_ENTER_SHOP,
@@ -1607,9 +1613,11 @@ enum dungeon_feature_type
 
     DNGN_SEALED_STAIRS_UP,
     DNGN_SEALED_STAIRS_DOWN,
+#if TAG_MAJOR_VERSION == 34
     DNGN_TRAP_ALARM,
     DNGN_TRAP_ZOT,
     DNGN_PASSAGE_OF_GOLUBRIA,
+#endif
 
     DNGN_ENTER_ZIGGURAT,
     DNGN_ENTER_BAZAAR,
@@ -1641,6 +1649,8 @@ enum dungeon_feature_type
     DNGN_ALTAR_QAZLAL,
     DNGN_ALTAR_RU,
     DNGN_ALTAR_PAKELLAS,
+
+    DNGN_TRAP_SHADOW, // move this before Pakellas before merging into master!
 #endif
 
     NUM_FEATURES
@@ -4452,6 +4462,7 @@ enum trap_type
     TRAP_GAS,
     TRAP_TELEPORT,
 #endif
+    TRAP_SHADOW,
     NUM_TRAPS,
     TRAP_MAX_REGULAR = TRAP_SHAFT,
     TRAP_UNASSIGNED = 100,

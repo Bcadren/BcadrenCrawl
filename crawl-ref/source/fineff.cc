@@ -27,6 +27,7 @@
 #include "ouch.h"
 #include "religion.h"
 #include "state.h"
+#include "terrain.h"
 #include "transform.h"
 #include "view.h"
 #include "viewchar.h"
@@ -443,11 +444,14 @@ void shock_serpent_discharge_fineff::fire()
     beam.flavour    = BEAM_VISUAL;
     beam.colour     = LIGHTCYAN;
     beam.glyph      = dchar_glyph(DCHAR_EXPLOSION);
+#ifdef USE_TILE
+    beam.tile_beam = -1;
+#endif
     beam.draw_delay = 0;
     coord_def tl(position.x - range, position.y - range);
     coord_def br(position.x + range, position.y + range);
     for (rectangle_iterator ri(tl, br); ri; ++ri)
-        if (in_bounds(*ri))
+        if (in_bounds(*ri) && !cell_is_solid(*ri))
         {
             if (!pause && you.see_cell(*ri))
                 pause = true;
