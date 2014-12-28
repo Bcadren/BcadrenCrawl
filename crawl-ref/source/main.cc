@@ -2972,6 +2972,9 @@ static void _move_player(int move_x, int move_y)
 }
 
 // Swap monster to this location.  Player is swapped elsewhere.
+// Moves the monster into position, but does not move the player
+// or apply location effects: the latter should happen after the
+// player is moved.
 static void _swap_places(monster* mons, const coord_def &loc)
 {
     ASSERT(map_bounds(loc));
@@ -2982,7 +2985,13 @@ static void _swap_places(monster* mons, const coord_def &loc)
         if (mons->type == MONS_WANDERING_MUSHROOM
             && monster_at(loc)->type == MONS_TOADSTOOL)
         {
-            monster_swaps_places(mons, loc - mons->pos());
+            // We'll fire location effects for 'mons' back in _move_player,
+            // so don't do so here. The toadstool won't get location effects,
+            // but the player will trigger those soon enough. This wouldn't
+            // work so well if toadstools were aquatic, had clinging, or were
+            // otherwise handled specially in monster_swap_places or in
+            // apply_location_effects.
+            monster_swaps_places(mons, loc - mons->pos(), true, false);
             return;
         }
         else
@@ -2994,9 +3003,7 @@ static void _swap_places(monster* mons, const coord_def &loc)
 
     mpr("You swap places.");
 
-    const coord_def old_loc = mons->pos();
     mons->move_to_pos(loc, true, true);
-    mons->apply_location_effects(old_loc);
     return;
 }
 
@@ -3391,6 +3398,11 @@ static void _move_player(coord_def move)
         // Don't trigger traps when confusion causes no move.
         if (you.pos() != targ)
             move_player_to_grid(targ, true);
+        // Now it is safe to apply the swappee's location effects. Doing
+        // so earlier would allow e.g. shadow traps to put a monster
+        // at the player's location.
+        if (swap)
+            targ_monst->apply_location_effects(targ_monst->pos());
 
         if (you.duration[DUR_BARBS])
         {

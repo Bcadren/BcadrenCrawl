@@ -6197,34 +6197,34 @@ void ru_do_retribution(monster* mons, int damage)
         + damage - (2 * mons->get_hit_dice()));
     const actor* act = &you;
 
-    if (power > 50 && (mons->has_spells() || mons->is_actual_spellcaster()))
+    if (power > 50 && (mons->antimagic_susceptible()))
     {
-        simple_monster_message(mons, " is muted in retribution by your will!",
-            MSGCH_GOD);
-        mons->add_ench(mon_enchant(ENCH_MUTE, 1, act, power+random2(120)));
+        mprf(MSGCH_GOD, "You focus your will and drain %s's magic in "
+                "retribution!", mons->name(DESC_THE).c_str());
+        mons->add_ench(mon_enchant(ENCH_ANTIMAGIC, 1, act, power+random2(320)));
     }
     else if (power > 35)
     {
-        simple_monster_message(mons, " is paralysed in retribution by your will!",
-            MSGCH_GOD);
+        mprf(MSGCH_GOD, "You focus your will and paralyse %s in retribution!",
+                mons->name(DESC_THE).c_str());
         mons->add_ench(mon_enchant(ENCH_PARALYSIS, 1, act, power+random2(60)));
     }
     else if (power > 25)
     {
-        simple_monster_message(mons, " is slowed in retribution by your will!",
-            MSGCH_GOD);
+        mprf(MSGCH_GOD, "You focus your will and slow %s in retribution!",
+                mons->name(DESC_THE).c_str());
         mons->add_ench(mon_enchant(ENCH_SLOW, 1, act, power+random2(100)));
     }
     else if (power > 10 && mons_can_be_blinded(mons->type))
     {
-        simple_monster_message(mons, " is blinded in retribution by your will!",
-            MSGCH_GOD);
+        mprf(MSGCH_GOD, "You focus your will and blind %s in retribution!",
+                mons->name(DESC_THE).c_str());
         mons->add_ench(mon_enchant(ENCH_BLIND, 1, act, power+random2(100)));
     }
     else if (power > 0)
     {
-        simple_monster_message(mons, " is illuminated in retribution by your will!",
-            MSGCH_GOD);
+        mprf(MSGCH_GOD, "You focus your will and illuminate %s in retribution!",
+                mons->name(DESC_THE).c_str());
         mons->add_ench(mon_enchant(ENCH_CORONA, 1, act, power+random2(150)));
     }
 }
@@ -6440,15 +6440,14 @@ static int _apply_apocalypse(coord_def where, int pow, int dummy, actor* agent)
     switch (effect)
     {
         case 0:
-            if (mons->has_spells() || mons->is_actual_spellcaster())
+            if (mons->antimagic_susceptible())
             {
-                message = " is rendered silent by the truth!";
-                enchantment = ENCH_MUTE;
-                duration = 120 + random2(160);
+                message = " loses its magic into the devouring truth!";
+                enchantment = ENCH_ANTIMAGIC;
+                duration = 500 + random2(200);
                 dmg += roll_dice(die_size, 4);
                 break;
-            } // if not a spellcaster, fall through to paralysis.
-
+            } // if not antimagicable, fall through to paralysis.
         case 1:
             message = " is paralysed by terrible understanding!";
             enchantment = ENCH_PARALYSIS;
@@ -6491,7 +6490,7 @@ bool ru_apocalypse()
     mpr("You reveal the great annihilating truth to your foes!");
     noisy(30, you.pos());
     apply_area_visible(_apply_apocalypse, you.piety, &you);
-    drain_player(100,false, true);
+    drain_player(100, false, true);
     return true;
 }
 

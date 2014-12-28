@@ -983,23 +983,30 @@ static const char* misc_type_name(int type, bool known)
     }
 }
 
+static bool _book_visually_special(uint32_t s)
+{
+    return s & 128; // one in ten books; c.f. item_colour()
+}
+
 static const char* book_secondary_string(uint32_t s)
 {
-    // larger than NDSC_BOOK_SEC?
+    if (!_book_visually_special(s))
+        return "";
+
     static const char* const secondary_strings[] = {
         "", "chunky ", "thick ", "thin ", "wide ", "glowing ",
         "dog-eared ", "oblong ", "runed ", "", "", ""
     };
-    return secondary_strings[s % ARRAYSZ(secondary_strings)];
+    return secondary_strings[(s / NDSC_BOOK_PRI) % ARRAYSZ(secondary_strings)];
 }
 
 static const char* book_primary_string(uint32_t p)
 {
-    // smaller than NDSC_BOOK_PRI??
     static const char* const primary_strings[] = {
-        "paperback ", "hardcover ", "leatherbound ", "metal-bound ",
-        "papyrus ", "", ""
+        "paperback", "hardcover", "leatherbound", "metal-bound", "papyrus",
     };
+    COMPILE_CHECK(NDSC_BOOK_PRI == ARRAYSZ(primary_strings));
+
     return primary_strings[p % ARRAYSZ(primary_strings)];
 }
 
@@ -1805,8 +1812,8 @@ string item_def::name_aux(description_level_type desc, bool terse, bool ident,
             buff << (item_typ == BOOK_MANUAL ? "manual" : "book");
         else if (!know_type)
         {
-            buff << book_secondary_string(rnd / NDSC_BOOK_PRI)
-                 << book_primary_string(rnd % NDSC_BOOK_PRI)
+            buff << book_secondary_string(rnd)
+                 << book_primary_string(rnd) << " "
                  << (item_typ == BOOK_MANUAL ? "manual" : "book");
         }
         else
