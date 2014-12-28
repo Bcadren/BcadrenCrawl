@@ -64,6 +64,7 @@
 #include "spl-transloc.h"
 #include "stairs.h"
 #include "state.h"
+#include "stepdown.h"
 #include "stringutil.h"
 #include "target.h"
 #include "terrain.h"
@@ -3290,9 +3291,11 @@ static spret_type _do_ability(const ability_def& abil, bool fail)
     {
         fail_check();
 
-        const int num = random2avg(you.skill(SK_EVOCATIONS, 10), 2)
-                        * you.magic_points;
         const int den = 100 * you.max_magic_points;
+        const int num =
+            stepdown(random2avg(you.skill(SK_EVOCATIONS, 10), 2)
+                        * you.magic_points,
+                     den / 3);
 
         if (recharge_wand(true, "", num, den) <= 0)
             return SPRET_ABORT;
