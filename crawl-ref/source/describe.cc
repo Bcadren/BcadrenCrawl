@@ -14,11 +14,12 @@
 #include <sstream>
 #include <string>
 
+#include "adjust.h"
 #include "artefact.h"
 #include "branch.h"
 #include "butcher.h"
+#include "cloud.h" // cloud_type_name
 #include "clua.h"
-#include "command.h"
 #include "database.h"
 #include "decks.h"
 #include "delay.h"
@@ -890,8 +891,8 @@ static string _describe_weapon(const item_def &item, bool verbose)
             else
             {
                 description += "It emits flame when wielded, causing extra "
-                    "injury to most foes and up to half as much damage over "
-                    "again against particularly susceptible opponents.";
+                    "injury to most foes and up to half again as much damage "
+                    "against particularly susceptible opponents.";
                 if (damtype == DVORP_SLICING || damtype == DVORP_CHOPPING)
                 {
                     description += " Big, fiery blades are also staple "
@@ -909,8 +910,8 @@ static string _describe_weapon(const item_def &item, bool verbose)
             {
                 description += "It has been specially enchanted to freeze "
                     "those struck by it, causing extra injury to most foes "
-                    "and up to half as much damage over again against "
-                    "particularly susceptible opponents. It can also slow down "
+                    "and up to half again as much damage against particularly "
+                    "susceptible opponents. It can also slow down "
                     "cold-blooded creatures.";
             }
             break;
@@ -2096,9 +2097,18 @@ void get_feature_desc(const coord_def &pos, describe_info &inf)
 
     // mention the ability to pray at altars
     if (feat_is_altar(feat))
-        long_desc += "(Pray here to learn more.)";
+        long_desc += "(Pray here to learn more.)\n";
 
     inf.body << long_desc;
+
+    if (const cloud_type cloud = env.map_knowledge(pos).cloud())
+    {
+        const string cl_name = cloud_type_name(cloud);
+        const string cl_desc = getLongDescription(cl_name + " cloud");
+        inf.body << "\nThere is a cloud of " << cl_name << " here"
+                 << (cl_desc.empty() ? "." : ":\n")
+                 << cl_desc;
+    }
 
     inf.quote = getQuoteString(db_name);
 }
@@ -2124,15 +2134,19 @@ static const string _toggle_message =
 static int _print_toggle_message(const describe_info &inf, int& key)
 {
     mouse_control mc(MOUSE_MODE_MORE);
-    if (!key)
-        key = getchm();
 
     if (inf.quote.empty())
+    {
+        if (!key)
+            key = getchm();
         return false;
+    }
 
     const int bottom_line = min(30, get_number_of_lines());
     cgotoxy(1, bottom_line);
     formatted_string::parse_string(_toggle_message).display();
+    if (!key)
+        key = getchm();
 
     if (key == '!' || key == CK_MOUSE_CMD)
         return true;
@@ -2630,29 +2644,35 @@ static void _adjust_item(item_def &item)
     }
 }
 
-static void _append_spell_stats(const spell_type spell,
-                                string &description,
-                                bool rod)
+/**
+ * List the simple calculated stats of a given spell, when cast by the player
+ * in their current condition.
+ *
+ * @param spell     The spell in question.
+ * @param rod       Whether the spell is being cast from a rod (not a book).
+ */
+static string _player_spell_stats(const spell_type spell, bool rod)
 {
-    if (rod)
-    {
-        snprintf(info, INFO_SIZE,
-                 "\nLevel: %d",
-                 spell_difficulty(spell));
-    }
-    else
+    string description;
+    description += make_stringf("\nLevel: %d", spell_difficulty(spell));
+    if (!rod)
     {
         const string schools = spell_schools_string(spell);
-        char* failure = failure_rate_to_string(spell_fail(spell));
-        snprintf(info, INFO_SIZE,
-                 "\nLevel: %d        School%s: %s        Fail: %s",
-                 spell_difficulty(spell),
-                 schools.find("/") != string::npos ? "s" : "",
-                 schools.c_str(),
-                 failure);
-        free(failure);
+        description +=
+            make_stringf("        School%s: %s",
+                         schools.find("/") != string::npos ? "s" : "",
+                         schools.c_str());
+
+        if (!crawl_state.need_save
+            || (get_spell_flags(spell) & SPFLAG_MONSTER))
+        {
+            return description; // all other info is player-dependent
+        }
+
+        const string failure = failure_rate_to_string(spell_fail(spell));
+        description += make_stringf("        Fail: %s", failure.c_str());
     }
-    description += info;
+
     description += "\n\nPower : ";
     description += spell_power_string(spell, rod);
     description += "\nRange : ";
@@ -2662,6 +2682,7 @@ static void _append_spell_stats(const spell_type spell,
     description += "\nNoise : ";
     description += spell_noise_string(spell);
     description += "\n";
+    return description;
 }
 
 string get_skill_description(skill_type skill, bool need_title)
@@ -2738,6 +2759,78 @@ static int _hex_chance(const spell_type spell, const int hd)
 }
 
 /**
+ * Describe mostly non-numeric player-specific information about a spell.
+ *
+ * (E.g., your god's opinion of it, whether it's in a high-level book that
+ * you can't memorize from, whether it's currently useless for whatever
+ * reason...)
+ *
+ * @param spell     The spell in question.
+ * @param item      The object the spell is in; may be null.
+ */
+static string _player_spell_desc(spell_type spell, const item_def* item)
+{
+    if (!crawl_state.need_save || (get_spell_flags(spell) & SPFLAG_MONSTER))
+        return ""; // all info is player-dependent
+
+    string description;
+
+    // Report summon cap
+    const int limit = summons_limit(spell);
+    if (limit)
+    {
+        description += "You can sustain at most " + number_in_words(limit)
+                        + " creature" + (limit > 1 ? "s" : "")
+                        + " summoned by this spell.\n";
+    }
+
+    const bool rod = item && item->base_type == OBJ_RODS;
+    if (god_hates_spell(spell, you.religion, rod))
+    {
+        description += uppercase_first(god_name(you.religion))
+                       + " frowns upon the use of this spell.\n";
+        if (god_loathes_spell(spell, you.religion))
+            description += "You'd be excommunicated if you dared to cast it!\n";
+    }
+    else if (god_likes_spell(spell, you.religion))
+    {
+        description += uppercase_first(god_name(you.religion))
+                       + " supports the use of this spell.\n";
+    }
+
+    if (item && !player_can_memorise_from_spellbook(*item))
+    {
+        description += "The spell is scrawled in ancient runes that are "
+                       "beyond your current level of understanding.\n";
+    }
+
+    if (spell_is_useless(spell, true, false, rod) && you_can_memorise(spell))
+    {
+        description += "\nThis spell will have no effect right now: "
+                       + spell_uselessness_reason(spell, true, false, rod)
+                       + "\n";
+    }
+
+    return description;
+}
+
+
+/**
+ * Describe a spell, as cast by the player.
+ *
+ * @param spell     The spell in question.
+ * @param item      The object the spell is in; may be null.
+ * @return          Information about the spell; does not include the title or
+ *                  db description, but does include level, range, etc.
+ */
+string player_spell_desc(spell_type spell, const item_def* item)
+{
+    const bool rod = item && item->base_type == OBJ_RODS;
+    return _player_spell_stats(spell, rod)
+           + _player_spell_desc(spell, item);
+}
+
+/**
  * Examine a given spell. Set the given string to its description, stats, &c.
  * If it's a book in a spell that the player is holding, mention the option to
  * memorize or forget it.
@@ -2776,13 +2869,6 @@ static int _get_spell_description(const spell_type spell,
 #endif
     }
 
-    // Report summon cap
-    if (const int limit = summons_limit(spell))
-    {
-        description += "You can sustain at most " + number_in_words(limit)
-                       + " creature" + (limit > 1 ? "s" : "") + " summoned by this spell.\n";
-    }
-
     if (mon_owner)
     {
         // FIXME: this HD is wrong in some cases
@@ -2802,40 +2888,7 @@ static int _get_spell_description(const spell_type spell,
 
     }
     else
-    {
-        const bool rod = item && item->base_type == OBJ_RODS;
-
-        if (god_hates_spell(spell, you.religion, rod))
-        {
-            description += uppercase_first(god_name(you.religion))
-                            + " frowns upon the use of this spell.\n";
-            if (god_loathes_spell(spell, you.religion))
-            {
-                description += "You'd be excommunicated if you dared to cast "
-                               "it!\n";
-            }
-        }
-        else if (god_likes_spell(spell, you.religion))
-        {
-            description += uppercase_first(god_name(you.religion))
-                           + " supports the use of this spell.\n";
-        }
-
-        if (item && !player_can_memorise_from_spellbook(*item))
-        {
-            description += "The spell is scrawled in ancient runes that are "
-                           "beyond your current level of understanding.\n";
-        }
-
-        if (spell_is_useless(spell, true, false, rod) && you_can_memorise(spell))
-        {
-            description += "\nThis spell will have no effect right now: "
-                           + spell_uselessness_reason(spell, true, false, rod)
-                           + "\n";
-        }
-
-        _append_spell_stats(spell, description, rod);
-    }
+        description += player_spell_desc(spell, item);
 
     // Don't allow memorization or amnesia after death.
     // (In the post-game inventory screen.)

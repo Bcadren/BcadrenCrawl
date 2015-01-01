@@ -212,7 +212,7 @@ mset(with_props("place:Lair:$ w:165 / dire elephant w:12 / " ..
                 "bone dragon / ancient lich / revenant",
      "place:Abyss:$ w:1990 / corrupter",
      with_props("place:Slime:$", { jelly_protect = true }),
-     with_props("place:Nor:$ w:460 / Ice Fiend / " ..
+     with_props("place:Coc:$ w:460 / Ice Fiend / " ..
                  "blizzard demon w:30", { weight = 5 }),
      with_props("place:Geh:$ w:460 / Brimstone Fiend / " ..
                  "balrug w:30", { weight = 5 }),
@@ -641,6 +641,8 @@ local function ziggurat_stairs(entry, exit)
 end
 
 local function ziggurat_furnish(centre, entry, exit)
+  ziggurat_stairs(entry, exit)
+
   has_loot_chamber = false
   local monster_generation = choose_monster_set()
 
@@ -648,32 +650,13 @@ local function ziggurat_furnish(centre, entry, exit)
     dgn.set_random_mon_list(monster_generation.spec)
   end
 
-  local need_lootvault = monster_generation.jelly_protect
-
-  -- zig 1: always start on one side
-  -- zig 2+: A chance of starting in the centre, increasing with zigs completed
-  -- & depth; 50% chance at zig2 + depth 27, 50% @ zig3 + depth21, etc
-  local completed = you.zigs_completed()
-  local place_centre = crawl.x_chance_in_y(completed * 6 + you.depth(),
-                                           completed * 6 + you.depth() + 6+27)
-                       and completed > 0
-
-
-
-  -- If we can (since there won't be a loot vault in the way), place the player
-  -- in the centre.
-  if not need_lootvault and place_centre then
-    entry = centre
-  end
-
-  ziggurat_stairs(entry, exit)
-
   -- Identify where we're going to place loot, but don't actually put
   -- anything down until we've placed pillars.
-  local lootspot = ziggurat_locate_loot(entry, exit, need_lootvault)
+  local lootspot = ziggurat_locate_loot(entry, exit,
+    monster_generation.jelly_protect)
 
-  if not has_loot_chamber and entry ~= centre then
-    -- Place pillars if we didn't put anything else in the middle.
+  if not has_loot_chamber then
+    -- Place pillars if we did not create a loot chamber.
     ziggurat_place_pillars(centre)
   end
 

@@ -28,6 +28,7 @@
 #include "libutil.h"
 #include "mapmark.h"
 #include "mon-enum.h"
+#include "mon-tentacle.h"
 #include "mgen_enum.h"
 #include "message.h"
 #include "misc.h"
@@ -542,6 +543,9 @@ void trap_def::trigger_shadow_trap(const actor& triggerer)
 {
     if (triggerer.is_summoned())
         return; // no summonsplosions
+
+    if (mons_is_tentacle_or_tentacle_segment(triggerer.type))
+        return; // no krakensplosions
 
     if (!you.see_cell(pos))
         return;
@@ -1879,9 +1883,9 @@ void handle_items_on_shaft(const coord_def& pos, bool open_shaft)
  * Get a number of traps to place on the current level.
  *
  * No traps are placed in either Temple or disconnected branches other than
- * Pandemonium. For other branches, we place 0-4 traps per level, averaged over
+ * Pandemonium. For other branches, we place 0-2 traps per level, averaged over
  * two dice. This value is increased for deeper levels; roughly one additional
- * trap for every 14 levels of absdepth, capping out at max 9 traps in a level.
+ * trap for every 10 levels of absdepth, capping out at max 9 traps in a level.
  *
  * @return  A number of traps to be placed.
 */
@@ -1894,8 +1898,8 @@ int num_traps_for_place()
         return 0;
     }
 
-    const int depth_bonus = div_rand_round(env.absdepth0, 7);
-    return random2avg(5 + depth_bonus, 2);
+    const int depth_bonus = div_rand_round(env.absdepth0, 5);
+    return random2avg(3 + depth_bonus, 2);
 }
 
 /**
@@ -1924,16 +1928,18 @@ trap_type random_trap_for_place()
     const bool shaft_ok = is_valid_shaft_level();
     const bool tele_ok = !crawl_state.game_is_sprint();
     const bool alarm_ok = env.absdepth0 > 3;
+    const bool shadow_ok = env.absdepth0 > 1;
 
     const pair<trap_type, int> trap_weights[] =
     {
         { TRAP_TELEPORT, tele_ok  ? 2 : 0},
-        { TRAP_SHADOW,              1    },
+        { TRAP_SHADOW,  shadow_ok ? 1 : 0 },
         { TRAP_SHAFT,   shaft_ok  ? 1 : 0},
         { TRAP_ALARM,   alarm_ok  ? 1 : 0},
     };
 
-    return *random_choose_weighted(trap_weights);
+    const trap_type *trap = random_choose_weighted(trap_weights);
+    return trap ? *trap : NUM_TRAPS;
 }
 
 int count_traps(trap_type ttyp)

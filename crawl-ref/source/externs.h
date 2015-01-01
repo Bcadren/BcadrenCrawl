@@ -289,29 +289,25 @@ typedef uint32_t mid_t;
 /// Upper bound on the number of monsters that can ever exist in a game.
 #define MID_FIRST_NON_MONSTER MID_ANON_FRIEND
 
-static inline monster_type operator++(monster_type &x)
-{
-    x = static_cast<monster_type>(x + 1);
-    return x;
-}
+/**
+ * Define overloaded ++ and -- operators for the enum T.
+ *
+ * This macro produces several inline function definitions; use it only at
+ * file/namespace scope. It requires a trailing semicolon.
+ *
+ * @param T A type expression naming the enum type to augument. Evaluated
+ *          several times.
+ */
+#define DEF_ENUM_INC(T) \
+    static inline T &operator++(T &x) { return x = static_cast<T>(x + 1); } \
+    static inline T &operator--(T &x) { return x = static_cast<T>(x - 1); } \
+    static inline T operator++(T &x, int) { T y = x; ++x; return y; } \
+    static inline T operator--(T &x, int) { T y = x; --x; return y; } \
+    COMPILE_CHECK(is_enum<T>::value)
 
-static inline monster_type operator--(monster_type &x)
-{
-    x = static_cast<monster_type>(x - 1);
-    return x;
-}
-
-static inline spell_type operator++(spell_type &x)
-{
-    x = static_cast<spell_type>(x + 1);
-    return x;
-}
-
-static inline spell_type operator--(spell_type &x)
-{
-    x = static_cast<spell_type>(x - 1);
-    return x;
-}
+DEF_ENUM_INC(monster_type);
+DEF_ENUM_INC(spell_type);
+DEF_ENUM_INC(skill_type);
 
 struct cloud_struct
 {

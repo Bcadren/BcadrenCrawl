@@ -5,6 +5,7 @@ acquire.o \
 act-iter.o \
 actor-los.o \
 actor.o \
+adjust.o \
 areas.o \
 arena.o \
 artefact.o \
@@ -120,6 +121,7 @@ l_you.o \
 lang-fake.o \
 lev-pand.o \
 libutil.o \
+lookup_help.o \
 los.o \
 los_def.o \
 losglobal.o \

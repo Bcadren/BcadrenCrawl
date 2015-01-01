@@ -221,6 +221,7 @@ perl.exe "util/gen-cflg.pl" compflag.h "&lt;UNKNOWN&gt;" "&lt;UNKNOWN&gt;"
     <ClCompile Include="..\act-iter.cc" />
     <ClCompile Include="..\actor-los.cc" />
     <ClCompile Include="..\actor.cc" />
+    <ClCompile Include="..\adjust.cc" />
     <ClCompile Include="..\AppHdr.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug Tiles|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug Tiles|x64'">Create</PrecompiledHeader>
@@ -360,6 +361,7 @@ perl.exe "util/gen-cflg.pl" compflag.h "&lt;UNKNOWN&gt;" "&lt;UNKNOWN&gt;"
     <ClCompile Include="..\l_view.cc" />
     <ClCompile Include="..\l_you.cc" />
     <ClCompile Include="..\lev-pand.cc" />
+    <ClCompile Include="..\lookup_help.cc" />
     <ClCompile Include="..\melee_attack.cc" />
     <ClCompile Include="..\mon-chimera.cc" />
     <ClCompile Include="..\mon-death.cc" />
@@ -613,6 +615,7 @@ perl.exe "util/gen-cflg.pl" compflag.h "&lt;UNKNOWN&gt;" "&lt;UNKNOWN&gt;"
     <ClInclude Include="..\acquire.h" />
     <ClInclude Include="..\act-iter.h" />
     <ClInclude Include="..\actor.h" />
+    <ClInclude Include="..\adjust.h" />
     <ClInclude Include="..\AppHdr.h" />
     <ClInclude Include="..\aptitudes.h" />
     <ClInclude Include="..\areas.h" />
@@ -731,6 +734,7 @@ perl.exe "util/gen-cflg.pl" compflag.h "&lt;UNKNOWN&gt;" "&lt;UNKNOWN&gt;"
     <ClInclude Include="..\l_defs.h" />
     <ClInclude Include="..\l_libs.h" />
     <ClInclude Include="..\lev-pand.h" />
+    <ClInclude Include="..\lookup_help.h" />
     <ClInclude Include="..\matrix.h" />
     <ClInclude Include="..\melee_attack.h" />
     <ClInclude Include="..\mi-enum.h" />

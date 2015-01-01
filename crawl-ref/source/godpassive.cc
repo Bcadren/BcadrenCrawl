@@ -299,13 +299,10 @@ string ash_describe_bondage(int flags, bool level)
         && you.bondage[ET_WEAPON] != -1)
     {
         if (you.bondage[ET_WEAPON] == you.bondage[ET_SHIELD])
-        {
-            desc = make_stringf("Your %s are %sbound.\n",
-                                you.hand_name(true).c_str(),
-                                you.bondage[ET_WEAPON] ? "" : "not ");
-        }
+            desc = you.hands_act("are", "bound.\n");
         else
         {
+            // FIXME: what if you sacrificed a hand?
             desc = make_stringf("Your %s %s is bound but not your %s %s.\n",
                                 you.bondage[ET_WEAPON] ? "weapon" : "shield",
                                 you.hand_name(false).c_str(),
@@ -636,8 +633,8 @@ map<skill_type, int8_t> ash_get_boosted_skills(eq_type type)
 
     // Boost all spell schools and evoc (to give some appeal to melee).
     case (ET_JEWELS):
-        for (int i = SK_FIRST_MAGIC_SCHOOL; i <= SK_LAST_MAGIC; ++i)
-            boost[skill_type(i)] = bondage;
+        for (skill_type sk = SK_FIRST_MAGIC_SCHOOL; sk <= SK_LAST_MAGIC; ++sk)
+            boost[sk] = bondage;
         boost[SK_EVOCATIONS] = bondage;
         break;
 

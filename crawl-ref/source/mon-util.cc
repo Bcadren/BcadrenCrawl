@@ -297,7 +297,7 @@ void set_resist(resists_t &all, mon_resist_flags res, int lev)
     }
 
     ASSERT_RANGE(lev, -3, 5);
-    all = all & ~(res * 7) | res * (lev & 7);
+    all = (all & ~(res * 7)) | (res * (lev & 7));
 }
 
 int get_mons_class_ac(monster_type mc)
@@ -312,10 +312,30 @@ int get_mons_class_ev(monster_type mc)
     return me ? me->ev : get_monster_data(MONS_PROGRAM_BUG)->ev;
 }
 
+static resists_t _apply_holiness_resists(resists_t resists, mon_holy_type mh)
+{
+    // Undead get full poison resistance.
+    if (mh == MH_UNDEAD)
+        resists = (resists & ~(MR_RES_POISON * 7)) | (MR_RES_POISON * 3);
+
+    // Everything but natural creatures have full rNeg. Set here for the
+    // benefit of the monster_info constructor.  If you change this, also
+    // change monster::res_negative_energy.
+    if (mh != MH_NATURAL)
+        resists = (resists & ~(MR_RES_NEG * 7)) | (MR_RES_NEG * 3);
+
+    return resists;
+}
+
 resists_t get_mons_class_resists(monster_type mc)
 {
     const monsterentry *me = get_monster_data(mc);
-    return me ? me->resists : get_monster_data(MONS_PROGRAM_BUG)->resists;
+    const resists_t resists = me ? me->resists
+                                 : get_monster_data(MONS_PROGRAM_BUG)->resists;
+    // Assumes that, when a monster's holiness differs from other monsters
+    // of the same type, that only adds resistances, never removes them.
+    // Currently the only such case is MF_FAKE_UNDEAD.
+    return _apply_holiness_resists(resists, mons_class_holiness(mc));
 }
 
 resists_t get_mons_resists(const monster* mon)
@@ -338,18 +358,9 @@ resists_t get_mons_resists(const monster* mon)
             resists |= get_mons_class_resists(subspecies);
     }
 
-    // Undead get full poison resistance. This is set from here in case
-    // they're undead due to the MF_FAKE_UNDEAD flag.
-    if (mon->holiness() == MH_UNDEAD)
-        resists = resists & ~(MR_RES_POISON * 7) | MR_RES_POISON * 3;
-
-    // Everything but natural creatures have full rNeg. Set here for the
-    // benefit of the monster_info constructor.  If you change this, also
-    // change monster::res_negative_energy.
-    if (mon->holiness() != MH_NATURAL)
-        resists = resists & ~(MR_RES_NEG * 7) | MR_RES_NEG * 3;
-
-    return resists;
+    // This is set from here in case they're undead due to the
+    // MF_FAKE_UNDEAD flag. See the comment in get_mons_class_resists.
+    return _apply_holiness_resists(resists, mon->holiness());
 }
 
 int get_mons_resist(const monster* mon, mon_resist_flags res)
@@ -1021,6 +1032,7 @@ int mons_demon_tier(monster_type mc)
     case 'C':
         if (mc != MONS_ANTAEUS)
             return 0;
+        // intentional fall-through for Antaeus
     case '&':
         return -1;
     case '1':
@@ -1530,6 +1542,9 @@ bool mons_can_use_stairs(const monster* mon)
         // and perhaps needs a whilelist (or long-duration vs. short-duration).
         return !summons_are_capped(static_cast<spell_type>(stype));
     }
+    if (stype == MON_SUMM_SHADOW)
+        return false; // shadow traps summons can't follow up/down stairs
+
     // Everything else is fine
     return true;
 }

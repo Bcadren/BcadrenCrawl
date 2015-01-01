@@ -754,7 +754,7 @@ bool do_wear_armour(int item, bool quiet)
             if (you.species == SP_OCTOPODE)
                 mpr("You need the rest of your tentacles for walking.");
             else
-                mprf("You'd need another %s to do that!", you.hand_name(true).c_str());
+                mprf("You'd need another %s to do that!", you.hand_name(false).c_str());
         }
         return false;
     }
@@ -771,6 +771,7 @@ bool do_wear_armour(int item, bool quiet)
                 mpr("You need the rest of your tentacles for walking.");
             else
             {
+                // Singular hand should have already been handled above.
                 mprf("You'd need three %s to do that!",
                      you.hand_name(true).c_str());
             }
@@ -2306,8 +2307,8 @@ void random_uselessness(int scroll_slot)
         }
         else
         {
-            mprf("Your %s glow %s for a moment.",
-                 you.hand_name(true).c_str(), weird_glowing_colour().c_str());
+            mpr(you.hands_act("glow", weird_glowing_colour()
+                                      + " for a moment."));
         }
         break;
 
@@ -2436,35 +2437,6 @@ bool player_can_read()
         return false;
     }
 
-    if (silenced(you.pos()))
-    {
-        mpr("Magic scrolls do not work when you're silenced!");
-        return false;
-    }
-
-    // water elementals
-    if (you.duration[DUR_WATER_HOLD] && !you.res_water_drowning())
-    {
-        mpr("You cannot read scrolls while unable to breathe!");
-        return false;
-    }
-
-    // ru
-    if (you.duration[DUR_NO_SCROLLS])
-    {
-        mpr("You cannot read scrolls in your current state!");
-        return false;
-    }
-
-#if TAG_MAJOR_VERSION == 34
-    // Prevent hot lava orcs reading scrolls
-    if (you.species == SP_LAVA_ORC && temperature_effect(LORC_NO_SCROLLS))
-    {
-        mpr("You'd burn any scroll you tried to read!");
-        return false;
-    }
-#endif
-
     return true;
 }
 
@@ -2498,6 +2470,26 @@ string cannot_read_item_reason(const item_def &item)
     // and scrolls - but nothing else.
     if (item.base_type != OBJ_SCROLLS)
         return "You can't read that!";
+
+    // the below only applies to scrolls. (it's easier to read books, since
+    // that's just a UI/strategic thing.)
+
+    if (silenced(you.pos()))
+        return "Magic scrolls do not work when you're silenced!";
+
+    // water elementals
+    if (you.duration[DUR_WATER_HOLD] && !you.res_water_drowning())
+        return "You cannot read scrolls while unable to breathe!";
+
+    // ru
+    if (you.duration[DUR_NO_SCROLLS])
+        return "You cannot read scrolls in your current state!";
+
+#if TAG_MAJOR_VERSION == 34
+    // Prevent hot lava orcs reading scrolls
+    if (you.species == SP_LAVA_ORC && temperature_effect(LORC_NO_SCROLLS))
+        return "You'd burn any scroll you tried to read!";
+#endif
 
     // don't waste the player's time reading known scrolls in situations where
     // they'd be useless

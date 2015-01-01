@@ -74,6 +74,7 @@
 #include "state.h"
 #include "stringutil.h"
 #include "target.h"
+#include "teleport.h" // monster_teleport
 #include "terrain.h"
 #include "throw.h"
 #ifdef USE_TILE
@@ -3667,12 +3668,13 @@ void cheibriados_temporal_distortion()
     }
     while (--you.duration[DUR_TIME_STEP] > 0);
 
-    monster* mon;
-    if (mon = monster_at(old_pos))
+    if (monster *mon = monster_at(old_pos))
     {
+        mon->props[FAKE_BLINK_KEY].get_bool() = true;
         mon->blink();
-        if (mon = monster_at(old_pos))
-            mon->teleport(true);
+        mon->props.erase(FAKE_BLINK_KEY);
+        if (monster *stubborn = monster_at(old_pos))
+            monster_teleport(stubborn, true, true);
     }
 
     you.moveto(old_pos);
@@ -3706,12 +3708,13 @@ void cheibriados_time_step(int pow) // pow is the number of turns to skip
     scaled_delay(1000);
 #endif
 
-    monster* mon;
-    if (mon = monster_at(old_pos))
+    if (monster *mon = monster_at(old_pos))
     {
+        mon->props[FAKE_BLINK_KEY].get_bool() = true;
         mon->blink();
-        if (mon = monster_at(old_pos))
-            mon->teleport(true);
+        mon->props.erase(FAKE_BLINK_KEY);
+        if (monster *stubborn = monster_at(old_pos))
+            monster_teleport(stubborn, true, true);
     }
 
     you.moveto(old_pos);
@@ -6442,7 +6445,8 @@ static int _apply_apocalypse(coord_def where, int pow, int dummy, actor* agent)
         case 0:
             if (mons->antimagic_susceptible())
             {
-                message = " loses its magic into the devouring truth!";
+                message = " loses " + mons->pronoun(PRONOUN_POSSESSIVE)
+                          + " magic into the devouring truth!";
                 enchantment = ENCH_ANTIMAGIC;
                 duration = 500 + random2(200);
                 dmg += roll_dice(die_size, 4);

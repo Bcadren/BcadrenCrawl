@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "adjust.h"
 #include "areas.h"
 #include "arena.h"
 #include "artefact.h"
@@ -22,7 +23,6 @@
 #include "cio.h"
 #include "clua.h"
 #include "colour.h"
-#include "command.h"
 #include "coord.h"
 #include "coordit.h"
 #include "dactions.h"
@@ -1569,10 +1569,12 @@ int find_free_slot(const item_def &i)
     // Return first free slot
     for (slot = 0; slot < ENDOFPACK; ++slot)
         if (!you.inv[slot].defined())
+        {
             if (disliked[slot])
                 badslot = slot;
             else
                 return slot;
+        }
 
     // If the least preferred slot is the only choice, so be it.
     return badslot;
@@ -4320,7 +4322,7 @@ static bool _book_from_spell(const char* specs, item_def &item)
     return false;
 }
 
-bool get_item_by_name(item_def *item, char* specs,
+bool get_item_by_name(item_def *item, const char* specs,
                       object_class_type class_wanted, bool create_for_real)
 {
     int            type_wanted    = -1;

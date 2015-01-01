@@ -168,7 +168,7 @@ static tileidx_t _tileidx_shop(coord_def where)
     }
 }
 
-static tileidx_t _tileidx_feature_base(dungeon_feature_type feat)
+tileidx_t tileidx_feature_base(dungeon_feature_type feat)
 {
     switch (feat)
     {
@@ -534,7 +534,7 @@ tileidx_t tileidx_feature(const coord_def &gc)
             unsigned rc = real_colour(colour, gc);
             return tile_dngn_coloured(base, rc) + spec; // XXX
         }
-        return _tileidx_feature_base(feat);
+        return tileidx_feature_base(feat);
     }
 
     case DNGN_TRAP_MECHANICAL:
@@ -599,7 +599,7 @@ tileidx_t tileidx_feature(const coord_def &gc)
             return t;
         }
     default:
-        return _tileidx_feature_base(feat);
+        return tileidx_feature_base(feat);
     }
 }
 
@@ -626,7 +626,7 @@ void tileidx_out_of_los(tileidx_t *fg, tileidx_t *bg, tileidx_t *cloud, const co
 
     // Override terrain for magic mapping.
     if (!cell.seen() && env.map_knowledge(gc).mapped())
-        *bg = _tileidx_feature_base(cell.feat());
+        *bg = tileidx_feature_base(cell.feat());
     else
         *bg = mem_bg;
     *bg |= tileidx_unseen_flag(gc);
@@ -5106,6 +5106,8 @@ tileidx_t tileidx_command(const command_type cmd)
         return TILEG_CMD_EDIT_PLAYER_TILE;
     case CMD_DISPLAY_COMMANDS:
         return TILEG_CMD_DISPLAY_COMMANDS;
+    case CMD_LOOKUP_HELP:
+        return TILEG_CMD_LOOKUP_HELP;
     case CMD_CHARACTER_DUMP:
         return TILEG_CMD_CHARACTER_DUMP;
     case CMD_DISPLAY_INVENTORY:

@@ -3182,11 +3182,10 @@ void level_change(bool skip_attribute_increase)
                     // time passing do_update = true.
 
                     uint8_t saved_skills[NUM_SKILLS];
-                    for (int i = SK_FIRST_SKILL; i < NUM_SKILLS; ++i)
+                    for (skill_type sk = SK_FIRST_SKILL; sk < NUM_SKILLS; ++sk)
                     {
-                        saved_skills[i] = you.skills[i];
-                        check_skill_level_change(static_cast<skill_type>(i),
-                                                 false);
+                        saved_skills[sk] = you.skills[sk];
+                        check_skill_level_change(sk, false);
                     }
                     // The player symbol depends on species.
                     update_player_symbol();
@@ -3198,10 +3197,10 @@ void level_change(bool skip_attribute_increase)
                     // Produce messages about skill increases/decreases. We
                     // restore one skill level at a time so that at most the
                     // skill being checked is at the wrong level.
-                    for (int i = SK_FIRST_SKILL; i < NUM_SKILLS; ++i)
+                    for (skill_type sk = SK_FIRST_SKILL; sk < NUM_SKILLS; ++sk)
                     {
-                        you.skills[i] = saved_skills[i];
-                        check_skill_level_change(static_cast<skill_type>(i));
+                        you.skills[sk] = saved_skills[sk];
+                        check_skill_level_change(sk);
                     }
 
                     redraw_screen();
@@ -9018,20 +9017,36 @@ string player::hands_verb(const string &plural_verb) const
     return hand + " " + conjugate_verb(plural_verb, plural);
 }
 
+// Is this a character that would not normally have a preceding space when
+// it follows a word?
+static bool _is_end_punct(char c)
+{
+    switch (c)
+    {
+    case ' ': case '.': case '!': case '?':
+    case ',': case ':': case ';': case ')':
+        return true;
+    }
+    return false;
+}
+
 /**
  * Return a string describing the player's hand(s) (or equivalent) taking the
  * given action (verb).
  *
  * @param plural_verb   The plural-agreeing verb corresponding to the action to
- *                      take. (E.g., "smoulder", "glow", "gain", etc.)
- * @param subject       The subject of the action. E.g. ".", "new energy.", &c.
- * @return              A string describing the player taking the given action.
- *                      E.g. "Your tentacle gains new energy."
+ *                      take. E.g., "smoulder", "glow", "gain", etc.
+ * @param object        The object or predicate complement of the action,
+ *                      including any sentence-final punctuation. E.g. ".",
+ *                      "new energy.", etc.
+ * @return              A string describing the player's hands taking the
+ *                      given action. E.g. "Your tentacle gains new energy."
  */
 string player::hands_act(const string &plural_verb,
-                         const string &subject) const
+                         const string &object) const
 {
-    return "Your " + hands_verb(plural_verb) + " " + subject;
+    const bool space = !object.empty() && !_is_end_punct(object[0]);
+    return "Your " + hands_verb(plural_verb) + (space ? " " : "") + object;
 }
 
 /**

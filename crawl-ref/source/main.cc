@@ -30,6 +30,7 @@
 #include "abyss.h"
 #include "acquire.h"
 #include "act-iter.h"
+#include "adjust.h"
 #include "areas.h"
 #include "arena.h"
 #include "artefact.h"
@@ -88,6 +89,7 @@
 #include "item_use.h"
 #include "libutil.h"
 #include "luaterp.h"
+#include "lookup_help.h"
 #include "macro.h"
 #include "makeitem.h"
 #include "map_knowledge.h"
@@ -1110,6 +1112,7 @@ static bool _cmd_is_repeatable(command_type cmd, bool is_again = false)
     case CMD_RESISTS_SCREEN:
     case CMD_READ_MESSAGES:
     case CMD_SEARCH_STASHES:
+    case CMD_LOOKUP_HELP:
         mpr("You can't repeat informational commands.");
         return false;
 
@@ -2116,6 +2119,7 @@ void process_command(command_type cmd)
     case CMD_MAKE_NOTE:                make_user_note();               break;
     case CMD_REPLAY_MESSAGES: replay_messages(); redraw_screen();      break;
     case CMD_RESISTS_SCREEN:           print_overview_screen();        break;
+    case CMD_LOOKUP_HELP:           keyhelp_query_descriptions();      break;
 
     case CMD_DISPLAY_RELIGION:
     {
@@ -3114,7 +3118,7 @@ static void _move_player(coord_def move)
                 mpr("You're too confused to move!");
         }
 
-        const coord_def& new_targ = you.pos() + move;
+        const coord_def new_targ = you.pos() + move;
         if (!in_bounds(new_targ) || !you.can_pass_through(new_targ))
         {
             you.walking = move.abs();
@@ -3153,7 +3157,7 @@ static void _move_player(coord_def move)
         }
     }
 
-    const coord_def& targ = you.pos() + move;
+    const coord_def targ = you.pos() + move;
 
     // You can't walk out of bounds!
     if (!in_bounds(targ))
@@ -3402,7 +3406,7 @@ static void _move_player(coord_def move)
         // so earlier would allow e.g. shadow traps to put a monster
         // at the player's location.
         if (swap)
-            targ_monst->apply_location_effects(targ_monst->pos());
+            targ_monst->apply_location_effects(targ);
 
         if (you.duration[DUR_BARBS])
         {

@@ -349,6 +349,9 @@ static int _mons_power_hd_factor(spell_type spell, bool random)
         case SPELL_CAUSE_FEAR:
             return 18 * ENCH_POW_FACTOR;
 
+        case SPELL_SENTINEL_MARK:
+            return 16 * ENCH_POW_FACTOR;
+
         case SPELL_IGNITE_POISON_SINGLE:
             return 12 * ENCH_POW_FACTOR;
 
@@ -1159,7 +1162,6 @@ bolt mons_spell_beam(monster* mons, spell_type spell_cast, int power,
         break;
 
     case SPELL_SENTINEL_MARK:
-        beam.ench_power = 125; //Difficult to resist
         beam.flavour    = BEAM_SENTINEL_MARK;
         beam.pierce     = true;
         break;
@@ -3241,7 +3243,7 @@ static coord_def _mons_prism_pos(monster* mon, actor* foe)
     // The % bit is effectively a ceil(); it captures the partial move the
     // target gets with their leftover energy.
     const int rad = 3 * BASELINE_DELAY / foe_speed
-                    + (((3 * BASELINE_DELAY) % foe_speed) > 0) ? 1 : 0;
+                    + (((3 * BASELINE_DELAY) % foe_speed) > 0 ? 1 : 0);
 
     // XXX: make this use coord_def when we have a hash<> for it
     unordered_set<int> possible_places;
@@ -3259,6 +3261,8 @@ static coord_def _mons_prism_pos(monster* mon, actor* foe)
     int hits = 1;
 
     const int range = _mons_spell_range(SPELL_FULMINANT_PRISM, *mon);
+
+    // TODO: try to avoid hurting allies and oneself here.
     for (distance_iterator di(mon->pos(), true, true, range); di; ++di)
     {
         // Our target needs to be in LOS, and we can't have a creature there.

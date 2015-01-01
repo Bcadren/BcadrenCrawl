@@ -886,11 +886,17 @@ void monster::equip_weapon(item_def &item, int near, bool msg)
                 "random colours.");
             break;
         case SPWPN_PENETRATION:
-            mprf("%s %s briefly pass through it before %s manages to get a "
+        {
+            bool plural = true;
+            string hand = hand_name(true, &plural);
+            mprf("%s %s briefly %s through it before %s manages to get a "
                  "firm grip on it.",
                  pronoun(PRONOUN_POSSESSIVE).c_str(),
-                 hand_name(true).c_str(),
+                 hand.c_str(),
+                 // Not conj_verb: the monster isn't the subject.
+                 conjugate_verb("pass", plural).c_str(),
                  pronoun(PRONOUN_SUBJECTIVE).c_str());
+        }
             break;
         case SPWPN_REAPING:
             mpr("It is briefly surrounded by shifting shadows.");
@@ -4587,12 +4593,14 @@ int monster::hurt(const actor *agent, int amount, beam_type flavour,
         }
 
         if (amount != INSTANT_DEATH)
+        {
             if (has_ench(ENCH_DEATHS_DOOR))
                 return 0;
             else if (petrified())
                 amount /= 2;
             else if (petrifying())
                 amount = amount * 2 / 3;
+        }
 
         if (amount != INSTANT_DEATH && has_ench(ENCH_INJURY_BOND))
         {

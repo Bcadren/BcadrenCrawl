@@ -865,9 +865,8 @@ void bolt::burn_wall_effect()
         did_god_conduct(DID_KILL_PLANT, 1, god_cares());
     ASSERT(agent());
 
-    // Trees do not burn so readily in a wet environment, and you shouldn't get
-    // tons of penance from an unid'd wand of fire.
-    if (player_in_branch(BRANCH_SWAMP) || in_good_standing(GOD_DITHMENOS))
+    // Trees do not burn so readily in a wet environment.
+    if (player_in_branch(BRANCH_SWAMP))
         place_cloud(CLOUD_FIRE, pos(), random2(12)+5, agent());
     else
         place_cloud(CLOUD_FOREST_FIRE, pos(), random2(30)+25, agent());
@@ -2621,7 +2620,8 @@ void bolt::drop_object()
         {
             mprf("%s %s!",
                  item->name(DESC_THE).c_str(),
-                 summoned_poof_msg(agent()->as_monster(), *item).c_str());
+                 summoned_poof_msg(agent() ? agent()->as_monster() : nullptr,
+                                   *item).c_str());
         }
         item_was_destroyed(*item);
         return;
@@ -2842,10 +2842,12 @@ void bolt::affect_place_clouds()
         place_cloud(CLOUD_GHOSTLY_FLAME, p, random2(6) + 5, agent());
 
     if (origin_spell == SPELL_DEATH_RATTLE)
+    {
         if (coinflip())
             place_cloud(CLOUD_NEGATIVE_ENERGY, p, random2(4) + 4, agent());
         else
             place_cloud(CLOUD_MIASMA, p, random2(4) + 4, agent());
+    }
 }
 
 void bolt::affect_place_explosion_clouds()
