@@ -229,7 +229,7 @@ spret_type cast_summon_swarm(int pow, god_type god, bool fail)
                                          1, MONS_GOLIATH_BEETLE,
                                          3, MONS_KILLER_BEE,
                                          1, MONS_VAMPIRE_MOSQUITO,
-                                         1, MONS_YELLOW_WASP,
+                                         1, MONS_WASP,
                                          0);
         }
         while (player_will_anger_monster(mon) && ++tries < MAX_TRIES);
@@ -3228,6 +3228,12 @@ monster* find_spectral_weapon(const actor* agent)
         return nullptr;
 }
 
+bool weapon_can_be_spectral(const item_def *wpn)
+{
+    return wpn && is_weapon(*wpn) && !is_range_weapon(*wpn)
+        && !is_special_unrandom_artefact(*wpn);
+}
+
 spret_type cast_spectral_weapon(actor *agent, int pow, god_type god, bool fail)
 {
     ASSERT(agent);
@@ -3236,8 +3242,7 @@ spret_type cast_spectral_weapon(actor *agent, int pow, god_type god, bool fail)
     item_def* wpn = agent->weapon();
 
     // If the wielded weapon should not be cloned, abort
-    if (!wpn || !is_weapon(*wpn) || is_range_weapon(*wpn)
-        || is_special_unrandom_artefact(*wpn))
+    if (!weapon_can_be_spectral(wpn))
     {
         if (agent->is_player())
         {
@@ -3714,4 +3719,28 @@ int count_summons(const actor *summoner, spell_type spell)
     }
 
     return count;
+}
+
+void summon_twister(int power_level)
+{
+    coord_def pos;
+    int tries = 0;
+
+    do
+    {
+        random_near_space(&you, you.pos(), pos, true);
+        tries++;
+    }
+    while (distance2(pos, you.pos()) < 3 && tries < 50);
+
+    if (tries > 50)
+        pos = you.pos();
+
+    if (create_monster(
+                mgen_data(MONS_TWISTER,
+                          BEH_HOSTILE, &you, 1 + random2(power_level + 1),
+                          0, pos, MHITYOU, MG_FORCE_PLACE)))
+    {
+        mpr("A tornado forms.");
+    }
 }

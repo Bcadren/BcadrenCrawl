@@ -725,9 +725,8 @@ many heads strike in all directions. Edible foes slain by the gnashing teeth
 are instantly devoured, reinvigorating the caster in their reptilian rampage.
 
 Like real hydras, the caster will sprout new heads when decapitated, unless the
-wound is cauterized by flame. However, because of a flaw in the spell, growing
-new heads does not provide healing as it does for real hydras. If all of the
-caster's heads are lopped off, the form will end.
+wound is cauterized by flame. If all of the caster's heads are lopped off, the
+form will end.
 %%%%
 Ice Form spell
 
@@ -966,9 +965,9 @@ onto their targets, yet because of their huge inertia, especially agile
 opponents may be able to outmanoeuvre them. The orbs need some time to
 stabilize, and a nascent orb won't do the full damage it is capable of.
 
-It is said that most copies of this spell suffer from a scribal error that
-makes the orbs unstable beyond a short range. Certain individuals may have
-access to spellbooks without this flaw, so beware!
+Those who have trained for years, or who have an innate ability, can maintain
+the orb out of their own line of sight. Adventurers, sadly, do not have the
+time to master this aspect of the spell.
 %%%%
 Orb of Electricity spell
 
@@ -1020,8 +1019,7 @@ Petrify spell
 
 This spell attempts to petrify a monster. If successful, the monster is slowed
 down for a while until it is temporarily turned into stone. In this state, a
-monster will take less damage upon being hit. It also precludes the use of
-wings, which can be quite unhealthy above lava.
+monster will take less damage upon being hit.
 %%%%
 Petrifying Cloud spell
 
@@ -1155,7 +1153,7 @@ Breathes a blast of flame that leaves a cloud of fire where it ends up.
 Sentinel's Mark spell
 
 This spell bestows a strong beacon upon an enemy. It announces the presence and
-location of the marked person to everyone on the same same dungeon level.
+location of the marked person to everyone on the same dungeon level.
 %%%%
 Shadow Bolt spell
 

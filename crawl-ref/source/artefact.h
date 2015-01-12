@@ -98,8 +98,7 @@ typedef FixedVector< bool, ART_PROPERTIES > artefact_known_props_t;
 
 void artefact_desc_properties(const item_def        &item,
                               artefact_properties_t &proprt,
-                              artefact_known_props_t &known,
-                              bool force_fake_props = false);
+                              artefact_known_props_t &known);
 
 void artefact_wpn_properties(const item_def       &item,
                              artefact_properties_t &proprt,
@@ -132,6 +131,18 @@ const unrandart_entry* get_unrand_entry(int unrand_index);
 void artefact_set_property(item_def           &item,
                            artefact_prop_type  prop,
                            int                 val);
+
+enum artp_value_type
+{
+    ARTP_VAL_BOOL,
+    ARTP_VAL_POS,
+    ARTP_VAL_ANY,
+};
+artp_value_type artp_potential_value_types(artefact_prop_type prop);
+
+const char *artp_name(artefact_prop_type prop);
+bool artp_potentially_good(artefact_prop_type prop);
+bool artp_potentially_bad(artefact_prop_type prop);
 
 int get_unrandart_num(const char *name);
 

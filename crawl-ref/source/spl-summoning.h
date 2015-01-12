@@ -113,6 +113,7 @@ spret_type cast_fulminating_prism(actor* caster, int pow,
                                   const coord_def& where, bool fail);
 
 monster* find_spectral_weapon(const actor* agent);
+bool weapon_can_be_spectral(const item_def *weapon);
 spret_type cast_spectral_weapon(actor *agent, int pow, god_type god, bool fail);
 void end_spectral_weapon(monster* mons, bool killed, bool quiet = false);
 bool trigger_spectral_weapon(actor* agent, const actor* target);
@@ -130,6 +131,7 @@ void summoned_monster(const monster* mons, const actor* caster,
 bool summons_are_capped(spell_type spell);
 int summons_limit(spell_type spell);
 int count_summons(const actor *summoner, spell_type spell);
+void summon_twister(int power_level);
 
 struct summons_desc // : public data_index_entry<spell_type>
 {

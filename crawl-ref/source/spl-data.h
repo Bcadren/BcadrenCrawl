@@ -1141,7 +1141,7 @@ static const struct spell_desc spelldata[] =
 {
     SPELL_DISINTEGRATE, "Disintegrate",
      SPTYP_CONJURATION,
-     SPFLAG_DIR_OR_TARGET | SPFLAG_NOT_SELF | SPFLAG_NEEDS_TRACER,
+     SPFLAG_DIR_OR_TARGET | SPFLAG_NOT_SELF | SPFLAG_NEEDS_TRACER | SPFLAG_MR_CHECK,
      6,
      200,
      6, 6,
@@ -2843,7 +2843,7 @@ static const struct spell_desc spelldata[] =
 {
     SPELL_SPECTRAL_WEAPON, "Spectral Weapon",
      SPTYP_HEXES | SPTYP_CHARMS,
-     SPFLAG_BATTLE | SPFLAG_SELFENCH | SPFLAG_UTILITY,
+     SPFLAG_BATTLE | SPFLAG_SELFENCH | SPFLAG_UTILITY | SPFLAG_NO_GHOST,
      3,
      100,
      -1, -1,

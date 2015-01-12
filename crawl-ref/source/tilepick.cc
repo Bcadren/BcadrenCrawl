@@ -494,7 +494,10 @@ tileidx_t tileidx_feature(const coord_def &gc)
     switch (feat)
     {
     case DNGN_FLOOR:
-        if (player_in_branch(BRANCH_SLIME))
+        // branches that can have slime walls (premature optimization?)
+        if (player_in_branch(BRANCH_SLIME)
+            || player_in_branch(BRANCH_TEMPLE)
+            || player_in_branch(BRANCH_LAIR))
         {
             bool slimy = false;
             for (adjacent_iterator ai(gc); ai; ++ai)
@@ -1435,12 +1438,12 @@ tileidx_t tileidx_monster_base(int type, bool in_water, int colour, int number,
         return TILEP_MONS_WRETCHED_STAR;
 
     // flying insects ('y')
-    case MONS_YELLOW_WASP:
-        return TILEP_MONS_YELLOW_WASP;
+    case MONS_WASP:
+        return TILEP_MONS_WASP;
     case MONS_VAMPIRE_MOSQUITO:
         return TILEP_MONS_VAMPIRE_MOSQUITO;
-    case MONS_RED_WASP:
-        return TILEP_MONS_RED_WASP;
+    case MONS_HORNET:
+        return TILEP_MONS_HORNET;
     case MONS_GHOST_MOTH:
         return TILEP_MONS_GHOST_MOTH;
     case MONS_MOTH_OF_WRATH:
@@ -3744,9 +3747,9 @@ static tileidx_t _tileidx_corpse(const item_def &item)
     // flying insects ('y')
     case MONS_VAMPIRE_MOSQUITO:
         return TILE_CORPSE_VAMPIRE_MOSQUITO;
-    case MONS_YELLOW_WASP:
+    case MONS_WASP:
         return TILE_CORPSE_YELLOW_WASP;
-    case MONS_RED_WASP:
+    case MONS_HORNET:
         return TILE_CORPSE_RED_WASP;
     case MONS_GHOST_MOTH:
         return TILE_CORPSE_GHOST_MOTH;
@@ -3977,7 +3980,7 @@ static tileidx_t _tileidx_rune(const item_def &item)
     case RUNE_GLOORX_VLOQ: return TILE_MISC_RUNE_GLOORX_VLOQ;
 
     case RUNE_DEMONIC:     return TILE_MISC_RUNE_DEMONIC
-        + ((uint32_t)item.special) % tile_main_count(TILE_MISC_RUNE_DEMONIC);
+        + ((uint32_t)item.rnd) % tile_main_count(TILE_MISC_RUNE_DEMONIC);
     case RUNE_ABYSSAL:     return TILE_MISC_RUNE_ABYSS;
 
     case RUNE_SNAKE:       return TILE_MISC_RUNE_SNAKE;
@@ -3996,6 +3999,36 @@ static tileidx_t _tileidx_rune(const item_def &item)
 
 static tileidx_t _tileidx_misc(const item_def &item)
 {
+    if (is_deck(item, true))
+    {
+        tileidx_t ch = TILE_ERROR;
+        switch (item.special)
+        {
+            case DECK_RARITY_LEGENDARY:
+                ch = TILE_MISC_DECK_LEGENDARY;
+                break;
+            case DECK_RARITY_RARE:
+                ch = TILE_MISC_DECK_RARE;
+                break;
+            case DECK_RARITY_COMMON:
+            default:
+                ch = TILE_MISC_DECK;
+                break;
+        }
+
+        if (item.flags & ISFLAG_KNOW_TYPE
+#if TAG_MAJOR_VERSION == 34
+            && item.sub_type != MISC_DECK_OF_ODDITIES // non-contiguous
+#endif
+            )
+        {
+            // NOTE: order of tiles must be identical to order of decks.
+            int offset = item.sub_type - MISC_DECK_OF_ESCAPE + 1;
+            ch += offset;
+        }
+        return ch;
+    }
+
     switch (item.sub_type)
     {
 #if TAG_MAJOR_VERSION == 34
@@ -4040,41 +4073,6 @@ static tileidx_t _tileidx_misc(const item_def &item)
     case MISC_PHANTOM_MIRROR:
         return TILE_MISC_PHANTOM_MIRROR;
 
-    case MISC_DECK_OF_ESCAPE:
-    case MISC_DECK_OF_DESTRUCTION:
-#if TAG_MAJOR_VERSION == 34
-    case MISC_DECK_OF_DUNGEONS:
-#endif
-    case MISC_DECK_OF_SUMMONING:
-    case MISC_DECK_OF_WONDERS:
-    case MISC_DECK_OF_PUNISHMENT:
-    case MISC_DECK_OF_WAR:
-    case MISC_DECK_OF_CHANGES:
-    case MISC_DECK_OF_DEFENCE:
-    case MISC_DECK_UNKNOWN:
-    {
-        tileidx_t ch = TILE_ERROR;
-        switch (item.special)
-        {
-        case DECK_RARITY_LEGENDARY:
-            ch = TILE_MISC_DECK_LEGENDARY;
-            break;
-        case DECK_RARITY_RARE:
-            ch = TILE_MISC_DECK_RARE;
-            break;
-        case DECK_RARITY_COMMON:
-        default:
-            ch = TILE_MISC_DECK;
-            break;
-        }
-        if (item.flags & ISFLAG_KNOW_TYPE)
-        {
-            // NOTE: order of tiles must be identical to order of decks.
-            int offset = item.sub_type - MISC_DECK_OF_ESCAPE + 1;
-            ch += offset;
-        }
-        return ch;
-    }
     case MISC_RUNE_OF_ZOT:
         return _tileidx_rune(item);
 

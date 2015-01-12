@@ -99,6 +99,7 @@ enum ability_flag_type
     ABFLAG_ZOTDEF         = 0x00040000, // ZotDef ability, w/ appropriate hotkey
     ABFLAG_SKILL_DRAIN    = 0x00080000, // drains skill levels
     ABFLAG_GOLD           = 0x00100000, // costs gold
+    ABFLAG_SACRIFICE      = 0x00200000, // sacrifice (Ru)
 };
 
 static int  _find_ability_slot(const ability_def& abil);
@@ -268,6 +269,7 @@ static const ability_def Ability_List[] =
     { ABIL_EVOKE_FLIGHT, "Evoke Flight", 1, 0, 100, 0, 0, ABFLAG_NONE},
     { ABIL_EVOKE_FOG, "Evoke Fog", 2, 0, 250, 0, 0, ABFLAG_NONE},
     { ABIL_EVOKE_TELEPORT_CONTROL, "Evoke Teleport Control", 4, 0, 200, 0, 0, ABFLAG_NONE},
+    { ABIL_EVOKE_TWISTER, "Evoke Twister", 10, 0, 200, 0, 0, ABFLAG_NONE},
 
     { ABIL_END_TRANSFORMATION, "End Transformation", 0, 0, 0, 0, 0, ABFLAG_NONE},
 
@@ -418,31 +420,31 @@ static const ability_def Ability_List[] =
       8, 0, 0, 0, 0, ABFLAG_EXHAUSTION|ABFLAG_SKILL_DRAIN },
 
     { ABIL_RU_SACRIFICE_PURITY, "Sacrifice Purity",
-      0, 0, 0, 0, 0, ABFLAG_NONE },
+      0, 0, 0, 0, 0, ABFLAG_SACRIFICE },
     { ABIL_RU_SACRIFICE_WORDS, "Sacrifice Words",
-      0, 0, 0, 0, 0, ABFLAG_NONE },
+      0, 0, 0, 0, 0, ABFLAG_SACRIFICE },
     { ABIL_RU_SACRIFICE_DRINK, "Sacrifice Drink",
-      0, 0, 0, 0, 0, ABFLAG_NONE },
+      0, 0, 0, 0, 0, ABFLAG_SACRIFICE },
     { ABIL_RU_SACRIFICE_ESSENCE, "Sacrifice Essence",
-      0, 0, 0, 0, 0, ABFLAG_NONE },
+      0, 0, 0, 0, 0, ABFLAG_SACRIFICE },
     { ABIL_RU_SACRIFICE_HEALTH, "Sacrifice Health",
-      0, 0, 0, 0, 0, ABFLAG_NONE },
+      0, 0, 0, 0, 0, ABFLAG_SACRIFICE },
     { ABIL_RU_SACRIFICE_STEALTH, "Sacrifice Stealth",
-      0, 0, 0, 0, 0, ABFLAG_NONE },
+      0, 0, 0, 0, 0, ABFLAG_SACRIFICE },
     { ABIL_RU_SACRIFICE_ARTIFICE, "Sacrifice Artifice",
-      0, 0, 0, 0, 0, ABFLAG_NONE },
+      0, 0, 0, 0, 0, ABFLAG_SACRIFICE },
     { ABIL_RU_SACRIFICE_LOVE, "Sacrifice Love",
-      0, 0, 0, 0, 0, ABFLAG_NONE },
+      0, 0, 0, 0, 0, ABFLAG_SACRIFICE },
     { ABIL_RU_SACRIFICE_COURAGE, "Sacrifice Courage",
-      0, 0, 0, 0, 0, ABFLAG_NONE },
+      0, 0, 0, 0, 0, ABFLAG_SACRIFICE },
     { ABIL_RU_SACRIFICE_ARCANA, "Sacrifice Arcana",
-      0, 0, 0, 0, 0, ABFLAG_NONE },
+      0, 0, 0, 0, 0, ABFLAG_SACRIFICE },
     { ABIL_RU_SACRIFICE_NIMBLENESS, "Sacrifice Nimbleness",
-      0, 0, 0, 0, 0, ABFLAG_NONE },
+      0, 0, 0, 0, 0, ABFLAG_SACRIFICE },
     { ABIL_RU_SACRIFICE_DURABILITY, "Sacrifice Durability",
-      0, 0, 0, 0, 0, ABFLAG_NONE },
+      0, 0, 0, 0, 0, ABFLAG_SACRIFICE },
     { ABIL_RU_SACRIFICE_HAND, "Sacrifice a Hand",
-      0, 0, 0, 0, 0, ABFLAG_NONE },
+      0, 0, 0, 0, 0, ABFLAG_SACRIFICE },
     { ABIL_RU_REJECT_SACRIFICES, "Reject Sacrifices",
       0, 0, 0, 0, 0, ABFLAG_NONE },
 
@@ -810,6 +812,14 @@ const string make_cost_description(ability_type ability)
             ret += ", Gold";
     }
 
+    if (abil.flags & ABFLAG_SACRIFICE)
+    {
+        ret += ", ";
+        const string prefix = "Sacrifice ";
+        ret += string(ability_name(ability)).substr(prefix.size());
+        ret += ru_sac_text(ability);
+    }
+
     // If we haven't output anything so far, then the effect has no cost
     if (ret.empty())
         return "None";
@@ -1138,6 +1148,9 @@ talent get_talent(ability_type ability, bool check_confused)
     case ABIL_EVOKE_FOG:
     case ABIL_EVOKE_TELEPORT_CONTROL:
         failure = 50 - you.skill(SK_EVOCATIONS, 2);
+        break;
+    case ABIL_EVOKE_TWISTER:
+        failure = 100 - you.skill(SK_EVOCATIONS, 4);
         break;
         // end item abilities - some possibly mutagenic {dlb}
 
@@ -2396,10 +2409,9 @@ static spret_type _do_ability(const ability_def& abil, bool fail)
 
     case ABIL_EVOKE_BLINK:      // randarts
     case ABIL_BLINK:            // mutation
-        fail_check();
         if (!you_worship(GOD_PAKELLAS) && you.penance[GOD_PAKELLAS])
             pakellas_evoke_backfire(SPELL_BLINK);
-        random_blink(true);
+        return cast_blink(true, fail);
         break;
 
     case ABIL_EVOKE_BERSERK:    // amulet of rage, randarts
@@ -2485,6 +2497,11 @@ static spret_type _do_ability(const ability_def& abil, bool fail)
         surge_power(you.spec_evoke());
         cast_teleport_control(
             player_adjust_evoc_power(30 + you.skill(SK_EVOCATIONS, 2)), false);
+        break;
+
+    case ABIL_EVOKE_TWISTER:
+        fail_check();
+        summon_twister(2);
         break;
 
     case ABIL_STOP_SINGING:
@@ -3869,6 +3886,12 @@ vector<talent> your_talents(bool check_confused, bool include_unusable)
         && !player_mutation_level(MUT_NO_ARTIFICE))
     {
         _add_talent(talents, ABIL_EVOKE_TELEPORT_CONTROL, check_confused);
+    }
+
+    if (you.scan_artefacts(ARTP_TWISTER)
+        && !player_mutation_level(MUT_NO_ARTIFICE))
+    {
+        _add_talent(talents, ABIL_EVOKE_TWISTER, check_confused);
     }
 
     // Find hotkeys for the non-hotkeyed talents.

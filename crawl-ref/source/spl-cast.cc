@@ -786,7 +786,8 @@ bool cast_a_spell(bool check_range, spell_type spell)
     //
     // I'm disabling this code for now except for excommunication, please
     // re-enable if you can fix it.
-    if (/*god_hates_spell*/god_loathes_spell(spell, you.religion))
+    if (/*god_hates_spell*/god_loathes_spell(spell, you.religion)
+        && !crawl_state.disables[DIS_CONFIRMATIONS])
     {
         // None currently dock just piety, right?
         if (!yesno(god_loathes_spell(spell, you.religion) ?
@@ -797,6 +798,23 @@ bool cast_a_spell(bool check_range, spell_type spell)
         {
             canned_msg(MSG_OK);
             crawl_state.zero_turns_taken();
+            return false;
+        }
+    }
+
+    int severity = fail_severity(spell);
+    if (Options.fail_severity_to_confirm > 0
+        && Options.fail_severity_to_confirm <= severity
+        && !crawl_state.disables[DIS_CONFIRMATIONS])
+    {
+        string prompt = make_stringf("The spell is %s to cast%s "
+                                     "Continue anyway?",
+                                     fail_severity_adjs[severity],
+                                     severity > 1 ? "!" : ".");
+
+        if (!yesno(prompt.c_str(), false, 'n'))
+        {
+            canned_msg(MSG_OK);
             return false;
         }
     }
@@ -2050,6 +2068,14 @@ static double _get_miscast_chance_with_miscast_prot(spell_type spell)
     return chance;
 }
 
+const char *fail_severity_adjs[] =
+{
+    "safe",
+    "slightly dangerous",
+    "quite dangerous",
+    "very dangerous",
+};
+
 int fail_severity(spell_type spell)
 {
     const double chance = _get_miscast_chance_with_miscast_prot(spell);
@@ -2058,6 +2084,7 @@ int fail_severity(spell_type spell)
            (chance < 0.005) ? 1 :
            (chance < 0.025) ? 2
                             : 3;
+    COMPILE_CHECK(ARRAYSZ(fail_severity_adjs) >= 3);
 }
 
 // Chooses a colour for the failure rate display for a spell. The colour is

@@ -2685,9 +2685,6 @@ void bolt::affect_ground()
         {
             beh_type beh = attitude_creation_behavior(attitude);
 
-            if (crawl_state.game_is_arena())
-                beh = coinflip() ? BEH_FRIENDLY : BEH_HOSTILE;
-
             const god_type god = agent() ? agent()->deity() : GOD_NO_GOD;
 
             if (create_monster(mgen_data(MONS_BALLISTOMYCETE,
@@ -3508,7 +3505,7 @@ void bolt::affect_player_enchantment(bool resistible)
         break;
 
     case BEAM_BLINK:
-        random_blink(false);
+        uncontrolled_blink();
         obvious_effect = true;
         break;
 
@@ -5788,8 +5785,7 @@ int bolt::range_used_on_hit() const
 }
 
 // Takes a bolt and refines it for use in the explosion function.
-// Explosions which do not follow from beams (e.g., scrolls of
-// immolation) bypass this function.
+// Explosions which do not follow from beams bypass this function.
 void bolt::refine_for_explosion()
 {
     ASSERT(!special_explosion);

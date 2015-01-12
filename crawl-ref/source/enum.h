@@ -179,7 +179,8 @@ enum ability_type
 #endif
     ABIL_EVOKE_FOG,
     ABIL_EVOKE_TELEPORT_CONTROL,
-    ABIL_MAX_EVOKE = ABIL_EVOKE_TELEPORT_CONTROL,
+    ABIL_EVOKE_TWISTER,
+    ABIL_MAX_EVOKE = ABIL_EVOKE_TWISTER,
 
     // Divine abilities
     // Zin
@@ -2553,8 +2554,8 @@ enum monster_type                      // menv[].type
 #if TAG_MAJOR_VERSION == 34
     MONS_BUMBLEBEE,
 #endif
-    MONS_YELLOW_WASP,
-    MONS_RED_WASP,
+    MONS_WASP,
+    MONS_HORNET,
     MONS_GOLIATH_BEETLE,
     MONS_BORING_BEETLE,
     MONS_BOULDER_BEETLE,
@@ -3753,8 +3754,8 @@ enum gender_type
     NUM_GENDERS
 };
 
-// Be sure to update _prop_name[] in wiz-item.cc to match.  Also
-// _randart_propnames(), but order doesn't matter there.
+// Be sure to update artefact_prop_data[] in artefact.cc. Also,
+// _randart_propnames() in describe.cc, but order doesn't matter there.
 enum artefact_prop_type
 {
     ARTP_BRAND,
@@ -3807,6 +3808,7 @@ enum artefact_prop_type
     ARTP_NO_UPGRADE,
     ARTP_RCORR,
     ARTP_RMUT,
+    ARTP_TWISTER,
     ARTP_NUM_PROPERTIES
 };
 

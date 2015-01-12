@@ -54,6 +54,7 @@ function callback.tgw_lugonu_bribe_lugonu_item (data, triggerable,
          Okawaru="no",
          Pakellas="randbook owner:Lugonu slevels:1 numspells:1",
          Qazlal="no",
+         Ru="no",
          ["Sif Muna"]="no",
          ["the Shining One"]="wand of invisibility ident:type /\
               book of Envenomations / Young Poisoner's Handbook /\

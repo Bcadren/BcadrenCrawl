@@ -79,6 +79,7 @@ melee_attack::melee_attack(actor *attk, actor *defn,
     cleaving(is_cleaving)
 {
     attack_occurred = false;
+    damage_brand = attacker->damage_brand(attack_number);
     init_attack(SK_UNARMED_COMBAT, attack_number);
     if (weapon && !using_weapon())
         wpn_skill = SK_FIGHTING;
@@ -629,8 +630,8 @@ static void _hydra_devour(monster &victim)
     // healing
     if (!you.duration[DUR_DEATHS_DOOR])
     {
-        const int healing = 1 + victim.get_experience_level() * 3 / 2
-                              + random2(victim.get_experience_level() * 3 / 2);
+        const int healing = 1 + victim.get_experience_level() * 3 / 4
+                              + random2(victim.get_experience_level() * 3 / 4);
         you.heal(healing);
         calc_hp();
         mpr("You feel better.");
@@ -1626,10 +1627,13 @@ void melee_attack::set_attack_verb()
             }
             else
             {
-                const char* pierce_desc[][2] = {{"spit", "like a pig"},
-                                                {"skewer", "like a kebab"},
-                                                {"stick", "like a pincushion"},
-                                                {"perforate", "like a sieve"}};
+                static const char * const pierce_desc[][2] =
+                {
+                    {"spit", "like a pig"},
+                    {"skewer", "like a kebab"},
+                    {"stick", "like a pincushion"},
+                    {"perforate", "like a sieve"}
+                };
                 const int choice = random2(ARRAYSZ(pierce_desc));
                 attack_verb = pierce_desc[choice][0];
                 verb_degree = pierce_desc[choice][1];
@@ -1657,19 +1661,27 @@ void melee_attack::set_attack_verb()
             attack_verb = "carve";
             verb_degree = "like the proverbial ham";
         }
+        else if (defender_genus == MONS_TENGU && one_chance_in(3))
+        {
+            attack_verb = "carve";
+            verb_degree = "like a turkey";
+        }
         else if ((defender_genus == MONS_YAK || defender_genus == MONS_YAKTAUR)
                  && Options.lang == LANG_GRUNT)
             attack_verb = "shave";
         else
         {
-            const char* pierce_desc[][2] = {{"open",    "like a pillowcase"},
-                                            {"slice",   "like a ripe choko"},
-                                            {"cut",     "into ribbons"},
-                                            {"carve",   "like a ham"},
-                                            {"chop",    "into pieces"}};
-            const int choice = random2(ARRAYSZ(pierce_desc));
-            attack_verb = pierce_desc[choice][0];
-            verb_degree = pierce_desc[choice][1];
+            static const char * const slice_desc[][2] =
+            {
+                {"open",    "like a pillowcase"},
+                {"slice",   "like a ripe choko"},
+                {"cut",     "into ribbons"},
+                {"carve",   "like a ham"},
+                {"chop",    "into pieces"}
+            };
+            const int choice = random2(ARRAYSZ(slice_desc));
+            attack_verb = slice_desc[choice][0];
+            verb_degree = slice_desc[choice][1];
         }
         break;
 
@@ -1690,14 +1702,17 @@ void melee_attack::set_attack_verb()
         }
         else
         {
-            const char* pierce_desc[][2] = {{"crush",   "like a grape"},
-                                            {"beat",    "like a drum"},
-                                            {"hammer",  "like a gong"},
-                                            {"pound",   "like an anvil"},
-                                            {"flatten", "like a pancake"}};
-            const int choice = random2(ARRAYSZ(pierce_desc));
-            attack_verb = pierce_desc[choice][0];
-            verb_degree = pierce_desc[choice][1];
+            static const char * const bludgeon_desc[][2] =
+            {
+                {"crush",   "like a grape"},
+                {"beat",    "like a drum"},
+                {"hammer",  "like a gong"},
+                {"pound",   "like an anvil"},
+                {"flatten", "like a pancake"}
+            };
+            const int choice = random2(ARRAYSZ(bludgeon_desc));
+            attack_verb = bludgeon_desc[choice][0];
+            verb_degree = bludgeon_desc[choice][1];
         }
         break;
 
@@ -1777,11 +1792,13 @@ void melee_attack::set_attack_verb()
             }
             else
             {
-                const char* punch_desc[][2] =
-                {{"pound",     "into fine dust"},
+                static const char * const punch_desc[][2] =
+                {
+                    {"pound",     "into fine dust"},
                     {"pummel",    "like a punching bag"},
                     {"pulverise", ""},
-                    {"squash",    "like an ant"}};
+                    {"squash",    "like an ant"}
+                };
                 const int choice = random2(ARRAYSZ(punch_desc));
                 // XXX: could this distinction work better?
                 if (choice == 0
@@ -2998,7 +3015,7 @@ void melee_attack::mons_apply_attack_flavour()
             break;
         }
 
-        if (attacker->type == MONS_RED_WASP || one_chance_in(3))
+        if (attacker->type == MONS_HORNET || one_chance_in(3))
         {
             int dmg = random_range(attacker->get_hit_dice() * 3 / 2,
                                    attacker->get_hit_dice() * 5 / 2);
@@ -3006,10 +3023,10 @@ void melee_attack::mons_apply_attack_flavour()
         }
 
         int paralyse_roll = (damage_done > 4 ? 3 : 20);
-        if (attacker->type == MONS_YELLOW_WASP)
+        if (attacker->type == MONS_WASP)
             paralyse_roll += 3;
 
-        const int flat_bonus  = attacker->type == MONS_RED_WASP ? 1 : 0;
+        const int flat_bonus  = attacker->type == MONS_HORNET ? 1 : 0;
         const bool strong_result = one_chance_in(paralyse_roll);
 
         if (strong_result && defender->res_poison() <= 0)

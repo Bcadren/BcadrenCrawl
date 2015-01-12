@@ -3429,10 +3429,12 @@ bool handle_mon_spell(monster* mons, bolt &beem)
 
     monster_spells hspell_pass(mons->spells);
 
-    erase_if(hspell_pass, [&](mon_spell_slot &t) {
-        return (t.flags & MON_SPELL_SILENCE_MASK)
-            && (mons->is_silenced() || mons->is_shapeshifter());
-    });
+    if (mons->is_silenced() || mons->is_shapeshifter())
+    {
+        erase_if(hspell_pass, [&](const mon_spell_slot &t) {
+            return t.flags & MON_SPELL_SILENCE_MASK;
+        });
+    }
 
     if (!hspell_pass.size())
         return false;
@@ -3950,7 +3952,7 @@ static monster_type _pick_swarmer()
         MONS_KILLER_BEE,     MONS_KILLER_BEE,    MONS_KILLER_BEE,
         MONS_SCORPION,       MONS_WORM,          MONS_VAMPIRE_MOSQUITO,
         MONS_GOLIATH_BEETLE, MONS_SPIDER,        MONS_BUTTERFLY,
-        MONS_YELLOW_WASP,    MONS_WORKER_ANT,    MONS_WORKER_ANT,
+        MONS_WASP,    MONS_WORKER_ANT,    MONS_WORKER_ANT,
         MONS_WORKER_ANT
     };
 
@@ -4788,7 +4790,7 @@ static const pop_entry _planerend_spider[] =
 { // Spider enemies
   {  1,   1,  100, FLAT, MONS_GHOST_MOTH },
   {  1,   1,  100, FLAT, MONS_EMPEROR_SCORPION },
-  {  1,   1,   20, FLAT, MONS_RED_WASP },
+  {  1,   1,   20, FLAT, MONS_HORNET },
   {  1,   1,   60, FLAT, MONS_ORB_SPIDER },
   {  1,   1,   20, FLAT, MONS_TARANTELLA },
   { 0,0,0,FLAT,MONS_0 }
@@ -7994,6 +7996,7 @@ static bool _ms_waste_of_time(monster* mon, mon_spell_slot slot)
 
     case SPELL_SPECTRAL_WEAPON:
         return find_spectral_weapon(mon)
+            || !weapon_can_be_spectral(mon->weapon())
             || !foe
             // Don't cast unless the caster is at or close to melee range for
             // its target. Casting spectral weapon at distance is bad since it
