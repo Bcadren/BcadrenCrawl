@@ -716,7 +716,7 @@ static int _acquirement_misc_subtype(bool divine, int & /*quantity*/)
     return result;
 }
 
-static int _acquirement_wand_subtype(bool /*divine*/, int & /*quantity*/)
+static int _acquirement_wand_subtype(bool divine, int & /*quantity*/)
 {
     int picked = NUM_WANDS;
 
@@ -775,8 +775,9 @@ static int _acquirement_wand_subtype(bool /*divine*/, int & /*quantity*/)
         }
 
         // Unknown wands get another huge weight bonus.
+        // Pakellas will try to give you wands you haven't seen before.
         if (get_ident_type(OBJ_WANDS, type) == ID_UNKNOWN_TYPE)
-            w *= 2;
+            w *= divine ? 50 : 2;
 
         total += w;
         if (x_chance_in_y(w, total))
