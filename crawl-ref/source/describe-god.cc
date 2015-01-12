@@ -1041,6 +1041,14 @@ static void _describe_god_powers(god_type which_god, int numcols)
                                    "You are immune to your own clouds.",
                                    ABIL_NON_ABILITY);
     }
+    else if (which_god == GOD_PAKELLAS)
+    {
+        have_any = true;
+        _print_final_god_abil_desc(which_god,
+                                   uppercase_first(god_name(which_god))
+                                   + " identifies device charges for you.",
+                                   ABIL_NON_ABILITY);
+    }
 
     // mv: No abilities (except divine protection) under penance
     if (!player_under_penance())
