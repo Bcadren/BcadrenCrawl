@@ -620,13 +620,6 @@ static bool _artp_can_go_on_item(artefact_prop_type prop, const item_def &item)
                     && (item_type == OBJ_JEWELLERY
                         || item_type == RING_TELEPORT_CONTROL);
             // ^ absurd
-        case ARTP_AC:
-        case ARTP_EVASION:
-        case ARTP_FOG:
-        case ARTP_RMUT:
-        case ARTP_CLARITY:
-        case ARTP_SUSTAB:
-            return false; // banned on randarts
         default:
             return true;
     }
@@ -689,10 +682,10 @@ static const artefact_prop_data artp_data[] =
         _gen_good_res_artp, _gen_bad_res_artp }, // ARTP_COLD,
     { "rElec", ARTP_VAL_BOOL,
         _gen_good_res_artp, nullptr }, // ARTP_ELECTRICITY,
-    { "rPois", ARTP_VAL_BOOL,
-        _gen_good_res_artp, nullptr }, // ARTP_POISON,
+    { "rPois", ARTP_VAL_ANY,
+        _gen_good_res_artp, _gen_bad_res_artp }, // ARTP_POISON,
     { "rN", ARTP_VAL_ANY,
-        _gen_good_res_artp,  nullptr }, // ARTP_NEGATIVE_ENERGY,
+        _gen_good_res_artp,  _gen_bad_res_artp }, // ARTP_NEGATIVE_ENERGY,
     { "MR", ARTP_VAL_ANY,
         _gen_good_res_artp, _gen_bad_res_artp }, // ARTP_MAGIC,
     { "SInv", ARTP_VAL_BOOL,
