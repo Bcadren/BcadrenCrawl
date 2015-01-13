@@ -394,7 +394,7 @@ int spell_fail(spell_type spell)
 
 int stepdown_spellpower(int power)
 {
-    return stepdown_value(power / 100, 50, 50, 150, 200);
+    return stepdown_value(power, 50, 50, 150, 200);
 }
 
 int calc_spell_power(spell_type spell, bool apply_intel, bool fail_rate_check,
@@ -455,7 +455,7 @@ int calc_spell_power(spell_type spell, bool apply_intel, bool fail_rate_check,
             power /= 10 + (you.props[HORROR_PENALTY_KEY].get_int() * 3) / 2;
         }
 
-        power = stepdown_spellpower(power);
+        power = stepdown_spellpower(power / 100);
     }
 
     const int cap = spell_power_cap(spell);
