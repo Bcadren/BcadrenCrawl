@@ -4597,7 +4597,7 @@ tileidx_t tileidx_bolt(const bolt &bolt)
         break;
 
     case ETC_MUTAGENIC:
-        if (bolt.name == "irradiate")
+        if (bolt.name == "irradiate" || bolt.name == "unravelling")
             return TILE_BOLT_IRRADIATE;
         break;
     }

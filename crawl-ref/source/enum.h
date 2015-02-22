@@ -580,6 +580,7 @@ enum beam_type                  // bolt::flavour
     BEAM_RANDOM,                  // currently translates into FIRE..ACID
     BEAM_CHAOS,
     BEAM_GHOSTLY_FLAME,
+    BEAM_UNRAVELLED_MAGIC,
 
     // Enchantments
     BEAM_SLOW,
@@ -622,7 +623,8 @@ enum beam_type                  // bolt::flavour
     BEAM_DRAIN_MAGIC,
     BEAM_TUKIMAS_DANCE,
     BEAM_RESISTANCE,
-    BEAM_LAST_ENCHANTMENT = BEAM_RESISTANCE,
+    BEAM_UNRAVELLING,
+    BEAM_LAST_ENCHANTMENT = BEAM_UNRAVELLING,
 
     BEAM_MEPHITIC,
     BEAM_INK,
@@ -4524,6 +4526,7 @@ enum spell_type
     SPELL_GRAVITAS,
     SPELL_CHANT_FIRE_STORM,
     SPELL_CHANT_WORD_OF_ENTROPY,
+    SPELL_VIOLENT_UNRAVELLING,
     NUM_SPELLS
 };
 
@@ -4694,7 +4697,7 @@ enum zap_type
     ZAP_RANDOM_BOLT_TRACER,
     ZAP_SCATTERSHOT,
     ZAP_MEPHITIC,
-
+    ZAP_UNRAVELLING,
     NUM_ZAPS
 };
 

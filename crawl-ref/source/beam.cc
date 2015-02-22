@@ -2437,6 +2437,23 @@ static void _explosive_bolt_explode(bolt *parent, coord_def pos)
         parent->beam_cancelled = true;
 }
 
+/**
+ * Turn a BEAM_UNRAVELLING beam into a BEAM_UNRAVELLED_MAGIC beam, and make
+ * it explode appropriately.
+ *
+ * @param[in,out] beam      The beam being turned into an explosion.
+ */
+static void _unravelling_explode(bolt &beam)
+{
+    beam.damage       = dice_def(3, 9); // TODO
+    beam.colour       = ETC_MUTAGENIC;
+    beam.flavour      = BEAM_UNRAVELLED_MAGIC;
+    beam.loudness     = 3; // ???
+    beam.ex_size      = 1;
+    beam.is_explosion = true;
+    // and it'll explode 'naturally' a little later.
+}
+
 bool bolt::is_bouncy(dungeon_feature_type feat) const
 {
     if ((real_flavour == BEAM_CHAOS
@@ -3219,6 +3236,9 @@ void bolt::reflect()
 
 void bolt::tracer_affect_player()
 {
+    if (flavour == BEAM_UNRAVELLING && debuff_player(true))
+        is_explosion = true;
+
     // Check whether thrower can see player, unless thrower == player.
     if (YOU_KILL(thrower))
     {
@@ -3466,6 +3486,7 @@ void bolt::affect_player_enchantment(bool resistible)
         break;
 
     case BEAM_MALMUTATE:
+    case BEAM_UNRAVELLED_MAGIC:
         mpr("Strange energies course through your body.");
         you.malmutate(aux_source.empty() ? get_source_name() :
                       (get_source_name() + "/" + aux_source));
@@ -3756,6 +3777,12 @@ void bolt::affect_player_enchantment(bool resistible)
         nice  = true;
         break;
 
+    case BEAM_UNRAVELLING:
+        debuff_player();
+        _unravelling_explode(*this);
+        obvious_effect = true;
+        break;
+
     default:
         // _All_ enchantments should be enumerated here!
         mpr("Software bugs nibble your toes!");
@@ -3933,6 +3960,9 @@ void bolt::affect_player()
     {
         confuse_player(3);
     }
+
+    if (flavour == BEAM_UNRAVELLED_MAGIC)
+        affect_player_enchantment();
 
     // handling of missiles
     if (item && item->base_type == OBJ_MISSILES)
@@ -4302,6 +4332,9 @@ void bolt::tracer_affect_monster(monster* mon)
     // Ignore unseen monsters.
     if (!agent() || !mon->visible_to(agent()))
         return;
+
+    if (flavour == BEAM_UNRAVELLING && debuff_monster(mon, true))
+        is_explosion = true;
 
     // Trigger explosion on exploding beams.
     if (is_explosion && !in_explosion_phase)
@@ -4867,11 +4900,17 @@ void bolt::affect_monster(monster* mon)
         }
     }
 
-    if (engulfs && flavour == BEAM_SPORE
+    if (engulfs && flavour == BEAM_SPORE // XXX: engulfs is redundant?
         && mon->holiness() == MH_NATURAL
         && !mon->is_unbreathing())
     {
         apply_enchantment_to_monster(mon);
+    }
+
+    if (flavour == BEAM_UNRAVELLED_MAGIC)
+    {
+        int unused; // res_margin
+        try_enchant_monster(mon, unused);
     }
 
     // Make a copy of the to-hit before we modify it.
@@ -5131,6 +5170,8 @@ bool bolt::has_saving_throw() const
     case BEAM_IGNITE_POISON:
     case BEAM_AGILITY:
     case BEAM_RESISTANCE:
+    case BEAM_UNRAVELLING:
+    case BEAM_UNRAVELLED_MAGIC:
         return false;
     case BEAM_VULNERABILITY:
         return !one_chance_in(3);  // Ignores MR 1/3 of the time
@@ -5149,6 +5190,7 @@ bool ench_flavour_affects_monster(beam_type flavour, const monster* mon,
     {
     case BEAM_MALMUTATE:
     case BEAM_CORRUPT_BODY:
+    case BEAM_UNRAVELLED_MAGIC:
         rc = mon->can_mutate();
         break;
 
@@ -5335,6 +5377,7 @@ mon_resist_type bolt::apply_enchantment_to_monster(monster* mon)
         return MON_AFFECTED;
 
     case BEAM_MALMUTATE:
+    case BEAM_UNRAVELLED_MAGIC:
         if (mon->malmutate("")) // exact source doesn't matter
             obvious_effect = true;
         if (YOU_KILL(thrower))
@@ -5754,6 +5797,14 @@ mon_resist_type bolt::apply_enchantment_to_monster(monster* mon)
         }
         return MON_AFFECTED;
 
+    case BEAM_UNRAVELLING:
+        if (!debuff_monster(mon, true))
+            return MON_UNAFFECTED;
+
+        debuff_monster(mon);
+        _unravelling_explode(*this);
+        return MON_AFFECTED;
+
     default:
         break;
     }
@@ -5838,6 +5889,10 @@ const map<spell_type, explosion_sfx> spell_explosions = {
     { SPELL_EXPLOSIVE_BOLT, {
         "The explosive bolt releases an explosion!",
         "an explosion",
+    } },
+    { SPELL_VIOLENT_UNRAVELLING, {
+        "The enchantments explode!",
+        "a sharp crackling", // radiation = geiger counter
     } },
 };
 
@@ -6251,6 +6306,12 @@ bool bolt::nasty_to(const monster* mon) const
     if (flavour == BEAM_TUKIMAS_DANCE)
         return tukima_affects(*mon);
 
+    if (flavour == BEAM_UNRAVELLING)
+    {
+        monster mhack = *mon;
+        return debuff_monster(&mhack, true);
+    }
+
     // everything else is considered nasty by everyone
     return true;
 }
@@ -6507,6 +6568,8 @@ static string _beam_type_name(beam_type type)
     case BEAM_BOUNCY_TRACER:         return "bouncy tracer";
     case BEAM_DEATH_RATTLE:          return "breath of the dead";
     case BEAM_RESISTANCE:            return "resistance";
+    case BEAM_UNRAVELLING:           return "unravelling";
+    case BEAM_UNRAVELLED_MAGIC:      return "unravelled magic";
 
     case NUM_BEAMS:                  die("invalid beam type");
     }

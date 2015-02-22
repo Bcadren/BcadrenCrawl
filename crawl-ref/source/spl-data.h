@@ -3619,6 +3619,17 @@ static const struct spell_desc spelldata[] =
 },
 
 {
+    SPELL_VIOLENT_UNRAVELLING, "Yara's Violent Unravelling",
+    SPTYP_HEXES | SPTYP_TRANSMUTATION,
+    SPFLAG_DIR_OR_TARGET | SPFLAG_NOT_SELF | SPFLAG_NEEDS_TRACER | SPFLAG_NO_GHOST | SPFLAG_CHAOTIC,
+    6,
+    200,
+    LOS_RADIUS, LOS_RADIUS,
+    5, 0,
+    nullptr,
+},
+
+{
     SPELL_CHANT_WORD_OF_ENTROPY, "Chant Word of Entropy",
     SPTYP_HEXES,
     SPFLAG_UTILITY,
