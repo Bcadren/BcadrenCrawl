@@ -1726,6 +1726,141 @@ MAP
    .........
 ENDMAP
 
+# http://i.imgur.com/H7nvQFo.jpg
+NAME: nicolae_swamp_little_tower
+DEPTH: Swamp
+TAGS: decor no_pool_fixup
+NSUBST: X = - / x
+SUBST: T = t-, - = ....P, z = WWw, _ = __w
+KMONS: P = plant
+CLEAR: _
+MAP
+   ttt___
+  ttTwwww___
+  tTWwwwwwww___
+  tTWwwwwwwwwww___
+ tt.Wwwwzzzzzwwwzz
+ t.Tzwwzx---xzwwz.
+ .tzwwzx-xXx-xzzz.
+.Ttwwwz-xx-xx-zz-.
+@Ttwwwz-X---X-WW-@
+.Ttwwwz-xx-xx-zz-.
+ .tzwwzx-xXx-xzzz.
+ t.Tzwwzx---xzwwz.
+ tt.Wwwwzzzzzwwwzz
+  tTWwwwwwwwwww___
+  tTWwwwwwww___
+  ttTwwww___
+   ttt___
+ENDMAP
+
+NAME: nicolae_swamp_dense_foliage
+DEPTH: Swamp
+TAGS: decor transparent
+SUBST: _ = ._, - = t_, t = tttttt., . = ......W
+CLEAR: _
+MAP
+         -_-
+      -_-.t.---
+   -_-.t.ttt.t.-
+  -.t.ttt.t.t.t.-
+ -.ttt.t.t.t.ttt_
+ -t.t.t.t.ttt.t.-
+ -.t.t.ttt.t.t.t.-
+-.t.ttt.t.t.t.ttt_
+_ttt.t.t.t.ttt.t.-
+-.t.t.t.ttt.t.t.t.-
+ -.t.ttt.t.t.t.ttt_
+ _ttt.t.t.t.ttt.t.-
+ -.t.t.t.ttt.t.t.-
+  -.t.ttt.t.t.t.t-
+  _ttt.t.t.t.ttt.-
+  -.t.t.t.ttt.t.-
+   -.t.ttt.t.-_-
+    ---.t.-_-
+       -_-
+ENDMAP
+
+NAME: nicolae_swamp_very_dense_foliage
+DEPTH: Swamp
+TAGS: decor transparent
+SUBST: _ = ._, - = t_, t = tttttt., . = ......W
+CLEAR: _
+MAP
+       -_-
+      tt.----_
+   --tttt.--.-_-
+   -.ttttt..tt.-----
+   --.tt..ttttt.--.-
+   --.t.tt.ttttt..tt
+  --.t.tttt.tt..ttttt
+  _.tt.tttt.t.tt.tttt-
+ _-tttt.tt.t.tttt.tt._
+ -.ttttt..tt.tttt.t.--
+ --.tt..ttttt.tt.t.--
+ --.t.tt.ttttt..tt.--
+--.t.tttt.tt..ttttt.-
+_.tt.tttt.t.tt.ttttt_
+-tttt.tt.t.tttt.tt._
+ ttttt..tt.tttt.t.--
+  tt..ttttt.tt.t.--
+  -.--.ttttt..tt.--
+  -----.tt..ttttt.-
+      -_-.--.ttttt-
+        _----.tt
+            -_-
+ENDMAP
+
+NAME: nicolae_swamp_phyte_club
+DEPTH: Swamp
+ORIENT: float
+TAGS: transparent no_monster_gen
+NSUBST: D = 2:H, MD = 2:M / 1:M. / 2:A / *:., O = 2:O / *:HH.
+SUBST: T = t., A = A.., Z = ttW, _ = t_, v = t--
+KMONS: S = patrolling giant spore / nothing
+KMONS: M = shambling mangrove
+KMONS: A = wandering mushroom
+KMONS: F = fungus
+KMONS: d = dryad
+KMONS: O = oklob plant / oklob sapling w:2
+KMONS: H = thorn hunter
+KMONS: . = plant w:5 / fungus w:5 / nothing w:100
+KMONS: - = plant / fungus / nothing w:80
+KFEAT: , = .
+CLEAR: _
+MAP
+              @
+              ,
+     _______tT,Tt_______
+    __tttttttT,Tttttttt__
+    _ttO--tttT,Tttt--Ott_
+    _t----vAttFttAv----t_
+    _t--v.....t.....v--t_
+    _t--.M..ZZZZZ..M.--t_
+    _tv...ZZ..S..ZZ...vt_
+   tttA..Z.........Z..Attt
+@ TTTtt.Z.S..WWW..S.Z.ttTTT @
+ ,,,,,t.Z..WW...WW..Z.t,,,,,
+  TTTtFZ...W..D..W...ZFtTTT
+  _ttt.Z..W.DtttD.W..Z.ttt_
+ __tA..ZS.W..ttt..W.SZ..At__
+ _ttv..Z..W..ttt..W..Z..vtt_
+__t--..Z...W.D.D.W...Z..--t__
+_tt--.M.Z..WW...WW..Z.M.--tt_
+_tO-v...Z.S..WWW..S.Z...v-Ot_
+_tt---...Z.........Z...---tt_
+__ttt-vA..ZZ..S..ZZ..Av-ttt__
+ ___tttttF..ZZZZZ..Fttttt___
+   __ttT,t....M....t,Ttt__
+     tT,Ttt.......ttT,Tt
+     T,TtttAv...vAtttT,T
+     ,Tt__tt--v--tt__tT,
+    @    __t-----t__    @
+          _tttOttt_
+          ___ttt___
+            _____
+ENDMAP
+
 ###############################################################################
 # Swamp ending vaults
 #
