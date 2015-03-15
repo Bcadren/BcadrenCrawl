@@ -3129,7 +3129,6 @@ ENDMAP
 
 NAME: nicolae_arrival_washed_ashore
 ORIENT: northwest
-WEIGHT: 10000
 TAGS: arrival no_monster_gen no_item_gen no_pool_fixup
 SUBST: B = bb., S = bWW, Z = WWw
 COLOUR: b : brown
