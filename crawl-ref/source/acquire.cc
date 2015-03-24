@@ -95,7 +95,7 @@ static equipment_type _acquirement_armour_slot(bool divine)
         { EQ_BOOTS,         1 },
     };
 
-    for (auto weight : weights)
+    for (auto &weight : weights)
         if (!you_can_wear(weight.first, true))
             weight.second = 0;
 
@@ -174,7 +174,7 @@ static armour_type _acquirement_shield_type()
                                 + div_rand_round(you.skills[SK_SHIELDS], 2) },
     };
 
-    for (auto weight : weights)
+    for (auto &weight : weights)
     {
         if (!check_armour_size(weight.first, you.body_size()))
             weight.second = 0;
@@ -336,7 +336,7 @@ static armour_type _pick_unseen_armour()
 
     armour_type picked = NUM_ARMOURS;
     int count = 0;
-    for (auto slot : armour_slots)
+    for (auto &slot : armour_slots)
     {
         if (!you_can_wear(slot, true))
             continue;
