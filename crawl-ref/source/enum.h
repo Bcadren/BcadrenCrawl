@@ -732,10 +732,10 @@ enum branch_type                // you.where_are_you
     BRANCH_ICE_CAVE,
     BRANCH_VOLCANO,
     BRANCH_WIZLAB,
-    BRANCH_OUBLIETTE,
 #if TAG_MAJOR_VERSION == 34
     BRANCH_DEPTHS,
 #endif
+    BRANCH_OUBLIETTE,
     NUM_BRANCHES
 };
 
