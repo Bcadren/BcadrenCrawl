@@ -84,7 +84,7 @@ NAME:   portal_oubliette_test
 DEPTH:  Oubliette
 ORIENT: encompass
 MONS:   Sigmund att:friendly
-KFEAT:  > = exit_newportal
+KFEAT:  > = exit_oubliette
 MAP
 xxxxx
 x...x
