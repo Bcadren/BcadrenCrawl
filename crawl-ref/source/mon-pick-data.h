@@ -992,6 +992,12 @@ static const pop_entry pop_ossuary[] =
   { 0,0,0,FLAT,MONS_0 }
 };
 
+
+static const pop_entry pop_oubliette[] =
+{ // Oubliette
+  { 0,0,0,FLAT,MONS_0 }
+};
+
 static const pop_entry pop_bailey[] =
 { // Bailey
   {  1,  1,  515, FLAT, MONS_GNOLL },
@@ -1141,6 +1147,7 @@ static const struct { const pop_entry *pop; int count; } population[] =
     POP(icecv),
     POP(volcano),
     POP(wizlab),
+    POP(oubliette),
 #if TAG_MAJOR_VERSION == 34
     POP(depths),
 #endif
@@ -1249,6 +1256,7 @@ static const struct { const pop_entry *pop; int count; } population_zombie[] =
     POP(icecv),
     POP(volcano),
     POP(wizlab),
+    POP(oubliette),
 #if TAG_MAJOR_VERSION == 34
     POP(depths),
 #endif
@@ -1353,6 +1361,7 @@ static const struct { const pop_entry *pop; int count; } population_water[] =
     POP(water_generic),
     POP(water_generic),
     POP(water_generic),
+    POP(water_generic), // added this for Oubliette --dpeg
 #if TAG_MAJOR_VERSION == 34
     POP(water_depths),
 #endif
@@ -1457,6 +1466,7 @@ static const struct { const pop_entry *pop; int count; } population_lava[] =
     POP(lava_generic),
     POP(lava_generic),
     POP(lava_generic),
+    POP(lava_generic), // added this for Oubliette --dpeg
 #if TAG_MAJOR_VERSION == 34
     POP(lava_depths),
 #endif

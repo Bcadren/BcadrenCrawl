@@ -298,4 +298,13 @@ const Branch branches[NUM_BRANCHES] =
       nullptr,
       LIGHTGREY, BROWN,
       'U', 0 },
+
+    { BRANCH_OUBLIETTE, NUM_BRANCHES, -1, -1, 1, 5, // I am not sure what the 1,5
+                                                    // mean -- dpeg
+      BFLAG_NO_XLEV_TRAVEL | BFLAG_NO_ITEMS, 0,
+      DNGN_ENTER_OUBLIETTE, DNGN_EXIT_OUBLIETTE,
+      "Oubliette", "an oubliette", "Oubliette",
+      "Your help is needed right now!",
+      LIGHTGREY, BLUE,
+      '9', 0 },
 };
