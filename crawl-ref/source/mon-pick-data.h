@@ -337,6 +337,8 @@ static const pop_entry pop_snake[] =
 static const pop_entry pop_spider[] =
 { // Spider Nest
   { -1,  4,  260, RISE, MONS_HORNET },
+  { -1,  6,   89, SEMI, MONS_BOULDER_BEETLE },
+  { -1,  6,   52, SEMI, MONS_BORING_BEETLE },
   { -1,  9,  765, SEMI, MONS_DEMONIC_CRAWLER },
   {  1,  4,  955, FLAT, MONS_WOLF_SPIDER },
   {  1,  4,  880, FLAT, MONS_TRAPDOOR_SPIDER },
@@ -347,8 +349,6 @@ static const pop_entry pop_spider[] =
   {  1,  4,  335, FLAT, MONS_SPIDER },
   {  1,  4,   52, FLAT, MONS_WASP },
   {  1,  6,  100, FLAT, MONS_TORPOR_SNAIL },
-  { -1,  6,   89, SEMI, MONS_BOULDER_BEETLE },
-  { -1,  6,   52, SEMI, MONS_BORING_BEETLE },
   {  1,  6,  190, SEMI, MONS_EMPEROR_SCORPION },
   {  1,  6,  155, SEMI, MONS_MOTH_OF_WRATH },
   {  1,  9,  300, SEMI, MONS_ENTROPY_WEAVER },
