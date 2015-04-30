@@ -171,7 +171,9 @@ static const char* _jewellery_base_ability_string(int subtype)
     case RING_FIRE:              return "Fire";
     case RING_ICE:               return "Ice";
     case RING_TELEPORTATION:     return "+/*Tele";
+#if TAG_MAJOR_VERSION == 34
     case RING_TELEPORT_CONTROL:  return "+cTele";
+#endif
     case AMU_CLARITY:            return "Clar";
     case AMU_WARDING:            return "Ward";
     case AMU_RESIST_CORROSION:   return "rCorr";
@@ -412,8 +414,10 @@ static const char* _jewellery_base_ability_description(int subtype)
     case RING_TELEPORTATION:
         return "It may teleport you to nearby monsters, and can be evoked to "
                "randomly teleport.";
+#if TAG_MAJOR_VERSION == 34
     case RING_TELEPORT_CONTROL:
         return "It can be evoked for teleport control.";
+#endif
     case AMU_CLARITY:
         return "It provides mental clarity.";
     case AMU_WARDING:

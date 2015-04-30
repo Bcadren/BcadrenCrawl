@@ -2680,7 +2680,6 @@ bool gives_ability(const item_def &item)
         if (item.sub_type == RING_TELEPORTATION
             || item.sub_type == RING_FLIGHT
             || item.sub_type == RING_INVISIBILITY
-            || item.sub_type == RING_TELEPORT_CONTROL
             || item.sub_type == AMU_RAGE)
         {
             return true;
@@ -2730,12 +2729,15 @@ bool gives_resistance(const item_def &item)
     case OBJ_JEWELLERY:
         if (!jewellery_is_amulet(item))
         {
-            if (item.sub_type >= RING_PROTECTION_FROM_FIRE
-                   && item.sub_type <= RING_PROTECTION_FROM_COLD
+            if (item.sub_type == RING_PROTECTION_FROM_FIRE
+                || item.sub_type == RING_POISON_RESISTANCE
+                || item.sub_type == RING_PROTECTION_FROM_COLD
                 || item.sub_type == RING_SEE_INVISIBLE
-                || item.sub_type >= RING_LIFE_PROTECTION
-                   && item.sub_type <= RING_TELEPORT_CONTROL
-                || item.sub_type == RING_SUSTAIN_ABILITIES)
+                || item.sub_type == RING_SUSTAIN_ABILITIES
+                || item.sub_type == RING_LIFE_PROTECTION
+                || item.sub_type == RING_PROTECTION_FROM_MAGIC
+                || item.sub_type == RING_FIRE
+                || item.sub_type == RING_ICE)
             {
                 return true;
             }

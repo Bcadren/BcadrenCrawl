@@ -2364,10 +2364,6 @@ ring of stealth
 
 <ring>
 %%%%
-ring of teleport control
-
-<ring>
-%%%%
 ring of teleportation
 
 <ring>
