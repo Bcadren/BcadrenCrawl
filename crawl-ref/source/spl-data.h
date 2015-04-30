@@ -1073,6 +1073,7 @@ static const struct spell_desc spelldata[] =
     nullptr,
 },
 
+#if TAG_MAJOR_VERSION == 34
 {
     SPELL_CONTROL_TELEPORT, "Control Teleport",
     SPTYP_CHARMS | SPTYP_TRANSLOCATION,
@@ -1084,7 +1085,6 @@ static const struct spell_desc spelldata[] =
     nullptr,
 },
 
-#if TAG_MAJOR_VERSION == 34
 {
     SPELL_POISON_WEAPON, "Poison Weapon",
     SPTYP_CHARMS | SPTYP_POISON,

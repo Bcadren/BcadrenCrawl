@@ -202,7 +202,6 @@ static const vector<spell_type> spellbook_templates[] =
 {   // Book of the Warp
     SPELL_RECALL,
     SPELL_GRAVITAS,
-    SPELL_CONTROL_TELEPORT,
     SPELL_FORCE_LANCE,
     SPELL_PHASE_SHIFT,
     SPELL_WARP_BRAND,
@@ -226,7 +225,6 @@ static const vector<spell_type> spellbook_templates[] =
 },
 
 {   // Book of Control
-    SPELL_CONTROL_TELEPORT,
     SPELL_CONTROL_UNDEAD,
     SPELL_ENGLACIATION,
     SPELL_MASS_CONFUSION,
