@@ -1254,7 +1254,7 @@ void MiscastEffect::_translocation(int severity)
             mon_msg_seen   = "Space bends around @the_monster@!";
             mon_msg_unseen = "A piece of empty space twists and distorts.";
             if (_ouch(4 + random2avg(7, 2)) && target->alive() && !target->no_tele())
-                target->blink(false);
+                target->blink();
             break;
         case 5:
             if (_create_monster(MONS_SPATIAL_VORTEX, 3))
@@ -1292,7 +1292,7 @@ void MiscastEffect::_translocation(int severity)
                     if (one_chance_in(3))
                         target->teleport(true);
                     else
-                        target->blink(false);
+                        target->blink();
                 }
                 if (target->alive())
                     target->confuse(act_source, 5 + random2(3));
@@ -3215,7 +3215,7 @@ void MiscastEffect::_zot()
                         if (one_chance_in(3))
                             target->teleport(true);
                         else
-                            target->blink(false);
+                            target->blink();
                     }
                 }
             }
