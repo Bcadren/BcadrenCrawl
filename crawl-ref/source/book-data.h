@@ -224,13 +224,13 @@ static const vector<spell_type> spellbook_templates[] =
     SPELL_SIMULACRUM,
 },
 
+#if TAG_MAJOR_VERSION == 34
 {   // Book of Control
     SPELL_CONTROL_UNDEAD,
     SPELL_ENGLACIATION,
     SPELL_MASS_CONFUSION,
 },
 
-#if TAG_MAJOR_VERSION == 34
 {   // Book of Battle (replacing Morphology)
     SPELL_INFUSION,
     SPELL_SHROUD_OF_GOLUBRIA,
