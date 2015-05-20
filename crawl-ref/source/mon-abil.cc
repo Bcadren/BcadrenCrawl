@@ -709,7 +709,7 @@ static void _starcursed_scream(monster* mon, actor* target)
         return;
 
     // These monsters have too primitive a mind to be affected
-    if (!target->is_player() && mons_intel(target->as_monster()) <= I_INSECT)
+    if (!target->is_player() && mons_intel(target->as_monster()) < I_ANIMAL)
         return;
 
     //Gather the chorus

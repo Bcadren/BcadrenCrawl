@@ -1676,7 +1676,7 @@ void monster::apply_enchantment(const mon_enchant &me)
     case ENCH_STICKY_FLAME:
     {
         if (feat_is_watery(grd(pos())) && (ground_level()
-              || mons_intel(this) >= I_NORMAL && airborne()))
+              || mons_intel(this) >= I_HUMAN && airborne()))
         {
             if (mons_near(this) && visible_to(&you))
             {

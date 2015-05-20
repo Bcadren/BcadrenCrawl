@@ -2155,7 +2155,7 @@ void fire_tracer(const monster* mons, bolt &pbolt, bool explode_only)
     pbolt.is_tracer     = true;
     pbolt.source        = mons->pos();
     pbolt.source_id     = mons->mid;
-    pbolt.smart_monster = (mons_intel(mons) >= I_NORMAL);
+    pbolt.smart_monster = (mons_intel(mons) >= I_HUMAN);
     pbolt.attitude      = mons_attitude(mons);
 
     // Init tracer variables.
@@ -5135,7 +5135,7 @@ bool ench_flavour_affects_monster(beam_type flavour, const monster* mon,
         rc = mon->holiness() == MH_NATURAL
              && mon->attitude != ATT_FRIENDLY
              && mons_can_be_zombified(mon)
-             && mons_intel(mon) >= I_NORMAL;
+             && mons_intel(mon) >= I_HUMAN;
         break;
 
     case BEAM_DISPEL_UNDEAD:
