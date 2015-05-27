@@ -83,7 +83,7 @@ public:
     item_type(item_base_type ct, int st) : base_type(ct), sub_type(st)
     {
     }
-    item_type(item_def &item);
+    item_type(const item_def &item);
 
     item_base_type base_type;
     int sub_type;
@@ -201,7 +201,7 @@ static void _init_monsters()
     valid_monsters[NUM_MONSTERS] = num_mons;
 }
 
-static item_base_type _item_base_type(item_def &item)
+static item_base_type _item_base_type(const item_def &item)
 {
     item_base_type type;
     switch (item.base_type)
@@ -415,7 +415,7 @@ static bool _item_has_antiquity(item_base_type base_type)
     }
 }
 
-item_type::item_type(item_def &item)
+item_type::item_type(const item_def &item)
 {
     base_type = _item_base_type(item);
     if (base_type == ITEM_DECKS)
@@ -659,7 +659,7 @@ static bool _item_track_monster(item_base_type base_type)
     }
 }
 
-void objstat_record_item(item_def &item)
+void objstat_record_item(const item_def &item)
 {
     level_id cur_lev = level_id::current();
     item_type itype(item);
@@ -769,7 +769,7 @@ void objstat_record_item(item_def &item)
     _record_item_stat(cur_lev, itype, "NumForIter", item.quantity);
 }
 
-static void _record_monster_stat(level_id &lev, int mons_ind, string field,
+static void _record_monster_stat(const level_id &lev, int mons_ind, string field,
                                  double value)
 {
     const level_id br_lev(lev.branch, -1);
@@ -783,7 +783,7 @@ static void _record_monster_stat(level_id &lev, int mons_ind, string field,
     monster_recs[all_lev][sum_ind][field] += value;
 }
 
-void objstat_record_monster(monster *mons)
+void objstat_record_monster(const monster *mons)
 {
     monster_type type;
     if (mons->has_ench(ENCH_GLOWING_SHAPESHIFTER))
@@ -984,7 +984,7 @@ static string _item_name(const item_type &item)
     return name;
 }
 
-static string _level_name(level_id lev)
+static string _level_name(const level_id &lev)
 {
     string name;
     if (lev.branch == NUM_BRANCHES)
@@ -1031,7 +1031,7 @@ static void _write_brand_stats(const vector<int> &brand_stats,
     fprintf(stat_outf, "\t%s", brand_summary.str().c_str());
 }
 
-static void _write_level_brand_stats(const level_id lev, const item_type &item)
+static void _write_level_brand_stats(const level_id &lev, const item_type &item)
 {
     if (item.base_type == ITEM_WEAPONS)
     {

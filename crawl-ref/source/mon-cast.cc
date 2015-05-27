@@ -524,7 +524,6 @@ bolt mons_spell_beam(monster* mons, spell_type spell_cast, int power,
                                    SPELL_BOLT_OF_FIRE,
                                    SPELL_LIGHTNING_BOLT,
                                    SPELL_QUICKSILVER_BOLT,
-                                   SPELL_CRYSTAL_BOLT,
                                    SPELL_CORROSIVE_BOLT);
     }
     else if (spell_cast == SPELL_LEGENDARY_DESTRUCTION)
@@ -994,7 +993,7 @@ bolt mons_spell_beam(monster* mons, spell_type spell_cast, int power,
     case SPELL_QUICKSILVER_BOLT:   // Quicksilver dragon and purple draconian
         beam.colour     = random_colour();
         beam.name       = "bolt of dispelling energy";
-        beam.short_name = "energy";
+        beam.short_name = "dispelling energy";
         beam.damage     = dice_def(3, 20);
         beam.hit        = 16 + power / 25;
         beam.flavour    = BEAM_MMISSILE;
@@ -1497,8 +1496,8 @@ bool setup_mons_cast(monster* mons, bolt &pbolt, spell_type spell_cast,
     case SPELL_OZOCUBUS_REFRIGERATION:
     case SPELL_OLGREBS_TOXIC_RADIANCE:
     case SPELL_SHATTER:
-    case SPELL_FRENZY:
 #if TAG_MAJOR_VERSION == 34
+    case SPELL_FRENZY:
     case SPELL_SUMMON_TWISTER:
 #endif
     case SPELL_BATTLESPHERE:
@@ -1515,7 +1514,9 @@ bool setup_mons_cast(monster* mons, bolt &pbolt, spell_type spell_cast,
     case SPELL_AWAKEN_VINES:
     case SPELL_CONTROL_WINDS:
     case SPELL_WALL_OF_BRAMBLES:
+#if TAG_MAJOR_VERSION == 34
     case SPELL_HASTE_PLANTS:
+#endif
     case SPELL_WIND_BLAST:
     case SPELL_SUMMON_VERMIN:
     case SPELL_TORNADO:
@@ -1608,8 +1609,7 @@ bool setup_mons_cast(monster* mons, bolt &pbolt, spell_type spell_cast,
             || spell_cast == SPELL_INVISIBILITY
             || spell_cast == SPELL_MINOR_HEALING
             || spell_cast == SPELL_TELEPORT_SELF
-            || spell_cast == SPELL_SILENCE
-            || spell_cast == SPELL_FRENZY)
+            || spell_cast == SPELL_SILENCE)
         {
             pbolt.target = mons->pos();
         }
@@ -1671,15 +1671,6 @@ static bool _ms_direct_nasty(spell_type monspell)
 {
     return !(get_spell_flags(monspell) & SPFLAG_UTILITY
              || spell_typematch(monspell, SPTYP_SUMMONING));
-}
-
-// Can be affected by the 'Haste Plants' spell
-static bool _is_hastable_plant(const monster* mons)
-{
-    return mons->holiness() == MH_PLANT
-           && !mons_is_firewood(mons)
-           && mons->type != MONS_SNAPLASHER_VINE
-           && mons->type != MONS_SNAPLASHER_VINE_SEGMENT;
 }
 
 // Checks if the foe *appears* to be immune to negative energy. We
@@ -2443,7 +2434,6 @@ static bool _ms_low_hitpoint_cast(monster* mon, mon_spell_slot slot)
     case SPELL_HASTE:
     case SPELL_DEATHS_DOOR:
     case SPELL_BERSERKER_RAGE:
-    case SPELL_FRENZY:
     case SPELL_MIGHT:
     case SPELL_WIND_BLAST:
     case SPELL_EPHEMERAL_INFUSION:
@@ -5337,10 +5327,6 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
         mons->go_berserk(true);
         return;
 
-    case SPELL_FRENZY:
-        mons->go_frenzy(mons);
-        return;
-
     case SPELL_TROGS_HAND:
     {
         simple_monster_message(mons,
@@ -5866,8 +5852,6 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
         _cast_ephemeral_infusion(mons);
         return;
 
-
-
     case SPELL_SUMMON_HOLIES: // Holy monsters.
         sumcount2 = 1 + random2(2)
                       + random2(mons->spell_hd(spell_cast) / 4 + 1);
@@ -5980,6 +5964,7 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
         }
         return;
     }
+
     case SPELL_BLINK_OTHER:
     {
         // Allow the caster to comment on moving the foe.
@@ -5991,6 +5976,7 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
         }
         break;
     }
+
     case SPELL_BLINK_OTHER_CLOSE:
     {
         // Allow the caster to comment on moving the foe.
@@ -6003,6 +5989,7 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
         }
         break;
     }
+
     case SPELL_TOMB_OF_DOROKLOHE:
     {
         sumcount = 0;
@@ -6098,10 +6085,12 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
         }
         return;
     }
+
     case SPELL_CHAIN_LIGHTNING:
     case SPELL_CHAIN_OF_CHAOS:
         cast_chain_spell(spell_cast, splpow, mons);
         return;
+
     case SPELL_SUMMON_EYEBALLS:
         sumcount2 = 1 + random2(mons->spell_hd(spell_cast) / 7 + 1);
 
@@ -6123,6 +6112,7 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
                           spell_cast, mons->pos(), mons->foe, 0, god));
         }
         return;
+
     case SPELL_SUMMON_BUTTERFLIES:
         duration = min(2 + mons->spell_hd(spell_cast) / 5, 6);
         for (int i = 0; i < 10; ++i)
@@ -6133,6 +6123,7 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
                           mons->foe, 0, god));
         }
         return;
+
     case SPELL_IOOD:
         if (mons->type == MONS_ORB_SPIDER && !mons->has_ench(ENCH_IOOD_CHARGED))
         {
@@ -6154,6 +6145,7 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
             mons_cast_noise(mons, pbolt, spell_cast, slot_flags);
         cast_iood(mons, 6 * mons->spell_hd(spell_cast), &pbolt);
         return;
+
     case SPELL_AWAKEN_FOREST:
         duration = 50 + random2(mons->spell_hd(spell_cast) * 20);
 
@@ -6168,9 +6160,11 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
     case SPELL_SUMMON_DRAGON:
         cast_summon_dragon(mons, splpow, god);
         return;
+
     case SPELL_SUMMON_HYDRA:
         cast_summon_hydra(mons, splpow, god);
         return;
+
     case SPELL_FIRE_SUMMON:
         sumcount2 = 1 + random2(mons->spell_hd(spell_cast) / 5 + 1);
 
@@ -6322,23 +6316,6 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
         }
         return;
 
-    case SPELL_HASTE_PLANTS:
-    {
-        int num = 2 + random2(3);
-        for (monster_near_iterator mi(mons, LOS_NO_TRANS); mi && num > 0; ++mi)
-        {
-            if (mons_aligned(*mi, mons)
-                && _is_hastable_plant(*mi)
-                && !mi->has_ench(ENCH_HASTE))
-            {
-                mi->add_ench(ENCH_HASTE);
-                simple_monster_message(*mi, " seems to speed up.");
-                --num;
-            }
-        }
-        return;
-    }
-
     case SPELL_WIND_BLAST:
     {
         if (foe && mons->can_see(foe))
@@ -6390,6 +6367,7 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
         }
         return;
     }
+
     case SPELL_PORTAL_PROJECTILE:
     {
         // Swap weapons if necessary so that that happens before the spell
@@ -6410,7 +6388,6 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
 
     case SPELL_LEGENDARY_DESTRUCTION:
     {
-        mons->hurt(mons, 10);
         if (pbolt.origin_spell == SPELL_IOOD)
         {
             cast_iood(mons, _mons_spellpower(SPELL_IOOD, *mons), &pbolt);
@@ -6461,6 +6438,7 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
         }
         return;
     }
+
 #if TAG_MAJOR_VERSION == 34
     case SPELL_REARRANGE_PIECES:
     {
@@ -6557,7 +6535,6 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
         return;
     }
 
-
     case SPELL_SUMMON_MANA_VIPER:
         sumcount2 = 1 + random2(mons->spell_hd(spell_cast) / 5 + 1);
 
@@ -6650,13 +6627,13 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
                                      mons->foe, 0, god));
         }
         return;
+    }
 
     case SPELL_SCATTERSHOT:
     {
         ASSERT(foe);
         cast_scattershot(mons, splpow, foe->pos());
         return;
-    }
     }
 
     case SPELL_HUNTING_CRY:
@@ -6810,7 +6787,7 @@ static void _speech_keys(vector<string>& key_list,
     {
         if (real_spell)
             key_list.push_back(spell_name + cast_str + " real");
-        if (mons_intel(mons) >= I_NORMAL)
+        if (mons_intel(mons) >= I_HUMAN)
             key_list.push_back(spell_name + cast_str + " gestures");
     }
 
@@ -7821,9 +7798,6 @@ static bool _ms_waste_of_time(monster* mon, mon_spell_slot slot)
         }
         return !mon->needs_berserk(false);
 
-    case SPELL_FRENZY:
-        return !mon->can_go_frenzy();
-
     case SPELL_HASTE:
         return mon->has_ench(ENCH_HASTE);
 
@@ -7910,8 +7884,7 @@ static bool _ms_waste_of_time(monster* mon, mon_spell_slot slot)
             return false;
 
         // Only intelligent monsters estimate.
-        int intel = mons_intel(mon);
-        if (intel < I_NORMAL)
+        if (mons_intel(mon) < I_HUMAN)
             return false;
 
         // We'll estimate the target's resistance to magic, by first getting
@@ -7922,11 +7895,8 @@ static bool _ms_waste_of_time(monster* mon, mon_spell_slot slot)
         {
             est_magic_resist = foe->res_magic();
 
-            // now randomise (normal intels less accurate than high):
-            if (intel == I_NORMAL)
-                est_magic_resist += random2(80) - 40;
-            else
-                est_magic_resist += random2(30) - 15;
+            // now randomise
+            est_magic_resist += random2(60) - 30; // +-30
         }
 
         const int power = ench_power_stepdown(_mons_spellpower(monspell, *mon));
@@ -8011,19 +7981,6 @@ static bool _ms_waste_of_time(monster* mon, mon_spell_slot slot)
     case SPELL_WATERSTRIKE:
         return !foe || !feat_is_watery(grd(foe->pos()));
 
-    case SPELL_HASTE_PLANTS:
-        for (monster_near_iterator mi(mon, LOS_NO_TRANS); mi; ++mi)
-        {
-            // Isn't useless if there's a single viable target for it
-            if (mons_aligned(*mi, mon)
-                && _is_hastable_plant(*mi)
-                && !mi->has_ench(ENCH_HASTE))
-            {
-                return false;
-            }
-        }
-        return true;
-
     // Don't use unless our foe is close to us and there are no allies already
     // between the two of us
     case SPELL_WIND_BLAST:
@@ -8104,7 +8061,7 @@ static bool _ms_waste_of_time(monster* mon, mon_spell_slot slot)
                   && foe->as_monster()->has_ench(ENCH_FROZEN);
 
     case SPELL_LEGENDARY_DESTRUCTION:
-        return !foe || mon->hit_points <= 10;
+        return !foe;
 
     case SPELL_BLACK_MARK:
         return mon->has_ench(ENCH_BLACK_MARK);

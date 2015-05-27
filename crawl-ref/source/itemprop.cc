@@ -797,15 +797,7 @@ void do_curse_item(item_def &item, bool quiet)
         {
             amusement *= 2;
 
-            // Cursed cloaks prevent you from removing body armour,
-            // gloves from switching rings.
-            if (item.base_type == OBJ_ARMOUR
-                && (get_armour_slot(item) == EQ_CLOAK
-                    || get_armour_slot(item) == EQ_GLOVES))
-            {
-                amusement *= 2;
-            }
-            else if (you.equip[EQ_WEAPON] == item.link)
+            if (you.equip[EQ_WEAPON] == item.link)
             {
                 // Redraw the weapon.
                 you.wield_change = true;
@@ -2733,7 +2725,7 @@ bool gives_resistance(const item_def &item)
                 || item.sub_type == RING_POISON_RESISTANCE
                 || item.sub_type == RING_PROTECTION_FROM_COLD
                 || item.sub_type == RING_SEE_INVISIBLE
-                || item.sub_type == RING_SUSTAIN_ABILITIES
+                || item.sub_type == RING_SUSTAIN_ATTRIBUTES
                 || item.sub_type == RING_LIFE_PROTECTION
                 || item.sub_type == RING_PROTECTION_FROM_MAGIC
                 || item.sub_type == RING_FIRE

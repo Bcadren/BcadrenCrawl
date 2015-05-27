@@ -303,8 +303,7 @@ static bool _ranged_allied_monster_in_dir(monster* mon, coord_def p)
         {
             // Hostile monsters of normal intelligence only move aside for
             // monsters of the same type.
-            if (mons_intel(mon) <= I_NORMAL
-                && _unfriendly_or_insane(mon)
+            if (_unfriendly_or_insane(mon)
                 && mons_genus(mon->type) != mons_genus(ally->type))
             {
                 return false;
@@ -339,8 +338,7 @@ static bool _allied_monster_at(monster* mon, coord_def a, coord_def b,
 
         // Hostile monsters of normal intelligence only move aside for
         // monsters of the same genus.
-        if (mons_intel(mon) <= I_NORMAL
-            && _unfriendly_or_insane(mon)
+        if (_unfriendly_or_insane(mon)
             && mons_genus(mon->type) != mons_genus(ally->type))
         {
             continue;
@@ -604,7 +602,7 @@ static void _handle_movement(monster* mons)
     // this.
     if ((newpos == you.pos()
            || monster_at(newpos) && mons->foe == mgrd(newpos))
-        && mons_intel(mons) >= I_ANIMAL
+        && mons_intel(mons) > I_BRAINLESS
         && coinflip()
         && !mons_is_confused(mons) && !mons->caught()
         && !mons->berserk_or_insane())
@@ -626,8 +624,7 @@ static void _handle_movement(monster* mons)
                 && (_allied_monster_at(mons, coord_def(-mmov.x, -1),
                                        coord_def(-mmov.x, 0),
                                        coord_def(-mmov.x, 1))
-                    || mons_intel(mons) >= I_NORMAL
-                       && _unfriendly_or_insane(mons)
+                    || _unfriendly_or_insane(mons)
                        && _ranged_allied_monster_in_dir(mons,
                                                         coord_def(-mmov.x, 0))))
             {
@@ -644,8 +641,7 @@ static void _handle_movement(monster* mons)
                 && (_allied_monster_at(mons, coord_def(-1, -mmov.y),
                                        coord_def(0, -mmov.y),
                                        coord_def(1, -mmov.y))
-                    || mons_intel(mons) >= I_NORMAL
-                       && _unfriendly_or_insane(mons)
+                    || _unfriendly_or_insane(mons)
                        && _ranged_allied_monster_in_dir(mons,
                                                         coord_def(0, -mmov.y))))
             {
@@ -663,8 +659,7 @@ static void _handle_movement(monster* mons)
                     && (_allied_monster_at(mons, coord_def(-mmov.x, -1),
                                            coord_def(-mmov.x, 0),
                                            coord_def(-mmov.x, 1))
-                        || mons_intel(mons) >= I_NORMAL
-                           && _unfriendly_or_insane(mons)
+                        ||  _unfriendly_or_insane(mons)
                            && _ranged_allied_monster_in_dir(mons,
                                                 coord_def(-mmov.x, -mmov.y))))
                 {
@@ -675,8 +670,7 @@ static void _handle_movement(monster* mons)
                      && (_allied_monster_at(mons, coord_def(-1, -mmov.y),
                                             coord_def(0, -mmov.y),
                                             coord_def(1, -mmov.y))
-                         || mons_intel(mons) >= I_NORMAL
-                            && _unfriendly_or_insane(mons)
+                         || _unfriendly_or_insane(mons)
                             && _ranged_allied_monster_in_dir(mons,
                                                 coord_def(-mmov.x, -mmov.y))))
             {
@@ -1738,33 +1732,8 @@ static void _confused_move_dir(monster *mons)
     mmov.reset();
     int pfound = 0;
     for (adjacent_iterator ai(mons->pos(), false); ai; ++ai)
-        if (mons->can_pass_through(*ai))
-        {
-            // Highly intelligent monsters don't move if they might drown.
-            if (mons_intel(mons) == I_HIGH
-                && !mons->is_habitable(*ai))
-            {
-                // Players without a spoiler sheet have no way to know which
-                // monsters are I_HIGH, and this behaviour is obscure.
-                // Thus, give a message.
-                const string where = make_stringf("%s@%d,%d",
-                    level_id::current().describe().c_str(),
-                    mons->pos().x, mons->pos().y);
-                if (!mons->props.exists("no_conf_move")
-                    || mons->props["no_conf_move"].get_string() != where)
-                {
-                    // But don't spam.
-                    mons->props["no_conf_move"] = where;
-                    simple_monster_message(mons,
-                        make_stringf(" stays still, afraid of the %s.",
-                        feat_type_name(grd(*ai))).c_str());
-                }
-                mmov.reset();
-                break;
-            }
-            else if (one_chance_in(++pfound))
-                mmov = *ai - mons->pos();
-        }
+        if (mons->can_pass_through(*ai) && one_chance_in(++pfound))
+            mmov = *ai - mons->pos();
 }
 
 static int _tentacle_move_speed(monster_type type)
@@ -2051,12 +2020,6 @@ static void _maybe_submerge(monster* mons)
         mons->speed_increment -= ENERGY_SUBMERGE(entry);
         return;
     }
-
-    if (mons->type == MONS_AIR_ELEMENTAL && one_chance_in(5))
-    {
-        // Takes no time.
-        mons->add_ench(ENCH_SUBMERGED);
-    }
 }
 
 void handle_monster_move(monster* mons)
@@ -2325,9 +2288,7 @@ void handle_monster_move(monster* mons)
         // Calculates mmov based on monster target.
         _handle_movement(mons);
 
-        if (mons_is_confused(mons)
-            || mons->type == MONS_AIR_ELEMENTAL
-               && mons->submerged())
+        if (mons_is_confused(mons))
         {
             _confused_move_dir(mons);
 
@@ -3000,8 +2961,6 @@ void handle_monsters(bool with_noise)
 
         // Only move the monster if nothing else has played with its energy
         // during their turn.
-        // This can happen with, e.g., headbutt stuns, cold attacks on cold-
-        // -blooded monsters, etc.
         // If something's played with the energy, they get added back to
         // the queue just after this.
         if (oldspeed == mon->speed_increment)
@@ -3400,7 +3359,7 @@ static bool _check_slime_walls(const monster *mon,
                                const coord_def &targ)
 {
     if (mons_is_slime(mon) || actor_slime_wall_immune(mon)
-        || mons_intel(mon) <= I_REPTILE)
+        || mons_intel(mon) <= I_BRAINLESS)
     {
         return false;
     }
@@ -3515,10 +3474,6 @@ bool mon_can_move_to_pos(const monster* mons, const coord_def& delta,
         if (you.pos() == targ)
             return false;
     }
-
-    // Fire elementals avoid water and cold.
-    if (mons->type == MONS_FIRE_ELEMENTAL && feat_is_watery(target_grid))
-        return false;
 
     // Try to avoid deliberately blocking the player's line of fire.
     if (mons->type == MONS_SPELLFORGED_SERVITOR)

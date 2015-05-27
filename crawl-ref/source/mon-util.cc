@@ -1519,7 +1519,6 @@ bool mons_class_can_use_stairs(monster_type mc)
 {
     return (!mons_class_is_zombified(mc) || mc == MONS_SPECTRAL_THING)
            && !mons_is_tentacle_or_tentacle_segment(mc)
-           && !mons_is_abyssal_only(mc)
            && mc != MONS_SILENT_SPECTRE
            && mc != MONS_PLAYER_GHOST
            && mc != MONS_GERYON
@@ -2866,7 +2865,7 @@ habitat_type mons_secondary_habitat(const monster* mon)
 
 bool intelligent_ally(const monster* mon)
 {
-    return mon->attitude == ATT_FRIENDLY && mons_intel(mon) >= I_NORMAL;
+    return mon->attitude == ATT_FRIENDLY && mons_intel(mon) >= I_HUMAN;
 }
 
 int mons_power(monster_type mc)
@@ -3168,10 +3167,10 @@ static bool _beneficial_beam_flavour(beam_type flavour)
 bool mons_should_fire(bolt &beam, bool ignore_good_idea)
 {
     dprf("tracer: foes %d (pow: %d), friends %d (pow: %d), "
-         "foe_ratio: %d, smart: %s",
+         "foe_ratio: %d",
          beam.foe_info.count, beam.foe_info.power,
          beam.friend_info.count, beam.friend_info.power,
-         beam.foe_ratio, beam.smart_monster ? "yes" : "no");
+         beam.foe_ratio);
 
     // Use different evaluation criteria if the beam is a beneficial
     // enchantment (haste other).
@@ -3267,7 +3266,6 @@ static bool _ms_ranged_spell(spell_type monspell, bool attack_only = false,
     {
     case SPELL_NO_SPELL:
     case SPELL_CANTRIP:
-    case SPELL_FRENZY:
     case SPELL_HASTE:
     case SPELL_MIGHT:
     case SPELL_MINOR_HEALING:
@@ -3597,7 +3595,7 @@ bool monster_shover(const monster* m)
         return false;
 
     // no mindless creatures pushing, aside from jellies, which just kind of ooze.
-    return mons_intel(m) > I_PLANT || mons_genus(m->type) == MONS_JELLY;
+    return mons_intel(m) > I_BRAINLESS || mons_genus(m->type) == MONS_JELLY;
 }
 
 /**
@@ -4731,7 +4729,7 @@ bool mons_is_recallable(actor* caller, monster* targ)
             return false;
     }
     // Monster recall requires same attitude and at least normal intelligence
-    else if (mons_intel(targ) < I_NORMAL
+    else if (mons_intel(targ) < I_HUMAN
              || (!caller && targ->friendly())
              || (caller && !mons_aligned(targ, caller->as_monster())))
     {
@@ -4791,8 +4789,7 @@ bool mons_is_beast(monster_type mc)
 {
     if (mons_class_holiness(mc) != MH_NATURAL
           && mc != MONS_APIS
-        || mons_class_intel(mc) < I_INSECT
-        || mons_class_intel(mc) > I_ANIMAL)
+        || mons_class_intel(mc) != I_ANIMAL)
     {
         return false;
     }

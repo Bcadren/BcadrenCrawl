@@ -166,27 +166,27 @@ static const char* _jewellery_base_ability_string(int subtype)
 {
     switch (subtype)
     {
-    case RING_SUSTAIN_ABILITIES: return "SustAb";
-    case RING_WIZARDRY:          return "Wiz";
-    case RING_FIRE:              return "Fire";
-    case RING_ICE:               return "Ice";
-    case RING_TELEPORTATION:     return "+/*Tele";
+    case RING_SUSTAIN_ATTRIBUTES: return "SustAt";
+    case RING_WIZARDRY:           return "Wiz";
+    case RING_FIRE:               return "Fire";
+    case RING_ICE:                return "Ice";
+    case RING_TELEPORTATION:      return "+/*Tele";
 #if TAG_MAJOR_VERSION == 34
-    case RING_TELEPORT_CONTROL:  return "+cTele";
+    case RING_TELEPORT_CONTROL:   return "+cTele";
 #endif
-    case AMU_CLARITY:            return "Clar";
-    case AMU_WARDING:            return "Ward";
-    case AMU_RESIST_CORROSION:   return "rCorr";
-    case AMU_THE_GOURMAND:       return "Gourm";
+    case AMU_CLARITY:             return "Clar";
+    case AMU_WARDING:             return "Ward";
+    case AMU_RESIST_CORROSION:    return "rCorr";
+    case AMU_THE_GOURMAND:        return "Gourm";
 #if TAG_MAJOR_VERSION == 34
-    case AMU_CONSERVATION:       return "Cons";
-    case AMU_CONTROLLED_FLIGHT:  return "cFly";
+    case AMU_CONSERVATION:        return "Cons";
+    case AMU_CONTROLLED_FLIGHT:   return "cFly";
 #endif
-    case AMU_RESIST_MUTATION:    return "rMut";
-    case AMU_GUARDIAN_SPIRIT:    return "Spirit";
-    case AMU_FAITH:              return "Faith";
-    case AMU_STASIS:             return "Stasis";
-    case AMU_INACCURACY:         return "Inacc";
+    case AMU_RESIST_MUTATION:     return "rMut";
+    case AMU_GUARDIAN_SPIRIT:     return "Spirit";
+    case AMU_FAITH:               return "Faith";
+    case AMU_STASIS:              return "Stasis";
+    case AMU_INACCURACY:          return "Inacc";
     }
     return "";
 }
@@ -268,10 +268,10 @@ static vector<string> _randart_propnames(const item_def& item,
         { ARTP_CURSE,                 PROPN_PLAIN },
         { ARTP_CLARITY,               PROPN_PLAIN },
         { ARTP_RMSL,                  PROPN_PLAIN },
-        { ARTP_SUSTAB,                PROPN_PLAIN },
+        { ARTP_SUSTAT,                PROPN_PLAIN },
     };
 
-    const unrandart_entry *entry;
+    const unrandart_entry *entry = nullptr;
     if (is_unrandom_artefact(item))
         entry = get_unrand_entry(item.special);
 
@@ -403,7 +403,7 @@ static const char* _jewellery_base_ability_description(int subtype)
 {
     switch (subtype)
     {
-    case RING_SUSTAIN_ABILITIES:
+    case RING_SUSTAIN_ATTRIBUTES:
         return "It sustains your strength, intelligence and dexterity.";
     case RING_WIZARDRY:
         return "It improves your spell success rate.";
@@ -475,7 +475,7 @@ static string _randart_descrip(const item_def &item)
         { ARTP_ELECTRICITY, "It insulates you from electricity.", false},
         { ARTP_POISON, "poison", true},
         { ARTP_NEGATIVE_ENERGY, "negative energy", true},
-        { ARTP_SUSTAB, "It sustains your strength, intelligence and dexterity.", false},
+        { ARTP_SUSTAT, "It sustains your strength, intelligence and dexterity.", false},
         { ARTP_MAGIC_RESISTANCE, "It affects your resistance to hostile "
                                  "enchantments.", false},
         { ARTP_HP, "It affects your health (%d).", false},
@@ -3892,15 +3892,10 @@ void get_monster_db_desc(const monster_info& mi, describe_info &inf,
         stair_use = true;
     }
 
-    if (mi.intel() <= I_PLANT)
+    if (mi.intel() <= I_BRAINLESS)
     {
         inf.body << uppercase_first(mi.pronoun(PRONOUN_SUBJECTIVE))
                  << " is mindless.\n";
-    }
-    else if (mi.intel() <= I_INSECT && you_worship(GOD_ELYVILON))
-    {
-        inf.body << uppercase_first(mi.pronoun(PRONOUN_SUBJECTIVE))
-                 << " is not intelligent enough to pacify.\n";
     }
 
 
