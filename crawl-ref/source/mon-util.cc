@@ -43,7 +43,6 @@
 #include "mon-abil.h"
 #include "mon-behv.h"
 #include "mon-book.h"
-#include "mon-chimera.h"
 #include "mon-death.h"
 #include "mon-place.h"
 #include "mon-poly.h"
@@ -698,9 +697,7 @@ static bool _mons_class_is_clingy(monster_type type)
 
 bool mons_can_cling_to_walls(const monster* mon)
 {
-    return _mons_class_is_clingy(mon->type)
-        || mons_class_is_chimeric(mon->type)
-           && _mons_class_is_clingy(get_chimera_legs(mon));
+    return _mons_class_is_clingy(mon->type);
 }
 
 // Conjuration or Hexes. Summoning and Necromancy make the monster a creature
@@ -1464,11 +1461,6 @@ bool mons_class_is_hybrid(monster_type mc)
     return mons_class_flag(mc, M_HYBRID);
 }
 
-bool mons_class_is_chimeric(monster_type mc)
-{
-    return mc == MONS_CHIMERA;
-}
-
 bool mons_class_is_animated_weapon(monster_type type)
 {
     return type == MONS_DANCING_WEAPON || type == MONS_SPECTRAL_WEAPON;
@@ -1483,8 +1475,6 @@ monster_type mons_base_type(const monster* mon)
 {
     if (mons_class_is_zombified(mon->type))
         return mons_species(mon->base_monster);
-    if (mons_class_is_chimeric(mon->type))
-        return mon->base_monster;
     return mon->type;
 }
 
@@ -1652,36 +1642,7 @@ mon_attack_def mons_attack_spec(const monster* mon, int attk_number, bool base_f
     if (attk_number < 0 || attk_number >= MAX_NUM_ATTACKS)
         attk_number = 0;
 
-    if (mons_class_is_chimeric(mc))
-    {
-        // Chimera get attacks 0, 1 and 2 from their base components. Attack 3 is
-        // the secondary attack of the main base type.
-        switch (attk_number)
-        {
-        case 0:
-            mc = mon->base_monster;
-            break;
-        case 1:
-            if (mon->props.exists(CHIMERA_PT2_KEY))
-            {
-                mc = static_cast<monster_type>(mon->props[CHIMERA_PT2_KEY].get_int());
-                attk_number = 0;
-            }
-            break;
-        case 2:
-            if (mon->props.exists(CHIMERA_PT3_KEY))
-            {
-                mc = static_cast<monster_type>(mon->props[CHIMERA_PT3_KEY].get_int());
-                attk_number = 0;
-            }
-            break;
-        case 3:
-            mc = mon->base_monster;
-            attk_number = 1;
-            break;
-        }
-    }
-    else if (mons_is_ghost_demon(mc))
+    if (mons_is_ghost_demon(mc))
     {
         if (attk_number == 0)
         {
@@ -3015,8 +2976,7 @@ bool mons_is_immotile(const monster* mons)
 
 bool mons_is_batty(const monster* m)
 {
-    return mons_class_flag(m->type, M_BATTY)
-        || m->type == MONS_CHIMERA && chimera_is_batty(m);
+    return mons_class_flag(m->type, M_BATTY);
 }
 
 bool mons_looks_stabbable(const monster* m)

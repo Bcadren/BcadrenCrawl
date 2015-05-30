@@ -2456,9 +2456,6 @@ enum monster_type                      // menv[].type
     MONS_MANTICORE,
     MONS_HIPPOGRIFF,
     MONS_GRIFFON,
-#if TAG_MAJOR_VERSION > 34
-    MONS_CHIMERA,
-#endif
     MONS_GIANT_FROG,
     MONS_SPINY_FROG,
     MONS_BLINK_FROG,
