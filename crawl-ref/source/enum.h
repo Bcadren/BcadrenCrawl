@@ -2456,6 +2456,9 @@ enum monster_type                      // menv[].type
     MONS_MANTICORE,
     MONS_HIPPOGRIFF,
     MONS_GRIFFON,
+#if TAG_MAJOR_VERSION > 34
+    MONS_MUTANT_BEAST,
+#endif
     MONS_GIANT_FROG,
     MONS_SPINY_FROG,
     MONS_BLINK_FROG,
@@ -3336,6 +3339,7 @@ enum monster_type                      // menv[].type
     MONS_SALAMANDER_STORMCALLER,
     MONS_ENTROPY_WEAVER,
     MONS_MOON_TROLL,
+    MONS_MUTANT_BEAST,
 #endif
 
     NUM_MONSTERS,               // used for polymorph
