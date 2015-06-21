@@ -40,6 +40,7 @@
 #include "mon-abil.h"
 #include "mon-act.h"
 #include "mon-behv.h"
+#include "mon-book.h" // MON_SPELL_WIZARD
 #include "mon-cast.h"
 #include "mon-death.h"
 #include "mon-movetarget.h"
@@ -2475,13 +2476,93 @@ spret_type cast_haunt(int pow, const coord_def& where, god_type god, bool fail)
     return SPRET_SUCCESS;
 }
 
+
+
+static spell_type servitor_spells[] =
+{
+    // primary spells
+    SPELL_LEHUDIBS_CRYSTAL_SPEAR,
+    SPELL_IOOD,
+    SPELL_IRON_SHOT,
+    SPELL_BOLT_OF_FIRE,
+    SPELL_BOLT_OF_COLD,
+    SPELL_POISON_ARROW,
+    SPELL_LIGHTNING_BOLT,
+    SPELL_BOLT_OF_MAGMA,
+    SPELL_BOLT_OF_DRAINING,
+    SPELL_VENOM_BOLT,
+    SPELL_THROW_ICICLE,
+    SPELL_STONE_ARROW,
+    SPELL_ISKENDERUNS_MYSTIC_BLAST,
+    // secondary spells
+    SPELL_CONJURE_BALL_LIGHTNING,
+    SPELL_FIREBALL,
+    SPELL_AIRSTRIKE,
+    SPELL_LRD,
+    SPELL_FREEZING_CLOUD,
+    SPELL_POISONOUS_CLOUD,
+    SPELL_FORCE_LANCE,
+    SPELL_DAZZLING_SPRAY,
+    SPELL_MEPHITIC_CLOUD,
+    // fallback spells
+    SPELL_STICKY_FLAME,
+    SPELL_THROW_FLAME,
+    SPELL_THROW_FROST,
+    SPELL_FREEZE,
+    SPELL_FLAME_TONGUE,
+    SPELL_STING,
+    SPELL_SANDBLAST,
+    SPELL_MAGIC_DART,
+    // end search
+    SPELL_NO_SPELL,
+};
+
+/**
+ * Initialize the given spellforged servitor's HD and spellset, based on the
+ * caster's spellpower and castable attack spells.
+ *
+ * @param mon       The spellforged servitor to be initialized.
+ * @param caster    The entity summoning the servitor; may be the player.
+ */
+void init_servitor_monster(monster &mon, const actor& caster)
+{
+    mon_spell_slot slot;
+    slot.flags = MON_SPELL_WIZARD;
+    const monster* moncaster = caster.is_monster() ? caster.as_monster()
+                                                   : nullptr;
+
+    const int pow = moncaster ?
+                    6 * moncaster->spell_hd(SPELL_SPELLFORGED_SERVITOR) :
+                    calc_spell_power(SPELL_SPELLFORGED_SERVITOR, true);
+
+    mon.set_hit_dice(9 + div_rand_round(pow, 14));
+    mon.max_hit_points = mon.hit_points = 60 + roll_dice(7, 5); // 67-95
+                                            // mhp doesn't vary with HD
+
+    int i = 0;
+    spell_type spell = SPELL_NO_SPELL;
+    while ((spell = servitor_spells[i++]) != SPELL_NO_SPELL)
+    {
+        if (moncaster && moncaster->has_spell(spell)
+           || !moncaster && you.has_spell(spell) && raw_spell_fail(spell) < 50)
+        {
+            slot.spell = spell;
+            mon.spells.push_back(slot);
+        }
+    }
+
+    const size_t count = mon.spells.size();
+    const int base_freq = moncaster ? 67 : 200;
+    for (auto& spellslot : mon.spells)
+        spellslot.freq = base_freq / count;
+    mon.props[CUSTOM_SPELLS_KEY].get_bool() = true;
+}
+
 void init_servitor(monster* servitor, actor* caster)
 {
+    ASSERT(servitor); // XXX: change to monster &servitor
     ASSERT(caster); // XXX: change to actor &caster
-    ASSERT(servitor->ghost.get());
-    servitor->ghost->init_spellforged_servitor(caster);
-    servitor->ghost_demon_init();
-    servitor->props[CUSTOM_SPELLS_KEY].get_bool() = true;
+    init_servitor_monster(*servitor, *caster);
 
     if (you.can_see(*caster))
     {
