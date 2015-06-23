@@ -2521,7 +2521,7 @@ static void _add_lich_spell(monster_spells &spells, const mon_spell_slot *set,
     spells.push_back(next_spell);
 }
 
-void _load_lich_spells(monster &lich)
+static void _load_lich_spells(monster &lich)
 {
     const size_t num_spells = 5 + random2(3);
 
