@@ -2524,7 +2524,7 @@ static spell_type servitor_spells[] =
  * @param mon       The spellforged servitor to be initialized.
  * @param caster    The entity summoning the servitor; may be the player.
  */
-void init_servitor_monster(monster &mon, const actor& caster)
+static void _init_servitor_monster(monster &mon, const actor& caster)
 {
     mon_spell_slot slot;
     slot.flags = MON_SPELL_WIZARD;
@@ -2562,7 +2562,7 @@ void init_servitor(monster* servitor, actor* caster)
 {
     ASSERT(servitor); // XXX: change to monster &servitor
     ASSERT(caster); // XXX: change to actor &caster
-    init_servitor_monster(*servitor, *caster);
+    _init_servitor_monster(*servitor, *caster);
 
     if (you.can_see(*caster))
     {
