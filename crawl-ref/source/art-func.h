@@ -841,7 +841,7 @@ static void _DRAGONSKIN_unequip(item_def *item, bool *show_msgs)
 static void _BLACK_KNIGHT_HORSE_world_reacts(item_def *item)
 {
     if (one_chance_in(10))
-        did_god_conduct(DID_UNHOLY, 1);
+        did_god_conduct(DID_NECROMANCY, 1);
 }
 
 ///////////////////////////////////////////////////
@@ -1309,7 +1309,7 @@ static void _ETHERIC_CAGE_world_reacts(item_def *item)
         inc_mp(binomial(div_rand_round(delay, BASELINE_DELAY), 1, 2));
     // It's more interesting to get a lump of contamination then to just add a
     // small amount every turn, plus there's a small chance of rapid buildup.
-    if (one_chance_in(80))
+    if (one_chance_in(100))
     {
         // On average the player recovers 25 contam per turn, this should keep
         // them in the gray a fair amount of time; be nicer if they're already
@@ -1326,6 +1326,13 @@ static void _ETERNAL_TORMENT_equip(item_def *item, bool *show_msgs, bool unmeld)
 {
     calc_hp();
 }
+
+static void _ETERNAL_TORMENT_world_reacts(item_def *item)
+{
+    if (one_chance_in(10))
+        did_god_conduct(DID_NECROMANCY, 1);
+}
+
 
 static void _ETERNAL_TORMENT_unequip(item_def *item, bool *show_msgs)
 {
