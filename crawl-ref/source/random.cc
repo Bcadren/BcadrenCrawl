@@ -3,6 +3,9 @@
 #include "random.h"
 
 #include <cmath>
+#include <memory>
+#include <vector>
+
 #ifdef UNIX
 // for times()
 #include <sys/times.h>
@@ -15,13 +18,25 @@
 # include <process.h>
 #endif
 
-#include "asg.h"
+#include "chacha.h"
 #include "syscalls.h"
+
+static ChaCha<32> chacha_rng[2] {
+  ChaCha<32>(0),
+  ChaCha<32>(0),
+};
 
 void seed_rng(uint32_t seed)
 {
-    uint32_t sarg[1] = { seed };
-    seed_asg(sarg, 1);
+    uint32_t seed_key[5];
+    seed_key[0] = seed;
+    chacha_rng[0] = ChaCha<32>(seed_key);
+    for (int i = 0; i < 5; ++i)
+    {
+      seed_key[i] = chacha_rng[0]();
+    }
+
+    chacha_rng[1] = ChaCha<32>(seed_key);
 }
 
 void seed_rng()
@@ -37,7 +52,12 @@ void seed_rng()
     seed_key[1] += getpid();
     seed_key[2] += time(nullptr);
 
-    seed_asg(seed_key, 5);
+    chacha_rng[0] = ChaCha<32>(seed_key);
+}
+
+uint32_t get_uint32(int rng)
+{
+    return chacha_rng[rng]();
 }
 
 uint32_t random_int()
@@ -303,7 +323,17 @@ int binomial(unsigned n_trials, unsigned trial_prob, unsigned scale)
 // range [0, 1.0)
 double random_real()
 {
-    return get_uint32() / (1.0 + AsgKISS::max());
+    // This is literally magic.
+    // 0x3FF0000000000000
+    uint64_t val = get_uint32() & 0xFFFFF;
+    val <<= 32;
+    val |= get_uint32();
+    val |= 0x3FF0000000000000l;
+    union {
+      uint64_t val;
+      double d;
+    } u = { val };
+    return u.d - 1.0;
 }
 
 // Roll n_trials, return true if at least one succeeded.  n_trials might be

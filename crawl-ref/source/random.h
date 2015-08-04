@@ -23,6 +23,7 @@ int maybe_roll_dice(int num, int size, bool random);
 int random_range(int low, int high);
 int random_range(int low, int high, int nrolls);
 uint32_t random_int();
+uint32_t get_uint32(int rng = 0);
 double random_real();
 
 int random2avg(int max, int rolls);

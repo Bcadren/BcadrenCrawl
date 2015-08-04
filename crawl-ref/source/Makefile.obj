@@ -9,7 +9,6 @@ adjust.o \
 areas.o \
 arena.o \
 artefact.o \
-asg.o \
 attack.o \
 attitude-change.o \
 beam.o \

@@ -3,7 +3,6 @@
 #include "tileview.h"
 
 #include "areas.h"
-#include "asg.h"
 #include "branch.h"
 #include "cloud.h"
 #include "colour.h"
@@ -28,6 +27,8 @@
 #include "traps.h"
 #include "travel.h"
 #include "viewgeom.h"
+
+#include "contrib/chacha.h"
 
 void tile_new_level(bool first_time, bool init_unseen)
 {
@@ -304,8 +305,11 @@ void tile_init_flavour()
         {
             static_cast<uint32_t>(ui_random(INT_MAX)),
             static_cast<uint32_t>(ui_random(INT_MAX)),
+            static_cast<uint32_t>(ui_random(INT_MAX)),
+            static_cast<uint32_t>(ui_random(INT_MAX)),
+            static_cast<uint32_t>(ui_random(INT_MAX)),
         };
-        AsgKISS rng(seed, 2);
+        ChaCha<32> rng(seed);
         dominoes.Generate(X_WIDTH, Y_WIDTH, output, rng);
     }
     for (rectangle_iterator ri(0); ri; ++ri)

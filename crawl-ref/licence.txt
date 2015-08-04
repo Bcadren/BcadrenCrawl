@@ -14,7 +14,7 @@ These include:
 * Public Domain|CC0: most of tiles, perlin.cc, perlin.h
 * MIT: json.cc/json.h, some .js files in webserver/static/scripts/contrib/
        worley.{cc,h}
-* zlib: webserver/static/scripts/contrib/inflate.js
+* zlib: webserver/static/scripts/contrib/inflate.js, contrib/chacha.h
 
 While a majority of the tiles are in the Public Domain, there is no accurate
 list. To err on the side of caution, please refer to Chris Hamons'
