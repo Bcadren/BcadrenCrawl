@@ -18,7 +18,7 @@
 # include <process.h>
 #endif
 
-#include "chacha.h"
+#include "contrib/chacha.h"
 #include "syscalls.h"
 
 static ChaCha<32> chacha_rng[2] {
