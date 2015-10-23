@@ -312,31 +312,40 @@ spret_type cast_healing(int pow, int max_pow, bool divine_ability,
  *
  * Forms, buffs, debuffs, contamination, probably a few other things.
  * Flight gets an extra 11 aut before going away to minimize instadeaths.
+ *
+ * @param test_run      If true, just report whether there are any effects
+ *                      to be dispelled; don't dispel anything.
+ * @return              Whether there are any effects to be dispelled, if
+ *                      test_run is set; otherwise true.
  */
-void debuff_player()
+bool debuff_player(bool test_run)
 {
     bool need_msg = false, danger = false;
 
     if (you.attribute[ATTR_DELAYED_FIREBALL])
     {
+        if (test_run) return true;
         you.attribute[ATTR_DELAYED_FIREBALL] = 0;
         mprf(MSGCH_DURATION, "Your charged fireball dissipates.");
     }
 
     if (you.attribute[ATTR_REPEL_MISSILES])
     {
+        if (test_run) return true;
         you.attribute[ATTR_REPEL_MISSILES] = 0;
         need_msg = true;
     }
 
     if (you.attribute[ATTR_DEFLECT_MISSILES])
     {
+        if (test_run) return true;
         you.attribute[ATTR_DEFLECT_MISSILES] = 0;
         need_msg = true;
     }
 
     if (you.attribute[ATTR_SWIFTNESS] > 0)
     {
+        if (test_run) return true;
         you.attribute[ATTR_SWIFTNESS] = 0;
         need_msg = true;
     }
@@ -348,6 +357,7 @@ void debuff_player()
         {
             if (i == DUR_TRANSFORMATION && you.form == TRAN_SHADOW)
                 continue;
+            else if (test_run) return true;
             else if ((i == DUR_FLIGHT || i == DUR_TRANSFORMATION) && dur > 11)
             {
                 dur = 11;
@@ -381,12 +391,26 @@ void debuff_player()
     }
 
     const int old_contam_level = get_contamination_level();
+    if (old_contam_level && test_run)
+        return true;
+
     contaminate_player(-1 * (1000 + random2(4000)));
     if (old_contam_level && old_contam_level == get_contamination_level())
         mpr("You feel slightly less contaminated with magical energies.");
+    return true;
 }
 
-void debuff_monster(monster* mon)
+
+/**
+ * Remove magical effects from a given monster.
+ *
+ * @param mon           The monster to be debuffed.
+ * @param test_run      If true, just report whether there are any effects
+ *                      to be dispelled; don't dispel anything.
+ * @return              Whether any effects were dispelled, or, if test_run is
+ *                      set, whether there are any to be dispelled.
+ */
+bool debuff_monster(monster* mon, bool test_run)
 {
     // List of magical enchantments which will be dispelled.
     static const enchant_type lost_enchantments[] =
@@ -439,11 +463,15 @@ void debuff_monster(monster* mon)
         if (ench == ENCH_REGENERATION && mon->has_ench(ENCH_RAISED_MR))
             continue;
 
+        if (test_run && mon->has_ench(ench))
+            return true;
+
         if (mon->del_ench(ench, true, true))
             dispelled = true;
     }
     if (dispelled)
         simple_monster_message(mon, "'s magical effects unravel!");
+    return dispelled;
 }
 
 int detect_traps(int pow)
