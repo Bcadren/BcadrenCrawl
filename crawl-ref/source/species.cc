@@ -414,7 +414,7 @@ void species_stat_gain(species_type species)
 		if (you.experience_level % (sd.how_often + 1) == 0)
 			modify_stat(*random_iterator(sd.level_stats), 1, false);
 	}
-    else if (you.experience_level % sd.how_often == 0)
+    else if (sd.level_stats.size() > 0 && you.experience_level % sd.how_often == 0)
         modify_stat(*random_iterator(sd.level_stats), 1, false);
 }
 
