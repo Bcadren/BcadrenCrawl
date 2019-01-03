@@ -887,10 +887,11 @@ void PasswallDelay::finish()
         break;
 
     case DNGN_CLOSED_DOOR:      // open the door
+    case DNGN_CLOSED_CLEAR_DOOR:
     case DNGN_RUNED_DOOR:
+    case DNGN_RUNED_CLEAR_DOOR:
         // Once opened, former runed doors become normal doors.
-        // Is that ok?  Keeping it for simplicity for now...
-        grd(dest) = DNGN_OPEN_DOOR;
+        dgn_open_door(dest);
         break;
     }
 

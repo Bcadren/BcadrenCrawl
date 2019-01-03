@@ -1139,6 +1139,7 @@ static cloud_type _cloud_from_feat(const dungeon_feature_type &ft)
     switch (ft)
     {
         case DNGN_CLOSED_DOOR:
+        case DNGN_OPEN_DOOR:
         case DNGN_METAL_WALL:
 		case DNGN_SILVER_WALL:
             return CLOUD_GREY_SMOKE;
@@ -1152,6 +1153,8 @@ static cloud_type _cloud_from_feat(const dungeon_feature_type &ft)
         case DNGN_CLEAR_STONE_WALL:
         case DNGN_CLEAR_PERMAROCK_WALL:
         case DNGN_GRATE:
+        case DNGN_CLOSED_CLEAR_DOOR:
+        case DNGN_OPEN_CLEAR_DOOR:
             return CLOUD_MIST;
         case DNGN_ORCISH_IDOL:
         case DNGN_GRANITE_STATUE:

@@ -1117,9 +1117,13 @@ static int _shatter_walls(coord_def where, int pow, actor *agent)
     switch (grid)
     {
     case DNGN_CLOSED_DOOR:
+    case DNGN_CLOSED_CLEAR_DOOR:
     case DNGN_RUNED_DOOR:
+    case DNGN_RUNED_CLEAR_DOOR:
     case DNGN_OPEN_DOOR:
+    case DNGN_OPEN_CLEAR_DOOR:
     case DNGN_SEALED_DOOR:
+    case DNGN_SEALED_CLEAR_DOOR:
         if (you.see_cell(where))
             mpr("A door shatters!");
         chance = 100;
