@@ -10,27 +10,29 @@
 #include "enum.h"
 #include "mon-info.h"
 
-enum spschool_flag_type
+enum class spschool
 {
-  SPTYP_NONE           = 0,
-  SPTYP_HEXES          = 1<<0,
-  SPTYP_CHARMS         = 1<<1,
-  SPTYP_FIRE           = 1<<2,
-  SPTYP_ICE            = 1<<3,
-  SPTYP_TRANSMUTATION  = 1<<4,
-  SPTYP_NECROMANCY     = 1<<5,
-  SPTYP_SUMMONING      = 1<<6,
-  SPTYP_TRANSLOCATION  = 1<<7,
-  SPTYP_POISON         = 1<<8,
-  SPTYP_EARTH          = 1<<9,
-  SPTYP_AIR            = 1<<10,
-  SPTYP_LAST_SCHOOL    = SPTYP_AIR,
-  SPTYP_RANDOM         = SPTYP_LAST_SCHOOL << 1,
+  none           = 0,
+  hexes          = 1<<0,
+  charms         = 1<<1,
+  fire           = 1<<2,
+  ice            = 1<<3,
+  transmutation  = 1<<4,
+  necromancy     = 1<<5,
+  summoning      = 1<<6,
+  translocation  = 1<<7,
+  poison         = 1<<8,
+  earth          = 1<<9,
+  air            = 1<<10,
+  LAST_SCHOOL    = spschool::air,
+  random         = spschool::LAST_SCHOOL << 1,
 };
-DEF_BITFIELD(spschools_type, spschool_flag_type, 10);
-const int SPTYP_LAST_EXPONENT = spschools_type::last_exponent;
-COMPILE_CHECK(spschools_type::exponent(SPTYP_LAST_EXPONENT)
-              == SPTYP_LAST_SCHOOL);
+DEF_BITFIELD(spschools_type, spschool, 10);
+const int SPSCHOOL_LAST_EXPONENT = spschools_type::last_exponent;
+COMPILE_CHECK(spschools_type::exponent(SPSCHOOL_LAST_EXPONENT)
+              == spschool::LAST_SCHOOL);
+// Moved from mapdef.cc:5318, needed to ensure randbook spschools are short ints
+COMPILE_CHECK(static_cast<int>(spschool::LAST_SCHOOL) < SHRT_MAX);
 
 struct bolt;
 class dist;
@@ -52,7 +54,7 @@ void init_spell_descs();
 void init_spell_name_cache();
 spell_type spell_by_name(string name, bool partial_match = false);
 
-spschool_flag_type school_by_name(string name);
+spschool school_by_name(string name);
 
 int get_spell_slot_by_letter(char letter);
 int get_spell_letter(spell_type spell);
@@ -80,7 +82,7 @@ int spell_levels_required(spell_type which_spell);
 
 spell_flags get_spell_flags(spell_type which_spell);
 
-bool spell_typematch(spell_type which_spell, spschool_flag_type which_disc);
+bool spell_typematch(spell_type which_spell, spschool which_disc);
 spschools_type get_spell_disciplines(spell_type which_spell);
 int count_bits(uint64_t bits);
 
@@ -91,8 +93,8 @@ int count_bits(enum_bitfield<E, Exp> bits)
 }
 
 const char *spell_title(spell_type which_spell);
-const char* spelltype_short_name(spschool_flag_type which_spelltype);
-const char* spelltype_long_name(spschool_flag_type which_spelltype);
+const char* spelltype_short_name(spschool which_spelltype);
+const char* spelltype_long_name(spschool which_spelltype);
 
 typedef function<int (coord_def where)> cell_func;
 typedef function<int (coord_def where, int pow, int spreadrate,
@@ -112,8 +114,8 @@ void apply_area_cloud(cloud_func func, const coord_def& where,
 bool spell_direction(dist &spelld, bolt &pbolt,
                      direction_chooser_args *args = nullptr);
 
-skill_type spell_type2skill(spschool_flag_type spelltype);
-spschool_flag_type skill2spell_type(skill_type spell_skill);
+skill_type spell_type2skill(spschool spelltype);
+spschool skill2spell_type(skill_type spell_skill);
 
 skill_type arcane_mutation_to_skill(mutation_type mutation);
 bool cannot_use_schools(spschools_type schools);
