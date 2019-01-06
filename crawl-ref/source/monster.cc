@@ -5376,7 +5376,7 @@ void monster::corrupt()
     malmutate("");
 }
 
-bool monster::polymorph(int pow)
+bool monster::polymorph(int pow, bool /*allow_immobile*/)
 {
     if (!can_polymorph())
         return false;
