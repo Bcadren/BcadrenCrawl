@@ -1511,6 +1511,14 @@ significant portion of its damage bypasses cold resistance. The icicle will some
 shatter on impact; dealing cold damage in all directions; the chance of it doing so is
 higher if it has traveled less distance.
 %%%%
+Throw Klown Pie spell
+
+Throws a harmful yet strangely delicious pie that can inflict its victim with a
+number of debilitating temporary effects. These include inducing vertigo,
+silence, fire vulnerability, stat drain, or an aversion to drinking potions.
+The dreaded moon pie can even turn you into a bat, a hog, or an insubstantial
+wisp!
+%%%%
 Thunderbolt spell
 
 Creates an arc of electricity.

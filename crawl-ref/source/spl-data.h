@@ -3968,6 +3968,28 @@ static const struct spell_desc spelldata[] =
 },
 
 {
+    SPELL_GRASPING_ROOTS, "Grasping Roots",
+    SPTYP_EARTH,
+    SPFLAG_TARGET | SPFLAG_NOT_SELF | SPFLAG_MONSTER,
+    5,
+    200,
+    LOS_RADIUS, LOS_RADIUS,
+    5, 0,
+    TILEG_GRASPING_ROOTS,
+},
+
+{
+    SPELL_THROW_PIE, "Throw Klown Pie",
+    SPTYP_HEXES,
+    SPFLAG_TARGET | SPFLAG_NOT_SELF | SPFLAG_MONSTER,
+    5,
+    200,
+    LOS_RADIUS, LOS_RADIUS,
+    5, 0,
+    TILEG_GENERIC_MONSTER_SPELL,
+},
+
+{
     SPELL_NO_SPELL, "nonexistent spell",
     SPTYP_NONE,
     SPFLAG_TESTING,

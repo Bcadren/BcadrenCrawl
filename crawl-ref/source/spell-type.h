@@ -465,5 +465,6 @@ enum spell_type : int
     SPELL_HARPOON_SHOT,
     SPELL_GRASPING_ROOTS,
     SPELL_SONIC_WAVE,
+    SPELL_THROW_PIE,
     NUM_SPELLS
 };
