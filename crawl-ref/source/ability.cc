@@ -2336,7 +2336,7 @@ static spret _do_ability(const ability_def& abil, bool fail)
 
     case ABIL_YRED_RECALL_UNDEAD_SLAVES:
         fail_check();
-        start_recall(RECALL_YRED);
+        start_recall(recall_t::yred);
         break;
 
     case ABIL_YRED_DRAIN_LIFE:
@@ -2709,7 +2709,7 @@ static spret _do_ability(const ability_def& abil, bool fail)
 
     case ABIL_BEOGH_RECALL_ORCISH_FOLLOWERS:
         fail_check();
-        start_recall(RECALL_BEOGH);
+        start_recall(recall_t::beogh);
         break;
 
     case ABIL_STOP_RECALL:
