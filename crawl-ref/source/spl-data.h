@@ -3981,7 +3981,7 @@ static const struct spell_desc spelldata[] =
 {
     SPELL_THROW_PIE, "Throw Klown Pie",
     SPTYP_HEXES,
-    SPFLAG_TARGET | SPFLAG_NOT_SELF | SPFLAG_MONSTER,
+    SPFLAG_DIR_OR_TARGET | SPFLAG_NEEDS_TRACER | SPFLAG_MONSTER,
     5,
     200,
     LOS_RADIUS, LOS_RADIUS,
