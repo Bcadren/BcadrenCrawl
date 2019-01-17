@@ -156,7 +156,7 @@ bool fight_melee(actor *attacker, actor *defender, bool *did_hit, bool simu)
 		}
 
 		// We're trying to hit a monster, break out of travel/explore now.
-		interrupt_activity(AI_HIT_MONSTER, defender->as_monster());
+		interrupt_activity(activity_interrupt::hit_monster, defender->as_monster());
 
 		bool local_time = false; // Not sure this is necessary; but I'm going to use it.
 
