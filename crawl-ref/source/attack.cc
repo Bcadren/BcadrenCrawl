@@ -1361,14 +1361,14 @@ int attack::apply_defender_ac(int damage, int damage_max) const
 {
     ASSERT(defender);
     int stab_bypass = 0;
-	ac_type local_ac = AC_NORMAL;
+	ac_type local_ac = ac_type::normal;
     if (stab_bonus)
     {
         stab_bypass = you.skill(wpn_skill, 50) + you.skill(SK_STEALTH, 50);
         stab_bypass = random2(div_rand_round(stab_bypass, 100 * stab_bonus));
     }
 	if (damage_brand == SPWPN_MOLTEN)
-			local_ac = AC_HALF;
+			local_ac = ac_type::half;
     int after_ac = defender->apply_ac(damage, damage_max,
                                       local_ac, stab_bypass);
     dprf(DIAG_COMBAT, "AC: att: %s, def: %s, ac: %d, gdr: %d, dam: %d -> %d",
