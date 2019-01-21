@@ -1525,7 +1525,6 @@ bool attack::apply_damage_brand(const char *what)
         break;
 
     case SPWPN_ELECTROCUTION:
-    {
         if (defender->res_elec() > 0)
             break;
         else
@@ -1542,7 +1541,6 @@ bool attack::apply_damage_brand(const char *what)
             defender->expose_to_element(BEAM_ELECTRICITY, 1);
         }
         break;
-    }
 
 	case SPWPN_SILVER:
 		special_damage = silver_damages_victim(defender, damage_done, special_damage_message);
