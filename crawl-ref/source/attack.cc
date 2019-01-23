@@ -1530,13 +1530,15 @@ bool attack::apply_damage_brand(const char *what)
         else
         {
             special_damage = roll_dice(2,4);
-            const char *punctuation =
-                attack_strength_punctuation(special_damage).c_str();
+            special_damage = 8 + random2(13);
+            const string punctuation =
+                    attack_strength_punctuation(special_damage);
             special_damage_message =
                 defender->is_player()
-                ? make_stringf("You are electrocuted%s", punctuation)
+                ? make_stringf("You are electrocuted%s", punctuation.c_str())
                 : make_stringf("Lightning courses through %s%s",
-                               defender->name(DESC_THE).c_str(), punctuation);
+                               defender->name(DESC_THE).c_str(),
+                               punctuation.c_str());
             special_damage_flavour = BEAM_ELECTRICITY;
             defender->expose_to_element(BEAM_ELECTRICITY, 1);
         }
