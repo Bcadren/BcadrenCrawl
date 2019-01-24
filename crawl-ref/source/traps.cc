@@ -658,8 +658,8 @@ void trap_def::trigger(actor& triggerer)
 					item_def item = generate_trap_item();
 					copy_item_to_grid(item, triggerer.pos());
 
-					if (random2limit(you.evasion(), 40)
-						+ random2(4) + 3 > 12)
+					if (random2avg(2 * you.evasion(), 2)
+				        > 18 + env.absdepth0 / 2)
 					{
 						mpr("A net drops to the ground!");
 					}
