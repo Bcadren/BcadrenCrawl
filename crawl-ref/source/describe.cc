@@ -1978,10 +1978,9 @@ static string _describe_armour(const item_def &item, bool verbose)
 
         // only display player-relevant info if the player exists
         if (crawl_state.need_save && get_armour_slot(item) == EQ_BODY_ARMOUR)
-        {
             description += make_stringf("\nWearing mundane armour of this type "
                                         "will give the following: %d AC",
-                                            you.base_ac_from(item));
+                                         you.base_ac_from(item, 100) / 100);
         }
     }
 
