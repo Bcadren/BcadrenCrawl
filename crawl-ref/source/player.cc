@@ -7058,6 +7058,9 @@ void player::petrify(actor *who, bool force)
 
     duration[DUR_PETRIFYING] = 30;
 
+    if (who)
+        props["petrified_by"] = who->name(DESC_A, true);
+
     redraw_evasion = true;
     mprf(MSGCH_WARN, "You are slowing down.");
 }

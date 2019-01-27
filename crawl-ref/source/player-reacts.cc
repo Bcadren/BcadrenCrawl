@@ -211,8 +211,7 @@ static void _decrement_petrification(int delay)
     if (_decrement_a_duration(DUR_PETRIFIED, delay) && !you.paralysed())
     {
         you.redraw_evasion = true;
-        // implicit assumption: all races that can be petrified are made of
-        // flesh when not petrified
+
         string flesh_equiv = get_form()->flesh_equivalent.empty() ?
                                         "flesh" :
                                         get_form()->flesh_equivalent;
@@ -225,14 +224,13 @@ static void _decrement_petrification(int delay)
 			flesh_equiv = "slime";
 		
 		if (you.species == SP_GARGOYLE || you.form == transformation::statue)
-		{
 			mprf(MSGCH_DURATION, "Your stony form becomes more flexible, allowing you to move again.");
-		}
 		else
-		{
 			mprf(MSGCH_DURATION, "You turn to %s and can move again.",
 				flesh_equiv.c_str());
-		}
+
+        if (you.props.exists("petrified_by"))
+            you.props.erase("petrified_by");
     }
 
     if (you.duration[DUR_PETRIFYING])
