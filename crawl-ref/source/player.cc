@@ -7011,7 +7011,7 @@ void player::paralyse(actor *who, int str, string source)
     {
         take_note(Note(NOTE_PARALYSIS, str, 0, source));
         // use the real name here even for invisible monsters
-        props["paralysed_by"] = use_actor_name ? who->name(DESC_A, true)
+        props[PARALYSED_BY_KEY] = use_actor_name ? who->name(DESC_A, true)
                                                : source;
     }
 
@@ -7059,7 +7059,7 @@ void player::petrify(actor *who, bool force)
     duration[DUR_PETRIFYING] = 30;
 
     if (who)
-        props["petrified_by"] = who->name(DESC_A, true);
+        props[PETRIFIED_BY_KEY] = who->name(DESC_A, true);
 
     redraw_evasion = true;
     mprf(MSGCH_WARN, "You are slowing down.");
