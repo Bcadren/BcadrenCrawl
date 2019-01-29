@@ -7781,7 +7781,8 @@ bool player::attempt_escape(int attempts)
     escape_attempts += attempts;
 
     // player breaks free if (4+n)d13 >= 5d(8+HD/4)
-    if (roll_dice(4 + escape_attempts, 13)
+    const int escape_score = roll_dice(4 + escape_attempts, 13);
+    if (escape_score
         >= roll_dice(5, 8 + div_rand_round(themonst->get_hit_dice(), 4)))
     {
         mprf("You escape %s grasp.", themonst->name(DESC_ITS, true).c_str());

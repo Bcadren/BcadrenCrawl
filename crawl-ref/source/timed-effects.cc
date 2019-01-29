@@ -83,8 +83,10 @@ static void _random_hell_miscast()
                                  2, spschool::charms,
                                  2, spschool::hexes);
 
-    MiscastEffect(&you, nullptr, {HELL_EFFECT_MISCAST}, which_miscast,
-                  4 + random2(6), random2avg(97, 3),
+    const int pow = 4 + random2(6);
+    const int fail = random2avg(97, 3);
+    MiscastEffect(&you, nullptr, {miscast_source::hell_effect}, which_miscast,
+                  pow, fail,
                   "the effects of Hell");
 }
 
@@ -149,8 +151,10 @@ static void _themed_hell_summon_or_miscast()
     }
     else
     {
-        MiscastEffect(&you, nullptr, {HELL_EFFECT_MISCAST}, spec->miscast_type,
-                      4 + random2(6), random2avg(97, 3),
+        const int pow = 4 + random2(6);
+        const int fail = random2avg(97, 3);
+        MiscastEffect(&you, nullptr, {miscast_source::hell_effect},
+                      spec->miscast_type, pow, fail,
                       "the effects of Hell");
     }
 }
@@ -580,7 +584,9 @@ static void _monster_flee(monster *mon)
     }
 
     // Randomise the target so we have a direction to flee.
-    coord_def mshift(random2(3) - 1, random2(3) - 1);
+    coord_def mshift;
+    mshift.x = random2(3) - 1;
+    mshift.y = random2(3) - 1;
 
     // Bounds check: don't let fleeing monsters try to run off the grid.
     const coord_def s = mon->target + mshift;
@@ -1064,7 +1070,11 @@ void timeout_malign_gateways(int duration)
             mmark->duration -= duration;
 
         if (mmark->duration > 0)
-            big_cloud(CLOUD_TLOC_ENERGY, 0, mmark->pos, 3+random2(10), 2+random2(5));
+        {
+            const int pow = 3 + random2(10);
+            const int size = 2 + random2(5);
+            big_cloud(CLOUD_TLOC_ENERGY, 0, mmark->pos, pow, size);
+        }
         else
         {
             monster* mons = monster_at(mmark->pos);
@@ -1096,8 +1106,11 @@ void timeout_malign_gateways(int duration)
                 {
                     tentacle->flags |= MF_NO_REWARD;
                     tentacle->add_ench(ENCH_PORTAL_TIMER);
+                    int dur = random2avg(mmark->power, 6);
+                    dur -= random2(4); // sequence point between random calls
+                    dur *= 10;
                     mon_enchant kduration = mon_enchant(ENCH_PORTAL_PACIFIED, 4,
-                        caster, (random2avg(mmark->power, 6)-random2(4))*10);
+                        caster, dur);
                     tentacle->props["base_position"].get_coord()
                                         = tentacle->pos();
                     tentacle->add_ench(kduration);

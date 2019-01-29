@@ -3399,8 +3399,8 @@ void cheibriados_time_bend(int pow)
         monster* mon = monster_at(*ai);
         if (mon && !mon->is_stationary())
         {
-            int res_margin = roll_dice(mon->get_hit_dice(), 3)
-                             - random2avg(pow, 2);
+            int res_margin = roll_dice(mon->get_hit_dice(), 3);
+            res_margin -= random2avg(pow, 2);
             if (res_margin > 0)
             {
                 mprf("%s%s",
@@ -6057,10 +6057,12 @@ void ru_draw_out_power()
     you.duration[DUR_SLOW] = 0;
     you.duration[DUR_PETRIFYING] = 0;
 
-    inc_hp(apply_invo_enhancer(div_rand_round(you.piety, 16)
-           + roll_dice(div_rand_round(you.piety, 20), 6),false));
-    inc_mp(apply_invo_enhancer(div_rand_round(you.piety, 48)
-           + roll_dice(div_rand_round(you.piety, 40), 4),false));
+    int hp_inc = div_rand_round(you.piety, 16);
+    hp_inc += roll_dice(div_rand_round(you.piety, 20), 6);
+    inc_hp(apply_invo_enhancer(hp_inc, false));
+    int mp_inc = div_rand_round(you.piety, 48);
+    mp_inc += roll_dice(div_rand_round(you.piety, 40), 4);
+    inc_mp(apply_invo_enhancer(mp_inc, false));
     drain_player(30, false, true);
 }
 
