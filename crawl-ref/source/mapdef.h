@@ -1114,7 +1114,6 @@ public:
     string          description;
     // Order among related maps; used only for tutorial/sprint.
     int             order;
-    string          tags;
     depth_ranges    place;
 
     depth_ranges     depths;
@@ -1153,6 +1152,7 @@ public:
     vector<subvault_place> subvault_places;
 
 private:
+    set<string>     tags;
     // This map has been loaded from an index, and not fully realised.
     bool            index_only;
     mutable long    cache_offset;
@@ -1248,7 +1248,8 @@ public:
 
     bool is_minivault() const;
     bool is_overwritable_layout() const;
-    bool has_tag(const string &tag) const;
+    bool has_tag(const string &tagswanted) const;
+    bool has_tag(const set<string> &tagswanted) const;
     bool has_tag_prefix(const string &tag) const;
     bool has_tag_suffix(const string &suffix) const;
 
@@ -1261,7 +1262,12 @@ public:
         return false;
     }
 
-    vector<string> get_tags() const;
+    const set<string> get_tags() const;
+    void add_tags(const string &tag);
+    void set_tags(const string &tag);
+    bool remove_tags(const string &tag);
+    void clear_tags();
+    string tags_string() const;
 
     vector<string> get_shuffle_strings() const;
     vector<string> get_subst_strings() const;
