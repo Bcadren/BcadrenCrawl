@@ -502,6 +502,7 @@ void initial_dungeon_setup()
 
 static void _setup_generic(const newgame_def& ng)
 {
+    reset_rng();
     _init_player();
 
 #if TAG_MAJOR_VERSION == 34
