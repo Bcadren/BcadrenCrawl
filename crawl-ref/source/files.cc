@@ -1250,15 +1250,6 @@ static void _make_level(dungeon_feature_type stair_taken,
 
     env.turns_on_level = -1;
 
-    if (you.chapter == CHAPTER_NONDUNGEON_START
-        && player_in_branch(BRANCH_DUNGEON))
-    {
-        // Preparations for entering the dungeon for the first time.
-		delete_level(level_id(BRANCH_START_MARKET, 1));
-		delete_level(level_id(BRANCH_START_TEMPLE, 1));
-        you.chapter = CHAPTER_ORB_HUNTING;
-    }
-
     tile_init_default_flavour();
     tile_clear_flavour();
     env.tile_names.clear();
@@ -1560,6 +1551,16 @@ bool load_level(dungeon_feature_type stair_taken, load_mode_type load_mode,
 #endif
 
     bool just_created_level = false;
+
+    if (load_mode != LOAD_GENERATE
+        && you.chapter == CHAPTER_NONDUNGEON_START
+        && player_in_branch(BRANCH_DUNGEON))
+    {
+		// Preparations for entering the dungeon for the first time.
+		delete_level(level_id(BRANCH_START_MARKET, 1));
+		delete_level(level_id(BRANCH_START_TEMPLE, 1));
+        you.chapter = CHAPTER_ORB_HUNTING;
+    }
 
     // GENERATE new level when the file can't be opened:
     if (!you.save->has_chunk(level_name))
