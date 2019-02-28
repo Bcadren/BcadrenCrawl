@@ -156,6 +156,19 @@ Monsters
 * Confused monsters now get a 1 in 3 chance to move normally, like players do.
 * Giant monsters no longer tear through webs.
 
+Stone Soup 0.22.1 (20180916)
+----------------------------
+
+Bugfix Release
+--------------
+* Support for distributing player ghosts files with releases. Now local games
+  will have a starting set of ghosts available for ghost vaults.
+* New tiles for Azrael, shock serpents, dream sheep, mana vipers, and the Robe
+  of Vines.
+* An additional set of Gnoll player dolls tiles.
+* Fix WebTiles menus for older versions of Firefox.
+* 81 bugfixes, adjustments, and cleanups in total.
+
 Stone Soup 0.22 (20180810)
 --------------------------
 
