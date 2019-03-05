@@ -1100,8 +1100,8 @@ static void _debug_acquirement_stats(FILE *ostat)
             "returning",
 #endif
             "chaos",
-            "evasion",
 #if TAG_MAJOR_VERSION == 34
+            "evasion",
             "confusion",
 #endif
             "penetration",
@@ -1464,6 +1464,9 @@ static void _debug_rap_stats(FILE *ostat)
         "ARTP_IMPROVED_VISION",
         "ARTP_INVISIBLE",
         "ARTP_FLY",
+#if TAG_MAJOR_VERSION > 34
+        "ARTP_FOG",
+#endif
         "ARTP_BLINK",
         "ARTP_BERSERK",
         "ARTP_NOISE",
