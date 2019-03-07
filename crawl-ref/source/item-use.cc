@@ -536,8 +536,8 @@ static int _prompt_weapon_to_unwield(int new_weapon)
 }
 
 /**
- * @param auto_wield true if this was initiated by the wield weapon command (w)
- *      false otherwise (e.g. switching between ranged and melee with the
+ * @param auto_wield false if this was initiated by the wield weapon command (w)
+ *      true otherwise (e.g. switching between ranged and melee with the
  *      auto_switch option)
  * @param slot Index into inventory of item to equip. Or one of following
  *     special values:
