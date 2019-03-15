@@ -197,6 +197,7 @@ public:
 
 protected:
     void do_preselect(InvEntry *ie);
+    int pre_process(int key) override;
     virtual bool is_selectable(int index) const override;
     virtual string help_key() const override;
 
