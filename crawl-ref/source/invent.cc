@@ -2005,6 +2005,27 @@ bool item_is_wieldable(const item_def &item)
     return (is_weapon(item) || item.base_type == OBJ_SHIELDS) && you.species != SP_FELID;
 }
 
+/// Does the item only serve to produce summons or allies?
+static bool _item_ally_only(const item_def &item)
+{
+    if (item.base_type == OBJ_WANDS)
+        return item.sub_type == WAND_ENSLAVEMENT;
+    else if (item.base_type == OBJ_MISCELLANY)
+    {
+        switch (item.sub_type)
+        {
+        case MISC_PHANTOM_MIRROR:
+        case MISC_HORN_OF_GERYON:
+        case MISC_BOX_OF_BEASTS:
+        case MISC_SACK_OF_SPIDERS:
+            return true;
+        default:
+            return false;
+        }
+    }
+    return false;
+}
+
 /**
  * Return whether an item can be evoked.
  *
@@ -2065,6 +2086,14 @@ bool item_is_evokable(const item_def &item, bool reach, bool known,
                                    && !item_is_melded(item) ||
 								   you.equip[EQ_WEAPON1] == item.link
 								   && !item_is_melded(item);
+
+    // TODO: check other summoning constraints here?
+    if (_item_ally_only(item) && you.has_mutation(MUT_NO_LOVE))
+    {
+        if (msg)
+            mpr("That item cannot be used by those hated by all!");
+        return false;
+    }
 
     switch (item.base_type)
     {
