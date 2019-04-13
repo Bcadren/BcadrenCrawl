@@ -840,7 +840,7 @@ void init_mons_spells()
 #if TAG_MAJOR_VERSION == 34
             spell == SPELL_MELEE ||
 #endif
-            setup_mons_cast(&fake_mon, pbolt, spell, true))
+            setup_mons_cast(&fake_mon, pbolt, spell, false, true))
         {
             _valid_mon_spells[i] = true;
         }
@@ -1705,6 +1705,7 @@ bolt mons_spell_beam(const monster* mons, spell_type spell_cast, int power,
 
 // Set up bolt structure for monster spell casting.
 bool setup_mons_cast(const monster* mons, bolt &pbolt, spell_type spell_cast,
+                     bool evoke,
                      bool check_validity)
 {
     // always set these -- used by things other than fire_beam()
@@ -1913,7 +1914,8 @@ bool setup_mons_cast(const monster* mons, bolt &pbolt, spell_type spell_cast,
     }
     }
 
-    const int power = _mons_spellpower(spell_cast, *mons);
+    const int power = evoke ? 30 + mons->get_hit_dice()
+                            : _mons_spellpower(spell_cast, *mons);
 
     bolt theBeam = mons_spell_beam(mons, spell_cast, power);
 
@@ -5713,9 +5715,10 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
                   false);
         return;
     }
+    bool evoke {slot_flags & MON_SPELL_EVOKE};
     // Always do setup. It might be done already, but it doesn't hurt
     // to do it again (cheap).
-    setup_mons_cast(mons, pbolt, spell_cast);
+    setup_mons_cast(mons, pbolt, spell_cast, evoke);
 
     // single calculation permissible {dlb}
     const spell_flags flags = get_spell_flags(spell_cast);
@@ -5763,7 +5766,12 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
     }
 
     const god_type god = _find_god(*mons, slot_flags);
+<<<<<<< HEAD
     const int splpow = _mons_spellpower(spell_cast, *mons);
+=======
+    const int splpow = evoke ? 30 + mons->get_hit_dice()
+                             : mons_spellpower(*mons, spell_cast);
+>>>>>>> 7384745ea9... Teach monsters to use scattershot, cloud, and iceblast wands
 
     switch (spell_cast)
     {
