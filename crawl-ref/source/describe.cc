@@ -1744,6 +1744,34 @@ static string _describe_weapon(const item_def &item, bool verbose)
 	if (spec_ench != SPWPN_NORMAL && item_type_known(item))
 		description += _weapon_brand_desc(item);
 
+    if (is_unrandom_artefact(item, UNRAND_STORM_BOW))
+    {
+        description += "\n\nAmmo fired by it will pass through the "
+            "targets it hits, potentially hitting all targets in "
+            "its path until it reaches maximum range.";
+    }
+    else if (is_unrandom_artefact(item, UNRAND_THERMIC_ENGINE))
+    {
+        description += "\n\nIt has been specially enchanted to freeze "
+            "those struck by it, causing extra injury to most foes "
+            "and up to half again as much damage against particularly "
+            "susceptible opponents.";
+    }
+
+    if (you.duration[DUR_EXCRUCIATING_WOUNDS] && &item == you.weapon())
+    {
+        description += "\nIt is temporarily rebranded; it is actually a";
+        if ((int) you.props[ORIGINAL_BRAND_KEY] == SPWPN_NORMAL)
+            description += "n unbranded weapon.";
+        else
+        {
+            description += " weapon of "
+                        + ego_type_string(item, false,
+                           (brand_type) you.props[ORIGINAL_BRAND_KEY].get_int())
+                        + ".";
+        }
+    }
+
 	if (is_artefact(item))
     {
         string rand_desc = _randart_descrip(item);
