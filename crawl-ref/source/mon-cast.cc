@@ -5766,12 +5766,8 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
     }
 
     const god_type god = _find_god(*mons, slot_flags);
-<<<<<<< HEAD
-    const int splpow = _mons_spellpower(spell_cast, *mons);
-=======
     const int splpow = evoke ? 30 + mons->get_hit_dice()
-                             : mons_spellpower(*mons, spell_cast);
->>>>>>> 7384745ea9... Teach monsters to use scattershot, cloud, and iceblast wands
+                             : _mons_spellpower(spell_cast, *mons);
 
     switch (spell_cast)
     {
