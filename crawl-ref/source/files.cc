@@ -1579,10 +1579,7 @@ bool load_level(dungeon_feature_type stair_taken, load_mode_type load_mode,
     }
 #endif
 
-    bool just_created_level = false;
-
-    if (load_mode != LOAD_GENERATE
-		&& load_mode != LOAD_VISITOR
+    if (load_mode != LOAD_VISITOR
         && you.chapter == CHAPTER_NONDUNGEON_START
         && player_in_branch(BRANCH_DUNGEON))
     {
