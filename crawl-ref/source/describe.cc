@@ -1003,7 +1003,7 @@ static bool _dual_wield_target(const item_def &item, const int target)
     if (skill == SK_NONE)
         return false;
 
-    return target && you.can_train[skill]
+    return target && you.can_currently_train[skill]
         && you.skill(skill, 10, false, false, false) < target
         && you.get_training_target(skill) < target;
 }
