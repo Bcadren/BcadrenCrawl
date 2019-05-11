@@ -31,10 +31,9 @@ function callback.tgw_lugonu_bribe_lugonu_item (data, triggerable,
               scroll of immolation ident:type q:3-6",
          Cheibriados="potion of haste ident:type q:2-4 /\
               good_item quick blade",
-         Dithmenos="lamp of fire w:5 /\
-              good_item " .. weapon .. " ego:molten ident:type",
-         Elyvilon="book of Necromancy w:5 /\
-              book of Death w:5 / book of Unlife w:5",
+         Dithmenos="ring of attention ident:type /\
+              scroll of noise ident:type q:2-4",
+         Elyvilon="book of Necromancy / book of Death / book of Unlife",
          Fedhas="randbook owner:Lugonu spells:necromutation numspells:1 /\
               randbook owner:Lugonu spells:simulacrum&animate_dead \
                        numspells:2",
