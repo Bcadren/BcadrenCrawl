@@ -1491,6 +1491,9 @@ static void abyss_area_shift()
     place_transiting_monsters();
 
     check_map_validity();
+    // TODO: should dactions be rerun at this point instead? That would cover
+    // this particular case...
+    ash_gozag_level_scan(false);
 }
 
 void destroy_abyss()

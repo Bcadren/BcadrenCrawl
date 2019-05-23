@@ -1112,6 +1112,66 @@ int gozag_gold_in_los(actor *whom)
     return gold_count;
 }
 
+// Detects gold for Gozag and Runes for Ashenzari.
+void ash_gozag_level_scan(bool count)
+{
+    vector<item_def *> gold_piles;
+    vector<coord_def> gold_places;
+    int gold = 0;
+    bool rune_found = false;
+    for (rectangle_iterator ri(0); ri; ++ri)
+    {
+        for (stack_iterator j(*ri); j; ++j)
+        {
+            if (j->base_type == OBJ_GOLD && !(j->flags & ISFLAG_UNOBTAINABLE))
+            {
+                gold += j->quantity;
+                gold_piles.push_back(&(*j));
+                gold_places.push_back(*ri);
+            }
+            else if (j->base_type == OBJ_RUNES && have_passive(passive_t::detect_runes))
+            {
+                update_item_at(*ri, true);
+                env.map_knowledge(*ri).flags |= MAP_DETECTED_ITEM;
+                rune_found = true;
+            }
+        }
+    }
+
+    if (rune_found)
+    {
+        mprf(MSGCH_BANISHMENT, "You have a vision of a rune of Zot.");
+        if (you.where_are_you == BRANCH_ABYSS)
+            flash_view_delay(UA_PICKUP, rune_colour(RUNE_ABYSSAL), 300);
+    }
+
+    if (!player_in_branch(BRANCH_ABYSS) && count)
+        you.attribute[ATTR_GOLD_GENERATED] += gold;
+
+    if (have_passive(passive_t::detect_gold))
+    {
+        for (unsigned int i = 0; i < gold_places.size(); i++)
+        {
+            bool detected = false;
+            int dummy = gold_piles[i]->index();
+            coord_def &pos = gold_places[i];
+            unlink_item(dummy);
+            move_item_to_grid(&dummy, pos, true);
+            if (!env.map_knowledge(pos).item()
+                || env.map_knowledge(pos).item()->base_type != OBJ_GOLD)
+            {
+                detected = true;
+            }
+            update_item_at(pos, true);
+            // the pile can still remain undetected if it is not in
+            // you.visible_igrd, for example if it is under deep water and the
+            // player will not be able to see it.
+            if (detected && env.map_knowledge(pos).item())
+                env.map_knowledge(pos).flags |= MAP_DETECTED_ITEM;
+        }
+    }
+}
+
 int qazlal_sh_boost(int piety)
 {
     if (!have_passive(passive_t::storm_shield))

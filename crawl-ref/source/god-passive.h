@@ -283,6 +283,7 @@ int ash_skill_boost(skill_type sk, int scale);
 bool ash_has_skill_boost(skill_type sk);
 map<skill_type, int8_t> ash_get_boosted_skills(eq_type type);
 int gozag_gold_in_los(actor* whom);
+void ash_gozag_level_scan(bool count);
 int qazlal_sh_boost(int piety = you.piety);
 int tso_sh_boost();
 void qazlal_storm_clouds();
