@@ -4798,6 +4798,7 @@ bool parse_args(int argc, char **argv, bool rc_only)
         case CLO_SCRIPT:
             crawl_state.test   = true;
             crawl_state.script = true;
+            crawl_state.script_args.clear();
             if (current < argc - 1)
             {
                 crawl_state.tests_selected = split_string(",", next_arg);
@@ -4806,8 +4807,10 @@ bool parse_args(int argc, char **argv, bool rc_only)
                 current = argc;
             }
             else
+            {
                 end(1, false,
                     "-script must specify comma-separated script names");
+            }
             break;
 
         case CLO_BUILDDB:
