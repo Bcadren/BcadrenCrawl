@@ -2932,7 +2932,7 @@ static string _hints_throw_stuff(const item_def &item)
     string result;
 
     result  = "To do this, type <w>%</w> to fire, then ";
-    if (!item.slot)
+    if (item.slot)
     {
         result += "<w>";
         result += item.slot;
