@@ -3247,7 +3247,7 @@ void map_def::fixup()
     }
 }
 
-bool map_def::has_tag(const set<string> &tagswanted) const
+bool map_def::has_tags(const set<string> &tagswanted) const
 {
     if (tags.empty() || tagswanted.size() == 0)
         return false;
@@ -3259,9 +3259,14 @@ bool map_def::has_tag(const set<string> &tagswanted) const
     return true;
 }
 
-bool map_def::has_tag(const string &tagswanted) const
+bool map_def::has_tags(const string &tagswanted) const
 {
-    return has_tag(parse_tags(tagswanted));
+    return has_tags(parse_tags(tagswanted));
+}
+
+bool map_def::has_tag(const string &tagwanted) const
+{
+    return tags.count(tagwanted) > 0;
 }
 
 bool map_def::has_tag_prefix(const string &prefix) const
