@@ -25,6 +25,7 @@
 #include "describe.h"
 #include "directn.h"
 #include "dungeon.h"
+#include "english.h"
 #include "enum.h"
 #include "env.h"
 #include "exclude.h"
@@ -1290,7 +1291,9 @@ static inline bool _monster_warning(activity_interrupt ai,
             god_warning = uppercase_first(god_name(you.religion))
                           + " warns you: "
                           + uppercase_first(mon->pronoun(PRONOUN_SUBJECTIVE))
-                          + " is a foul ";
+                          + " "
+                          + conjugate_verb("are", mon->pronoun_plurality())
+                          + " a foul ";
             if (mon->has_ench(ENCH_GLOWING_SHAPESHIFTER))
                 god_warning += "glowing ";
             god_warning += "shapeshifter.";
@@ -1312,8 +1315,9 @@ static inline bool _monster_warning(activity_interrupt ai,
             }
 
             (ash_id ? god_warning : text) +=
-                " " + uppercase_first(mon->pronoun(PRONOUN_SUBJECTIVE)) + " is"
-                + (ash_id && mweap[0] != ' ' ? " " : "")
+                " " + uppercase_first(mon->pronoun(PRONOUN_SUBJECTIVE))
+                + " " + conjugate_verb("are", mi.pronoun_plurality())
+                + (mweap[0] != ' ' ? " " : "")
                 + mweap + ".";
         }
 
