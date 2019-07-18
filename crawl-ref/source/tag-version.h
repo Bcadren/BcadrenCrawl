@@ -230,6 +230,7 @@ enum tag_minor_version
     TAG_MINOR_GAMESEEDS,           // Game seeds + rng state saved
     TAG_MINOR_YELLOW_DRACONIAN_RACID, // Change yellow draconians' rAcid fake mutation to a true mutation.
     TAG_MINOR_SINGULAR_THEY,       // Add singular they pronouns
+    TAG_MINOR_ABYSS_UNIQUE_VAULTS, // Separate abyss vault tracking from main dungeon
 #endif
     NUM_TAG_MINORS,
     TAG_MINOR_VERSION = NUM_TAG_MINORS - 1
