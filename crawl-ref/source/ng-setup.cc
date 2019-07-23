@@ -612,7 +612,7 @@ static void _setup_generic(const newgame_def& ng)
 
     reassess_starting_skills();
     init_skill_order();
-    init_can_train();
+    init_can_currently_train();
     init_train();
     init_training();
 

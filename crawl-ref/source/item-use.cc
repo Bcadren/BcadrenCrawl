@@ -844,7 +844,7 @@ bool wield_weapon(bool auto_wield, int slot, bool show_weff_messages,
             if (!unwield_item(false, show_weff_messages))
                 return false;
         }
-        update_can_train();
+        update_can_currently_train();
         // Go ahead and wield the weapon.
         equip_item(EQ_WEAPON0, item_slot, show_weff_messages);
     }
