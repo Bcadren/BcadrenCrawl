@@ -76,7 +76,7 @@ TextureID get_dngn_tex(tileidx_t idx)
         return TEX_FEAT;
 }
 
-static tileidx_t _tileidx_trap(trap_type type)
+tileidx_t tileidx_trap(trap_type type)
 {
     switch (type)
     {
@@ -567,7 +567,7 @@ tileidx_t tileidx_feature(const coord_def &gc)
 
     case DNGN_TRAP_MECHANICAL:
     case DNGN_TRAP_TELEPORT:
-        return _tileidx_trap(env.map_knowledge(gc).trap());
+        return tileidx_trap(env.map_knowledge(gc).trap());
 
     case DNGN_TRAP_WEB:
     {
