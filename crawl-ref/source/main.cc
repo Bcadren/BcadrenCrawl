@@ -2291,6 +2291,8 @@ void world_reacts()
 
     wu_jian_end_of_turn_effects();
 
+    add_auto_excludes();
+
     viewwindow();
 
     if (you.cannot_act() && any_messages()
