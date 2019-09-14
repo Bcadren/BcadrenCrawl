@@ -81,4 +81,4 @@ void mark_mon_equipment_seen(const monster *mons);
 void toggle_show_terrain();
 void reset_show_terrain();
 
-void handle_terminal_resize(bool redraw = true);
+void handle_terminal_resize();

@@ -1769,7 +1769,7 @@ void reset_show_terrain()
 ////////////////////////////////////////////////////////////////////////////
 // Term resize handling (generic).
 
-void handle_terminal_resize(bool redraw)
+void handle_terminal_resize()
 {
     crawl_state.terminal_resized = false;
 
@@ -1778,6 +1778,5 @@ void handle_terminal_resize(bool redraw)
     else
         crawl_view.init_geometry();
 
-    if (redraw)
-        redraw_screen();
+    redraw_screen();
 }
