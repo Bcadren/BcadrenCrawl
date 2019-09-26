@@ -266,6 +266,14 @@ An awoken dead tree
 
 <An awoken tree>
 %%%%
+An awoken autumnal tree
+
+<An awoken tree>
+%%%%
+An awoken dead tree
+
+<An awoken tree>
+%%%%
 An abandoned shop
 
 A shop that has been abandoned.
