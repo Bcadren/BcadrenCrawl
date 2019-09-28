@@ -950,44 +950,9 @@ bool StackFiveMenu::process_key(int keyin)
 
 bool stack_five(int slot)
 {
-<<<<<<< HEAD
     item_def& deck(you.inv[slot]);
     if (_check_buggy_deck(deck))
         return false;
-=======
-    ToggleableMenu deck_menu(MF_SINGLESELECT | MF_UNCANCEL
-            | MF_NO_WRAP_ROWS | MF_TOGGLE_ACTION | MF_ALWAYS_SHOW_MORE);
-    {
-        ToggleableMenuEntry* me =
-            new ToggleableMenuEntry("Draw which deck?        "
-                                    "Cards available",
-                                    "Describe which deck?    "
-                                    "Cards available",
-                                    MEL_TITLE);
-        deck_menu.set_title(me, true, true);
-    }
-    deck_menu.set_tag("deck");
-    deck_menu.add_toggle_key('!');
-    deck_menu.add_toggle_key('?');
-    deck_menu.menu_action = Menu::ACT_EXECUTE;
-
-    deck_menu.set_more(formatted_string::parse_string(
-                       "Press '<w>!</w>' or '<w>?</w>' to toggle "
-                       "between deck selection and description."));
-
-    int numbers[NUM_DECKS];
-
-    for (int i = FIRST_PLAYER_DECK; i <= LAST_PLAYER_DECK; i++)
-    {
-        ToggleableMenuEntry* me =
-            new ToggleableMenuEntry(deck_status((deck_type)i),
-                    deck_status((deck_type)i),
-                    MEL_ITEM, 1, _deck_hotkey((deck_type)i));
-        numbers[i] = i;
-        me->data = &numbers[i];
-        if (!deck_cards((deck_type)i))
-            me->colour = COL_USELESS;
->>>>>>> b99ddf99ac... Make menu colours more consistent
 
     const int num_cards    = cards_in_deck(deck);
     const int num_to_stack = (num_cards < 5 ? num_cards : 5);

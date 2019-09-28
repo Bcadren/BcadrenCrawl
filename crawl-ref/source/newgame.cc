@@ -1028,16 +1028,6 @@ static job_group jobs_order[] =
         { JOB_ARTIFICER, JOB_WANDERER }
     },
     {
-        "Custom",
-        coord_def(1, 7), 20,
-        { JOB_PRIEST , JOB_NOBLE }
-    },
-    {
-        "Hybrid",
-        coord_def(2, 7), 21,
-        { JOB_DEMIGOD , JOB_DEMONSPAWN, JOB_MUMMY }
-    },
-    {
         "Zealot",
         coord_def(1, 0), 25,
         { JOB_BERSERKER, JOB_ABYSSAL_KNIGHT, JOB_CHAOS_KNIGHT }
@@ -1054,7 +1044,17 @@ static job_group jobs_order[] =
         { JOB_WIZARD, JOB_SUMMONER, JOB_NECROMANCER,
           JOB_FIRE_ELEMENTALIST, JOB_ICE_ELEMENTALIST,
           JOB_AIR_ELEMENTALIST, JOB_EARTH_ELEMENTALIST, JOB_VENOM_MAGE }
-    }
+    },
+    {
+        "Hybrid",
+        coord_def(3, 0), 21,
+        { JOB_DEMIGOD , JOB_DEMONSPAWN, JOB_MUMMY }
+    },
+    {
+        "Custom",
+        coord_def(3, 5), 20,
+        { JOB_PRIEST , JOB_NOBLE }
+    },
 };
 
 /**
@@ -1096,7 +1096,10 @@ public:
 
         descriptions = make_shared<Switcher>();
 
-        m_main_items = make_shared<OuterMenu>(true, 3, 20);
+        if (m_choice_type == C_JOB)
+            m_main_items = make_shared<OuterMenu>(true, 4, 20);
+        else
+            m_main_items = make_shared<OuterMenu>(true, 3, 20);
         m_main_items->menu_id = m_choice_type == C_JOB ?
             "background-main" : "species-main";
         m_main_items->set_margin_for_crt({1, 0, 1, 0});
@@ -1621,6 +1624,18 @@ static weapon_type _fixup_weapon(weapon_type wp,
     return WPN_UNKNOWN;
 }
 
+// Check for the GUI only weapons in order to not show
+// an aptitude, since it has no meaning.
+static bool _is_non_weapon(item_def wpn)
+{
+    if (wpn.sub_type == WPN_AVERAGE ||
+        wpn.sub_type == WPN_STRONG ||
+        wpn.sub_type == WPN_INTELLIGENT ||
+        wpn.sub_type == WPN_DEFT)
+        return true;
+    return false;
+}
+
 static void _construct_weapon_menu(const newgame_def& ng,
                                    const weapon_type& defweapon,
                                    const vector<weapon_choice>& weapons,
@@ -1663,9 +1678,6 @@ static void _construct_weapon_menu(const newgame_def& ng,
             else if (species_size(ng.species, PSIZE_TORSO) <= SIZE_SMALL)
             {
                 thrown_name = "tomahawks";
-#ifdef USE_TILE_LOCAL
-                tile_stack->add_child(make_shared<Image>(
-                        tile_def(TILE_MI_TOMAHAWK, TEX_DEFAULT)));
 #ifdef USE_TILE
                 tile = TILE_MI_TOMAHAWK;
 #endif
@@ -1678,7 +1690,7 @@ static void _construct_weapon_menu(const newgame_def& ng,
 #endif
             }
             choices.emplace_back(SK_THROWING,
-                    thrown_name + " and throwing nets", tile);
+                thrown_name + " and throwing nets", tile);
             break;
         }
         default:
@@ -1690,14 +1702,25 @@ static void _construct_weapon_menu(const newgame_def& ng,
             {
                 text += " and ";
                 text += wpn_type == WPN_HUNTING_SLING ? ammo_name(MI_SLING_BULLET)
-                                                      : ammo_name(wpn_type);
+                    : ammo_name(wpn_type);
                 text += "s";
             }
-            choices.emplace_back(item_attack_skill(dummy), text
+            if (_is_non_weapon(dummy))
+            {
+                choices.emplace_back(SK_FIGHTING, text
 #ifdef USE_TILE
                     , tileidx_item(dummy)
 #endif
-            );
+                );
+            }
+            else
+            {
+                choices.emplace_back(item_attack_skill(dummy), text
+#ifdef USE_TILE
+                    , tileidx_item(dummy)
+#endif
+                );
+            }
             break;
         }
     }
@@ -1747,8 +1770,10 @@ static void _construct_weapon_menu(const newgame_def& ng,
                     wpn_restriction == CC_UNRESTRICTED ? WHITE : LIGHTGREY));
 
         hbox->justify_items = Widget::Align::STRETCH;
-        string apt_text = make_stringf("(%+d apt)",
-                species_apt(choice.skill, ng.species));
+        string apt_text = "";
+        if (choice.skill != SK_FIGHTING)
+            apt_text = make_stringf("(%+d apt)",
+                    species_apt(choice.skill, ng.species));
         auto suffix = make_shared<Text>(formatted_string(apt_text,
                 wpn_restriction == CC_UNRESTRICTED ? WHITE : LIGHTGREY));
         hbox->add_child(suffix);
@@ -1827,10 +1852,15 @@ static bool _prompt_weapon(const newgame_def& ng, newgame_def& ng_choice,
     vbox->add_child(title_hbox);
 
     if (job_custom_stats(ng.job))
+    {
         auto prompt = make_shared<Text>(formatted_string("You have a choice of weapons.", CYAN));
+        vbox->add_child(prompt);
+    }
     else
+    {
         auto prompt = make_shared<Text>(formatted_string("You have a choice of base stats.", CYAN));
-    vbox->add_child(prompt);
+        vbox->add_child(prompt);
+    }
 
     auto main_items = make_shared<OuterMenu>(true, 1, weapons.size());
     main_items->menu_id = "weapon-main";

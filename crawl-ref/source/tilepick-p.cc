@@ -1206,6 +1206,8 @@ tileidx_t tilep_species_to_base_tile(int sp, int level)
         return TILEP_BASE_GNOLL;
     case SP_SILENT_SPECTRE:
         return TILEP_BASE_SILENT_SPECTRE;
+    case SP_GOBLIN:
+        return TILEP_BASE_GOBLIN;
     default:
         return TILEP_BASE_HUMAN;
     }

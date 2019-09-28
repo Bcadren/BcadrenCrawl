@@ -623,7 +623,7 @@ bool wield_weapon(bool auto_wield, int slot, bool show_weff_messages,
                 mpr("You're already wielding that.");
                 return false;
             }
-            if (yesno("Switch to other hand?", true, false, true, true, false, nullptr, GOTO_MSG)) 
+            if (yesno("Switch to other hand?", true, false)) 
             {
 
                 int temp0 = you.equip[EQ_WEAPON0];

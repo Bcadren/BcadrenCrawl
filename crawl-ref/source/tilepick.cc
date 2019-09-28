@@ -2191,6 +2191,11 @@ static tileidx_t _tileidx_weapon_base(const item_def &item)
     case WPN_LONGBOW:               return TILE_WPN_LONGBOW;
     case WPN_LAJATANG:              return TILE_WPN_LAJATANG;
     case WPN_BARDICHE:              return TILE_WPN_BARDICHE;
+// Used in GUI only.
+    case WPN_AVERAGE:               return TILE_WPN_AVERAGE;
+    case WPN_STRONG:                return TILE_WPN_STRONG;
+    case WPN_INTELLIGENT:           return TILE_WPN_INTELLIGENT;
+    case WPN_DEFT:                  return TILE_WPN_DEFT;
     }
 
     return TILE_ERROR;
@@ -3875,8 +3880,6 @@ static tileidx_t _tileidx_player_job_base(const job_type job)
             return TILEG_JOB_BERSERKER;
         case JOB_HUNTER:
             return TILEG_JOB_HUNTER;
-        case JOB_CONJURER:
-            return TILEG_JOB_CONJURER;
         case JOB_ENCHANTER:
             return TILEG_JOB_ENCHANTER;
         case JOB_FIRE_ELEMENTALIST:
@@ -3909,6 +3912,16 @@ static tileidx_t _tileidx_player_job_base(const job_type job)
             return TILEG_JOB_ARCANE_MARKSMAN;
         case JOB_ABYSSAL_KNIGHT:
             return TILEG_JOB_ABYSSAL_KNIGHT;
+        case JOB_DEMONSPAWN:
+            return TILEG_JOB_DEMONSPAWN;
+        case JOB_MUMMY:
+            return TILEG_JOB_MUMMY;
+        case JOB_DEMIGOD:
+            return TILEG_JOB_DEMIGOD;
+        case JOB_NOBLE:
+            return TILEG_JOB_NOBLE;
+        case JOB_PRIEST:
+            return TILEG_JOB_MONK;
         default:
             return TILEG_ERROR;
     }
@@ -3922,14 +3935,10 @@ static tileidx_t _tileidx_player_species_base(const species_type species)
             return TILEG_SP_HUMAN;
         case SP_DEEP_ELF:
             return TILEG_SP_DEEP_ELF;
-        case SP_HALFLING:
-            return TILEG_SP_HALFLING;
         case SP_HILL_ORC:
             return TILEG_SP_HILL_ORC;
         case SP_KOBOLD:
             return TILEG_SP_KOBOLD;
-        case SP_MUMMY:
-            return TILEG_SP_MUMMY;
         case SP_NAGA:
             return TILEG_SP_NAGA;
         case SP_OGRE:
@@ -3940,24 +3949,16 @@ static tileidx_t _tileidx_player_species_base(const species_type species)
             return TILEG_SP_DRACONIAN;
         case SP_CENTAUR:
             return TILEG_SP_CENTAUR;
-        case SP_DEMIGOD:
-            return TILEG_SP_DEMIGOD;
         case SP_SPRIGGAN:
             return TILEG_SP_SPRIGGAN;
         case SP_MINOTAUR:
             return TILEG_SP_MINOTAUR;
-        case SP_DEMONSPAWN:
-            return TILEG_SP_DEMONSPAWN;
         case SP_GHOUL:
             return TILEG_SP_GHOUL;
         case SP_TENGU:
             return TILEG_SP_TENGU;
         case SP_MERFOLK:
             return TILEG_SP_MERFOLK;
-        case SP_VAMPIRE:
-            return TILEG_SP_VAMPIRE;
-        case SP_DEEP_DWARF:
-            return TILEG_SP_DEEP_DWARF;
         case SP_FELID:
             return TILEG_SP_FELID;
         case SP_OCTOPODE:
@@ -3972,6 +3973,12 @@ static tileidx_t _tileidx_player_species_base(const species_type species)
             return TILEG_SP_BARACHI;
         case SP_GNOLL:
             return TILEG_SP_GNOLL;
+        case SP_LIGNIFITE:
+            return TILEG_SP_LIGNIFITE;
+        case SP_GOBLIN:
+            return TILEG_SP_GOBLIN;
+        case SP_SILENT_SPECTRE:
+            return TILEG_SP_SILENT_SPECTRE;
         default:
             return TILEP_ERROR;
     }

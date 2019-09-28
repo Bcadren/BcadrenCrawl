@@ -149,6 +149,11 @@ lajatang3
 staff_mummy WPN_STAFF_MUMMY
 %rim 1
 
+# Used in GUI only.
+average WPN_AVERAGE
+intelligent WPN_INTELLIGENT
+deft WPN_DEFT
+strong WPN_STRONG
 
 ##Ranged
 %sdir item/weapon/ranged

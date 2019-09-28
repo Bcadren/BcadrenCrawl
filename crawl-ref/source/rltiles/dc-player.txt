@@ -93,6 +93,7 @@ vine_stalker_f VINE_STALKER
 vine_stalker_m
 silent_spectre_f SILENT_SPECTRE
 silent_spectre_m
+goblin GOBLIN
 
 # draconians
 draconian_f DRACONIAN DRACONIAN_FIRST

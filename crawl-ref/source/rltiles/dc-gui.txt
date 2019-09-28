@@ -185,7 +185,6 @@ backgrounds/AM.png JOB_RECOMMENDED_ARCANE_MARKSMAN
 backgrounds/Wr.png JOB_RECOMMENDED_WARPER
 backgrounds/En.png JOB_RECOMMENDED_ENCHANTER
 backgrounds/Wz.png JOB_RECOMMENDED_WIZARD
-backgrounds/Cj.png JOB_RECOMMENDED_CONJURER
 backgrounds/Su.png JOB_RECOMMENDED_SUMMONER
 backgrounds/Ne.png JOB_RECOMMENDED_NECROMANCER
 backgrounds/FE.png JOB_RECOMMENDED_FIRE_ELEMENTALIST
@@ -193,6 +192,10 @@ backgrounds/IE.png JOB_RECOMMENDED_ICE_ELEMENTALIST
 backgrounds/AE.png JOB_RECOMMENDED_AIR_ELEMENTALIST
 backgrounds/EE.png JOB_RECOMMENDED_EARTH_ELEMENTALIST
 backgrounds/VM.png JOB_RECOMMENDED_VENOM_MAGE
+backgrounds/Ds.png JOB_RECOMMENDED_DEMONSPAWN
+backgrounds/Mu.png JOB_RECOMMENDED_MUMMY
+backgrounds/Dg.png JOB_RECOMMENDED_DEMIGOD
+backgrounds/No.png JOB_RECOMMENDED_NOBLE
 %syn LAST_RECOMMENDED_JOB
 
 %texture backgrounds/disabled-fg
@@ -212,7 +215,6 @@ backgrounds/AM.png JOB_ARCANE_MARKSMAN
 backgrounds/Wr.png JOB_WARPER
 backgrounds/En.png JOB_ENCHANTER
 backgrounds/Wz.png JOB_WIZARD
-backgrounds/Cj.png JOB_CONJURER
 backgrounds/Su.png JOB_SUMMONER
 backgrounds/Ne.png JOB_NECROMANCER
 backgrounds/FE.png JOB_FIRE_ELEMENTALIST
@@ -220,31 +222,22 @@ backgrounds/IE.png JOB_ICE_ELEMENTALIST
 backgrounds/AE.png JOB_AIR_ELEMENTALIST
 backgrounds/EE.png JOB_EARTH_ELEMENTALIST
 backgrounds/VM.png JOB_VENOM_MAGE
+backgrounds/Ds.png JOB_DEMONSPAWN
+backgrounds/Mu.png JOB_MUMMY
+backgrounds/Dg.png JOB_DEMIGOD
+backgrounds/No.png JOB_NOBLE
 %syn LAST_JOB
-
 
 %texture none
 ../player/felids/cat3.png SP_RECOMMENDED_FELID
 %start
-%compose ../player/base/centaur_lightgrey_f.png
+%compose ../player/base/centaur_brown_m.png
 %compose ../player/body/animal_skin.png
 %finish SP_RECOMMENDED_CENTAUR
-%start
-%compose ../player/base/deep_dwarf_m.png
-%compose ../player/body/animal_skin.png
-%finish SP_RECOMMENDED_DEEP_DWARF
 %start
 %compose ../player/base/deep_elf_f.png
 %compose ../player/body/animal_skin.png
 %finish SP_RECOMMENDED_DEEP_ELF
-%start
-%compose ../player/base/demigod_f.png
-%compose ../player/body/animal_skin.png
-%finish SP_RECOMMENDED_DEMIGOD
-%start
-%compose ../player/base/demonspawn_pink.png
-%compose ../player/body/animal_skin.png
-%finish SP_RECOMMENDED_DEMONSP_RECOMMENDEDAWN
 %start
 %compose ../player/base/draconian_f.png
 %compose ../player/body/animal_skin.png
@@ -270,13 +263,9 @@ backgrounds/VM.png JOB_VENOM_MAGE
 %compose ../player/body/animal_skin.png
 %finish SP_RECOMMENDED_GNOLL
 %start
-%compose ../player/base/halfling_m.png
-%compose ../player/body/animal_skin.png
-%finish SP_RECOMMENDED_HALFLING
-%start
 %compose ../player/base/human_f.png
 %compose ../player/body/animal_skin.png
-%finish SP_RECOMMENDED_HuMAN
+%finish SP_RECOMMENDED_HUMAN
 %start
 %compose ../player/base/kobold_m.png
 %compose ../player/body/animal_skin.png
@@ -289,7 +278,6 @@ backgrounds/VM.png JOB_VENOM_MAGE
 %compose ../player/base/minotaur_m.png
 %compose ../player/body/animal_skin.png
 %finish SP_RECOMMENDED_MINOTAUR
-../player/base/mummy_m.png SP_RECOMMENDED_MUMMY
 %start
 %compose ../player/base/naga_f.png
 %compose ../player/body/animal_skin.png
@@ -306,7 +294,7 @@ backgrounds/VM.png JOB_VENOM_MAGE
 %start
 %compose ../player/base/spriggan_m.png
 %compose ../player/body/animal_skin.png
-%finish SP_RECOMMENDED_SP_RECOMMENDEDRIGGAN
+%finish SP_RECOMMENDED_SPRIGGAN
 %start
 %compose ../player/base/tengu_winged_f.png
 %compose ../player/body/animal_skin.png
@@ -316,34 +304,37 @@ backgrounds/VM.png JOB_VENOM_MAGE
 %compose ../player/body/animal_skin.png
 %finish SP_RECOMMENDED_TROLL
 %start
-%compose ../player/base/vampire_f.png
-%compose ../player/body/animal_skin.png
-%finish SP_RECOMMENDED_VAMPIRE
-%start
 %compose ../player/base/vine_stalker_f.png
 %compose ../player/body/animal_skin.png
 %finish SP_RECOMMENDED_VINE_STALKER
+%start
+%compose ../player/base/lignifite.png
+%compose ../player/body/animal_skin.png
+%finish SP_RECOMMENDED_LIGNIFITE
+%start
+%compose ../player/base/silent_spectre_f.png
+%compose ../player/body/animal_skin.png
+%finish SP_RECOMMENDED_SILENT_SPECTRE
+%start
+%compose ../player/base/goblin.png
+%compose ../player/body/animal_skin.png
+%finish SP_RECOMMENDED_GOBLIN
 %syn LAST_RECOMMENDED_SPECIES
 
 %texture backgrounds/disabled-fg
 ../player/felids/cat3.png SP_FELID
-../player/base/centaur_lightgrey_f.png SP_CENTAUR
-../player/base/deep_dwarf_m.png SP_DEEP_DWARF
+../player/base/centaur_brown_m.png SP_CENTAUR
 ../player/base/deep_elf_f.png SP_DEEP_ELF
-../player/base/demigod_f.png SP_DEMIGOD
-../player/base/demonspawn_pink.png SP_DEMONSPAWN
 ../player/base/draconian_f.png SP_DRACONIAN
 ../player/base/formicid.png SP_FORMICID
 ../player/base/frog_m.png SP_BARACHI
 ../player/base/gargoyle_m.png SP_GARGOYLE
 ../player/base/ghoul_m.png SP_GHOUL
 ../player/base/gnoll_m.png SP_GNOLL
-../player/base/halfling_m.png SP_HALFLING
 ../player/base/human_f.png SP_HUMAN
 ../player/base/kobold_m.png SP_KOBOLD
 ../player/base/merfolk_water_f.png SP_MERFOLK
 ../player/base/minotaur_m.png SP_MINOTAUR
-../player/base/mummy_m.png SP_MUMMY
 ../player/base/naga_f.png SP_NAGA
 ../player/base/octopode1.png SP_OCTOPODE
 ../player/base/ogre_m.png SP_OGRE
@@ -351,6 +342,8 @@ backgrounds/VM.png JOB_VENOM_MAGE
 ../player/base/spriggan_m.png SP_SPRIGGAN
 ../player/base/tengu_wingless_f.png SP_TENGU
 ../player/base/troll_f.png SP_TROLL
-../player/base/vampire_f.png SP_VAMPIRE
 ../player/base/vine_stalker_f.png SP_VINE_STALKER
+../player/base/lignifite.png SP_LIGNIFITE
+../player/base/silent_spectre_f.png SP_SILENT_SPECTRE
+../player/base/goblin.png SP_GOBLIN
 %syn LAST_SPECIES
