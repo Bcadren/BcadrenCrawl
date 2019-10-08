@@ -839,7 +839,7 @@ static void _describe_cards(vector<card_type> cards)
     }
 
 #ifdef USE_TILE_LOCAL
-    vbox->max_size()[0] = tiles.get_crt_font()->char_width()*80;
+    vbox->max_size().width = tiles.get_crt_font()->char_width()*80;
 #endif
 
     scroller->set_child(move(vbox));
