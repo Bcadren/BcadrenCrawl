@@ -119,7 +119,7 @@ int show_description(const describe_info &inf, const tile_def *tile)
         {
             auto icon = make_shared<Image>();
             icon->set_tile(*tile);
-            icon->set_margin_for_sdl({0, 10, 0, 0});
+            icon->set_margin_for_sdl(0, 10, 0, 0);
             title_hbox->add_child(move(icon));
         }
 #endif
@@ -128,8 +128,8 @@ int show_description(const describe_info &inf, const tile_def *tile)
         title_hbox->add_child(move(title));
 
         title_hbox->align_items = Widget::CENTER;
-        title_hbox->set_margin_for_sdl({0, 0, 20, 0});
-        title_hbox->set_margin_for_crt({0, 0, 1, 0});
+        title_hbox->set_margin_for_sdl(0, 0, 20, 0);
+        title_hbox->set_margin_for_crt(0, 0, 1, 0);
         vbox->add_child(move(title_hbox));
     }
 
@@ -161,8 +161,8 @@ int show_description(const describe_info &inf, const tile_def *tile)
     if (!inf.quote.empty())
     {
         auto footer = make_shared<Text>(_toggle_message);
-        footer->set_margin_for_sdl({20, 0, 0, 0});
-        footer->set_margin_for_crt({1, 0, 0, 0});
+        footer->set_margin_for_sdl(20, 0, 0, 0);
+        footer->set_margin_for_crt(1, 0, 0, 0);
         vbox->add_child(move(footer));
     }
 
@@ -2714,8 +2714,7 @@ void describe_feature_wide(const coord_def& pos)
         title_hbox->add_child(move(icon));
 #endif
         auto title = make_shared<Text>(feat.title);
-        title->set_margin_for_crt({0, 0, 0, 0});
-        title->set_margin_for_sdl({0, 0, 0, 10});
+        title->set_margin_for_sdl(0, 0, 0, 10);
         title_hbox->add_child(move(title));
         title_hbox->align_items = Widget::CENTER;
 
@@ -2723,8 +2722,8 @@ void describe_feature_wide(const coord_def& pos)
 
         if (has_desc || &feat != &feats.back())
         {
-            title_hbox->set_margin_for_crt({0, 0, 1, 0});
-            title_hbox->set_margin_for_sdl({0, 0, 20, 0});
+            title_hbox->set_margin_for_crt(0, 0, 1, 0);
+            title_hbox->set_margin_for_sdl(0, 0, 20, 0);
         }
         vbox->add_child(move(title_hbox));
 
@@ -2739,8 +2738,8 @@ void describe_feature_wide(const coord_def& pos)
             auto text = make_shared<Text>(desc_text);
             if (&feat != &feats.back())
             {
-                text->set_margin_for_sdl({0, 0, 20, 0});
-                text->set_margin_for_crt({0, 0, 1, 0});
+                text->set_margin_for_sdl(0, 0, 20, 0);
+                text->set_margin_for_crt(0, 0, 1, 0);
             }
             text->wrap_text = true;
             vbox->add_child(text);
@@ -3141,13 +3140,12 @@ bool describe_item(item_def &item, function<void (string&)> fixup_desc)
 #endif
 
     auto title = make_shared<Text>(name);
-    title->set_margin_for_crt({0, 0, 0, 0});
-    title->set_margin_for_sdl({0, 0, 0, 10});
+    title->set_margin_for_sdl(0, 0, 0, 10);
     title_hbox->add_child(move(title));
 
     title_hbox->align_items = Widget::CENTER;
-    title_hbox->set_margin_for_crt({0, 0, 1, 0});
-    title_hbox->set_margin_for_sdl({0, 0, 20, 0});
+    title_hbox->set_margin_for_crt(0, 0, 1, 0);
+    title_hbox->set_margin_for_sdl(0, 0, 20, 0);
     vbox->add_child(move(title_hbox));
 
     auto scroller = make_shared<Scroller>();
@@ -3164,8 +3162,8 @@ bool describe_item(item_def &item, function<void (string&)> fixup_desc)
         footer_text += formatted_string(_actions_desc(actions, item));
         auto footer = make_shared<Text>();
         footer->set_text(footer_text);
-        footer->set_margin_for_crt({1, 0, 0, 0});
-        footer->set_margin_for_sdl({20, 0, 0, 0});
+        footer->set_margin_for_crt(1, 0, 0, 0);
+        footer->set_margin_for_sdl(20, 0, 0, 0);
         vbox->add_child(move(footer));
     }
 
@@ -3625,13 +3623,12 @@ void describe_spell(spell_type spell, const monster_info *mon_owner,
 
     auto title = make_shared<Text>();
     title->set_text(formatted_string(spl_title));
-    title->set_margin_for_crt({0, 0, 0, 0});
-    title->set_margin_for_sdl({0, 0, 0, 10});
+    title->set_margin_for_sdl(0, 0, 0, 10);
     title_hbox->add_child(move(title));
 
     title_hbox->align_items = Widget::CENTER;
-    title_hbox->set_margin_for_crt({0, 0, 1, 0});
-    title_hbox->set_margin_for_sdl({0, 0, 20, 0});
+    title_hbox->set_margin_for_crt(0, 0, 1, 0);
+    title_hbox->set_margin_for_sdl(0, 0, 20, 0);
     vbox->add_child(move(title_hbox));
 
     auto scroller = make_shared<Scroller>();
@@ -3645,8 +3642,8 @@ void describe_spell(spell_type spell, const monster_info *mon_owner,
     {
         auto more = make_shared<Text>();
         more->set_text(formatted_string("(M)emorise this spell.", CYAN));
-        more->set_margin_for_crt({1, 0, 0, 0});
-        more->set_margin_for_sdl({20, 0, 0, 0});
+        more->set_margin_for_crt(1, 0, 0, 0);
+        more->set_margin_for_sdl(20, 0, 0, 0);
         vbox->add_child(move(more));
     }
 
@@ -4970,13 +4967,12 @@ int describe_monsters(const monster_info &mi, bool force_seen,
 
     auto title = make_shared<Text>();
     title->set_text(formatted_string(inf.title));
-    title->set_margin_for_crt({0, 0, 0, 0});
-    title->set_margin_for_sdl({0, 0, 0, 10});
+    title->set_margin_for_sdl(0, 0, 0, 10);
     title_hbox->add_child(move(title));
 
     title_hbox->align_items = Widget::CENTER;
-    title_hbox->set_margin_for_crt({0, 0, 1, 0});
-    title_hbox->set_margin_for_sdl({0, 0, 20, 0});
+    title_hbox->set_margin_for_crt(0, 0, 1, 0);
+    title_hbox->set_margin_for_sdl(0, 0, 20, 0);
     vbox->add_child(move(title_hbox));
 
     desc += formatted_string(inf.body.str());
@@ -5016,8 +5012,8 @@ int describe_monsters(const monster_info &mi, bool force_seen,
                 formatted_string::parse_string(mores[i])));
     }
 
-    more_sw->set_margin_for_sdl({20, 0, 0, 0});
-    more_sw->set_margin_for_crt({1, 0, 0, 0});
+    more_sw->set_margin_for_sdl(20, 0, 0, 0);
+    more_sw->set_margin_for_crt(1, 0, 0, 0);
     desc_sw->expand_h = false;
     vbox->add_child(desc_sw);
     if (!inf.quote.empty())
