@@ -3993,7 +3993,7 @@ int monster::res_holy_energy() const
 int monster::res_negative_energy(bool intrinsic_only) const
 {
     // If you change this, also change get_mons_resists.
-    if (!(holiness() & MH_NATURAL | MH_DEMONIC))
+    if (!(holiness() & MH_NATURAL) && !(holiness() & MH_DEMONIC))
         return 3;
 
     int u = get_mons_resist(*this, MR_RES_NEG);
