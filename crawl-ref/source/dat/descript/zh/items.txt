@@ -3,7 +3,7 @@ amulet of conservation
 
 这个护身符能够保护佩戴者携带的物品，降低物品被摧毁的概率。
 %%%%
-amulet of inaccuracy
+amulet of reduced vision
 
 这个护身符降低佩戴者所有攻击的命中率——包括近战攻击、远程攻击和魔法攻击。
 %%%%

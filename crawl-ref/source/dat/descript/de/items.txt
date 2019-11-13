@@ -4,7 +4,7 @@ amulet of conservation
 Dieses Amulett bewahrt manche Besitztümer seines Trägers vor vollständiger
 Zerstörung, ist aber nicht unfehlbar.
 %%%%
-amulet of inaccuracy
+amulet of reduced vision
 
 Dieses Amulett macht seinen Träger weniger Zielgenau im Nahkampf und wenn
 dieser Ungeheuer mit Fernkampf oder Zaubern angreift.

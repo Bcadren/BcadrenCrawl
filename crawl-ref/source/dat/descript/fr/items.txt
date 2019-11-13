@@ -14,7 +14,7 @@ amulet of guardian spirit
 Cette amulette héberge un esprit protecteur qui divise les dégâts subits par le
 porteur entre ses réserves de vie et de magie.
 %%%%
-amulet of inaccuracy
+amulet of reduced vision
 
 Cette amulette rend le porteur moins précis dans ses attaques de mêlée et
 lorsqu'il vise ses ennemis en tirant ou en lançant des sorts.

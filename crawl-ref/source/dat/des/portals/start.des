@@ -253,7 +253,7 @@ KFEAT:  H = distillery shop type:Alchemist suffix:Brewery count:15 greed:20 use_
 KFEAT:  I = jewellery shop type:Amulets suffix:and_Necklaces count:9 greed:10 use_all ; \
             mundane not_cursed amulet of harm | mundane not_cursed amulet of the acrobat |\
             mundane not_cursed amulet of magic regeneration |\
-            mundane not_cursed amulet of the gourmand | mundane cursed amulet of inaccuracy |\
+            mundane not_cursed amulet of the gourmand | mundane cursed amulet of reduced vision |\
             mundane not_cursed amulet of guardian spirit |\
             mundane not_cursed amulet of reflection | mundane not_cursed amulet of regeneration |\
 	    mundane not_cursed amulet of faith

@@ -4,7 +4,7 @@ amulet of conservation
 Este amuleto protege algumas das posses do usuário de serem destruídas,  mas
 não é infalível.
 %%%%
-amulet of inaccuracy
+amulet of reduced vision
 
 Este amuleto faz com que o usuário seja menos preciso em combate mano a mano e
 ao lançar ataques a distância e magias em monstros.

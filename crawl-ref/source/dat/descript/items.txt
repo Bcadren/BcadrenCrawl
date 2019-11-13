@@ -25,10 +25,10 @@ side effect, it also amplifies all damage dealt to the wearer, albeit to a
 lesser degree. When the effects of the amulet are severed by removing it, the
 magical backlash significantly drains the wearer.
 %%%%
-amulet of inaccuracy
+amulet of reduced vision
 
-An amulet that makes its wearer less accurate in melee combat and when
-targeting monsters via ranged attacks or spells.
+An amulet that dulls the vision of the wearer; making them have a harder time
+reading scrolls, spotting hidden or invisible creatures and aiming their attacks.
 %%%%
 amulet of magic regeneration
 

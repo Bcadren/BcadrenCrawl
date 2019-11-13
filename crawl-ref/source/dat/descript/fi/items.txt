@@ -4,7 +4,7 @@ amulet of conservation
 Tämä amuletti suojaa joitakin käyttäjän omistamia tavaroita tuhoutumiselta,
 mutta ei pettämättömästi.
 %%%%
-amulet of inaccuracy
+amulet of reduced vision
 
 Tämä amuletti laskee kantajansa tarkkuutta lähi- ja kaukotaistelussa sekä
 loitsiessa.
