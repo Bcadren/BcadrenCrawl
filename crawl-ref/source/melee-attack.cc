@@ -3561,39 +3561,6 @@ bool melee_attack::_extra_aux_attack(unarmed_attack_type atk)
     }
 }
 
-// TODO: Potentially move this, may or may not belong here (may not
-// even belong as its own function, could be integrated with the general
-// to-hit method
-// Returns the to-hit for your extra unarmed attacks.
-// DOES NOT do the final roll (i.e., random2(your_to_hit)).
-int melee_attack::calc_your_to_hit_unarmed(int uattack)
-{
-    int your_to_hit;
-
-    your_to_hit = 1300
-                + you.dex() * 75
-                + you.skill(SK_FIGHTING, 30);
-    your_to_hit /= 100;
-
-    your_to_hit -= 5 * you.inaccuracy();
-
-    if (you.get_mutation_level(MUT_EYEBALLS))
-        your_to_hit += 2 * you.get_mutation_level(MUT_EYEBALLS) + 1;
-
-    if (apply_starvation_penalties())
-        your_to_hit -= 3;
-
-    if (you.duration[DUR_VERTIGO])
-        your_to_hit -= 5;
-
-    if (you.confused())
-        your_to_hit -= 5;
-
-    your_to_hit += slaying_bonus();
-
-    return your_to_hit;
-}
-
 bool melee_attack::using_weapon() const
 {
     return weapon && is_melee_weapon(*weapon);
