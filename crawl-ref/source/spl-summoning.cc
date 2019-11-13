@@ -1742,7 +1742,7 @@ int animate_remains(const coord_def &a, corpse_type class_allowed,
     int motions = 0;
 
     // Search all the items on the ground for a corpse.
-    for (stack_iterator si(a, true); si; ++si)
+    for (stack_iterator si(a); si; ++si)
     {
         if (si->base_type != OBJ_CORPSES)
             continue;
