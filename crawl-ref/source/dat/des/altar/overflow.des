@@ -2601,12 +2601,12 @@ MONS:   angel god:zin dbname:zin_angel / \
 : interest_check(_G)
 MAP
 xxxxxxxxx
-xVVVcVVVx
-xV1m.._Vx
-xVmm...Vx
+xyyycyyyx
+xy1m.._yx
+xymm...yx
 xc.....cx
 xcG...Gcx
-xccV+Vccx
+xccy+yccx
     @
 ENDMAP
 
@@ -2623,14 +2623,14 @@ FTILE:  _.m+$ = floor_limestone
 MAP
   xxxxxxxx
   xccccccx
- xcVVVVVcx
- xcV$$$Vcxx
-xxcV$$$Vcxx
+ xcyyyyycx
+ xcy$$$ycxx
+xxcy$$$ycxx
 xccmm$mmccx
 xcc.mmm.ccx
 xcc.._..ccx
-xxcV...Vcxx
- xccV+Vccx
+xxcy...ycxx
+ xccy+yccx
      @
 ENDMAP
 
@@ -2648,9 +2648,9 @@ SUBST:  ' = .
 : interest_check(_G)
 MAP
  .....
-..VVV..
-.VVTVV.
-..V_V..
+..yyy..
+.yyTyy.
+..y_y..
  .....
 ...'...
 ..'v'..
@@ -2672,14 +2672,14 @@ NSUBST: ? = 2:d / *:.
 MAP
   xxxxxxxx
  xcccccccx
- xcVVVVVcx
- xcV???Vcx
- xcV???Vcx
-xxcVVmVVcxx
+ xcyyyyycx
+ xcy???ycx
+ xcy???ycx
+xxcyymyycxx
 xcc.....ccx
-xccV._.Vccx
+xccy._.yccx
 xxc.....cxx
- xccV+Vccx
+ xccy+yccx
      @
 ENDMAP
 
@@ -2695,8 +2695,8 @@ FTILE:  _' = floor_limestone
 SUBST:  ' = .
 MAP
   ccccccc
-VVV.ttttVVV
-V.tt'_'t..V
+yyy.ttttyyy
+y.tt'_'t..y
 ....'''....
 ...........
 ...'''''...
@@ -2716,8 +2716,8 @@ SUBST:  ' = .
 MAP
  .......
  .ccccc.
-..cVVVc..
-.ccV_Vcc.
+..cyyyc..
+.ccy_ycc.
 ..cc+cc..
 ...'''...
 .G.....G.
@@ -2953,8 +2953,8 @@ SUBST:   ' : .
 : interest_check(_G)
 MAP
  xxxxx
- xVVVx
-xxVEVxx
+ xyyyx
+xxyEyxx
 xD.G.Fx
 xx+++xx
  ""@""
@@ -3066,7 +3066,7 @@ MAP
 ..n___n..
 @.n_1_n.@
 ..n___n..
-..VnnnV..
+..ynnny..
 ....B....
  .......
 ENDMAP
@@ -3095,11 +3095,11 @@ COLOUR: v = red
 MAP
     x.@.x
   xxx...xxx
-xxxXXv+VCCxxx
-xccv--;__VCCx
+xxxXXy+yCCxxx
+xccy--;__yCCx
 xc1nA-;_BN2Cx
-xccv--;__VCCx
-xxxXXv+VCCxxx
+xccy--;__yCCx
+xxxXXy+yCCxxx
   xxx...xxx
     x.@.x
 ENDMAP
@@ -3242,12 +3242,12 @@ COLOUR: G = yellow
 FTILE:  +._O$ = floor_limestone
 : set_feature_name("granite_statue", "golden statue")
 MAP
-VVVVVVVVV
-V..$$$..V
-V._.$.O.V
-V.......V
-VV.....VV
- VVV+VVV
+yyyyyyyyy
+y..$$$..y
+y._.$.O.y
+y.......y
+yy.....yy
+ yyy+yyy
 ENDMAP
 
 NAME:   grunt_temple_overflow_forces_of_nature
