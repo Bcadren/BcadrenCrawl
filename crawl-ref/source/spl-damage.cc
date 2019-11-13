@@ -1176,9 +1176,11 @@ static int _shatter_walls(coord_def where, int pow, actor *agent)
 static int _shatter_player_dice()
 {
     if (you.is_insubstantial())
-        return 1;
-    if (you.petrified() || you.petrifying())
-        return 6; // reduced later by petrification's damage reduction
+        return 0;
+	if (you.petrified())
+		return 6;
+	if (you.petrifying())
+        return 4; 
     else if (you.form == transformation::statue
              || you.form == transformation::ice_beast
              || you.species == SP_GARGOYLE)
@@ -1197,9 +1199,7 @@ static int _shatter_player_dice()
  */
 static bool _shatterable(const actor *act)
 {
-    if (act->is_player())
-        return _shatter_player_dice();
-    return _shatter_mon_dice(act->as_monster());
+	return !act->is_insubstantial();
 }
 
 spret_type cast_shatter(int pow, bool fail)
