@@ -724,7 +724,7 @@ static const artefact_prop_data artp_data[] =
     { "Fragile", ARTP_VAL_BOOL, 25, // ARTP_FRAGILE,
         nullptr, []() { return 1; }, 0, 0 },
     { "SH", ARTP_VAL_ANY, 0, nullptr, nullptr, 0, 0 }, // ARTP_SHIELDING,
-    { "-Vis", ARTP_VAL_BOOL, 25, nullptr, []() { return 1; }, 0, 0 }, // ARTP_INACCURACY,+
+    { "-Vis", ARTP_VAL_BOOL, 25, nullptr, []() { return 1; }, 0, 0 }, // ARTP_INACCURACY,
     { "Harm", ARTP_VAL_BOOL, 0, // ARTP_HARM,
         []() {return 1;}, nullptr, 0, 0},
 };
@@ -1480,7 +1480,7 @@ static bool _randart_is_redundant(const item_def &item,
         break;
 
     case AMU_INACCURACY:
-        provides = ARTP_SLAYING;
+        provides = ARTP_INACCURACY;
         break;
 
     case AMU_REGENERATION:
