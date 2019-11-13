@@ -213,9 +213,16 @@ static void _decrement_petrification(int delay)
         you.redraw_evasion = true;
         // implicit assumption: all races that can be petrified are made of
         // flesh when not petrified
-        const string flesh_equiv = get_form()->flesh_equivalent.empty() ?
-                                            "flesh" :
-                                            get_form()->flesh_equivalent;
+        string flesh_equiv = get_form()->flesh_equivalent.empty() ?
+                                        "flesh" :
+                                        get_form()->flesh_equivalent;
+
+		if (you.species == SP_LIGNIFITE)
+			flesh_equiv = "wood";
+		if (you.species == SP_SILENT_SPECTRE)
+			flesh_equiv = "vapour";
+		if (you.religion == GOD_JIYVA && you.undead_state() == US_ALIVE)
+			flesh_equiv = "slime";
 		
 		if (you.species == SP_GARGOYLE || you.form == transformation::statue)
 		{

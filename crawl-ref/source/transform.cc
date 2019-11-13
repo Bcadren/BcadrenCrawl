@@ -92,7 +92,7 @@ Form::Form(const form_entry &fe)
       str_mod(fe.str_mod), dex_mod(fe.dex_mod),
       blocked_slots(fe.blocked_slots), size(fe.size), hp_mod(fe.hp_mod),
       can_cast(fe.can_cast), spellcasting_penalty(fe.spellcasting_penalty),
-      unarmed_hit_bonus(fe.unarmed_hit_bonus), uc_colour(fe.uc_colour),
+	  uc_colour(fe.uc_colour),
       uc_attack_verbs(fe.uc_attack_verbs),
       can_bleed(fe.can_bleed), breathes(fe.breathes),
       keeps_mutations(fe.keeps_mutations),

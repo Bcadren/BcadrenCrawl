@@ -15,7 +15,7 @@ public:
     ranged_attack(actor *attacker, actor *defender, item_def *projectile,
                   bool teleport, actor *blame = 0);
 
-    int calc_to_hit(bool random) override;
+    int calc_to_hit(bool random, bool player_aux = false) override;
 
 
     // Applies attack damage and other effects.

@@ -50,7 +50,7 @@ public:
     bool attack();
 
     // To-hit is a function of attacker/defender, inherited from attack
-    int calc_to_hit(bool random = true) override;
+    int calc_to_hit(bool random = true, bool player_aux = false) override;
 
     static void chaos_affect_actor(actor *victim);
 

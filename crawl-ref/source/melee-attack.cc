@@ -1355,7 +1355,7 @@ bool melee_attack::player_aux_unarmed()
         if (atk == UNAT_CONSTRICT && !attacker->can_constrict(defender, true))
             continue;
 
-        to_hit = random2(calc_your_to_hit_unarmed(atk));
+        to_hit = calc_to_hit(true,true);
 
         handle_noise(defender->pos());
         alert_nearby_monsters();
@@ -2355,19 +2355,15 @@ void melee_attack::apply_staff_damage()
  *
  * @param random If false, calculate average to-hit deterministically.
  */
-int melee_attack::calc_to_hit(bool random)
+int melee_attack::calc_to_hit(bool random, bool player_aux)
 {
     int mhit = attack::calc_to_hit(random);
 
-    if (attacker->is_player() && !weapon)
+    if (attacker->is_player() && !weapon && !player_aux
+		&& you.duration[DUR_CONFUSING_TOUCH])
     {
-        // Just trying to touch is easier than trying to damage.
-        if (you.duration[DUR_CONFUSING_TOUCH])
-            mhit += maybe_random2(you.dex(), random);
-
-        // TODO: Review this later (transformations getting extra hit
-        // almost across the board seems bad) - Cryp71c
-        mhit += maybe_random2(get_form()->unarmed_hit_bonus, random);
+        mhit *= 10 + you.dex();
+		mhit /= 10;
     }
 
     return mhit;

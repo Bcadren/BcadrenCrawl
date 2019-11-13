@@ -144,8 +144,10 @@ bool attack::handle_phase_end()
  * Calculate the to-hit for an attacker
  *
  * @param random If false, calculate average to-hit deterministically.
+ * @param player_aux If true, ignore the weapon the player is wielding.
+ *     and calc without any weapon skill (auxillary attack calc).
  */
-int attack::calc_to_hit(bool random)
+int attack::calc_to_hit(bool random, bool player_aux)
 {
     float mhit = attacker->is_player() ?
                 5 + you.dex()
@@ -166,7 +168,8 @@ int attack::calc_to_hit(bool random)
 		mhit /= 2000;
 
         // weapon skill contribution
-        if (using_weapon())
+		if (player_aux) {}
+        else if (using_weapon())
         {
             if (wpn_skill != SK_FIGHTING)
             {
