@@ -5695,6 +5695,12 @@ static const string shout_verbs[] = {"shout", "yell", "scream"};
 static const string felid_shout_verbs[] = {"meow", "yowl", "caterwaul"};
 static const string frog_shout_verbs[] = {"ribbit", "croak", "bellow"};
 static const string dog_shout_verbs[] = {"bark", "howl", "screech"};
+static const string bird_shout_verbs[] = {"squawk","caw","screech"};
+static const string cow_shout_verbs[] = {"moo","snort","bellow"};
+
+// static const string octopus_shout_verbs[] = {"make noises, somehow","make frantic noises, somehow","manage to scream, as if by divine power"};
+    // BCADREN: I'd like to have a joke one for Octopi since they don't have the structures necessary to shout (no lungs, etc.)
+        // But it'd be a longer affair to put that in, since it doesn't grammatically work with Zin's recitation, etc.
 
 /**
  * What verb should be used to describe the player's shouting?
@@ -5713,6 +5719,10 @@ string player::shout_verb(bool directed) const
         return dog_shout_verbs[screaminess];
     if (species == SP_BARACHI)
         return frog_shout_verbs[screaminess];
+	if (species == SP_TENGU)
+		return bird_shout_verbs[screaminess];
+	if (species == SP_MINOTAUR)
+		return cow_shout_verbs[screaminess];
     if (species != SP_FELID)
         return shout_verbs[screaminess];
     if (directed && screaminess == 0)
