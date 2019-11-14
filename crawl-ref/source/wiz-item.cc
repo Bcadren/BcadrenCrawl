@@ -1187,7 +1187,6 @@ static void _debug_acquirement_stats(FILE *ostat)
             const char* names[] =
             {
                 "none",
-                "conjuration",
                 "enchantment",
                 "fire magic",
                 "ice magic",

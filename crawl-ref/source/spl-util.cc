@@ -778,8 +778,6 @@ const char* spelltype_short_name(spschool_flag_type which_spelltype)
 {
     switch (which_spelltype)
     {
-    case SPTYP_CONJURATION:
-        return "Conj";
     case SPTYP_HEXES:
         return "Hex";
     case SPTYP_CHARMS:
@@ -813,8 +811,6 @@ const char* spelltype_long_name(spschool_flag_type which_spelltype)
 {
     switch (which_spelltype)
     {
-    case SPTYP_CONJURATION:
-        return "Conjuration";
     case SPTYP_HEXES:
         return "Hexes";
     case SPTYP_CHARMS:
@@ -1540,7 +1536,7 @@ static const mutation_type arcana_sacrifice_map[] = {
  */
 bool cannot_use_schools(spschools_type schools)
 {
-    COMPILE_CHECK(ARRAYSZ(arcana_sacrifice_map) == SPTYP_LAST_EXPONENT + 1);
+    COMPILE_CHECK(ARRAYSZ(arcana_sacrifice_map) == (SPTYP_LAST_EXPONENT + 2));
 
     // iter over every school
     for (int i = 0; i <= SPTYP_LAST_EXPONENT; i++)
@@ -1569,9 +1565,9 @@ bool cannot_use_schools(spschools_type schools)
  */
 skill_type arcane_mutation_to_skill(mutation_type mutation)
 {
-    for (int exp = 0; exp <= SPTYP_LAST_EXPONENT; exp++)
+    for (int exp = 1; exp <= 13; exp++)
         if (arcana_sacrifice_map[exp] == mutation)
-            return spell_type2skill(spschools_type::exponent(exp));
+            return spell_type2skill(spschools_type::exponent(exp-1));
     return SK_NONE;
 }
 

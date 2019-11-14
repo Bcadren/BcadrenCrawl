@@ -1495,7 +1495,7 @@ spret_type your_spells(spell_type spell, int powc, bool allow_fail,
 
             // The spell still goes through, but you get a miscast anyway.
             MiscastEffect(&you, nullptr, GOD_MISCAST + GOD_VEHUMET,
-                          SPTYP_CONJURATION,
+                          SPTYP_NONE,
                           (you.experience_level / 2) + (spell_difficulty(spell) * 2),
                           random2avg(88, 3), "the malice of Vehumet");
         }

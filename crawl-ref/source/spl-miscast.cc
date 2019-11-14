@@ -320,7 +320,7 @@ void MiscastEffect::do_miscast()
 
     switch (sp_type)
     {
-    case SPTYP_CONJURATION:    _conjuration(severity);    break;
+    case SPTYP_NONE:           _conjuration(severity);    break;
     case SPTYP_HEXES:          _hexes(severity);          break;
     case SPTYP_CHARMS:         _charms(severity);         break;
     case SPTYP_TRANSLOCATION:  _translocation(severity);  break;

@@ -735,10 +735,6 @@ void monster::bind_spell_flags()
 
 static bool _needs_ranged_attack(const monster* mon)
 {
-    // Prevent monsters that have conjurations from grabbing missiles.
-    if (mon->has_spell_of_type(SPTYP_CONJURATION))
-        return false;
-
     // Same for summonings, but make an exception for friendlies.
     if (!mon->friendly() && mon->has_spell_of_type(SPTYP_SUMMONING))
         return false;

@@ -938,10 +938,6 @@ static string _gen_randbook_owner(god_type god, spschool_flag_type disc1,
                 if (all_spells_disc1 && !one_chance_in(6))
                     return god_name(GOD_KIKUBAAQUDGHA, false);
                 break;
-            case SPTYP_CONJURATION:
-                if (all_spells_disc1 && !one_chance_in(4))
-                    return god_name(GOD_VEHUMET, false);
-                break;
             default:
                 break;
         }

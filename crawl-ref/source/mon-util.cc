@@ -3779,10 +3779,6 @@ static bool _ms_ranged_spell(spell_type monspell, bool attack_only = false,
         return false;
     }
 
-    // conjurations are attacks.
-    if (spell_typematch(monspell, SPTYP_CONJURATION))
-        return true;
-
     // hexes that aren't conjurations or summons are enchantments.
     if (spell_typematch(monspell, SPTYP_HEXES))
         return !attack_only && ench_too;

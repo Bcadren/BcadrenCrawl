@@ -80,7 +80,7 @@ static void _random_hell_miscast()
     const spschool_flag_type which_miscast
         = random_choose_weighted(8, SPTYP_NECROMANCY,
                                  4, SPTYP_SUMMONING,
-                                 2, SPTYP_CONJURATION,
+                                 2, SPTYP_NONE,
                                  1, SPTYP_CHARMS,
                                  1, SPTYP_HEXES);
 
