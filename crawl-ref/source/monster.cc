@@ -4596,6 +4596,7 @@ bool monster::fully_petrify(actor *atk, bool quiet)
 
 	if (airborne())
 	{
+		noisy(15, pos());
 		dungeon_feature_type feat = grd(pos());
 		if (feat == DNGN_LAVA)
 			simple_monster_message(*this, " falls into the lava with a sizzling splash!");
@@ -4606,7 +4607,6 @@ bool monster::fully_petrify(actor *atk, bool quiet)
 			simple_monster_message(*this, " crashes into the ground with a thud!");
 			hurt(atk, roll_dice(2, 10), BEAM_MMISSILE, KILLED_BY_FALLING);
 		}
-		noisy(15, pos());
 	}
 
     add_ench(ENCH_PETRIFIED);
