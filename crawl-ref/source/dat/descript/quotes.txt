@@ -802,7 +802,7 @@ amulet of guardian spirit
 
 <amulet>
 %%%%
-amulet of inaccuracy
+amulet of reduced vision
 
 <amulet>
 %%%%
