@@ -2010,8 +2010,7 @@ static void _wild_magic_card(int power, deck_rarity_type rarity)
         if (x_chance_in_y((power_level + 1) * 5 + random2(5),
                            mons->get_hit_dice()))
         {
-            spschool type = random_choose(spschool::none,
-                                          spschool::fire,
+            spschool type = random_choose(spschool::fire,
                                           spschool::ice,
                                           spschool::earth,
                                           spschool::air,

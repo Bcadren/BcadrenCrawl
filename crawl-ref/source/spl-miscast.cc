@@ -322,7 +322,6 @@ void MiscastEffect::do_miscast()
 
     switch (sp_type)
     {
-    case spschool::none:           _conjuration(severity);    break;
     case spschool::hexes:          _hexes(severity);          break;
     case spschool::charms:         _charms(severity);         break;
     case spschool::translocation:  _translocation(severity);  break;

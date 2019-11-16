@@ -1494,9 +1494,12 @@ spret your_spells(spell_type spell, int powc, bool allow_fail,
             simple_god_message(" does not allow the disloyal to dabble in "
                                "destruction!", GOD_VEHUMET);
 
+			const spschool which_miscast = random_choose(spschool::fire, spschool::ice,
+				                                         spschool::air, spschool::earth);
+
             // The spell still goes through, but you get a miscast anyway.
             MiscastEffect(&you, nullptr, {GOD_MISCAST, GOD_VEHUMET},
-                          spschool::none,
+                          which_miscast,
                           (you.experience_level / 2) + (spell_difficulty(spell) * 2),
                           random2avg(88, 3), "the malice of Vehumet");
         }

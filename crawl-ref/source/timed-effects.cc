@@ -80,9 +80,8 @@ static void _random_hell_miscast()
     const spschool which_miscast
         = random_choose_weighted(8, spschool::necromancy,
                                  4, spschool::summoning,
-                                 2, spschool::none,
-                                 1, spschool::charms,
-                                 1, spschool::hexes);
+                                 2, spschool::charms,
+                                 2, spschool::hexes);
 
     MiscastEffect(&you, nullptr, {HELL_EFFECT_MISCAST}, which_miscast,
                   4 + random2(6), random2avg(97, 3),
