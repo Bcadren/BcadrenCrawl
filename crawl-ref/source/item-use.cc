@@ -564,7 +564,7 @@ bool wield_weapon(bool auto_wield, int slot, bool show_weff_messages,
     if (auto_wield)
     {
         if (item_slot == you.equip[EQ_WEAPON0] || item_slot == you.equip[EQ_WEAPON1]
-            || (you.equip[EQ_WEAPON0] == -1 || you.equip[EQ_WEAPON1] == -1
+            || ((you.equip[EQ_WEAPON0] == -1 || you.equip[EQ_WEAPON1] == -1)
 			&& !item_is_wieldable(you.inv[item_slot])))
         {
             item_slot = 1;      // backup is 'b'
@@ -863,7 +863,6 @@ bool wield_weapon(bool auto_wield, int slot, bool show_weff_messages,
 		if (!you.weapon(0))
 		{
 			equip_item(EQ_WEAPON0, item_slot, show_weff_messages);
-			return true;
 		}
 
 		if (!unwield_item(true, show_weff_messages))
@@ -1054,9 +1053,105 @@ bool armour_prompt(const string & mesg, int *index, operation_types oper)
     return false;
 }
 
-bool prepare_double_swap()
+// Double Swap. Intentionally a bit finicky because is it'd be hard to logic out
+// both "what the player wants this to do" and "should this be able to work"
+// if it wasn't finicky. It 'errors' to tell the player why they can't double
+// swap if they don't fit the function's requirements.
+bool double_swap()
 {
-	mpr("Hey it worked!");
+	if (you.get_mutation_level(MUT_GHOST) == 0 && 
+		((you.weapon(0) && you.weapon(0)->cursed()) ||
+		(you.weapon(1) && you.weapon(1)->cursed())))
+	{
+		mpr("You can't dualswap while wielding a cursed weapon!");
+		return false;
+	}
+
+	int item_slot0 = 0; // a
+	int item_slot1 = 1; // b
+
+	if (item_slot0 == you.equip[EQ_WEAPON0] || item_slot0 == you.equip[EQ_WEAPON1]
+		|| item_slot1 == you.equip[EQ_WEAPON0] || item_slot1 == you.equip[EQ_WEAPON1])
+	{
+		item_slot0 = 2; // c
+		item_slot1 = 3; // d
+	}
+
+	if (item_slot0 == you.equip[EQ_WEAPON0] || item_slot0 == you.equip[EQ_WEAPON1]
+		|| item_slot1 == you.equip[EQ_WEAPON0] || item_slot1 == you.equip[EQ_WEAPON1])
+	{
+		mpr("You're already wielding some of both your sets of dual swap items.");
+		return false;
+	}
+
+	item_def wpn0 = you.inv[item_slot0];
+
+	if (!wpn0.defined())
+	{
+		mpr("One of your dualswap slots is empty.");
+		return false;
+	}
+
+	if (!can_wield(&wpn0, true, false, false, false))
+		return false;
+
+	if (you.hands_reqd(wpn0) == HANDS_TWO)
+	{
+		if (you.weapon(0))
+		{
+			if (!unwield_item(true, true))
+				return false;
+		}
+		if (you.weapon(1))
+		{
+			if (!unwield_item(false, true))
+				return false;
+		}
+		equip_item(EQ_WEAPON0, item_slot0, true);
+		return true;
+	}
+
+	wpn0 = you.inv[item_slot1];
+
+	if (!wpn0.defined())
+	{
+		mpr("One of your dualswap slots is empty.");
+		return false;
+	}
+
+	if (!can_wield(&wpn0, true, false, false, false))
+		return false;
+
+	if (you.hands_reqd(wpn0) == HANDS_TWO)
+	{
+		mpr ("You have a two-handed weapon in the wrong dualswap slot.");
+		return false;
+	}
+
+	if (is_range_weapon(wpn0))
+	{
+		mpr("You have a ranged weapon in the wrong dualswap slot.");
+		return false;
+	}
+
+	if (you.weapon(0))
+	{
+		if (!unwield_item(true, true))
+			return false;
+	}
+	if (you.weapon(1))
+	{
+		if (!unwield_item(false, true))
+			return false;
+	}
+
+	equip_item(EQ_WEAPON0, item_slot0, true);
+	equip_item(EQ_WEAPON1, item_slot1, true);
+
+	you.wield_change = true;
+	you.m_quiver.on_weapon_changed();
+	you.turn_is_over = true;
+
 	return true;
 }
 

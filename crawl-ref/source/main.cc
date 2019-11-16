@@ -1829,7 +1829,7 @@ void process_command(command_type cmd)
     case CMD_SHOUT:                issue_orders();           break;
     case CMD_THROW_ITEM_NO_QUIVER: throw_item_no_quiver();   break;
     case CMD_WEAPON_SWAP:          wield_weapon(true);       break;
-	case CMD_DOUBLE_SWAP:          prepare_double_swap();    break;
+	case CMD_DOUBLE_SWAP:          double_swap();            break;
     case CMD_WEAR_ARMOUR:          wear_armour();            break;
     case CMD_WEAR_JEWELLERY:       puton_ring(-1);           break;
     case CMD_WIELD_WEAPON:         wield_weapon(false);      break;
