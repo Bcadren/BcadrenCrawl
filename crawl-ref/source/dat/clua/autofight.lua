@@ -68,12 +68,18 @@ end
 local function have_reaching()
   local wp = items.equipped_at("weapon")
   local wp0 = items.equipped_at("weapon0")
-  return wp and wp.reach_range == 2 and not wp.is_melded or wp0 and wp0.reach_range == 2 and not wp0.is_melded
+  return (wp and wp.reach_range == 2 and not wp.is_melded) or (wp0 and wp0.reach_range == 2 and not wp0.is_melded)
 end
 
 local function have_ranged()
   local wp = items.equipped_at("weapon")
   return wp and wp.is_ranged and not wp.is_melded
+end
+
+local function have_melee()
+  local wp = items.equipped_at("weapon")
+  local wp0 = items.equipped_at("weapon0")
+  return (wp and not wp.is_ranged and not wp.is_melded) or (wp0 and not wp0.is_ranged and not wp0.is_melded)
 end
 
 local function have_throwing(no_move)
@@ -182,7 +188,11 @@ local function get_monster_info(dx,dy,no_move)
   end
   info = {}
   info.distance = (abs(dx) > abs(dy)) and -abs(dx) or -abs(dy)
-  if have_ranged() then
+  if have_ranged() and (-info.distance > 2) then
+    info.attack_type = you.see_cell_no_trans(dx, dy) and 3 or 0
+  elseif have_ranged() and (-info.distance > 1) and not have_reaching() then
+    info.attack_type = you.see_cell_no_trans(dx, dy) and 3 or 0
+  elseif have_ranged() and not have_melee() then
     info.attack_type = you.see_cell_no_trans(dx, dy) and 3 or 0
   elseif not have_reaching() then
     info.attack_type = (-info.distance < 2) and 2 or 0
