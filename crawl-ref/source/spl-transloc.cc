@@ -443,7 +443,7 @@ spret cast_blink(bool fail)
 	if (!you.airborne() && dangerous_terrain_seen() && !yesno("Really blink while near dangerous terrain?", false, 'n'))
 	{
 		canned_msg(MSG_OK);
-		return SPRET_ABORT;
+		return spret::abort;
 	}
 
     fail_check();
@@ -486,7 +486,7 @@ spret cast_controlled_blink(bool fail, bool safe)
 		if (!you.airborne() && dangerous_terrain_seen() && !yesno("Really make an uncontrolled blink while near dangerous terrain?", false, 'n'))
 		{
 			canned_msg(MSG_OK);
-			return SPRET_ABORT;
+			return spret::abort;
 		}
 
         mprf(MSGCH_ORB, "The Orb prevents control of your translocation!");
