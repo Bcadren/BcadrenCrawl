@@ -49,6 +49,8 @@ bool wield_weapon(bool auto_wield, int slot = -1,
                   bool show_wield_msg = true,
                   bool adjust_time_taken = true);
 
+bool prepare_double_swap();
+
 bool item_is_worn(int inv_slot);
 
 bool enchant_item(item_def &item, bool quiet);

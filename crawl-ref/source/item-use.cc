@@ -563,9 +563,9 @@ bool wield_weapon(bool auto_wield, int slot, bool show_weff_messages,
 
     if (auto_wield)
     {
-        if (item_slot == you.equip[EQ_WEAPON0]
-            || you.equip[EQ_WEAPON0] == -1
-               && !item_is_wieldable(you.inv[item_slot]))
+        if (item_slot == you.equip[EQ_WEAPON0] || item_slot == you.equip[EQ_WEAPON1]
+            || (you.equip[EQ_WEAPON0] == -1 || you.equip[EQ_WEAPON1] == -1
+			&& !item_is_wieldable(you.inv[item_slot])))
         {
             item_slot = 1;      // backup is 'b'
         }
@@ -683,6 +683,21 @@ bool wield_weapon(bool auto_wield, int slot, bool show_weff_messages,
 					wpn = you.weapon(0);
 				else if (you.weapon(0)->cursed() && you.get_mutation_level(MUT_GHOST) == 0)
 					wpn = you.weapon(1);
+				else if (auto_wield)
+				{
+					if (is_range_weapon(*you.weapon(0)) || (you.weapon(0)->base_type == OBJ_SHIELDS && !is_hybrid(you.weapon(0)->sub_type)))
+					{
+						if (you.weapon(1)->base_type == OBJ_SHIELDS && !is_hybrid(you.weapon(1)->sub_type))
+						{
+						    if (unwield_item(true, show_weff_messages))
+								equip_item(EQ_WEAPON0, item_slot, show_weff_messages);
+						}
+						else if (unwield_item(false, show_weff_messages))
+							equip_item(EQ_WEAPON1, item_slot, show_weff_messages);
+					}
+					else if (unwield_item(true, show_weff_messages))
+						equip_item(EQ_WEAPON0, item_slot, show_weff_messages);
+				}
 				else
 				{
 					unwanted = _prompt_weapon_to_unwield(SLOT_BARE_HANDS);
@@ -845,6 +860,12 @@ bool wield_weapon(bool auto_wield, int slot, bool show_weff_messages,
 			return false;
 		}
 
+		if (!you.weapon(0))
+		{
+			equip_item(EQ_WEAPON0, item_slot, show_weff_messages);
+			return true;
+		}
+
 		if (!unwield_item(true, show_weff_messages))
 			return false;
 
@@ -899,6 +920,34 @@ bool wield_weapon(bool auto_wield, int slot, bool show_weff_messages,
 			equip_item(EQ_WEAPON1, item_slot, show_weff_messages);
 	}
 
+	else if (you.weapon(0)->cursed() && you.get_mutation_level(MUT_GHOST) == 0)
+	{
+		if (unwield_item(false, show_weff_messages))
+			equip_item(EQ_WEAPON1, item_slot, show_weff_messages);
+	}
+
+	else if (you.weapon(1)->cursed() && you.get_mutation_level(MUT_GHOST) == 0)
+	{
+		if (unwield_item(true, show_weff_messages))
+			equip_item(EQ_WEAPON0, item_slot, show_weff_messages);
+	}
+
+	else if (auto_wield)
+	{
+		if (is_range_weapon(*you.weapon(0)) || (you.weapon(0)->base_type == OBJ_SHIELDS && !is_hybrid(you.weapon(0)->sub_type)))
+		{
+			if (you.weapon(1)->base_type == OBJ_SHIELDS && !is_hybrid(you.weapon(1)->sub_type))
+			{
+				if (unwield_item(true, show_weff_messages))
+					equip_item(EQ_WEAPON0, item_slot, show_weff_messages);
+			}
+			else if (unwield_item(false, show_weff_messages))
+				equip_item(EQ_WEAPON1, item_slot, show_weff_messages);
+		}
+		else if (unwield_item(true, show_weff_messages))
+			equip_item(EQ_WEAPON0, item_slot, show_weff_messages);
+	}
+
 	else
 	{
 		unwanted = _prompt_weapon_to_unwield(SLOT_BARE_HANDS);
@@ -919,12 +968,6 @@ bool wield_weapon(bool auto_wield, int slot, bool show_weff_messages,
 
 		wpn = &you.inv[unwanted];
 		// check if you'd get stat-zeroed
-
-		if (wpn->cursed() && (you.get_mutation_level(MUT_GHOST) == 0))
-		{
-			mpr("You can't unwield that.");
-			return false;
-		}
 
 		if (!_safe_to_remove_or_wear(*wpn, true))
 			return false;
@@ -1009,6 +1052,12 @@ bool armour_prompt(const string & mesg, int *index, operation_types oper)
     }
 
     return false;
+}
+
+bool prepare_double_swap()
+{
+	mpr("Hey it worked!");
+	return true;
 }
 
 /**
