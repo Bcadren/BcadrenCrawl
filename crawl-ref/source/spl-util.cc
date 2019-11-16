@@ -1510,21 +1510,19 @@ bool spell_no_hostile_in_range(spell_type spell)
     return false;
 }
 
-
 // a map of schools to the corresponding sacrifice 'mutations'.
-static const mutation_type arcana_sacrifice_map[] = {
-	MUT_NON_MUTATION,
-    MUT_NO_HEXES_MAGIC,
-    MUT_NO_CHARM_MAGIC,
-    MUT_NO_FIRE_MAGIC,
-    MUT_NO_ICE_MAGIC,
-    MUT_NO_TRANSMUTATION_MAGIC,
-    MUT_NO_NECROMANCY_MAGIC,
-    MUT_NO_SUMMONING_MAGIC,
-    MUT_NO_TRANSLOCATION_MAGIC,
-    MUT_NO_POISON_MAGIC,
-    MUT_NO_EARTH_MAGIC,
-    MUT_NO_AIR_MAGIC
+static const mutation_type arcana_sacrifice_map [] = {
+	MUT_NO_HEXES_MAGIC,
+	MUT_NO_CHARM_MAGIC,
+	MUT_NO_FIRE_MAGIC,
+	MUT_NO_ICE_MAGIC,
+	MUT_NO_TRANSMUTATION_MAGIC,
+	MUT_NO_NECROMANCY_MAGIC,
+	MUT_NO_SUMMONING_MAGIC,
+	MUT_NO_TRANSLOCATION_MAGIC,
+	MUT_NO_POISON_MAGIC,
+	MUT_NO_EARTH_MAGIC,
+	MUT_NO_AIR_MAGIC
 };
 
 /**
@@ -1536,7 +1534,7 @@ static const mutation_type arcana_sacrifice_map[] = {
  */
 bool cannot_use_schools(spschools_type schools)
 {
-    COMPILE_CHECK(ARRAYSZ(arcana_sacrifice_map) == (SPTYP_LAST_EXPONENT + 2));
+	COMPILE_CHECK(ARRAYSZ(arcana_sacrifice_map) == SPTYP_LAST_EXPONENT + 1);
 
     // iter over every school
     for (int i = 0; i <= SPTYP_LAST_EXPONENT; i++)
@@ -1565,9 +1563,11 @@ bool cannot_use_schools(spschools_type schools)
  */
 skill_type arcane_mutation_to_skill(mutation_type mutation)
 {
-    for (int exp = 1; exp <= 13; exp++)
-        if (arcana_sacrifice_map[exp] == mutation)
-            return spell_type2skill(spschools_type::exponent(exp-1));
+	for (int exp = 0; exp <= SPTYP_LAST_EXPONENT; exp++)
+	{
+		if (arcana_sacrifice_map[exp] == mutation)
+			return spell_type2skill(spschools_type::exponent(exp));
+	}
     return SK_NONE;
 }
 
