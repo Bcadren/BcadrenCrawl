@@ -570,6 +570,12 @@ bool wield_weapon(bool auto_wield, int slot, bool show_weff_messages,
             item_slot = 1;      // backup is 'b'
         }
 
+		if (item_slot == you.equip[EQ_WEAPON0] || item_slot == you.equip[EQ_WEAPON1])
+		{
+			mpr("Nonsense autoswap! Adjust your items!");
+			return false;
+		}
+
         if (slot != -1)         // allow external override
             item_slot = slot;
     }
@@ -688,15 +694,11 @@ bool wield_weapon(bool auto_wield, int slot, bool show_weff_messages,
 					if (is_range_weapon(*you.weapon(0)) || (you.weapon(0)->base_type == OBJ_SHIELDS && !is_hybrid(you.weapon(0)->sub_type)))
 					{
 						if (you.weapon(1)->base_type == OBJ_SHIELDS && !is_hybrid(you.weapon(1)->sub_type))
-						{
-						    if (unwield_item(true, show_weff_messages))
-								equip_item(EQ_WEAPON0, item_slot, show_weff_messages);
-						}
-						else if (unwield_item(false, show_weff_messages))
-							equip_item(EQ_WEAPON1, item_slot, show_weff_messages);
+							wpn = you.weapon(0);
+						wpn = you.weapon(1);
 					}
 					else if (unwield_item(true, show_weff_messages))
-						equip_item(EQ_WEAPON0, item_slot, show_weff_messages);
+						wpn = you.weapon(0);
 				}
 				else
 				{
