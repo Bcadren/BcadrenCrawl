@@ -482,7 +482,7 @@ spret cast_darkness(int pow, bool fail)
     return spret::success;
 }
 
-spret_type cast_SMD(const coord_def& target, int pow, bool fail)
+spret cast_SMD(const coord_def& target, int pow, bool fail)
 {
 	fail_check();
 
@@ -517,11 +517,11 @@ spret_type cast_SMD(const coord_def& target, int pow, bool fail)
 
 		default:
 			mpr("You can't deconstruct that!");
-			return SPRET_ABORT;
+			return spret::abort;
 	}
 
 	delay = min(max(2,div_rand_round(delay * 100, pow)), 16);
 
 	start_delay<SMDDelay>(delay, target);
-	return SPRET_SUCCESS;
+	return spret::success;
 }
