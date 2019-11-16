@@ -2616,7 +2616,7 @@ static spret_type _do_ability(const ability_def& abil, bool fail)
     case ABIL_LUGONU_BEND_SPACE:
         fail_check();
 		if (!lugonu_bend_space())
-			return SPRET_ABORT;
+			return spret_type::abort;
         break;
 
     case ABIL_LUGONU_BANISH:
@@ -2782,12 +2782,12 @@ static spret_type _do_ability(const ability_def& abil, bool fail)
 			if (you.hands_reqd(*you.weapon(0)) == HANDS_TWO)
 			{
 				mpr("You need a free hand or a melee weapon in one hand to use this ability.");
-				return SPRET_ABORT;
+				return spret_type::abort;
 			}
 			else if (you.weapon(1) && ((you.weapon(1)->base_type == OBJ_SHIELDS && !is_hybrid(you.weapon(1)->sub_type)) || is_range_weapon(*you.weapon(1))))
 			{
 				mpr("You need a free hand or a melee weapon in one hand to use this ability.");
-				return SPRET_ABORT;
+				return spret_type::abort;
 			}
 		}
 
