@@ -915,7 +915,7 @@ int make_mons_weapon(monster_type type, int level, bool melee_only)
             { { WPN_CLUB,             10 }, },
             { 1, 4, 8 },
             { { SPWPN_NORMAL,         20 },
-              { SPWPN_FLAMING,        20 },
+              { SPWPN_MOLTEN,         20 },
               { SPWPN_FREEZING,       10 },
               { SPWPN_VORPAL  ,       10 },
               { SPWPN_ELECTROCUTION,  10 },
