@@ -318,10 +318,9 @@ bool melee_attack::handle_phase_dodged()
         if (!attacker->alive())
             return false;
 
-        const bool using_lbl0 = defender->weapon(0)
-            && item_attack_skill(*defender->weapon(0)) == SK_LONG_BLADES;
-		const bool using_lbl1 = defender->weapon(1)
-			&& item_attack_skill(*defender->weapon(1)) == SK_LONG_BLADES;
+        const bool using_lbl0 = defender->weapon(0) && item_attack_skill(*defender->weapon(0)) == SK_LONG_BLADES;
+		const bool using_lbl1 = (defender->is_player() || mons_wields_two_weapons(*defender->as_monster()))
+			&& defender->weapon(1) && item_attack_skill(*defender->weapon(1)) == SK_LONG_BLADES;
         const bool using_fencers
             = (defender->is_player()) && player_equip_unrand(UNRAND_FENCERS);
         const int chance = using_lbl0 + using_lbl1 + using_fencers;
@@ -3355,14 +3354,18 @@ void melee_attack::do_minotaur_retaliation()
 }
 
 /**
- * Launch a long blade counterattack against the attacker. No sanity checks;
- * caller beware!
- *
- * XXX: might be wrong for deep elf blademasters with a long blade in only
- * one hand
+ * Launch a long blade counterattack against the attacker.
  */
 void melee_attack::riposte(int which_attack)
 {
+	// Sanity Check 0
+	if (!is_melee_weapon(*defender->weapon(which_attack)))
+		return;
+
+	// Sanity Check 1
+	if (defender->is_monster() && which_attack > 0 && !mons_wields_two_weapons(*defender->as_monster()))
+		return;
+
     if (you.see_cell(defender->pos()))
     {
         mprf("%s riposte%s.", defender->name(DESC_THE).c_str(),

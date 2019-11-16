@@ -469,11 +469,8 @@ item_def *monster::weapon(int which_attack) const
     if (which_attack && mons_wields_two_weapons(*this))
     {
         const int offhand = _mons_offhand_weapon_index(this);
-        if (offhand != NON_ITEM
-            && (weap == NON_ITEM || which_attack == 1 || coinflip()))
-        {
+        if (which_attack == 1)
             weap = offhand;
-        }
     }
 
     return weap == NON_ITEM ? nullptr : &mitm[weap];
