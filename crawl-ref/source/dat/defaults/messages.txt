@@ -32,28 +32,32 @@ msc += $danger:rotting away
 
 # Less urgent, but still significant messages
 #
-msc += $warning:distant snort
+msc += $warning:sense of challenge
 msc += $warning:beating.*drum
 msc += $warning:drumbeats cease
 msc += $warning:floor suddenly vibrates
 msc += $warning:a sudden draft
+msc += $warning:intense greed
 msc += $warning:coins.*counted
 msc += $warning:tolling.*bell
-msc += $warning:roar of battle
+msc += $warning:heat of battle
 msc += $warning:creaking.*portcullis
 msc += $warning:portcullis is probably
 msc += $warning:wave of frost
 msc += $warning:crackling.*melting
+msc += $warning:dry bones
 msc += $warning:hiss.*sand
+msc += $warning:foul stench
 msc += $warning:sound.*rushing water
 msc += $warning:rusting.*drain
 msc += $warning:drain falling apart
 msc += $warning:heat about you
 msc += $warning:falling.*rocks
 msc += $warning:rumble.*avalanche of rocks
+msc += $warning:intense field
 msc += $warning:crackle.*arcane power
 msc += $warning:crackle.*magical portal
-msc += $warning:distant wind
+msc += $warning:salty desert breeze
 msc += $warning:whistling.*wind
 msc += $warning:rapidly growing quiet
 msc += $warning:slides

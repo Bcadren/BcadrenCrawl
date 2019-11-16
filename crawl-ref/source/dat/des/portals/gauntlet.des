@@ -13,7 +13,7 @@ function gauntlet_portal(e)
 
   local messager =
     timed_msg {
-      initmsg = { "You hear a distant snort.",
+      initmsg = { "You feel a sense of challenge.",
                   "Hark! There is a gateway to a gauntlet on this level. " ..
                   "Find the entrance quickly before the gate is sealed!" },
       finalmsg = "After a thunderous strike, the drumbeats cease.",
