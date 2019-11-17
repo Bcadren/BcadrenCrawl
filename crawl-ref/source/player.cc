@@ -6071,7 +6071,7 @@ int player::skill(skill_type sk, int scale, bool real, bool drained, bool temp) 
             level = ash_skill_boost(sk, scale);
 
     if (temp && duration[DUR_HEROISM] && sk <= SK_LAST_MUNDANE)
-        level = min(level + 5 * scale, MAX_SKILL_LEVEL * scale);
+        level = level + 5 * scale;
     return level;
 }
 

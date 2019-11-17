@@ -1071,12 +1071,12 @@ int ash_skill_boost(skill_type sk, int scale)
                   + ash_skill_point_boost(sk, you.skill(sk, 10, true));
 
     int level = you.skills[sk];
-    while (level < MAX_SKILL_LEVEL && skill_points >= skill_exp_needed(level + 1, sk))
+    while (skill_points >= skill_exp_needed(level + 1, sk))
         ++level;
 
     level = level * scale + get_skill_progress(sk, level, skill_points, scale);
 
-    return min(level, MAX_SKILL_LEVEL * scale);
+    return level;
 }
 
 int gozag_gold_in_los(actor *whom)
