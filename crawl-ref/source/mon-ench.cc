@@ -1495,7 +1495,11 @@ void monster::apply_enchantment(const mon_enchant &me)
 
     case ENCH_AQUATIC_LAND:
         // Aquatic monsters lose hit points every turn they spend on dry land.
-        ASSERT(mons_habitat(*this) == HT_WATER || mons_habitat(*this) == HT_LAVA);
+		if (!mons_habitat(*this) == HT_WATER && mons_habitat(*this) == HT_LAVA)
+		{
+			del_ench(ENCH_AQUATIC_LAND);
+			break;
+		}
         if (mons_primary_habitat(*this) == HT_WATER && feat_is_watery(env.grid(this->pos())))
         {
             del_ench(ENCH_AQUATIC_LAND);
