@@ -570,12 +570,6 @@ bool wield_weapon(bool auto_wield, int slot, bool show_weff_messages,
             item_slot = 1;      // backup is 'b'
         }
 
-		if (item_slot == you.equip[EQ_WEAPON0] || item_slot == you.equip[EQ_WEAPON1])
-		{
-			mpr("Nonsense autoswap! Adjust your items!");
-			return false;
-		}
-
         if (slot != -1)         // allow external override
             item_slot = slot;
     }

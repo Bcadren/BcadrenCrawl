@@ -2606,15 +2606,38 @@ bool drop_item(int item_dropped, int quant_drop)
     //
     // Unwield needs to be done before copy in order to clear things
     // like temporary brands. -- bwr
-    if ((item_dropped == you.equip[EQ_WEAPON0] || item_dropped == you.equip[EQ_WEAPON1])  && quant_drop >= item.quantity)
+    if ((item_dropped == you.equip[EQ_WEAPON0])  && quant_drop >= item.quantity)
     {
-        if (!wield_weapon(true, SLOT_BARE_HANDS, true, true, true, false))
-            return false;
+		if (you.get_mutation_level(MUT_GHOST) == 0 && you.weapon(0)->cursed())
+		{
+			if (you.hands_reqd(*you.weapon(0)) == HANDS_TWO)
+				mprf("%s is stuck to your %s", you.weapon(0)->name(DESC_THE).c_str(), you.hand_name(true).c_str());
+			else
+				mprf("%s is stuck to your right %s", you.weapon(0)->name(DESC_THE).c_str(), you.hand_name(false).c_str());
+			return false;
+		}
+		if (!unwield_item(true, true))
+			return false;
         // May have been destroyed by removal. Returning true because we took
         // time to swap away.
         else if (!item.defined())
             return true;
     }
+
+	if ((item_dropped == you.equip[EQ_WEAPON1]) && quant_drop >= item.quantity)
+	{
+		if (you.get_mutation_level(MUT_GHOST) == 0 && you.weapon(1)->cursed())
+		{
+			mprf("%s is stuck to your left %s", you.weapon(1)->name(DESC_THE).c_str(), you.hand_name(false).c_str());
+			return false;
+		}
+		if (!unwield_item(false, true))
+			return false;
+		// May have been destroyed by removal. Returning true because we took
+		// time to swap away.
+		else if (!item.defined())
+			return true;
+	}
 
     ASSERT(item.defined());
 
