@@ -1908,7 +1908,7 @@ unsigned int skill_exp_needed(int lev, skill_type sk, species_type sp)
             15750, 17700, 19800, 22050, 24450,  // 21-25
             27000, 29750 };
 
-    ASSERT_RANGE(lev, 0, MAX_SKILL_LEVEL + 1);
+	lev = max(0, min(lev, MAX_SKILL_LEVEL + 1));
     return exp[lev] * species_apt_factor(sk, sp);
 }
 

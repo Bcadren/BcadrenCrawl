@@ -1060,21 +1060,32 @@ unsigned int ash_skill_point_boost(skill_type sk, int scaled_skill)
 
 int ash_skill_boost(skill_type sk, int scale)
 {
-    // It gives a bonus to skill points. The formula is:
-    // factor * (piety_rank + 1) * skill_level
-    // low bonus    -> factor = 3
-    // medium bonus -> factor = 5
-    // high bonus   -> factor = 7
+	// It gives a bonus to skill points. The formula is:
+	// factor * (piety_rank + 1) * skill_level
+	// low bonus    -> factor = 3
+	// medium bonus -> factor = 5
+	// high bonus   -> factor = 7
 
-    unsigned int skill_points = you.skill_points[sk]
-                  + get_crosstrain_points(sk)
-                  + ash_skill_point_boost(sk, you.skill(sk, 10, true));
+	unsigned int skill_points = you.skill_points[sk]
+		+ get_crosstrain_points(sk)
+		+ ash_skill_point_boost(sk, you.skill(sk, 10, true));
 
-    int level = you.skills[sk];
-    while (skill_points >= skill_exp_needed(level + 1, sk))
-        ++level;
+	const int past_27_cost = 2500 * species_apt_factor(sk);
+	int level = you.skills[sk];
+	while (level < MAX_SKILL_LEVEL && skill_points >= skill_exp_needed(level + 1, sk))
+		++level;
+	if (level >= MAX_SKILL_LEVEL)
+        skill_points -= skill_exp_needed(27, sk);
+	while (level >= MAX_SKILL_LEVEL && skill_points >= past_27_cost)
+	{
+		skill_points -= past_27_cost;
+		++level;
+	}
 
-    level = level * scale + get_skill_progress(sk, level, skill_points, scale);
+	if (level <= MAX_SKILL_LEVEL)
+		level = level * scale + get_skill_progress(sk, level, skill_points, scale);
+	else
+		level = level * scale + div_round_up(skill_points,past_27_cost);
 
     return level;
 }
