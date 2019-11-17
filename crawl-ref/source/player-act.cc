@@ -248,7 +248,6 @@ random_var player::attack_delay(const item_def *projectile, bool rescale) const
     // math.
     const int DELAY_SCALE = 20;
 
-
 	// Old Version Applies when a Single Weapon is used (this Weap being that weapon).
 	item_def * weap;
 
@@ -286,7 +285,10 @@ random_var player::attack_delay(const item_def *projectile, bool rescale) const
 		{
 			const int wpn_sklev = min(you.skill(wpn_skill0, 10), 10 * dual_wield_mindelay_skill(*weap0, *weap1));
 
-			attk_delay -= div_rand_round(random_var(wpn_sklev), DELAY_SCALE);
+			if (wpn_sklev >= 27)
+				attk_delay -= random_var(div_round_up(wpn_sklev, DELAY_SCALE));
+			else
+    			attk_delay -= div_rand_round(random_var(wpn_sklev), DELAY_SCALE);
 		}
 
 		else
