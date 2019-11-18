@@ -3243,10 +3243,10 @@ void melee_attack::do_spines()
             return;
         }
 
-        if (attacker->alive() && one_chance_in(3))
+        if (attacker->alive())
         {
-            int dmg = roll_dice(5, 4);
-            int hurt = attacker->apply_ac(dmg);
+            int dmg = random2(defender->get_hit_dice());
+            int hurt = attacker->apply_ac(dmg, 0, AC_PROPORTIONAL);
             dprf(DIAG_COMBAT, "Spiny: dmg = %d hurt = %d", dmg, hurt);
 
             if (hurt <= 0)
