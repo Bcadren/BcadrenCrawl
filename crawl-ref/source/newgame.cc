@@ -1088,21 +1088,21 @@ static job_group jobs_order[] =
         coord_def(0, 7), 15,
         { JOB_ARTIFICER, JOB_WANDERER }
     },
+	{
+		"Custom",
+		coord_def(15, 7), 20,
+        { JOB_PRIEST , JOB_NOBLE }
+	},
+	{
+		"Hybrid",
+		coord_def(35, 7), 21,
+        { JOB_DEMIGOD , JOB_DEMONSPAWN, JOB_MUMMY }
+	},
     {
         "Zealot",
         coord_def(15, 0), 20,
         { JOB_BERSERKER, JOB_ABYSSAL_KNIGHT, JOB_CHAOS_KNIGHT }
     },
-	{
-		"Custom",
-		coord_def(15, 7), 20,
-		{ JOB_PRIEST , JOB_NOBLE}
-	},
-	{
-		"Hybrid",
-		coord_def(35, 7), 21,
-		{ JOB_DEMIGOD , JOB_DEMONSPAWN, JOB_MUMMY }
-	},
     {
         "Warrior-mage",
         coord_def(35, 0), 21,
