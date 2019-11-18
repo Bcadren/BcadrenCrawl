@@ -689,9 +689,10 @@ bool wield_weapon(bool auto_wield, int slot, bool show_weff_messages,
 					{
 						if (you.weapon(1)->base_type == OBJ_SHIELDS && !is_hybrid(you.weapon(1)->sub_type))
 							wpn = you.weapon(0);
-						wpn = you.weapon(1);
+						else 
+							wpn = you.weapon(1);
 					}
-					else if (unwield_item(true, show_weff_messages))
+					else
 						wpn = you.weapon(0);
 				}
 				else

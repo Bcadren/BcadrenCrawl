@@ -1574,6 +1574,8 @@ bool needs_notele_warning(const item_def &item, operation_types oper)
 bool needs_handle_warning(const item_def &item, operation_types oper,
                           bool &penance)
 {
+	if (!item.defined())
+		return false;
     if (_has_warning_inscription(item, oper))
         return true;
 
