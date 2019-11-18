@@ -2238,7 +2238,7 @@ bool setup_fragmentation_beam(bolt &beam, int pow, const actor *caster,
     case DNGN_ORCISH_IDOL:
         if (what && *what == nullptr)
             *what = "stone idol";
-		destroy = true;
+    	destroy = true;
         // fall-through
     case DNGN_ROCK_WALL:
 	case DNGN_CLEAR_ROCK_WALL:
@@ -2249,7 +2249,7 @@ bool setup_fragmentation_beam(bolt &beam, int pow, const actor *caster,
 		beam.name = "blast of rock fragments";
 		beam.damage.num = 2;
 
-		if (x_chance_in_y(pow, 500) || beam.is_tracer)
+		if (x_chance_in_y(pow, 500))
 		{
 			destroy = true;
 			beam.ex_size++;
@@ -2265,7 +2265,7 @@ bool setup_fragmentation_beam(bolt &beam, int pow, const actor *caster,
 		beam.name = "blast of stone fragments";
 		beam.damage.num = 3;
 
-		if (x_chance_in_y(pow, 1600) || beam.is_tracer)
+		if (x_chance_in_y(pow, 1600))
 		{
 			beam.ex_size++;
 			beam.damage.num++;
@@ -2278,7 +2278,7 @@ bool setup_fragmentation_beam(bolt &beam, int pow, const actor *caster,
 
         beam.name       = "blast of granite fragments";
         beam.damage.num = 4;
-		destroy = true;
+    	destroy = true;
         break;
 
     // Metal -- small but nasty explosion
@@ -2314,7 +2314,7 @@ bool setup_fragmentation_beam(bolt &beam, int pow, const actor *caster,
         beam.ex_size    = 2;
         beam.name       = "blast of crystal shards";
         beam.damage.num = 4;
-		if (coinflip() || beam.is_tracer)
+		if (coinflip())
 		{
 			beam.ex_size++;
 			beam.damage.num++;
