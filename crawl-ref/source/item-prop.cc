@@ -438,7 +438,7 @@ static const weapon_def Weapon_prop[] =
 {
     // Maces & Flails
     { WPN_CLUB,              "club",                5,  3, 13,
-        SK_WHIPS_FLAILS, SIZE_LITTLE, SIZE_LITTLE, MI_NONE,
+        SK_MACES_STAVES, SIZE_LITTLE, SIZE_LITTLE, MI_NONE,
         DAMV_CRUSHING, 10, 0, 10, {} },
 #if TAG_MAJOR_VERSION == 34
     { WPN_SPIKED_FLAIL,      "spiked flail",        5,  3, 13,
@@ -467,7 +467,7 @@ static const weapon_def Weapon_prop[] =
         DAMV_CRUSHING, 0, 0, 0, M_AND_F_BRANDS },
 #endif
     { WPN_MACE,              "mace",                8,  3, 14,
-        SK_WHIPS_FLAILS, SIZE_LITTLE, SIZE_LITTLE, MI_NONE,
+        SK_MACES_STAVES, SIZE_LITTLE, SIZE_LITTLE, MI_NONE,
         DAMV_CRUSHING, 9, 10, 30, M_AND_F_BRANDS },
     { WPN_FLAIL,             "flail",              10,  0, 14,
         SK_WHIPS_FLAILS, SIZE_LITTLE, SIZE_LITTLE, MI_NONE,
