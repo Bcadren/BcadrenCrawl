@@ -3246,7 +3246,7 @@ void melee_attack::do_spines()
         if (attacker->alive())
         {
             int dmg = random2(defender->get_hit_dice());
-            int hurt = attacker->apply_ac(dmg, 0, AC_PROPORTIONAL);
+            int hurt = attacker->apply_ac(dmg, 0, AC_HALF);
             dprf(DIAG_COMBAT, "Spiny: dmg = %d hurt = %d", dmg, hurt);
 
             if (hurt <= 0)
@@ -3259,7 +3259,23 @@ void melee_attack::do_spines()
                      defender->type == MONS_BRIAR_PATCH ? "thorns"
                                                         : "spines");
             }
-            attacker->hurt(defender, hurt, BEAM_MISSILE, KILLED_BY_SPINES);
+
+			beam_type damtype = BEAM_MISSILE;
+
+			if (defender->type == MONS_SPINY_FROG)
+			{
+				damtype = BEAM_POISON_ARROW;
+
+				int pois = random_range(defender->get_hit_dice() * 2 / 3, defender->get_hit_dice());
+
+				const int resist = attacker->res_poison();
+				if (attacker->is_player())
+					poison_player((resist ? pois / 2 : pois), defender->name(DESC_A), "venomous spines", true);
+				else
+					poison_monster(attacker->as_monster(), defender, (resist ? pois / 2 : pois), true, true);
+			}
+
+            attacker->hurt(defender, hurt, damtype, KILLED_BY_SPINES);
         }
     }
 }
