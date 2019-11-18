@@ -23,7 +23,6 @@ aptitudes:
   stealth: 2
   shields: 1
   spellcasting: -1
-  conjurations: 1
   hexes: -1
   charms: -1
   summoning: -1
@@ -62,8 +61,8 @@ recommended_jobs:
   - JOB_EARTH_ELEMENTALIST
   - JOB_VENOM_MAGE
 recommended_weapons:
-  - SK_MACES_FLAILS
-  - SK_STAVES
+  - SK_WHIPS_FLAILS
+  - SK_MACES_STAVES
   - SK_BOWS
   - SK_CROSSBOWS
-create_enum: false
+create_enum: False

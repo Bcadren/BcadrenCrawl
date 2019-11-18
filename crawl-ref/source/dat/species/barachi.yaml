@@ -16,13 +16,12 @@ aptitudes:
   short_blades: 1
   long_blades: 2
   axes: 1
-  maces_and_flails: 1
-  staves: 1
+  whips_and_flails: 1
+  maces_and_staves: 1
   armour: 2
   dodging: 1
   shields: 1
   unarmed_combat: 1
-  conjurations: 1
   hexes: 1
   charms: 1
   summoning: 2
@@ -57,4 +56,4 @@ recommended_jobs:
   - JOB_SKALD
   - JOB_SUMMONER
   - JOB_ICE_ELEMENTALIST
-create_enum: false
+create_enum: False

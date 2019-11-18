@@ -1,6 +1,8 @@
 enum: SP_MINOTAUR
 monster: MONS_MINOTAUR
 name: Minotaur
+adjective: Bovine
+genus: Cow
 difficulty: Simple
 difficulty_priority: 90
 aptitudes:
@@ -12,9 +14,9 @@ aptitudes:
   short_blades: 1
   long_blades: 2
   axes: 2
-  maces_and_flails: 2
+  whips_and_flails: 2
   polearms: 2
-  staves: 2
+  maces_and_staves: 2
   slings: 1
   bows: 1
   crossbows: 1
@@ -25,7 +27,6 @@ aptitudes:
   shields: 2
   unarmed_combat: 1
   spellcasting: -4
-  conjurations: -3
   hexes: -4
   charms: -4
   summoning: -3
@@ -58,4 +59,4 @@ recommended_jobs:
   - JOB_HUNTER
   - JOB_BERSERKER
   - JOB_ABYSSAL_KNIGHT
-create_enum: false
+create_enum: False

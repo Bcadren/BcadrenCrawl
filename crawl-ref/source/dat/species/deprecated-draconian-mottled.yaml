@@ -37,4 +37,4 @@ fake_mutations:
   - long: You can spit globs of burning liquid.
     short: breathe sticky flame splash
   - long: You can ignite nearby creatures when you spit burning liquid.
-create_enum: false
+create_enum: False

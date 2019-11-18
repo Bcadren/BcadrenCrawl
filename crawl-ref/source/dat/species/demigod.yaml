@@ -1,9 +1,10 @@
+TAG_MAJOR_VERSION: 34
 enum: SP_DEMIGOD
 monster: MONS_DEMIGOD
 name: "Demigod"
 short_name: "Dg"
 adjective: "Divine"
-difficulty: Advanced
+difficulty: False
 difficulty_priority: 80
 aptitudes:
   xp: -2
@@ -14,9 +15,9 @@ aptitudes:
   short_blades: -1
   long_blades: -1
   axes: -1
-  maces_and_flails: -1
+  whips_and_flails: -1
   polearms: -1
-  staves: -1
+  maces_and_staves: -1
   slings: -1
   bows: -1
   crossbows: -1
@@ -26,7 +27,6 @@ aptitudes:
   shields: -1
   unarmed_combat: -1
   spellcasting: -2
-  conjurations: -1
   hexes: -1
   charms: -1
   summoning: -1
@@ -49,11 +49,4 @@ levelup_stat_frequency: 28
 mutations:
   1:
     MUT_HIGH_MAGIC: 1
-recommended_jobs:
-  - JOB_TRANSMUTER
-  - JOB_CONJURER
-  - JOB_FIRE_ELEMENTALIST
-  - JOB_ICE_ELEMENTALIST
-  - JOB_AIR_ELEMENTALIST
-  - JOB_EARTH_ELEMENTALIST
-create_enum: false
+create_enum: False

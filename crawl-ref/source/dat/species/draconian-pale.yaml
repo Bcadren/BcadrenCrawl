@@ -37,4 +37,4 @@ mutations:
 fake_mutations:
   - long: You can breathe blasts of scalding, opaque steam.
     short: breathe steam
-create_enum: false
+create_enum: False

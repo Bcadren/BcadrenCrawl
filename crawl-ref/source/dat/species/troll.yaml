@@ -13,9 +13,9 @@ aptitudes:
   short_blades: -2
   long_blades: -2
   axes: -2
-  maces_and_flails: -1
+  whips_and_flails: -2
   polearms: -2
-  staves: -2
+  maces_and_staves: -1
   slings: -4
   bows: -4
   crossbows: -4
@@ -25,7 +25,6 @@ aptitudes:
   stealth: -5
   shields: -2
   spellcasting: -5
-  conjurations: -3
   hexes: -4
   charms: -4
   summoning: -3
@@ -63,6 +62,6 @@ recommended_jobs:
   - JOB_EARTH_ELEMENTALIST
   - JOB_WIZARD
 recommended_weapons:
-  - SK_MACES_FLAILS
+  - SK_MACES_STAVES
   - SK_UNARMED_COMBAT
-create_enum: false
+create_enum: False

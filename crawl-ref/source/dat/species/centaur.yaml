@@ -13,9 +13,9 @@ aptitudes:
   short_blades: -1
   long_blades: -1
   axes: -1
-  maces_and_flails: -1
+  whips_and_flails: -1
   polearms: -1
-  staves: -1
+  maces_and_staves: -1
   slings: 1
   bows: 3
   crossbows: 1
@@ -25,7 +25,6 @@ aptitudes:
   stealth: -4
   shields: -3
   spellcasting: -3
-  conjurations: -1
   hexes: -1
   charms: -1
   summoning: -1
@@ -59,4 +58,4 @@ recommended_jobs:
   - JOB_HUNTER
   - JOB_WARPER
   - JOB_ARCANE_MARKSMAN
-create_enum: false
+create_enum: False

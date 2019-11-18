@@ -12,9 +12,9 @@ aptitudes:
   short_blades: 1
   long_blades: -2
   axes: -2
-  maces_and_flails: -3
+  whips_and_flails: -2
   polearms: -3
-  staves: -3
+  maces_and_staves: -3
   slings: 2
   bows: 2
   armour: -3
@@ -23,7 +23,6 @@ aptitudes:
   shields: -3
   unarmed_combat: -2
   spellcasting: 2
-  conjurations: -3
   hexes: 2
   charms: 4
   summoning: -2
@@ -55,10 +54,9 @@ recommended_jobs:
   - JOB_ABYSSAL_KNIGHT
   - JOB_WARPER
   - JOB_ENCHANTER
-  - JOB_CONJURER
   - JOB_EARTH_ELEMENTALIST
   - JOB_VENOM_MAGE
 recommended_weapons:
   - SK_SHORT_BLADES
   - SK_SLINGS
-create_enum: false
+create_enum: False

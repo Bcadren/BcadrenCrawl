@@ -13,9 +13,9 @@ aptitudes:
   short_blades: False
   long_blades: False
   axes: False
-  maces_and_flails: False
+  whips_and_flails: False
   polearms: False
-  staves: False
+  maces_and_staves: False
   slings: False
   bows: False
   crossbows: False
@@ -25,7 +25,6 @@ aptitudes:
   stealth: 4
   shields: False
   spellcasting: -1
-  conjurations: -1
   hexes: 4
   charms: 2
   translocations: 4
@@ -71,10 +70,9 @@ recommended_jobs:
   - JOB_TRANSMUTER
   - JOB_ICE_ELEMENTALIST
   - JOB_AIR_ELEMENTALIST
-  - JOB_CONJURER
   - JOB_SUMMONER
   - JOB_VENOM_MAGE
 recommended_weapons:
   - SK_UNARMED_COMBAT
-create_enum: false
 altar_action: sit before
+create_enum: False

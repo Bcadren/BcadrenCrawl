@@ -165,18 +165,18 @@ SPECIES_GROUP_TEMPLATE = """
     }},
 """
 ALL_APTITUDES = ('fighting', 'short_blades', 'long_blades', 'axes',
-    'maces_and_flails', 'polearms', 'staves', 'slings', 'bows', 'crossbows',
+    'whips_and_flails', 'polearms', 'maces_and_staves', 'slings', 'bows', 'crossbows',
     'throwing', 'armour', 'dodging', 'stealth', 'shields', 'unarmed_combat',
-    'spellcasting', 'conjurations', 'hexes', 'charms', 'summoning',
+    'spellcasting', 'hexes', 'charms', 'summoning',
     'necromancy', 'transmutations', 'translocations', 'fire_magic',
     'ice_magic', 'air_magic', 'earth_magic', 'poison_magic', 'invocations',
     'evocations')
-UNDEAD_TYPES = ('US_ALIVE', 'US_HUNGRY_DEAD', 'US_UNDEAD', 'US_SEMI_UNDEAD')
+UNDEAD_TYPES = ('US_ALIVE', 'US_HUNGRY_DEAD', 'US_UNDEAD', 'US_SEMI_UNDEAD', 'US_GHOST')
 SIZES = ('SIZE_TINY', 'SIZE_LITTLE', 'SIZE_SMALL', 'SIZE_MEDIUM', 'SIZE_LARGE',
     'SIZE_BIG', 'SIZE_GIANT')
 ALL_STATS = ('str', 'int', 'dex')
 ALL_WEAPON_SKILLS = ('SK_SHORT_BLADES', 'SK_LONG_BLADES', 'SK_AXES',
-    'SK_MACES_FLAILS', 'SK_POLEARMS', 'SK_STAVES', 'SK_SLINGS', 'SK_BOWS',
+    'SK_WHIPS_FLAILS', 'SK_POLEARMS', 'SK_MACES_STAVES', 'SK_SLINGS', 'SK_BOWS',
     'SK_CROSSBOWS', 'SK_UNARMED_COMBAT')
 
 def recommended_jobs(jobs):

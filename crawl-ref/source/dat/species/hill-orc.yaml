@@ -14,9 +14,9 @@ aptitudes:
   fighting: 2
   long_blades: 1
   axes: 3
-  maces_and_flails: 1
+  whips_and_flails: 1
   polearms: 1
-  staves: -1
+  maces_and_staves: -1
   slings: -1
   bows: -1
   crossbows: -1
@@ -49,8 +49,8 @@ recommended_jobs:
   - JOB_NECROMANCER
   - JOB_FIRE_ELEMENTALIST
 recommended_weapons:
-  - SK_MACES_FLAILS
+  - SK_WHIPS_FLAILS
   - SK_LONG_BLADES
   - SK_AXES
   - SK_POLEARMS
-create_enum: false
+create_enum: False

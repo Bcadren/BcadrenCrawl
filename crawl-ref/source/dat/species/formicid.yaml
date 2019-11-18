@@ -16,7 +16,6 @@ aptitudes:
   dodging: -1
   stealth: 3
   shields: 2
-  conjurations: -1
   hexes: 2
   translocations: -1
   transmutations: 1
@@ -50,11 +49,11 @@ recommended_jobs:
   - JOB_EARTH_ELEMENTALIST
   - JOB_VENOM_MAGE
 recommended_weapons:
-  - SK_MACES_FLAILS
+  - SK_WHIPS_FLAILS
   - SK_AXES
   - SK_POLEARMS
   - SK_LONG_BLADES
-  - SK_STAVES
+  - SK_MACES_STAVES
   - SK_CROSSBOWS
   - SK_SLINGS
-create_enum: false
+create_enum: False
