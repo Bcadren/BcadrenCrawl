@@ -1981,7 +1981,6 @@ static string _describe_armour(const item_def &item, bool verbose)
             description += make_stringf("\nWearing mundane armour of this type "
                                         "will give the following: %d AC",
                                          you.base_ac_from(item, 100) / 100);
-        }
     }
 
     const int ego = get_armour_ego_type(item);
