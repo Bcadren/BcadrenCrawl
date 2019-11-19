@@ -704,7 +704,7 @@ bool wield_weapon(bool auto_wield, int slot, bool show_weff_messages,
 					{
 						unwanted = prompt_invent_item(
 							"You're wielding something in both hands. Unwield which one?",
-							MT_INVLIST, OSEL_UNCURSED_WIELDED_WEAPONS, OPER_REMOVE,
+							menu_type::invlist, OSEL_UNCURSED_WIELDED_WEAPONS, OPER_REMOVE,
 							invprompt_flag::no_warning | invprompt_flag::hide_known);;
 					}
 
@@ -953,7 +953,7 @@ bool wield_weapon(bool auto_wield, int slot, bool show_weff_messages,
 		{
 			unwanted = prompt_invent_item(
 				"You're wielding something in both hands. Unwield which one?",
-				MT_INVLIST, OSEL_UNCURSED_WIELDED_WEAPONS, OPER_REMOVE,
+				menu_type::invlist, OSEL_UNCURSED_WIELDED_WEAPONS, OPER_REMOVE,
 				invprompt_flag::no_warning | invprompt_flag::hide_known);;
 		}
 

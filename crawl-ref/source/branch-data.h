@@ -354,7 +354,7 @@ const Branch branches[NUM_BRANCHES] =
 #endif
 
 	{ BRANCH_START_TEMPLE, NUM_BRANCHES, -1, -1, 1, 4,
-	  BFLAG_NO_XLEV_TRAVEL | BFLAG_NO_ITEMS,
+      brflag::no_x_level_travel | brflag::no_items,
 	  DNGN_ENTER_START_TEMPLE, DNGN_EXIT_START_TEMPLE, NUM_FEATURES,
 	  "Temple", "a Temple outside the Dungeon", "Start Temple",
 	  "You enter a Temple.",
@@ -362,7 +362,7 @@ const Branch branches[NUM_BRANCHES] =
 	  '+',{}, branch_noise::loud },
 
 	{ BRANCH_START_MARKET, NUM_BRANCHES, -1, -1, 1, 4,
-	  BFLAG_NO_XLEV_TRAVEL | BFLAG_NO_ITEMS,
+      brflag::no_x_level_travel | brflag::no_items,
       DNGN_ENTER_START_MARKET, DNGN_EXIT_START_MARKET, NUM_FEATURES,
 	  "Market", "a Market outside the Dungeon", "Start Market",
 	  "You go to the shops.",
