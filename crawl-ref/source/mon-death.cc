@@ -2259,17 +2259,11 @@ item_def* monster_die(monster& mons, killer_type killer,
 
                 if (have_passive(passive_t::mp_on_kill))
                 {
-                    mp_heal = 1 + random2(mons.get_experience_level() / 2);
+					mp_heal = apply_pity(1 + random2(mons.get_experience_level() / 2));
 #if TAG_MAJOR_VERSION == 34
                     if (you.religion == GOD_PAKELLAS)
                         mp_heal = random2(2 + mons.get_experience_level() / 6);
-                        break;
 #endif
-                    case GOD_VEHUMET:
-                    default:
-                        mp_heal = apply_pity(1 + random2(mons.get_experience_level() / 2));
-                        break;
-                    }
                 }
 
                 if (hp_heal && you.hp < you.hp_max
