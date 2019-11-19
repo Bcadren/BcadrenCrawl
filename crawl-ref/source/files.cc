@@ -32,6 +32,7 @@
 #include "butcher.h" // for fedhas_rot_all_corpses
 #include "chardump.h"
 #include "cloud.h"
+#include "colour.h"
 #include "coordit.h"
 #include "dactions.h"
 #include "dgn-overview.h"
