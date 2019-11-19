@@ -1,0 +1,70 @@
+enum: SP_LIGNIFITE
+monster: MONS_SHAMBLING_MANGROVE
+name: "Lignifite"
+adjective: "Lignin"
+genus: "Tree"
+difficulty: Advanced
+difficulty_priority: 30
+species_flags:
+  - hairless
+aptitudes:
+  xp: -1
+  hp: -1
+  mp_mod: 1
+  mr: 4
+  short_blades: -1
+  long_blades: -2
+  axes: -3
+  whips_and_flails: 1
+  maces_and_staves: 1
+  slings: -2
+  bows: -2
+  crossbows: -2
+  armour: -2
+  dodging: -1
+  hexes: -1
+  charms: -1
+  summoning: 0
+  necromancy: -2
+  translocations: -2
+  transmutations: -2
+  fire_magic: -2
+  ice_magic: -1
+  earth_magic: 1
+  poison_magic: 2
+  invocations: 1
+  evocations: -1
+size: little
+str: 13
+int: 9
+dex: 3
+levelup_stat_frequency: 4
+levelup_stats:
+- str
+- int
+mutations:
+  1:
+    MUT_POISON_RESISTANCE: 1
+    MUT_ROT_IMMUNITY: 1
+    MUT_TORMENT_RESISTANCE: 1
+    MUT_SLOW_METABOLISM: 1
+    MUT_DEFORMED: 1
+    MUT_FAST: 1
+    MUT_UNBREATHING: 1
+fake_mutations:
+  - long: Your woody flesh burns easily. (rF-)
+    short: rF-
+recommended_jobs:
+  - JOB_FIGHTER
+  - JOB_MONK
+  - JOB_BERSERKER
+  - JOB_ABYSSAL_KNIGHT
+  - JOB_SKALD
+  - JOB_VENOM_MAGE
+  - JOB_SUMMONER
+recommended_weapons:
+  - SK_WHIPS_FLAILS
+  - SK_POLEARMS
+  - SK_MACES_STAVES
+  - SK_THROWING
+create_enum: False
