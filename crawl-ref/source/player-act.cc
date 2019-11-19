@@ -266,7 +266,7 @@ random_var player::attack_delay(const item_def *projectile, bool rescale) const
     }
 
 	// UC; now always 5.
-    else if (!projectile && !weap0 && !weapon1)
+    else if (!projectile && !weap0 && !weap1)
     {
         attk_delay = random_var(5);
     }
