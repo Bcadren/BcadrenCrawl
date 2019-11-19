@@ -74,10 +74,10 @@ end
 local function reach_range()
   local wp = items.equipped_at("weapon")
   local wp0 = items.equipped_at("weapon0")
-  if (wp and not wp.is_melded and wp.reach_range > 2) or (wp0 and not wp0.is_melded and wp0.reach_range > 2)
+  if (wp and not wp.is_melded and wp.reach_range > 2) or (wp0 and not wp0.is_melded and wp0.reach_range > 2) then
       return 3
   end
-  if (wp and not wp.is_melded and wp.reach_range > 1) or (wp0 and not wp0.is_melded and wp0.reach_range > 1)
+  if (wp and not wp.is_melded and wp.reach_range > 1) or (wp0 and not wp0.is_melded and wp0.reach_range > 1) then
       return 2
   end
   return 1
