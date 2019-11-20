@@ -1851,7 +1851,7 @@ bool is_useless_skill(skill_type skill)
             && you.get_mutation_level(MUT_NO_TRANSMUTATION_MAGIC))
         || (skill == SK_DODGING && you.get_mutation_level(MUT_NO_DODGING))
         || (skill == SK_ARMOUR && you.get_mutation_level(MUT_NO_ARMOUR)
-			&& !you.duration[DUR_COLLAPSE])
+            && !you.duration[DUR_COLLAPSE])
         || (skill == SK_SHIELDS && you.get_mutation_level(MUT_MISSING_HAND))
         || (skill == SK_EVOCATIONS && you.get_mutation_level(MUT_NO_ARTIFICE))
         || (skill == SK_STEALTH && you.get_mutation_level(MUT_NO_STEALTH))
@@ -1912,7 +1912,7 @@ unsigned int skill_exp_needed(int lev, skill_type sk, species_type sp)
             15750, 17700, 19800, 22050, 24450,  // 21-25
             27000, 29750 };
 
-	lev = max(0, min(lev, MAX_SKILL_LEVEL + 1));
+    lev = max(0, min(lev, MAX_SKILL_LEVEL + 1));
     return exp[lev] * species_apt_factor(sk, sp);
 }
 
@@ -1934,32 +1934,32 @@ int species_apt(skill_type skill, species_type species)
         spec_skills_initialised = true;
     }
 
-	int mod = 0;
+    int mod = 0;
 
-	if (you.char_class == JOB_MUMMY)
-	{
-		if (skill == SK_NECROMANCY || skill == SK_SPELLCASTING)
-			mod = 2;
-		else if (skill == SK_FIGHTING)
-			mod = 0;
-		else
-			mod = -2;
-	}
+    if (you.char_class == JOB_MUMMY)
+    {
+        if (skill == SK_NECROMANCY || skill == SK_SPELLCASTING)
+            mod = 2;
+        else if (skill == SK_FIGHTING)
+            mod = 0;
+        else
+            mod = -2;
+    }
 
-	if (you.char_class == JOB_DEMIGOD && skill == SK_INVOCATIONS)
-		return UNUSABLE_SKILL;
+    if (you.char_class == JOB_DEMIGOD && skill == SK_INVOCATIONS)
+        return UNUSABLE_SKILL;
 
-	else if (you.char_class == JOB_DEMIGOD || you.char_class == JOB_DEMONSPAWN)
-	{
-		if (skill == SK_INVOCATIONS)
-			mod = 3;
-		else
-			mod = -1;
-	}
+    else if (you.char_class == JOB_DEMIGOD || you.char_class == JOB_DEMONSPAWN)
+    {
+        if (skill == SK_INVOCATIONS)
+            mod = 3;
+        else
+            mod = -1;
+    }
 
     return max(UNUSABLE_SKILL, _spec_skills[species][skill]
                                - you.get_mutation_level(MUT_UNSKILLED)
-	                           + mod);
+                               + mod);
 }
 
 float species_apt_factor(skill_type sk, species_type sp)
@@ -1980,21 +1980,21 @@ vector<skill_type> get_crosstrain_skills(skill_type sk)
     case SK_LONG_BLADES:
         return { SK_SHORT_BLADES };
     case SK_AXES:
-		return { SK_POLEARMS };
+        return { SK_POLEARMS };
     case SK_MACES_STAVES:
          return { SK_WHIPS_FLAILS, SK_POLEARMS };
     case SK_WHIPS_FLAILS:
-		return { SK_MACES_STAVES };
+        return { SK_MACES_STAVES };
     case SK_POLEARMS:
-		return { SK_AXES, SK_MACES_STAVES }; 
+        return { SK_AXES, SK_MACES_STAVES }; 
     case SK_SLINGS:
         return { SK_THROWING };
     case SK_THROWING:
         return { SK_SLINGS };
-	case SK_BOWS:
-		return { SK_CROSSBOWS };
-	case SK_CROSSBOWS:
-		return { SK_BOWS };
+    case SK_BOWS:
+        return { SK_CROSSBOWS };
+    case SK_CROSSBOWS:
+        return { SK_BOWS };
     default:
         return {};
     }

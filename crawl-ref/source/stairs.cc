@@ -1026,8 +1026,8 @@ level_id stair_destination(dungeon_feature_type feat, const string &dst,
     case DNGN_EXIT_PORTAL_VAULT:
 #endif
     case DNGN_EXIT_PANDEMONIUM:
-		if (you.chapter == CHAPTER_NONDUNGEON_START)
-			return level_id(BRANCH_DUNGEON, 1);
+        if (you.chapter == CHAPTER_NONDUNGEON_START)
+            return level_id(BRANCH_DUNGEON, 1);
         else if (you.level_stack.empty())
         {
             if (you.wizard)
@@ -1047,8 +1047,8 @@ level_id stair_destination(dungeon_feature_type feat, const string &dst,
         push_features_to_abyss();
         break;
     default:
-		if (you.chapter == CHAPTER_NONDUNGEON_START)
-			return level_id(BRANCH_DUNGEON, 1);
+        if (you.chapter == CHAPTER_NONDUNGEON_START)
+            return level_id(BRANCH_DUNGEON, 1);
         break;
     }
 

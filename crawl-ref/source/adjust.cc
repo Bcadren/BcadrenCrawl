@@ -219,7 +219,7 @@ void swap_inv_slots(int from_slot, int to_slot, bool verbose)
     }
 
     if (to_slot == you.equip[EQ_WEAPON0] || from_slot == you.equip[EQ_WEAPON0]
-		|| to_slot == you.equip[EQ_WEAPON1] || from_slot == you.equip[EQ_WEAPON1])
+        || to_slot == you.equip[EQ_WEAPON1] || from_slot == you.equip[EQ_WEAPON1])
     {
         you.wield_change = true;
         you.m_quiver.on_weapon_changed();

@@ -679,7 +679,7 @@ static bool _has_hair(actor* target)
 
     return !form_changed_physiology()
            && (species_has_hair(you.species) || you.species == SP_MUMMY
-			   || you.char_class == JOB_MUMMY);
+               || you.char_class == JOB_MUMMY);
 }
 
 static string _hair_str(actor* target, bool &plural)
@@ -754,18 +754,18 @@ void MiscastEffect::_conjuration(int severity)
                            " for a moment.";
             break;
         case 6:
-			if (you.undead_state() == US_GHOST)
-				you_msg = "Your surface ripples.";
-			else 
-				you_msg      = "Your skin tingles.";
+            if (you.undead_state() == US_GHOST)
+                you_msg = "Your surface ripples.";
+            else 
+                you_msg      = "Your skin tingles.";
             mon_msg_seen = "@The_monster@ twitches.";
             break;
         case 7:
-			if (you.undead_state() == US_GHOST)
-				you_msg = "Your core emits a weird" + weird_glowing_colour() +
-				          "glow for a moment.";
+            if (you.undead_state() == US_GHOST)
+                you_msg = "Your core emits a weird" + weird_glowing_colour() +
+                          "glow for a moment.";
             else 
-				you_msg      = "Your skin glows momentarily.";
+                you_msg      = "Your skin glows momentarily.";
             mon_msg_seen = "@The_monster@ glows momentarily.";
             // A small glow isn't going to make it past invisibility.
             break;
@@ -774,8 +774,8 @@ void MiscastEffect::_conjuration(int severity)
             // care of elsewhere.
             break;
         case 9:
-			if (you.species == SP_MUMMY || you.char_class == JOB_MUMMY)
-				you_msg = "Your bandages flutter.";
+            if (you.species == SP_MUMMY || you.char_class == JOB_MUMMY)
+                you_msg = "Your bandages flutter.";
             else if (you.can_smell())
                 all_msg = "You smell something strange.";
             break;
@@ -916,18 +916,18 @@ void MiscastEffect::_hexes(int severity)
                            " for a moment.";
             break;
         case 6:
-			if (you.undead_state() == US_GHOST)
-				you_msg = "Your surface ripples.";
-			else
-				you_msg = "Your skin tingles.";
+            if (you.undead_state() == US_GHOST)
+                you_msg = "Your surface ripples.";
+            else
+                you_msg = "Your skin tingles.";
             mon_msg_seen = "@The_monster@ twitches.";
             break;
         case 7:
-			if (you.undead_state() == US_GHOST)
-				you_msg = "Your core emits a weird" + weird_glowing_colour() +
-				"glow for a moment.";
-			else
-				you_msg = "Your skin glows momentarily.";
+            if (you.undead_state() == US_GHOST)
+                you_msg = "Your core emits a weird" + weird_glowing_colour() +
+                "glow for a moment.";
+            else
+                you_msg = "Your skin glows momentarily.";
             mon_msg_seen = "@The_monster@'s body glows momentarily.";
             break;
         case 8:
@@ -1067,18 +1067,18 @@ void MiscastEffect::_charms(int severity)
                            " for a moment.";
             break;
         case 6:
-			if (you.undead_state() == US_GHOST)
-				you_msg = "Your surface ripples.";
-			else
-				you_msg = "Your skin tingles.";
+            if (you.undead_state() == US_GHOST)
+                you_msg = "Your surface ripples.";
+            else
+                you_msg = "Your skin tingles.";
             mon_msg_seen = "@The_monster@ twitches.";
             break;
         case 7:
-			if (you.undead_state() == US_GHOST)
-				you_msg = "Your core emits a weird" + weird_glowing_colour() +
-				"glow for a moment.";
-			else
-				you_msg = "Your skin glows momentarily.";
+            if (you.undead_state() == US_GHOST)
+                you_msg = "Your core emits a weird" + weird_glowing_colour() +
+                "glow for a moment.";
+            else
+                you_msg = "Your skin glows momentarily.";
             mon_msg_seen = "@The_monster@'s body glows momentarily.";
             break;
         case 8:
@@ -1232,10 +1232,10 @@ void MiscastEffect::_translocation(int severity)
                              + weird_glowing_colour() + " for a moment.";
             break;
         case 6:
-			if (you.undead_state() == US_GHOST)
-				you_msg = "Your surface ripples.";
-			else
-				you_msg = "Your skin tingles.";
+            if (you.undead_state() == US_GHOST)
+                you_msg = "Your surface ripples.";
+            else
+                you_msg = "Your skin tingles.";
             mon_msg_seen = "@The_monster@ twitches.";
             break;
         case 7:
@@ -1597,11 +1597,11 @@ void MiscastEffect::_necromancy(int severity)
                 simple_god_message(" averts the curse.");
                 return;
             }
-			else if (you.get_mutation_level(MUT_GODS_PITY) > 1 && coinflip())
-			{
-				simple_god_message(" averts the curse.");
-				return;
-			}
+            else if (you.get_mutation_level(MUT_GODS_PITY) > 1 && coinflip())
+            {
+                simple_god_message(" averts the curse.");
+                return;
+            }
             else
             {
                 simple_god_message(" partially averts the curse.");
@@ -1616,8 +1616,8 @@ void MiscastEffect::_necromancy(int severity)
         switch (random2(10))
         {
         case 0:
-			if (you.species == SP_MUMMY || you.char_class == JOB_MUMMY)
-				you_msg = "Your bandages flutter.";
+            if (you.species == SP_MUMMY || you.char_class == JOB_MUMMY)
+                you_msg = "Your bandages flutter.";
             else if (you.can_smell())
                 all_msg = "You smell decay.";
             break;
@@ -1870,18 +1870,18 @@ void MiscastEffect::_transmutation(int severity)
                            " for a moment.";
             break;
         case 6:
-			if (you.undead_state() == US_GHOST)
-				you_msg = "Your surface ripples.";
-			else
-				you_msg = "Your skin tingles.";
+            if (you.undead_state() == US_GHOST)
+                you_msg = "Your surface ripples.";
+            else
+                you_msg = "Your skin tingles.";
             mon_msg_seen = "@The_monster@ twitches.";
             break;
         case 7:
-			if (you.undead_state() == US_GHOST)
-				you_msg = "Your core emits a weird" + weird_glowing_colour() +
-				"glow for a moment.";
-			else
-				you_msg = "Your skin glows momentarily.";
+            if (you.undead_state() == US_GHOST)
+                you_msg = "Your core emits a weird" + weird_glowing_colour() +
+                "glow for a moment.";
+            else
+                you_msg = "Your skin glows momentarily.";
             mon_msg_seen = "@The_monster@'s body glows momentarily.";
             break;
         case 8:
@@ -1889,8 +1889,8 @@ void MiscastEffect::_transmutation(int severity)
             // care of elsewhere.
             break;
         case 9:
-			if (you.species == SP_MUMMY || you.char_class == JOB_MUMMY)
-				you_msg = "Your bandages flutter.";
+            if (you.species == SP_MUMMY || you.char_class == JOB_MUMMY)
+                you_msg = "Your bandages flutter.";
             else if (you.can_smell())
                 all_msg = "You smell something strange.";
             break;
@@ -2072,8 +2072,8 @@ void MiscastEffect::_fire(int severity)
             all_msg = "You have a brief vision of globes of primordial fire.";
             break;
         case 4:
-			if (you.species == SP_MUMMY || you.char_class == JOB_MUMMY)
-				you_msg = "Your bandages flutter.";
+            if (you.species == SP_MUMMY || you.char_class == JOB_MUMMY)
+                you_msg = "Your bandages flutter.";
             else if (you.can_smell())
                 all_msg = "You smell smoke.";
             break;
@@ -2617,8 +2617,8 @@ void MiscastEffect::_air(int severity)
                 msg_ch         = MSGCH_SOUND;
                 sound_loudness = 2;
             }
-			else if (you.species == SP_MUMMY || you.char_class == JOB_MUMMY)
-				you_msg = "Your bandages flutter.";
+            else if (you.species == SP_MUMMY || you.char_class == JOB_MUMMY)
+                you_msg = "Your bandages flutter.";
             else if (you.can_smell())
                 all_msg = "You smell ozone.";
             break;
@@ -2633,8 +2633,8 @@ void MiscastEffect::_air(int severity)
                 msg_ch         = MSGCH_SOUND;
                 sound_loudness = 2;
             }
-			else if (you.species == SP_MUMMY || you.char_class == JOB_MUMMY)
-				you_msg = "Your bandages flutter.";
+            else if (you.species == SP_MUMMY || you.char_class == JOB_MUMMY)
+                you_msg = "Your bandages flutter.";
             else if (you.can_smell())
                 all_msg = "You smell something musty.";
             break;

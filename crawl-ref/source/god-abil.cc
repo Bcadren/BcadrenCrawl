@@ -102,10 +102,10 @@ static bool _player_sacrificed_arcana();
 // Affects God's Pity I and any other Invocations Enhancers.
 int apply_invo_enhancer(int power, bool message)
 {
-	double calc = (double)power;
-	if (message && player_spec_invo() > 0)
-		god_speaks(you.religion,"You feel a surge of divine energy.");
-	return rand_round(calc * pow(1.5,player_spec_invo()));
+    double calc = (double)power;
+    if (message && player_spec_invo() > 0)
+        god_speaks(you.religion,"You feel a surge of divine energy.");
+    return rand_round(calc * pow(1.5,player_spec_invo()));
 }
 
 /** Would a god currently allow using a one-time six-star ability?
@@ -759,8 +759,8 @@ bool zin_check_able_to_recite(bool quiet)
         return false;
     }
 
-	if (player_spec_invo() > 0)
-		god_speaks(you.religion, "You feel a surge of divine energy.");
+    if (player_spec_invo() > 0)
+        god_speaks(you.religion, "You feel a surge of divine energy.");
 
     return true;
 }
@@ -1287,7 +1287,7 @@ bool zin_vitalisation()
     you.attribute[ATTR_DIVINE_STAMINA] = stamina_amt;
     you.set_duration(DUR_DIVINE_STAMINA, apply_invo_enhancer(60 + roll_dice(2, 10),false));
 
-	simple_god_message(" grants you divine stamina.");
+    simple_god_message(" grants you divine stamina.");
 
     notify_stat_change(STAT_STR, stamina_amt, true);
     notify_stat_change(STAT_INT, stamina_amt, true);
@@ -1334,14 +1334,14 @@ void zin_sanctuary()
     ASSERT(!env.sanctuary_time);
 
     flash_view(UA_PLAYER, WHITE);
-	int pow = apply_invo_enhancer(100, true);
+    int pow = apply_invo_enhancer(100, true);
     holy_word(pow, HOLY_WORD_ZIN, you.pos(), true, &you);
 
-	// Yes, shamelessly stolen from NetHack...
-	if (!silenced(you.pos())) // How did you manage that?
-		mprf(MSGCH_SOUND, "You hear a choir sing!");
-	else
-		mpr("You are suddenly bathed in radiance!");
+    // Yes, shamelessly stolen from NetHack...
+    if (!silenced(you.pos())) // How did you manage that?
+        mprf(MSGCH_SOUND, "You hear a choir sing!");
+    else
+        mpr("You are suddenly bathed in radiance!");
 
 #ifndef USE_TILE_LOCAL
     // Allow extra time for the flash to linger.
@@ -1365,20 +1365,20 @@ void tso_divine_shield()
 
     // Size of SH bonus.
     you.attribute[ATTR_DIVINE_SHIELD] =
-		apply_invo_enhancer(12 + you.skill_rdiv(SK_INVOCATIONS, 4, 5), false);
+        apply_invo_enhancer(12 + you.skill_rdiv(SK_INVOCATIONS, 4, 5), false);
 
-	if (!you.duration[DUR_DIVINE_SHIELD])
-	{
-		if (you.shield())
-		{
-			mprf("Your shield is strengthened by %s divine power.",
-				apostrophise(god_name(GOD_SHINING_ONE)).c_str());
-		}
-		else
-			mpr("A divine shield forms around you!");
-	}
-	else
-		mpr("Your divine shield is renewed.");
+    if (!you.duration[DUR_DIVINE_SHIELD])
+    {
+        if (you.shield())
+        {
+            mprf("Your shield is strengthened by %s divine power.",
+                apostrophise(god_name(GOD_SHINING_ONE)).c_str());
+        }
+        else
+            mpr("A divine shield forms around you!");
+    }
+    else
+        mpr("Your divine shield is renewed.");
 
     you.redraw_armour_class = true;
 }
@@ -1420,8 +1420,8 @@ bool elyvilon_divine_vigour()
         you.set_duration(DUR_DIVINE_VIGOUR, 
                          apply_invo_enhancer(40 + you.skill_rdiv(SK_INVOCATIONS, 5, 2), false));
 
-		mprf("%s grants you divine vigour.",
-			god_name(GOD_ELYVILON).c_str());
+        mprf("%s grants you divine vigour.",
+            god_name(GOD_ELYVILON).c_str());
 
         calc_hp();
         inc_hp((you.hp_max * you.hp + old_hp_max - 1)/old_hp_max - you.hp);
@@ -1464,35 +1464,35 @@ bool vehumet_supports_spell(spell_type spell)
         || spell == SPELL_VIOLENT_UNRAVELLING
         || spell == SPELL_INNER_FLAME
         || spell == SPELL_IGNITION
-		|| spell == SPELL_FIREBALL
-		|| spell == SPELL_BOLT_OF_FIRE
-		|| spell == SPELL_BOLT_OF_COLD
-		|| spell == SPELL_BOLT_OF_DRAINING
-		|| spell == SPELL_BOLT_OF_MAGMA
-		|| spell == SPELL_LIGHTNING_BOLT
-		|| spell == SPELL_FLAME_TONGUE
-		|| spell == SPELL_SHOCK
-		|| spell == SPELL_SEARING_RAY
-		|| spell == SPELL_THROW_FROST
-		|| spell == SPELL_BLINDING_SPRAY
-		|| spell == SPELL_DISCHARGE
-		|| spell == SPELL_STONE_ARROW
-		|| spell == SPELL_BATTLESPHERE
-		|| spell == SPELL_STICKY_FLAME
-		|| spell == SPELL_THROW_ICICLE
-		|| spell == SPELL_FULMINANT_PRISM
-		|| spell == SPELL_IRRADIATE
-		|| spell == SPELL_VENOM_BOLT
-		|| spell == SPELL_FREEZING_CLOUD
-		|| spell == SPELL_CONJURE_BALL_LIGHTNING
-		|| spell == SPELL_POISON_ARROW
-		|| spell == SPELL_IRON_SHOT
-		|| spell == SPELL_IOOD
-		|| spell == SPELL_CHAIN_LIGHTNING
-		|| spell == SPELL_LEHUDIBS_CRYSTAL_SPEAR
-		|| spell == SPELL_FIRE_STORM
-		|| spell == SPELL_GLACIATE
-		|| spell == SPELL_SPELLFORGED_SERVITOR)
+        || spell == SPELL_FIREBALL
+        || spell == SPELL_BOLT_OF_FIRE
+        || spell == SPELL_BOLT_OF_COLD
+        || spell == SPELL_BOLT_OF_DRAINING
+        || spell == SPELL_BOLT_OF_MAGMA
+        || spell == SPELL_LIGHTNING_BOLT
+        || spell == SPELL_FLAME_TONGUE
+        || spell == SPELL_SHOCK
+        || spell == SPELL_SEARING_RAY
+        || spell == SPELL_THROW_FROST
+        || spell == SPELL_BLINDING_SPRAY
+        || spell == SPELL_DISCHARGE
+        || spell == SPELL_STONE_ARROW
+        || spell == SPELL_BATTLESPHERE
+        || spell == SPELL_STICKY_FLAME
+        || spell == SPELL_THROW_ICICLE
+        || spell == SPELL_FULMINANT_PRISM
+        || spell == SPELL_IRRADIATE
+        || spell == SPELL_VENOM_BOLT
+        || spell == SPELL_FREEZING_CLOUD
+        || spell == SPELL_CONJURE_BALL_LIGHTNING
+        || spell == SPELL_POISON_ARROW
+        || spell == SPELL_IRON_SHOT
+        || spell == SPELL_IOOD
+        || spell == SPELL_CHAIN_LIGHTNING
+        || spell == SPELL_LEHUDIBS_CRYSTAL_SPEAR
+        || spell == SPELL_FIRE_STORM
+        || spell == SPELL_GLACIATE
+        || spell == SPELL_SPELLFORGED_SERVITOR)
     {
         return true;
     }
@@ -1502,12 +1502,12 @@ bool vehumet_supports_spell(spell_type spell)
 
 void trog_do_trogs_hand(int pow)
 {
-	if (you.undead_state() == US_GHOST)
-		you.increase_duration(DUR_TROGS_HAND,
-						apply_invo_enhancer(5 + roll_dice(2, pow / 3 + 1), true), 100,
-						"Your aura crackles.");
-	else 
-		you.increase_duration(DUR_TROGS_HAND,
+    if (you.undead_state() == US_GHOST)
+        you.increase_duration(DUR_TROGS_HAND,
+                        apply_invo_enhancer(5 + roll_dice(2, pow / 3 + 1), true), 100,
+                        "Your aura crackles.");
+    else 
+        you.increase_duration(DUR_TROGS_HAND,
                           apply_invo_enhancer(5 + roll_dice(2, pow / 3 + 1), true), 100,
                           "Your skin crawls.");
     mprf(MSGCH_DURATION, "You feel resistant to hostile enchantments.");
@@ -1515,13 +1515,13 @@ void trog_do_trogs_hand(int pow)
 
 void trog_remove_trogs_hand()
 {
-	if (you.duration[DUR_REGENERATION] == 0)
-	{
-		if (you.undead_state() == US_GHOST)
-			mprf(MSGCH_DURATION, "Your aura calms down.");
-		else
-			mprf(MSGCH_DURATION, "Your skin stops crawling.");
-	}
+    if (you.duration[DUR_REGENERATION] == 0)
+    {
+        if (you.undead_state() == US_GHOST)
+            mprf(MSGCH_DURATION, "Your aura calms down.");
+        else
+            mprf(MSGCH_DURATION, "Your skin stops crawling.");
+    }
     mprf(MSGCH_DURATION, "You feel less resistant to hostile enchantments.");
     you.duration[DUR_TROGS_HAND] = 0;
 }
@@ -1874,11 +1874,11 @@ void yred_make_enslaved_soul(monster* mon, bool force_hostile)
 
     // If the original monster has been levelled up, its HD might be different
     // from its class HD, in which case its HP should be rerolled to match.
-	if (player_spec_invo() > 0)
-	{
-		mon->set_hit_dice(apply_invo_enhancer(max(orig.get_experience_level(), 1), true));
-		roll_zombie_hp(mon);
-	}
+    if (player_spec_invo() > 0)
+    {
+        mon->set_hit_dice(apply_invo_enhancer(max(orig.get_experience_level(), 1), true));
+        roll_zombie_hp(mon);
+    }
     else if (mon->get_experience_level() != orig.get_experience_level())
     {
         mon->set_hit_dice(max(orig.get_experience_level(), 1));
@@ -1926,7 +1926,7 @@ bool kiku_receive_corpses(int pow)
 {
     // pow = necromancy * 4, ranges from 0 to 108
 
-	pow = apply_invo_enhancer(pow, true);
+    pow = apply_invo_enhancer(pow, true);
 
     dprf("kiku_receive_corpses() power: %d", pow);
 
@@ -2958,7 +2958,7 @@ bool fedhas_plant_ring()
     if (created_count == 0)
         canned_msg(MSG_NOTHING_HAPPENS);
 
-	return created_count;
+    return created_count;
 }
 
 // Create a circle of water around the target, with a radius of
@@ -3273,8 +3273,8 @@ spret fedhas_evolve_flora(bool fail)
 
     fail_check();
 
-	if (player_spec_invo() > 0)
-		god_speaks(you.religion, "You feel a surge of divine energy.");
+    if (player_spec_invo() > 0)
+        god_speaks(you.religion, "You feel a surge of divine energy.");
 
     switch (upgrade.new_type)
     {
@@ -3374,11 +3374,11 @@ bool lugonu_bend_space()
     const int pow = apply_invo_enhancer(4 + skill_bump(SK_INVOCATIONS),true);
     const bool area_warp = random2(pow) > 9;
 
-	if (!you.airborne() && dangerous_terrain_seen() && !yesno("Really bend space while near dangerous terrain?", false, 'n'))
-	{
-		canned_msg(MSG_OK);
-		return false;
-	}
+    if (!you.airborne() && dangerous_terrain_seen() && !yesno("Really bend space while near dangerous terrain?", false, 'n'))
+    {
+        canned_msg(MSG_OK);
+        return false;
+    }
 
     mprf("Space bends %saround you!", area_warp ? "sharply " : "");
 
@@ -3386,12 +3386,12 @@ bool lugonu_bend_space()
         _lugonu_warp_area(pow);
 
     uncontrolled_blink(true);
-	return true;
+    return true;
 }
 
 void cheibriados_time_bend(int pow)
 {
-	pow = apply_invo_enhancer(pow, true);
+    pow = apply_invo_enhancer(pow, true);
 
     mpr("The flow of time bends around you.");
 
@@ -3487,8 +3487,8 @@ bool cheibriados_slouch()
     if (stop_attack_prompt(hitfunc, "harm", _act_slouchable))
         return false;
 
-	if (player_spec_invo () > 0)
-		god_speaks(you.religion, "You feel a surge of divine energy.");
+    if (player_spec_invo () > 0)
+        god_speaks(you.religion, "You feel a surge of divine energy.");
 
     mpr("You can feel time thicken for a moment.");
     dprf("your speed is %d", player_movement_speed());
@@ -3542,7 +3542,7 @@ void cheibriados_time_step(int pow) // pow is the number of turns to skip
 {
     const coord_def old_pos = you.pos();
 
-	apply_invo_enhancer(pow, true);
+    apply_invo_enhancer(pow, true);
 
     mpr("You step out of the flow of time.");
     flash_view(UA_PLAYER, LIGHTBLUE);
@@ -4327,8 +4327,8 @@ bool gozag_call_merchant()
             continue;
         if (type == SHOP_DISTILLERY && (you.species == SP_MUMMY || you.char_class == JOB_MUMMY))
             continue;
-		if (type == SHOP_SCROLL && you.species == SP_SILENT_SPECTRE)
-			continue;
+        if (type == SHOP_SCROLL && you.species == SP_SILENT_SPECTRE)
+            continue;
         if (type == SHOP_EVOKABLES && you.get_mutation_level(MUT_NO_ARTIFICE))
             continue;
         if (you.species == SP_FELID &&
@@ -4619,9 +4619,9 @@ spret qazlal_upheaval(coord_def target, bool quiet, bool fail)
         beam.target = target;
 
     fail_check();
-	
-	if (!quiet && player_spec_invo() > 0)
-		god_speaks(you.religion, "You feel a surge of divine energy.");
+    
+    if (!quiet && player_spec_invo() > 0)
+        god_speaks(you.religion, "You feel a surge of divine energy.");
 
     string message = "";
 
@@ -4782,10 +4782,10 @@ spret qazlal_elemental_force(bool fail)
                                  apply_invo_enhancer (random2avg(you.skill(SK_INVOCATIONS), 2),true)));
     mgen_data mg;
     mg.summon_type = MON_SUMM_AID;
-	if (player_spec_invo > 0)
-		mg.abjuration_duration = 2;
-	else
-	    mg.abjuration_duration = 1;
+    if (player_spec_invo > 0)
+        mg.abjuration_duration = 2;
+    else
+        mg.abjuration_duration = 1;
     mg.flags |= MG_FORCE_PLACE | MG_AUTOFOE;
     mg.summoner = &you;
     int placed = 0;
@@ -4864,8 +4864,8 @@ bool qazlal_disaster_area()
         return false;
     }
 
-	if (player_spec_invo > 0)
-		god_speaks(you.religion, "You feel a surge of divine energy.");
+    if (player_spec_invo > 0)
+        god_speaks(you.religion, "You feel a surge of divine energy.");
 
     mprf(MSGCH_GOD, "Nature churns violently around you!");
 
@@ -5002,9 +5002,9 @@ static mutation_type _random_valid_sacrifice(const vector<mutation_type> &muts)
         if (mut == MUT_INHIBITED_REGENERATION && you.species == SP_VAMPIRE)
             continue;
 
-		// Can't scream in permasilence. Hah.
-		if (mut == MUT_SCREAM && you.species == SP_SILENT_SPECTRE)
-			continue;
+        // Can't scream in permasilence. Hah.
+        if (mut == MUT_SCREAM && you.species == SP_SILENT_SPECTRE)
+            continue;
 
         // demonspawn can't get frail if they have a robust facet
         if ((you.species == SP_DEMONSPAWN || you.char_class == JOB_DEMONSPAWN) && mut == MUT_FRAIL
@@ -5219,8 +5219,8 @@ static int _get_stat_piety(stat_type input_stat, int multiplier)
             stat_val -= 1;
     if (you.base_stats[STAT_DEX] > you.base_stats[input_stat])
             stat_val -= 1;
-	if (you.base_stats[input_stat] < 6)
-		stat_val = 6 - (you.base_stats[input_stat] + 1) / 2;
+    if (you.base_stats[input_stat] < 6)
+        stat_val = 6 - (you.base_stats[input_stat] + 1) / 2;
     return stat_val * multiplier;
 }
 
@@ -6027,8 +6027,8 @@ void ru_do_retribution(monster* mons, int damage)
 
 void ru_draw_out_power()
 {
-	if (player_spec_invo () > 0)
-		god_speaks(you.religion, "You feel a surge of divine energy.");
+    if (player_spec_invo () > 0)
+        god_speaks(you.religion, "You feel a surge of divine energy.");
     mpr("You are restored by drawing out deep reserves of power within.");
 
     //Escape nets and webs
@@ -6203,8 +6203,8 @@ bool ru_power_leap()
     wave.loudness = 2;
     wave.explode();
 
-	if (player_spec_invo() > 0)
-		god_speaks(you.religion, "You feel a surge of divine energy.");
+    if (player_spec_invo() > 0)
+        god_speaks(you.religion, "You feel a surge of divine energy.");
 
     // we need to exempt the player from damage.
     for (adjacent_iterator ai(you.pos(), false); ai; ++ai)
@@ -6304,8 +6304,8 @@ bool ru_apocalypse()
             return false;
         }
     }
-	if (player_spec_invo () > 0)
-		god_speaks(you.religion, "You feel a surge of divine energy.");
+    if (player_spec_invo () > 0)
+        god_speaks(you.religion, "You feel a surge of divine energy.");
     mpr("You reveal the great annihilating truth to your foes!");
     noisy(30, you.pos());
     apply_area_visible(_apply_apocalypse, you.pos());
@@ -6445,8 +6445,8 @@ bool uskayaw_stomp()
         return false;
     }
 
-	if (player_spec_invo() > 0)
-		god_speaks(you.religion, "You feel a surge of divine energy.");
+    if (player_spec_invo() > 0)
+        god_speaks(you.religion, "You feel a surge of divine energy.");
     mpr("You stomp with the beat, sending a shockwave through the revelers "
             "around you!");
     apply_monsters_around_square(_get_stomped, you.pos());
@@ -6577,8 +6577,8 @@ bool uskayaw_line_pass()
         mpr("Something unexpectedly blocked you, preventing you from passing!");
     else
     {
-		if (player_spec_invo() > 0)
-			god_speaks(you.religion, "You feel a surge of divine energy.");
+        if (player_spec_invo() > 0)
+            god_speaks(you.religion, "You feel a surge of divine energy.");
         line_pass.fire();
         you.stop_being_constricted(false);
         move_player_to_grid(beam.target, false);
@@ -6725,15 +6725,15 @@ bool hepliaklqana_choose_ancestor_type(int ancestor_choice)
     if (monster* ancestor = hepliaklqana_ancestor_mon())
     {
         ancestor->type = ancestor_type;
-		if (you.species != SP_FELID && you.species != SP_TROLL)
-		{
-			give_weapon(ancestor, -1);
-			ASSERT(ancestor->weapon());
-		}
-		if (you.species != SP_FELID)
-		{
-			give_shield(ancestor);
-		}
+        if (you.species != SP_FELID && you.species != SP_TROLL)
+        {
+            give_weapon(ancestor, -1);
+            ASSERT(ancestor->weapon());
+        }
+        if (you.species != SP_FELID)
+        {
+            give_shield(ancestor);
+        }
         set_ancestor_spells(*ancestor);
     }
 
@@ -6773,8 +6773,8 @@ spret hepliaklqana_idealise(bool fail)
 
     fail_check();
 
-	if (player_spec_invo () > 0)
-		god_speaks(you.religion, "You feel a surge of divine energy.");
+    if (player_spec_invo () > 0)
+        god_speaks(you.religion, "You feel a surge of divine energy.");
     simple_god_message(make_stringf(" grants %s healing and protection!",
                                     ancestor->name(DESC_YOUR).c_str()).c_str());
 
@@ -6839,8 +6839,8 @@ static void _transfer_drain_nearby(coord_def destination)
             = random_range(apply_invo_enhancer(1 + you.skill_rdiv(SK_INVOCATIONS, 1, 27),false),
                            apply_invo_enhancer(2 + you.skill_rdiv(SK_INVOCATIONS, 4, 27),false));
 
-		if (player_spec_invo() > 0)
-			god_speaks(you.religion, "You feel a surge of divine energy.");
+        if (player_spec_invo() > 0)
+            god_speaks(you.religion, "You feel a surge of divine energy.");
 
         if (mon->add_ench(mon_enchant(ENCH_DRAINED, degree, &you, dur)))
             simple_monster_message(*mon, " is drained by nostalgia.");

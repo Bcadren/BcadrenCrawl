@@ -733,7 +733,7 @@ bool fill_status_info(int status, status_info& inf)
 static void _describe_hunger(status_info& inf)
 {
     const bool vamp = (you.species == SP_VAMPIRE);
-	const bool kenku = (you.species == SP_TENGU);
+    const bool kenku = (you.species == SP_TENGU);
 
     switch (you.hunger_state)
     {
@@ -885,7 +885,7 @@ static void _describe_poison(status_info& inf)
 
 static void _describe_speed(status_info& inf)
 {
-	bool slow = you.duration[DUR_SLOW];
+    bool slow = you.duration[DUR_SLOW];
     bool fast = you.duration[DUR_HASTE];
 
     if (slow && fast)

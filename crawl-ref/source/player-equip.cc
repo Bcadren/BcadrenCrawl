@@ -135,19 +135,19 @@ static void _assert_valid_slot(equipment_type eq, equipment_type slot)
 {
     if (eq == slot)
         return;
-	if (eq == EQ_RINGS); // all other slots are unique
-	{
-		equipment_type r1 = EQ_LEFT_RING, r2 = EQ_RIGHT_RING;
-		if (you.species == SP_OCTOPODE)
-			r1 = EQ_RING_ONE, r2 = EQ_RING_EIGHT;
-		if (slot >= r1 && slot <= r2)
-			return;
-		if (const item_def* amu = you.slot_item(EQ_AMULET, true))
-			if (is_unrandom_artefact(*amu, UNRAND_FINGER_AMULET) && slot == EQ_RING_AMULET)
-				return;
-	}
-	if ((eq == EQ_WEAPON0 || eq == EQ_WEAPON1) && (slot == EQ_WEAPON0 || slot == EQ_WEAPON1))
-		return;
+    if (eq == EQ_RINGS); // all other slots are unique
+    {
+        equipment_type r1 = EQ_LEFT_RING, r2 = EQ_RIGHT_RING;
+        if (you.species == SP_OCTOPODE)
+            r1 = EQ_RING_ONE, r2 = EQ_RING_EIGHT;
+        if (slot >= r1 && slot <= r2)
+            return;
+        if (const item_def* amu = you.slot_item(EQ_AMULET, true))
+            if (is_unrandom_artefact(*amu, UNRAND_FINGER_AMULET) && slot == EQ_RING_AMULET)
+                return;
+    }
+    if ((eq == EQ_WEAPON0 || eq == EQ_WEAPON1) && (slot == EQ_WEAPON0 || slot == EQ_WEAPON1))
+        return;
 }
 
 void equip_effect(equipment_type slot, int item_slot, bool unmeld, bool msg)
@@ -160,11 +160,11 @@ void equip_effect(equipment_type slot, int item_slot, bool unmeld, bool msg)
     if (msg)
         _equip_use_warning(item);
 
-	if (slot >= EQ_CLOAK && slot <= EQ_BODY_ARMOUR 
-		|| (item.base_type == OBJ_SHIELDS && is_hybrid(item.sub_type)))
-		_equip_armour_effect(item, unmeld, slot);
-	else if (slot == EQ_WEAPON0 || slot == EQ_WEAPON1)
-		_equip_weapon_effect(item, msg, unmeld, slot);
+    if (slot >= EQ_CLOAK && slot <= EQ_BODY_ARMOUR 
+        || (item.base_type == OBJ_SHIELDS && is_hybrid(item.sub_type)))
+        _equip_armour_effect(item, unmeld, slot);
+    else if (slot == EQ_WEAPON0 || slot == EQ_WEAPON1)
+        _equip_weapon_effect(item, msg, unmeld, slot);
     else if (slot >= EQ_FIRST_JEWELLERY && slot <= EQ_LAST_JEWELLERY)
         _equip_jewellery_effect(item, unmeld, slot);
 }
@@ -176,9 +176,9 @@ void unequip_effect(equipment_type slot, int item_slot, bool meld, bool msg)
 
     _assert_valid_slot(eq, slot);
 
-	if (slot >= EQ_CLOAK && slot <= EQ_BODY_ARMOUR 
-		|| (item.base_type == OBJ_SHIELDS && is_hybrid(item.sub_type)))
-		_unequip_armour_effect(item, meld, slot);
+    if (slot >= EQ_CLOAK && slot <= EQ_BODY_ARMOUR 
+        || (item.base_type == OBJ_SHIELDS && is_hybrid(item.sub_type)))
+        _unequip_armour_effect(item, meld, slot);
     else if (slot == EQ_WEAPON0 || slot == EQ_WEAPON1)
         _unequip_weapon_effect(item, msg, meld,slot);
     else if (slot >= EQ_FIRST_JEWELLERY && slot <= EQ_LAST_JEWELLERY)
@@ -405,10 +405,10 @@ static void _wield_cursed(item_def& item, bool known_cursed, bool unmeld)
 {
     if (!item.cursed() || unmeld)
         return;
-	else if (you.get_mutation_level(MUT_GHOST) == 1) {
-		mprf("Your %s temporarily phases out of reality as it tries to stick to you.", you.hand_name(false).c_str());
-		return;
-	}
+    else if (you.get_mutation_level(MUT_GHOST) == 1) {
+        mprf("Your %s temporarily phases out of reality as it tries to stick to you.", you.hand_name(false).c_str());
+        return;
+    }
     mprf("It sticks to your %s!", you.hand_name(false).c_str());
     int amusement = 16;
     if (!known_cursed)
@@ -435,212 +435,212 @@ static void _equip_weapon_effect(item_def& item, bool showMsgs, bool unmeld, equ
     const bool known_cursed = item_known_cursed(item);
 
     // And here we finally get to the special effects of wielding. {dlb}
-	if (item.base_type == OBJ_STAVES)
-	{
-		set_ident_flags(item, ISFLAG_IDENT_MASK);
-		set_ident_type(OBJ_STAVES, item.sub_type, true);
+    if (item.base_type == OBJ_STAVES)
+    {
+        set_ident_flags(item, ISFLAG_IDENT_MASK);
+        set_ident_type(OBJ_STAVES, item.sub_type, true);
 
-		if (item.sub_type == STAFF_POWER)
-		{
-			canned_msg(MSG_MANA_INCREASE);
-			calc_mp();
-		}
+        if (item.sub_type == STAFF_POWER)
+        {
+            canned_msg(MSG_MANA_INCREASE);
+            calc_mp();
+        }
 
-		_wield_cursed(item, known_cursed, unmeld);
-	}
+        _wield_cursed(item, known_cursed, unmeld);
+    }
 
-	else if ((item.base_type == OBJ_SHIELDS && is_hybrid(item.sub_type)) || item.base_type == OBJ_WEAPONS)
-	{
-		// Note that if the unrand equip prints a message, it will
-		// generally set showMsgs to false.
-		if (artefact)
-			_equip_artefact_effect(item, &showMsgs, unmeld, slot);
+    else if ((item.base_type == OBJ_SHIELDS && is_hybrid(item.sub_type)) || item.base_type == OBJ_WEAPONS)
+    {
+        // Note that if the unrand equip prints a message, it will
+        // generally set showMsgs to false.
+        if (artefact)
+            _equip_artefact_effect(item, &showMsgs, unmeld, slot);
 
-		const bool was_known = item_type_known(item);
-		bool known_recurser = false;
+        const bool was_known = item_type_known(item);
+        bool known_recurser = false;
 
-		set_ident_flags(item, ISFLAG_IDENT_MASK);
+        set_ident_flags(item, ISFLAG_IDENT_MASK);
 
-		special = item.brand;
+        special = item.brand;
 
-		if (artefact)
-		{
-			special = artefact_property(item, ARTP_BRAND);
+        if (artefact)
+        {
+            special = artefact_property(item, ARTP_BRAND);
 
-			if (!was_known && !(item.flags & ISFLAG_NOTED_ID))
-			{
-				item.flags |= ISFLAG_NOTED_ID;
+            if (!was_known && !(item.flags & ISFLAG_NOTED_ID))
+            {
+                item.flags |= ISFLAG_NOTED_ID;
 
-				// Make a note of it.
-				take_note(Note(NOTE_ID_ITEM, 0, 0, item.name(DESC_A),
-					origin_desc(item)));
-			}
-			else
-				known_recurser = artefact_known_property(item, ARTP_CURSE);
-		}
+                // Make a note of it.
+                take_note(Note(NOTE_ID_ITEM, 0, 0, item.name(DESC_A),
+                    origin_desc(item)));
+            }
+            else
+                known_recurser = artefact_known_property(item, ARTP_CURSE);
+        }
 
-		if (special != SPWPN_NORMAL)
-		{
-			// message first
-			if (showMsgs)
-			{
-				const string item_name = item.name(DESC_YOUR);
-				switch (special)
-				{
-				case SPWPN_MOLTEN:
-					if (item.sub_type == WPN_HAND_CROSSBOW || item.sub_type == WPN_ARBALEST ||
-						item.sub_type == WPN_TRIPLE_CROSSBOW)
-						mprf("As you load %s, your bolt melts into a column of liquid metal!", item_name.c_str());
-					else if (item.sub_type == WPN_HUNTING_SLING || item.sub_type == WPN_FUSTIBALUS)
-						mprf("As you load %s, your sling bullet melts into a ball of liquid metal!", item_name.c_str());
-					else if (item.sub_type == WPN_SHORTBOW || item.sub_type == WPN_LONGBOW)
-						mprf("As you load %s, the head of your arrow melts into a liquid metal spear!", item_name.c_str());
-					else
-						mprf("The surface of %s melts into red hot liquid metal!", item_name.c_str());
-					break;
+        if (special != SPWPN_NORMAL)
+        {
+            // message first
+            if (showMsgs)
+            {
+                const string item_name = item.name(DESC_YOUR);
+                switch (special)
+                {
+                case SPWPN_MOLTEN:
+                    if (item.sub_type == WPN_HAND_CROSSBOW || item.sub_type == WPN_ARBALEST ||
+                        item.sub_type == WPN_TRIPLE_CROSSBOW)
+                        mprf("As you load %s, your bolt melts into a column of liquid metal!", item_name.c_str());
+                    else if (item.sub_type == WPN_HUNTING_SLING || item.sub_type == WPN_FUSTIBALUS)
+                        mprf("As you load %s, your sling bullet melts into a ball of liquid metal!", item_name.c_str());
+                    else if (item.sub_type == WPN_SHORTBOW || item.sub_type == WPN_LONGBOW)
+                        mprf("As you load %s, the head of your arrow melts into a liquid metal spear!", item_name.c_str());
+                    else
+                        mprf("The surface of %s melts into red hot liquid metal!", item_name.c_str());
+                    break;
 
-				case SPWPN_FREEZING:
-					mprf("%s %s", item_name.c_str(),
-						is_range_weapon(item) ?
-						"is covered in frost." :
-						"glows with a cold blue light!");
-					break;
+                case SPWPN_FREEZING:
+                    mprf("%s %s", item_name.c_str(),
+                        is_range_weapon(item) ?
+                        "is covered in frost." :
+                        "glows with a cold blue light!");
+                    break;
 
-				case SPWPN_HOLY_WRATH:
-				case SPWPN_SILVER:
-					mprf("%s softly glows with a divine radiance!",
-						item_name.c_str());
-					break;
+                case SPWPN_HOLY_WRATH:
+                case SPWPN_SILVER:
+                    mprf("%s softly glows with a divine radiance!",
+                        item_name.c_str());
+                    break;
 
-				case SPWPN_ELECTROCUTION:
-					if (!silenced(you.pos()))
-					{
-						mprf(MSGCH_SOUND,
-							"You hear the crackle of electricity.");
-					}
-					else
-						mpr("You see sparks fly.");
-					break;
+                case SPWPN_ELECTROCUTION:
+                    if (!silenced(you.pos()))
+                    {
+                        mprf(MSGCH_SOUND,
+                            "You hear the crackle of electricity.");
+                    }
+                    else
+                        mpr("You see sparks fly.");
+                    break;
 
-				case SPWPN_VENOM:
-					mprf("%s begins to drip with poison!", item_name.c_str());
-					break;
+                case SPWPN_VENOM:
+                    mprf("%s begins to drip with poison!", item_name.c_str());
+                    break;
 
-				case SPWPN_PROTECTION:
-					mprf("%s protects you from harm!", item_name.c_str());
-					break;
+                case SPWPN_PROTECTION:
+                    mprf("%s protects you from harm!", item_name.c_str());
+                    break;
 
-				case SPWPN_DRAINING:
-					mpr("You sense an unholy aura.");
-					break;
+                case SPWPN_DRAINING:
+                    mpr("You sense an unholy aura.");
+                    break;
 
-				case SPWPN_SPEED:
-					mpr(you.hands_act("tingle", "!"));
-					break;
+                case SPWPN_SPEED:
+                    mpr(you.hands_act("tingle", "!"));
+                    break;
 
-				case SPWPN_VAMPIRISM:
-					if (you.species == SP_VAMPIRE)
-						mpr("You feel a bloodthirsty glee!");
-					else if (you.undead_state() == US_ALIVE && !you_foodless())
-						mpr("You feel a dreadful hunger.");
-					else
-						mpr("You feel an empty sense of dread.");
-					break;
+                case SPWPN_VAMPIRISM:
+                    if (you.species == SP_VAMPIRE)
+                        mpr("You feel a bloodthirsty glee!");
+                    else if (you.undead_state() == US_ALIVE && !you_foodless())
+                        mpr("You feel a dreadful hunger.");
+                    else
+                        mpr("You feel an empty sense of dread.");
+                    break;
 
-				case SPWPN_PAIN:
-				{
-					const string your_arm = you.arm_name(false);
-					if (you.skill(SK_NECROMANCY) == 0)
-						mpr("You have a feeling of ineptitude.");
-					else if (you.skill(SK_NECROMANCY) <= 6)
-					{
-						mprf("Pain shudders through your %s!",
-							your_arm.c_str());
-					}
-					else
-					{
-						mprf("A searing pain shoots up your %s!",
-							your_arm.c_str());
-					}
-					break;
-				}
+                case SPWPN_PAIN:
+                {
+                    const string your_arm = you.arm_name(false);
+                    if (you.skill(SK_NECROMANCY) == 0)
+                        mpr("You have a feeling of ineptitude.");
+                    else if (you.skill(SK_NECROMANCY) <= 6)
+                    {
+                        mprf("Pain shudders through your %s!",
+                            your_arm.c_str());
+                    }
+                    else
+                    {
+                        mprf("A searing pain shoots up your %s!",
+                            your_arm.c_str());
+                    }
+                    break;
+                }
 
-				case SPWPN_CHAOS:
-					mprf("%s is briefly surrounded by a scintillating aura of "
-						"random colours.", item_name.c_str());
-					break;
+                case SPWPN_CHAOS:
+                    mprf("%s is briefly surrounded by a scintillating aura of "
+                        "random colours.", item_name.c_str());
+                    break;
 
-				case SPWPN_PENETRATION:
-				{
-					// FIXME: make hands_act take a pre-verb adverb so we can
-					// use it here.
-					bool plural = true;
-					string hand = you.hand_name(true, &plural);
+                case SPWPN_PENETRATION:
+                {
+                    // FIXME: make hands_act take a pre-verb adverb so we can
+                    // use it here.
+                    bool plural = true;
+                    string hand = you.hand_name(true, &plural);
 
-					mprf("Your %s briefly %s through it before you manage "
-						"to get a firm grip on it.",
-						hand.c_str(), conjugate_verb("pass", plural).c_str());
-					break;
-				}
+                    mprf("Your %s briefly %s through it before you manage "
+                        "to get a firm grip on it.",
+                        hand.c_str(), conjugate_verb("pass", plural).c_str());
+                    break;
+                }
 
-				case SPWPN_REAPING:
-					mprf("%s is briefly surrounded by shifting shadows.",
-						item_name.c_str());
-					break;
+                case SPWPN_REAPING:
+                    mprf("%s is briefly surrounded by shifting shadows.",
+                        item_name.c_str());
+                    break;
 
-				case SPWPN_ANTIMAGIC:
-					// Even if your maxmp is 0.
-					mpr("You feel magic leave you.");
-					break;
+                case SPWPN_ANTIMAGIC:
+                    // Even if your maxmp is 0.
+                    mpr("You feel magic leave you.");
+                    break;
 
-				case SPWPN_DISTORTION:
-					mpr("Space warps around you for a moment!");
-					break;
+                case SPWPN_DISTORTION:
+                    mpr("Space warps around you for a moment!");
+                    break;
 
-				case SPWPN_ACID:
-					mprf("%s begins to ooze corrosive slime!", item_name.c_str());
-					break;
+                case SPWPN_ACID:
+                    mprf("%s begins to ooze corrosive slime!", item_name.c_str());
+                    break;
 
-				default:
-					break;
-				}
-			}
+                default:
+                    break;
+                }
+            }
 
-			// effect second
-			switch (special)
-			{
-			case SPWPN_VAMPIRISM:
-				if (you.species != SP_VAMPIRE
-					&& you.undead_state() == US_ALIVE
-					&& !you_foodless()
-					&& !unmeld)
-				{
-					make_hungry(4500, false, false);
-				}
-				break;
+            // effect second
+            switch (special)
+            {
+            case SPWPN_VAMPIRISM:
+                if (you.species != SP_VAMPIRE
+                    && you.undead_state() == US_ALIVE
+                    && !you_foodless()
+                    && !unmeld)
+                {
+                    make_hungry(4500, false, false);
+                }
+                break;
 
-			case SPWPN_DISTORTION:
-				if (!was_known)
-				{
-					// Xom loves it when you ID a distortion weapon this way,
-					// and even more so if he gifted the weapon himself.
-					if (origin_as_god_gift(item) == GOD_XOM)
-						xom_is_stimulated(200);
-					else
-						xom_is_stimulated(100);
-				}
-				break;
+            case SPWPN_DISTORTION:
+                if (!was_known)
+                {
+                    // Xom loves it when you ID a distortion weapon this way,
+                    // and even more so if he gifted the weapon himself.
+                    if (origin_as_god_gift(item) == GOD_XOM)
+                        xom_is_stimulated(200);
+                    else
+                        xom_is_stimulated(100);
+                }
+                break;
 
-			case SPWPN_ANTIMAGIC:
-				calc_mp();
-				break;
+            case SPWPN_ANTIMAGIC:
+                calc_mp();
+                break;
 
-			default:
-				break;
-			}
-		}
-		_wield_cursed(item, known_cursed || known_recurser, unmeld);
-	}
+            default:
+                break;
+            }
+        }
+        _wield_cursed(item, known_cursed || known_recurser, unmeld);
+    }
 }
 
 static void _unequip_weapon_effect(item_def& real_item, bool showMsgs,
@@ -672,16 +672,16 @@ static void _unequip_weapon_effect(item_def& real_item, bool showMsgs,
             switch (brand)
             {
             case SPWPN_MOLTEN:
-				if (showMsgs)
-					if (is_range_weapon(item))
-						mprf("As you unwield %s, your ammo resolidies.", msg.c_str());
-					else
+                if (showMsgs)
+                    if (is_range_weapon(item))
+                        mprf("As you unwield %s, your ammo resolidies.", msg.c_str());
+                    else
                     mprf("%s resolidifies.", msg.c_str());
                 break;
 
             case SPWPN_FREEZING:
             case SPWPN_HOLY_WRATH:
-			case SPWPN_SILVER:
+            case SPWPN_SILVER:
                 if (showMsgs)
                     mprf("%s stops glowing.", msg.c_str());
                 break;
@@ -830,8 +830,8 @@ static void _equip_armour_effect(item_def& arm, bool unmeld,
             break;
 
         case SPARM_IMPROVED_VISION:
-			if (you.innate_vision() < 1)
-	            mpr("Your vision improves.");
+            if (you.innate_vision() < 1)
+                mpr("Your vision improves.");
             autotoggle_autopickup(false);
             break;
 
@@ -884,14 +884,14 @@ static void _equip_armour_effect(item_def& arm, bool unmeld,
                 mpr("You feel powerful.");
             break;
 
-		case SPARM_HIGH_PRIEST:
-			if (you.species == SP_DEMIGOD || you.char_class == JOB_DEMIGOD)
-				mpr("You feel like worshipping yourself.");
-			else if (you_worship(GOD_NO_GOD))
-				mpr("You feel like seeking a god to worship.");
-			else
-				mprf(MSGCH_GOD, "You feel a surge of divine power.");
-			break;
+        case SPARM_HIGH_PRIEST:
+            if (you.species == SP_DEMIGOD || you.char_class == JOB_DEMIGOD)
+                mpr("You feel like worshipping yourself.");
+            else if (you_worship(GOD_NO_GOD))
+                mpr("You feel like seeking a god to worship.");
+            else
+                mprf(MSGCH_GOD, "You feel a surge of divine power.");
+            break;
 
         case SPARM_SPIRIT_SHIELD:
             _spirit_shield_message(unmeld);
@@ -914,8 +914,8 @@ static void _equip_armour_effect(item_def& arm, bool unmeld,
                 mpr("You feel immune to the effects of clouds.");
             break;
 
-		default:
-			mpr("You don't feel anything in particular.");
+        default:
+            mpr("You don't feel anything in particular.");
         }
     }
 
@@ -927,24 +927,24 @@ static void _equip_armour_effect(item_def& arm, bool unmeld,
 
     if (arm.cursed() && !unmeld)
     {
-		if (you.get_mutation_level(MUT_GHOST) == 0)
-		{
-			mpr("Oops, that feels deathly cold.");
-			learned_something_new(HINT_YOU_CURSED);
-		
-			if (!known_cursed)
-			{
-				int amusement = 64;
+        if (you.get_mutation_level(MUT_GHOST) == 0)
+        {
+            mpr("Oops, that feels deathly cold.");
+            learned_something_new(HINT_YOU_CURSED);
+        
+            if (!known_cursed)
+            {
+                int amusement = 64;
 
-				if (origin_as_god_gift(arm) == GOD_XOM)
-					amusement *= 2;
+                if (origin_as_god_gift(arm) == GOD_XOM)
+                    amusement *= 2;
 
-				xom_is_stimulated(amusement);
-			}
-		
-		}
-		else
-			mpr("You feel a curse try and fail to bind to your spectral form.");
+                xom_is_stimulated(amusement);
+            }
+        
+        }
+        else
+            mpr("You feel a curse try and fail to bind to your spectral form.");
     }
 
     you.redraw_armour_class = true;
@@ -1059,12 +1059,12 @@ static void _unequip_armour_effect(item_def& item, bool meld,
         mpr("You feel strangely numb.");
         break;
 
-	case SPARM_HIGH_PRIEST:
-		if (you.species == SP_DEMIGOD || you.char_class == JOB_DEMIGOD)
-			mpr("You feel less interested in self-worship.");
-		else 
- 			mprf(MSGCH_GOD,"Your divine fervour dies down.");
-		break;
+    case SPARM_HIGH_PRIEST:
+        if (you.species == SP_DEMIGOD || you.char_class == JOB_DEMIGOD)
+            mpr("You feel less interested in self-worship.");
+        else 
+             mprf(MSGCH_GOD,"Your divine fervour dies down.");
+        break;
 
     case SPARM_SPIRIT_SHIELD:
         if (!you.spirit_shield())
@@ -1326,24 +1326,24 @@ static void _equip_jewellery_effect(item_def &item, bool unmeld,
 
     if (item.cursed() && !unmeld)
     {
-		if (you.get_mutation_level(MUT_GHOST) == 0)
-		{
-			mprf("Oops, that %s feels deathly cold.",
-				jewellery_is_amulet(item) ? "amulet" : "ring");
-			learned_something_new(HINT_YOU_CURSED);
+        if (you.get_mutation_level(MUT_GHOST) == 0)
+        {
+            mprf("Oops, that %s feels deathly cold.",
+                jewellery_is_amulet(item) ? "amulet" : "ring");
+            learned_something_new(HINT_YOU_CURSED);
 
-			int amusement = 32;
-			if (!known_cursed && !known_bad)
-			{
-				amusement *= 2;
+            int amusement = 32;
+            if (!known_cursed && !known_bad)
+            {
+                amusement *= 2;
 
-				if (origin_as_god_gift(item) == GOD_XOM)
-					amusement *= 2;
-			}
-			xom_is_stimulated(amusement);
-		}
-		else
-			mpr("You feel a curse try and fail to bind to your spectral form.");
+                if (origin_as_god_gift(item) == GOD_XOM)
+                    amusement *= 2;
+            }
+            xom_is_stimulated(amusement);
+        }
+        else
+            mpr("You feel a curse try and fail to bind to your spectral form.");
     }
 
     // Cursed or not, we know that since we've put the ring on.
@@ -1428,23 +1428,23 @@ static void _unequip_jewellery_effect(item_def &item, bool mesg, bool meld,
 
 bool unwield_item(bool handedness, bool showMsgs)
 {
-	equipment_type slot;
-	int item = -1;
+    equipment_type slot;
+    int item = -1;
 
-	if (handedness)
-	{
-		if (!you.weapon(0))
-			return false; 
-		slot = EQ_WEAPON0;
-		item = 0;
-	}
-	else
-	{
-		if (!you.weapon(1))
-			return false;
-		slot = EQ_WEAPON1;
-		item = 1;
-	}
+    if (handedness)
+    {
+        if (!you.weapon(0))
+            return false; 
+        slot = EQ_WEAPON0;
+        item = 0;
+    }
+    else
+    {
+        if (!you.weapon(1))
+            return false;
+        slot = EQ_WEAPON1;
+        item = 1;
+    }
 
     const bool is_weapon = get_item_slot(*you.weapon(item)) == slot;
 
@@ -1454,7 +1454,7 @@ bool unwield_item(bool handedness, bool showMsgs)
     unequip_item(slot, showMsgs);
 
     you.wield_change     = true;
-	you.redraw_quiver    = true;
+    you.redraw_quiver    = true;
 
     return true;
 }

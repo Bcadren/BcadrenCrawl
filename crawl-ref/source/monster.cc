@@ -505,10 +505,10 @@ item_def *monster::melee_weapon() const
 // Give hands required to wield weapon.
 hands_reqd_type monster::hands_reqd(const item_def &item, bool base) const
 {
-	if (mons_genus(type) == MONS_FORMICID)
-		return HANDS_ONE;
-	else if (mons_is_hepliaklqana_ancestor && you.species == SP_FORMICID)
-		return HANDS_ONE;
+    if (mons_genus(type) == MONS_FORMICID)
+        return HANDS_ONE;
+    else if (mons_is_hepliaklqana_ancestor && you.species == SP_FORMICID)
+        return HANDS_ONE;
     return actor::hands_reqd(item, base);
 }
 
@@ -808,9 +808,9 @@ void monster::equip_weapon_message(item_def &item)
                                  ISFLAG_CURSED) + ".";
     simple_monster_message(*this, str.c_str());
 
-	if (item.base_type == OBJ_SHIELDS && !is_hybrid(item.sub_type) 
-		|| item.base_type == OBJ_STAVES)
-		return;
+    if (item.base_type == OBJ_SHIELDS && !is_hybrid(item.sub_type) 
+        || item.base_type == OBJ_STAVES)
+        return;
 
     const int brand = get_weapon_brand(item);
 
@@ -824,7 +824,7 @@ void monster::equip_weapon_message(item_def &item)
                                       : "It glows with a cold blue light!");
             break;
         case SPWPN_HOLY_WRATH:
-		case SPWPN_SILVER:
+        case SPWPN_SILVER:
             mpr("It softly glows with a divine radiance!");
             break;
         case SPWPN_ELECTROCUTION:
@@ -861,9 +861,9 @@ void monster::equip_weapon_message(item_def &item)
             break;
         case SPWPN_ACID:
             mprf("It begins to drip corrosive slime!");
-			break;
-		default:
-			break;
+            break;
+        default:
+            break;
     }
 }
 
@@ -912,7 +912,7 @@ void monster::equip_message(item_def &item)
     {
     case OBJ_WEAPONS:
     case OBJ_STAVES:
-	case OBJ_SHIELDS:
+    case OBJ_SHIELDS:
         equip_weapon_message(item);
         break;
 
@@ -950,7 +950,7 @@ void monster::unequip_weapon(item_def &item, bool msg)
             break;
 
         case SPWPN_HOLY_WRATH:
-		case SPWPN_SILVER:
+        case SPWPN_SILVER:
             mpr("It stops glowing.");
             break;
 
@@ -1882,19 +1882,19 @@ bool monster::pickup_weapon(item_def &item, bool msg, bool force)
 bool monster::pickup_shield(item_def &item, bool msg, bool force)
 {
 
-	// Monsters that are capable of dual wielding won't pick up shields.
-	// Neither will monsters that are already wielding a two-hander.
-	if (!force && mons_wields_two_weapons(*this)
-			|| (mslot_item(MSLOT_WEAPON) && hands_reqd(*mslot_item(MSLOT_WEAPON)) == HANDS_TWO))
-		return false;
+    // Monsters that are capable of dual wielding won't pick up shields.
+    // Neither will monsters that are already wielding a two-hander.
+    if (!force && mons_wields_two_weapons(*this)
+            || (mslot_item(MSLOT_WEAPON) && hands_reqd(*mslot_item(MSLOT_WEAPON)) == HANDS_TWO))
+        return false;
 
-	// Don't pick up new armour if we've been gifted something by the player.
-	if (!force && props.exists(BEOGH_SH_GIFT_KEY))
-		return false;
-	
-	if (is_weapon_wieldable(item, body_size()))
-		return pickup(item, MSLOT_SHIELD, msg);
-	return false;
+    // Don't pick up new armour if we've been gifted something by the player.
+    if (!force && props.exists(BEOGH_SH_GIFT_KEY))
+        return false;
+    
+    if (is_weapon_wieldable(item, body_size()))
+        return pickup(item, MSLOT_SHIELD, msg);
+    return false;
 }
 
 /**
@@ -2101,8 +2101,8 @@ bool monster::pickup_item(item_def &item, bool msg, bool force)
     // Pickup some stuff only if WANDERING.
     case OBJ_ARMOURS:
         return pickup_armour(item, msg, force);
-	case OBJ_SHIELDS:
-		return pickup_shield(item, msg, force);
+    case OBJ_SHIELDS:
+        return pickup_shield(item, msg, force);
     case OBJ_GOLD:
         return pickup_gold(item, msg);
     case OBJ_JEWELLERY:
@@ -2818,17 +2818,17 @@ void monster::expose_to_element(beam_type flavour, int strength,
     case BEAM_COLD:
         if (slow_cold_blood && res_cold() <= 0 && one_chance_in(3))
         {
-			int x = mons_class_flag(type, M_COLD_BLOOD) ? 2 : 1;
+            int x = mons_class_flag(type, M_COLD_BLOOD) ? 2 : 1;
             do_slow_monster(*this, this, (strength * 2 + random2(4)) * BASELINE_DELAY * x);
         }
         break;
     case BEAM_WATER:
         del_ench(ENCH_STICKY_FLAME);
-		del_ench(ENCH_MAGIC_CANDLE);
+        del_ench(ENCH_MAGIC_CANDLE);
         break;
-	case BEAM_MAGIC_CANDLE:
-		backlight_monster(this);
-		break;
+    case BEAM_MAGIC_CANDLE:
+        backlight_monster(this);
+        break;
     case BEAM_FIRE:
     case BEAM_LAVA:
     case BEAM_STICKY_FLAME:
@@ -2847,15 +2847,15 @@ void monster::expose_to_element(beam_type flavour, int strength,
         }
         if (has_ench(ENCH_ICEMAIL))
             del_ench(ENCH_ICEMAIL);
-		if (has_ench(ENCH_CONDENSATION_SHIELD))
-		{
-			del_ench(ENCH_CONDENSATION_SHIELD);
-			if (you.can_see(*this))
-			{
-				mprf("The heat dissipates %s  shield.",
-					apostrophise(name(DESC_THE)).c_str());
-			}
-		}
+        if (has_ench(ENCH_CONDENSATION_SHIELD))
+        {
+            del_ench(ENCH_CONDENSATION_SHIELD);
+            if (you.can_see(*this))
+            {
+                mprf("The heat dissipates %s  shield.",
+                    apostrophise(name(DESC_THE)).c_str());
+            }
+        }
         break;
     default:
         break;
@@ -3131,7 +3131,7 @@ bool monster::pacified() const
 bool monster::shielded() const
 {
     return shield()
-		   || has_ench(ENCH_CONDENSATION_SHIELD)
+           || has_ench(ENCH_CONDENSATION_SHIELD)
            || wearing(EQ_AMULET, AMU_REFLECTION) > 0;
 }
 
@@ -3142,18 +3142,18 @@ int monster::shield_bonus() const
 
     int sh = -100;
     const item_def *shld = shield();
-	if (shld && shld->base_type == OBJ_SHIELDS)
-	{
+    if (shld && shld->base_type == OBJ_SHIELDS)
+    {
 
-		int shld_c = property(*shld, PARM_AC) + shld->plus * 2;
-		shld_c = shld_c * 2 + (body_size(PSIZE_TORSO) - SIZE_MEDIUM)
-			* (shld->sub_type - SHD_LARGE_SHIELD);
-		sh = random2avg(shld_c + get_hit_dice() * 4 / 3, 2) / 2;
-	}
+        int shld_c = property(*shld, PARM_AC) + shld->plus * 2;
+        shld_c = shld_c * 2 + (body_size(PSIZE_TORSO) - SIZE_MEDIUM)
+            * (shld->sub_type - SHD_LARGE_SHIELD);
+        sh = random2avg(shld_c + get_hit_dice() * 4 / 3, 2) / 2;
+    }
 
-	// Condensation Shield
-	else if (has_ench(ENCH_CONDENSATION_SHIELD))
-		sh += spell_hd(SPELL_CONDENSATION_SHIELD);
+    // Condensation Shield
+    else if (has_ench(ENCH_CONDENSATION_SHIELD))
+        sh += spell_hd(SPELL_CONDENSATION_SHIELD);
 
     // shielding from jewellery
     const item_def *amulet = mslot_item(MSLOT_JEWELLERY);
@@ -3303,19 +3303,19 @@ int monster::base_armour_class() const
         return min(10, 3 + get_hit_dice() * 2 / 3);
 
     // Hepliaklqana ancestors scale with xl.
-	// Also special cases for non-armoured races.
+    // Also special cases for non-armoured races.
     if (mons_is_hepliaklqana_ancestor(type))
     {
-		if (you.species == SP_FELID || you.species == SP_OCTOPODE)
-			return 3;
-		if (species_is_draconian(you.species))
-			return get_experience_level() / 2 + 3;
-		else
-		{
-			if (type == MONS_ANCESTOR_KNIGHT)
-				return get_experience_level() + 7;
-			return get_experience_level() / 2;
-		}
+        if (you.species == SP_FELID || you.species == SP_OCTOPODE)
+            return 3;
+        if (species_is_draconian(you.species))
+            return get_experience_level() / 2 + 3;
+        else
+        {
+            if (type == MONS_ANCESTOR_KNIGHT)
+                return get_experience_level() + 7;
+            return get_experience_level() / 2;
+        }
     }
 
     const int base_ac = get_monster_data(type)->AC;
@@ -3364,10 +3364,10 @@ int monster::armour_class(bool calc_unid) const
     }
 
     // various enchantments
-	if (has_ench(ENCH_PETRIFYING))
-		ac += 4 + 2 * (get_hit_dice() / 3);
-	if (has_ench(ENCH_PETRIFIED))
-		ac += 6 + get_hit_dice();
+    if (has_ench(ENCH_PETRIFYING))
+        ac += 4 + 2 * (get_hit_dice() / 3);
+    if (has_ench(ENCH_PETRIFIED))
+        ac += 6 + get_hit_dice();
     if (has_ench(ENCH_OZOCUBUS_ARMOUR))
         ac += 4 + get_hit_dice() / 3;
     if (has_ench(ENCH_ICEMAIL))
@@ -3434,20 +3434,20 @@ int monster::base_evasion() const
         return _zombie_ev_modifier(type) + base_ev;
     }
 
-	// Ancestors vary with player race and HD.
-	if (mons_is_hepliaklqana_ancestor(type))
-	{
-		int local_size = get_species_def(you.species).size;
-		int ev = get_experience_level();
-		int x = 1;
-		if (local_size > 3)
-			x = (ev * (10 + (3 - local_size) * 2)) / 10;
-		if (local_size < 3)
-			x = (ev * (10 + (3 - local_size) * 5)) / 10;
-		else
-			x = ev;
-		return x;
-	}
+    // Ancestors vary with player race and HD.
+    if (mons_is_hepliaklqana_ancestor(type))
+    {
+        int local_size = get_species_def(you.species).size;
+        int ev = get_experience_level();
+        int x = 1;
+        if (local_size > 3)
+            x = (ev * (10 + (3 - local_size) * 2)) / 10;
+        if (local_size < 3)
+            x = (ev * (10 + (3 - local_size) * 5)) / 10;
+        else
+            x = ev;
+        return x;
+    }
 
     // abominations are weird.
     if (type == MONS_ABOMINATION_LARGE)
@@ -4057,15 +4057,15 @@ bool monster::res_corr(bool calc_unid, bool items) const
 
 int monster::res_acid(bool calc_unid) const
 {
-	int u = get_mons_resist(*this, MR_RES_ACID);
-	
-	if (res_corr(calc_unid))
-	{
-		u++;
-	}
+    int u = get_mons_resist(*this, MR_RES_ACID);
+    
+    if (res_corr(calc_unid))
+    {
+        u++;
+    }
 
-	if (inv[MSLOT_ARMOUR] != NON_ITEM && u < 2)
-		u++;
+    if (inv[MSLOT_ARMOUR] != NON_ITEM && u < 2)
+        u++;
 
     if (has_ench(ENCH_RESISTANCE) && u < 2)
         u++;
@@ -4092,11 +4092,11 @@ int monster::res_magic(bool calc_unid) const
                 mons_class_res_magic(type, base_monster);
 
     // Hepliaklqana ancestors scale with xl.
-	if (mons_is_hepliaklqana_ancestor(type))
-		u = get_experience_level() * species_mr_modifier(you.species) * 2;
-		// 6 - 108 for low MR races (Draconians, Minotaurs, etc.)
-		// 10 - 180 for medium MR races (Mummies, etc.)
-	    // 14 - Immune for High MR Races (Spriggans, etc.)
+    if (mons_is_hepliaklqana_ancestor(type))
+        u = get_experience_level() * species_mr_modifier(you.species) * 2;
+        // 6 - 108 for low MR races (Draconians, Minotaurs, etc.)
+        // 10 - 180 for medium MR races (Mummies, etc.)
+        // 14 - Immune for High MR Races (Spriggans, etc.)
 
     // Draining/malmutation reduce monster base MR proportionately.
     const int HD = get_hit_dice();
@@ -4141,8 +4141,8 @@ int monster::res_magic(bool calc_unid) const
     if (u < 0)
         u = 0;
 
-	if (u > 200)
-		return MAG_IMMUNE;
+    if (u > 200)
+        return MAG_IMMUNE;
 
     return u;
 }
@@ -4182,8 +4182,8 @@ bool monster::antimagic_susceptible() const
 
 bool monster::airborne() const
 {
-	if (petrified() || paralysed() || has_ench(ENCH_GRASPING_ROOTS))
-		return false;
+    if (petrified() || paralysed() || has_ench(ENCH_GRASPING_ROOTS))
+        return false;
 
     // For dancing weapons, this function can get called before their
     // ghost_demon is created, so check for a nullptr ghost. -cao
@@ -4375,15 +4375,15 @@ bool monster::corrode_equipment(const char* corrosion_source, int degree)
     if (mons_is_avatar(type) || type == MONS_PLAYER_SHADOW)
         return false;
 
-	const int rAcid = res_acid();
-	int acidResistDegree = 0;
+    const int rAcid = res_acid();
+    int acidResistDegree = 0;
 
-	if (rAcid >= 3)
-		return false; // This shouldn't happen.
-	else if (rAcid == 2)
-		acidResistDegree = 20;
-	else if (rAcid == 1)
-		acidResistDegree = 60;
+    if (rAcid >= 3)
+        return false; // This shouldn't happen.
+    else if (rAcid == 2)
+        acidResistDegree = 20;
+    else if (rAcid == 1)
+        acidResistDegree = 60;
 
     if (rAcid > 0)
     {
@@ -4510,7 +4510,7 @@ int monster::hurt(const actor *agent, int amount, beam_type flavour,
         }
 
         if (flavour == BEAM_DEVASTATION || flavour == BEAM_DISINTEGRATION
-			|| flavour == BEAM_ENERGY)
+            || flavour == BEAM_ENERGY)
         {
             if (can_bleed())
                 blood_spray(pos(), type, amount / 5);
@@ -4580,7 +4580,7 @@ void monster::confuse(actor *atk, int strength)
 
 void monster::paralyse(actor *atk, int strength, string cause)
 {
-	enchant_actor_with_flavour(this, atk, BEAM_PETRIFY);
+    enchant_actor_with_flavour(this, atk, BEAM_PETRIFY);
 }
 
 void monster::petrify(actor *atk, bool force)
@@ -4593,20 +4593,20 @@ bool monster::fully_petrify(actor *atk, bool quiet)
     bool msg = !quiet && simple_monster_message(*this, mons_is_immotile(*this) ?
                          " turns to stone!" : " stops moving altogether!");
 
-	if (airborne())
-	{
-		noisy(15, pos());
-		dungeon_feature_type feat = grd(pos());
-		if (feat == DNGN_LAVA)
-			simple_monster_message(*this, " falls into the lava with a sizzling splash!");
-		else if (feat_is_water(feat))
-			simple_monster_message(*this, " falls into the water and sinks like a stone!");
-		else
-		{
-			simple_monster_message(*this, " crashes into the ground with a thud!");
-			hurt(atk, roll_dice(2, 10), BEAM_MMISSILE, KILLED_BY_FALLING);
-		}
-	}
+    if (airborne())
+    {
+        noisy(15, pos());
+        dungeon_feature_type feat = grd(pos());
+        if (feat == DNGN_LAVA)
+            simple_monster_message(*this, " falls into the lava with a sizzling splash!");
+        else if (feat_is_water(feat))
+            simple_monster_message(*this, " falls into the water and sinks like a stone!");
+        else
+        {
+            simple_monster_message(*this, " crashes into the ground with a thud!");
+            hurt(atk, roll_dice(2, 10), BEAM_MMISSILE, KILLED_BY_FALLING);
+        }
+    }
 
     add_ench(ENCH_PETRIFIED);
     return msg;
@@ -4747,8 +4747,8 @@ bool monster::is_trap_safe(const coord_def& where, bool just_check) const
     if (wont_attack() && trap.is_bad_for_player())
         return false;
 
-	if (stasis() && (trap.type == TRAP_TELEPORT || trap.type == TRAP_TELEPORT_PERMANENT))
-		return true;
+    if (stasis() && (trap.type == TRAP_TELEPORT || trap.type == TRAP_TELEPORT_PERMANENT))
+        return true;
 
     // Dumb monsters don't care at all.
     if (intel == I_BRAINLESS)
@@ -5239,8 +5239,8 @@ bool monster::can_see_invisible(bool calc_unid) const
     if (!calc_unid)
         return false;
 
-	if (scan_artefacts(ARTP_INACCURACY) > 0)
-		return false;
+    if (scan_artefacts(ARTP_INACCURACY) > 0)
+        return false;
     if (scan_artefacts(ARTP_IMPROVED_VISION) > 0)
         return true;
     else if (wearing_ego(EQ_ALL_ARMOUR, SPARM_IMPROVED_VISION))
@@ -5527,11 +5527,11 @@ void monster::apply_location_effects(const coord_def &oldpos,
             add_ench(ENCH_AQUATIC_LAND);
     }
 
-	if (alive()
-		&& (mons_habitat(*this) == HT_LAVA)
-		&& !feat_is_lava(env.grid(pos()))
-		&& !has_ench(ENCH_AQUATIC_LAND))
-			add_ench(ENCH_AQUATIC_LAND);
+    if (alive()
+        && (mons_habitat(*this) == HT_LAVA)
+        && !feat_is_lava(env.grid(pos()))
+        && !has_ench(ENCH_AQUATIC_LAND))
+            add_ench(ENCH_AQUATIC_LAND);
 
     if (alive() && has_ench(ENCH_AQUATIC_LAND))
     {
@@ -6640,7 +6640,7 @@ bool monster::stasis() const
 {
     return mons_genus(type) == MONS_FORMICID
            || type == MONS_PLAYER_GHOST && ghost->species == SP_FORMICID
-		   || mons_is_hepliaklqana_ancestor(type) && you.species == SP_FORMICID;
+           || mons_is_hepliaklqana_ancestor(type) && you.species == SP_FORMICID;
 }
 
 bool monster::cloud_immune(bool calc_unid, bool items) const
@@ -6712,61 +6712,61 @@ void monster::align_summons(bool force_friendly)
     mon_attitude_type new_att = (force_friendly ? ATT_FRIENDLY
                                    : attitude);
 
-	bool destroy_avatars = false;
-	bool avatar_gone = false;
+    bool destroy_avatars = false;
+    bool avatar_gone = false;
 
     // Neutral monsters don't need avatars, and in same cases would attack their
     // own avatars if they had them.
     if (new_att == ATT_NEUTRAL || new_att == ATT_STRICT_NEUTRAL
         || new_att == ATT_GOOD_NEUTRAL)
-		destroy_avatars = true;
+        destroy_avatars = true;
 
     monster* avatar = find_spectral_weapon(this);
     if (avatar)
     {
-		if (destroy_avatars)
-		{
-			end_spectral_weapon(avatar, false, false);
-			avatar_gone = true;
-		}
-		else
-		{
-			avatar->attitude = new_att;
-			reset_spectral_weapon(avatar);
-		}
+        if (destroy_avatars)
+        {
+            end_spectral_weapon(avatar, false, false);
+            avatar_gone = true;
+        }
+        else
+        {
+            avatar->attitude = new_att;
+            reset_spectral_weapon(avatar);
+        }
     }
 
     avatar = find_battlesphere(this);
     if (avatar)
     {
-		if (destroy_avatars)
-		{
-			end_battlesphere(avatar, false);
-			avatar_gone = true;
-		}
-		else
-		{
-			avatar->attitude = new_att;
-			reset_battlesphere(avatar);
-		}
+        if (destroy_avatars)
+        {
+            end_battlesphere(avatar, false);
+            avatar_gone = true;
+        }
+        else
+        {
+            avatar->attitude = new_att;
+            reset_battlesphere(avatar);
+        }
     }
 
-	if (avatar_gone)
-		simple_monster_message(*this, " dismisses their weapons as they adapt a more neutral outlook on things.");
+    if (avatar_gone)
+        simple_monster_message(*this, " dismisses their weapons as they adapt a more neutral outlook on things.");
 
-	for (monster_iterator mi; mi; ++mi)
-	{
-		int sumtype = 0;
+    for (monster_iterator mi; mi; ++mi)
+    {
+        int sumtype = 0;
 
-		if (attitude != new_att
-			&& mi->summoner == mid
-			&& (mi->is_summoned(nullptr, &sumtype)
-				|| sumtype == MON_SUMM_CLONE))
-		{
-			mi->attitude = new_att;
-			mi->reset();
-		}
-	}
+        if (attitude != new_att
+            && mi->summoner == mid
+            && (mi->is_summoned(nullptr, &sumtype)
+                || sumtype == MON_SUMM_CLONE))
+        {
+            mi->attitude = new_att;
+            mi->reset();
+        }
+    }
 }
 
 /**

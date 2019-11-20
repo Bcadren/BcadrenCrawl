@@ -6,13 +6,13 @@ enum equipment_type
 
     EQ_WEAPON0,
     EQ_FIRST_EQUIP = EQ_WEAPON0,
-	EQ_WEAPON1,
+    EQ_WEAPON1,
     EQ_CLOAK,
     EQ_HELMET,
     EQ_GLOVES,
     EQ_BOOTS,
 #if TAG_MAJOR_VERSION == 34
-	EQ_OLD_SHIELD,
+    EQ_OLD_SHIELD,
 #endif
     EQ_BODY_ARMOUR,
     EQ_FIRST_JEWELLERY,

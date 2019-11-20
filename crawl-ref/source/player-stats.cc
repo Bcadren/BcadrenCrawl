@@ -632,7 +632,7 @@ static void _handle_stat_change(stat_type stat)
 
         // 2 to 5 turns of paralysis (XXX: decremented right away?)
         // you.increase_duration(DUR_PARALYSIS, 2 + random2(3));
-		// Removing Paralysis as too strong of immediate punishment.
+        // Removing Paralysis as too strong of immediate punishment.
     }
 
     you.redraw_stats[stat] = true;

@@ -106,10 +106,10 @@ spret cast_excruciating_wounds(int power, bool fail)
     if (!has_temp_brand)
     {
         you.props[ORIGINAL_BRAND_KEY] = get_weapon_brand(weapon);
-		if (weapon.base_type == OBJ_WEAPONS)
-	        set_item_ego_type(weapon, OBJ_WEAPONS, which_brand);
-		else if (weapon.base_type == OBJ_SHIELDS)
-			set_item_ego_type(weapon, OBJ_SHIELDS, which_brand);
+        if (weapon.base_type == OBJ_WEAPONS)
+            set_item_ego_type(weapon, OBJ_WEAPONS, which_brand);
+        else if (weapon.base_type == OBJ_SHIELDS)
+            set_item_ego_type(weapon, OBJ_SHIELDS, which_brand);
         you.wield_change = true;
         you.redraw_armour_class = true;
         if (orig_brand == SPWPN_ANTIMAGIC)

@@ -247,9 +247,9 @@ void get_class_hotkeys(const int type, vector<char> &glyphs)
     case OBJ_ARMOURS:
         glyphs.push_back('[');
         break;
-	case OBJ_SHIELDS:
-		glyphs.push_back(']');
-		break;
+    case OBJ_SHIELDS:
+        glyphs.push_back(']');
+        break;
     case OBJ_WANDS:
         glyphs.push_back('/');
         break;
@@ -469,11 +469,11 @@ string no_selectables_message(int item_selector)
     case OSEL_ANY:
         return "You aren't carrying anything.";
     case OSEL_WIELD:
-		return "You aren't carrying any weapons or shields.";
+        return "You aren't carrying any weapons or shields.";
     case OBJ_WEAPONS:
         return "You aren't carrying any weapons.";
-	case OBJ_SHIELDS:
-		return "You aren't carrying any shields.";
+    case OBJ_SHIELDS:
+        return "You aren't carrying any shields.";
     case OSEL_BLESSABLE_WEAPON:
         return "You aren't carrying any weapons that can be blessed.";
     case OBJ_ARMOURS:
@@ -816,7 +816,7 @@ void InvMenu::sort_menu(vector<InvEntry*> &invitems,
 
 FixedVector<int, NUM_OBJECT_CLASSES> inv_order(
     OBJ_WEAPONS,
-	OBJ_SHIELDS,
+    OBJ_SHIELDS,
     OBJ_MISSILES,
     OBJ_ARMOURS,
     OBJ_STAVES,
@@ -1002,7 +1002,7 @@ const char *item_class_name(int type, bool terse)
         {
         case OBJ_GOLD:       return "Gold";
         case OBJ_WEAPONS:    return "Weapons";
-		case OBJ_SHIELDS:    return "Shields";
+        case OBJ_SHIELDS:    return "Shields";
         case OBJ_MISSILES:   return "Missiles";
         case OBJ_ARMOURS:    return "Armour";
         case OBJ_WANDS:      return "Wands";
@@ -1106,7 +1106,7 @@ bool item_is_selected(const item_def &i, int selector)
         return true;
     }
     case OBJ_WEAPONS:
-	case OBJ_SHIELDS:
+    case OBJ_SHIELDS:
     case OSEL_WIELD:
         return item_is_wieldable(i);
 
@@ -1163,11 +1163,11 @@ bool item_is_selected(const item_def &i, int selector)
 
     case OSEL_UNCURSED_WORN_RINGS:
         return (!i.cursed() || (you.get_mutation_level(MUT_GHOST) > 0)) && item_is_equipped(i) 
-			&& itype == OBJ_JEWELLERY && !jewellery_is_amulet(i);
+            && itype == OBJ_JEWELLERY && !jewellery_is_amulet(i);
 
-	case OSEL_UNCURSED_WIELDED_WEAPONS:
-			return (!i.cursed() || (you.get_mutation_level(MUT_GHOST) > 0)) && item_is_equipped(i)
-			&& (itype == OBJ_WEAPONS || itype == OBJ_STAVES || itype == OBJ_SHIELDS);
+    case OSEL_UNCURSED_WIELDED_WEAPONS:
+            return (!i.cursed() || (you.get_mutation_level(MUT_GHOST) > 0)) && item_is_equipped(i)
+            && (itype == OBJ_WEAPONS || itype == OBJ_STAVES || itype == OBJ_SHIELDS);
 
     default:
         return false;
@@ -1538,7 +1538,7 @@ bool check_old_item_warning(const item_def& item,
                              operation_types oper)
 {
 
-	// BCADREN DO: CASE FOR OFFHAND.
+    // BCADREN DO: CASE FOR OFFHAND.
 
     item_def old_item;
     string prompt;
@@ -1635,12 +1635,12 @@ static string _operation_verb(operation_types oper)
 static bool _is_wielded(const item_def &item)
 {
     int equip0 = you.equip[EQ_WEAPON0];
-	if (equip0 != -1 && item.link == equip0)
-		return true;
-	int equip1 = you.equip[EQ_WEAPON1];
-	if (equip1 != -1 && item.link == equip1)
-		return true;
-	return false;
+    if (equip0 != -1 && item.link == equip0)
+        return true;
+    int equip1 = you.equip[EQ_WEAPON1];
+    if (equip1 != -1 && item.link == equip1)
+        return true;
+    return false;
 }
 
 static bool _is_known_no_tele_item(const item_def &item)
@@ -1662,8 +1662,8 @@ bool needs_notele_warning(const item_def &item, operation_types oper)
 bool needs_handle_warning(const item_def &item, operation_types oper,
                           bool &penance)
 {
-	if (!item.defined())
-		return false;
+    if (!item.defined())
+        return false;
     if (_has_warning_inscription(item, oper))
         return true;
 
@@ -2179,8 +2179,8 @@ bool item_is_evokable(const item_def &item, bool reach, bool known,
 
     const bool wielded = !equip || you.equip[EQ_WEAPON0] == item.link
                                    && !item_is_melded(item) ||
-								   you.equip[EQ_WEAPON1] == item.link
-								   && !item_is_melded(item);
+                                   you.equip[EQ_WEAPON1] == item.link
+                                   && !item_is_melded(item);
 
     // TODO: check other summoning constraints here?
     if (_item_ally_only(item) && you.has_mutation(MUT_NO_LOVE))
@@ -2214,10 +2214,10 @@ bool item_is_evokable(const item_def &item, bool reach, bool known,
             mpr("That item cannot be evoked!");
         return false;
 
-	case OBJ_SHIELDS:
-		if (msg)
-			mpr("That item cannot be evoked!");
-		return false;
+    case OBJ_SHIELDS:
+        if (msg)
+            mpr("That item cannot be evoked!");
+        return false;
 
     case OBJ_STAVES:
         if (known && !item_type_known(item)

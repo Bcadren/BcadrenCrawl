@@ -696,8 +696,8 @@ static void _fill_player_doll(player_save_info &p, package *save)
     for (unsigned int j = 0; j < TILEP_PART_MAX; ++j)
         equip_doll.parts[j] = TILEP_SHOW_EQUIP;
 
-	equip_doll.parts[TILEP_PART_BASE]
-		= tilep_species_to_base_tile(p.species, p.experience_level);
+    equip_doll.parts[TILEP_PART_BASE]
+        = tilep_species_to_base_tile(p.species, p.experience_level);
 
     bool success = false;
 
@@ -869,7 +869,7 @@ static int _get_dest_stair_type(branch_type old_branch,
 {
     // Order is important here.
     if (stair_taken == DNGN_EXIT_ABYSS || stair_taken == DNGN_EXIT_START_TEMPLE
-		|| stair_taken == DNGN_EXIT_START_MARKET)
+        || stair_taken == DNGN_EXIT_START_MARKET)
     {
         find_first = false;
         return DNGN_EXIT_DUNGEON;
@@ -1309,62 +1309,62 @@ static string _get_hatch_name()
 // Hijacking this to also detect runes with Ashenzari instead of creating a new function.
 static void _count_gold()
 {
-	vector<item_def *> gold_piles;
-	vector<coord_def> gold_places;
-	int gold = 0;
-	bool rune_found = false;
-	for (rectangle_iterator ri(0); ri; ++ri)
-	{
-		for (stack_iterator j(*ri); j; ++j)
-		{
-			if (j->base_type == OBJ_GOLD)
-			{
-				gold += j->quantity;
-				gold_piles.push_back(&(*j));
-				gold_places.push_back(*ri);
-			}
-			else if (j->base_type == OBJ_RUNES && have_passive(passive_t::detect_runes))
-			{
-				update_item_at(*ri, true);
-				env.map_knowledge(*ri).flags |= MAP_DETECTED_ITEM;
-				rune_found = true;
-			}
-		}
-	}
+    vector<item_def *> gold_piles;
+    vector<coord_def> gold_places;
+    int gold = 0;
+    bool rune_found = false;
+    for (rectangle_iterator ri(0); ri; ++ri)
+    {
+        for (stack_iterator j(*ri); j; ++j)
+        {
+            if (j->base_type == OBJ_GOLD)
+            {
+                gold += j->quantity;
+                gold_piles.push_back(&(*j));
+                gold_places.push_back(*ri);
+            }
+            else if (j->base_type == OBJ_RUNES && have_passive(passive_t::detect_runes))
+            {
+                update_item_at(*ri, true);
+                env.map_knowledge(*ri).flags |= MAP_DETECTED_ITEM;
+                rune_found = true;
+            }
+        }
+    }
 
-	if (rune_found)
-	{
-		mprf(MSGCH_BANISHMENT, "You have a vision of a rune of Zot.");
-		if (you.where_are_you == BRANCH_ABYSS)
-			flash_view_delay(UA_PICKUP, rune_colour(RUNE_ABYSSAL), 300);
-	}
+    if (rune_found)
+    {
+        mprf(MSGCH_BANISHMENT, "You have a vision of a rune of Zot.");
+        if (you.where_are_you == BRANCH_ABYSS)
+            flash_view_delay(UA_PICKUP, rune_colour(RUNE_ABYSSAL), 300);
+    }
 
-	if (!player_in_branch(BRANCH_ABYSS))
-		you.attribute[ATTR_GOLD_GENERATED] += gold;
+    if (!player_in_branch(BRANCH_ABYSS))
+        you.attribute[ATTR_GOLD_GENERATED] += gold;
 
-	// TODO: this probably should fire when you join gozag, too?
-	if (have_passive(passive_t::detect_gold))
-	{
-		for (unsigned int i = 0; i < gold_places.size(); i++)
-		{
-			bool detected = false;
-			int dummy = gold_piles[i]->index();
-			coord_def &pos = gold_places[i];
-			unlink_item(dummy);
-			move_item_to_grid(&dummy, pos, true);
-			if (!env.map_knowledge(pos).item()
-				|| env.map_knowledge(pos).item()->base_type != OBJ_GOLD)
-			{
-				detected = true;
-			}
-			update_item_at(pos, true);
-			if (detected)
-			{
-				ASSERT(env.map_knowledge(pos).item());
-				env.map_knowledge(pos).flags |= MAP_DETECTED_ITEM;
-			}
-		}
-	}
+    // TODO: this probably should fire when you join gozag, too?
+    if (have_passive(passive_t::detect_gold))
+    {
+        for (unsigned int i = 0; i < gold_places.size(); i++)
+        {
+            bool detected = false;
+            int dummy = gold_piles[i]->index();
+            coord_def &pos = gold_places[i];
+            unlink_item(dummy);
+            move_item_to_grid(&dummy, pos, true);
+            if (!env.map_knowledge(pos).item()
+                || env.map_knowledge(pos).item()->base_type != OBJ_GOLD)
+            {
+                detected = true;
+            }
+            update_item_at(pos, true);
+            if (detected)
+            {
+                ASSERT(env.map_knowledge(pos).item());
+                env.map_knowledge(pos).flags |= MAP_DETECTED_ITEM;
+            }
+        }
+    }
 }
 
 static const string VISITED_LEVELS_KEY = "visited_levels";
@@ -1583,9 +1583,9 @@ bool load_level(dungeon_feature_type stair_taken, load_mode_type load_mode,
         && you.chapter == CHAPTER_NONDUNGEON_START
         && player_in_branch(BRANCH_DUNGEON))
     {
-		// Preparations for entering the dungeon for the first time.
-		delete_level(level_id(BRANCH_START_MARKET, 1));
-		delete_level(level_id(BRANCH_START_TEMPLE, 1));
+        // Preparations for entering the dungeon for the first time.
+        delete_level(level_id(BRANCH_START_MARKET, 1));
+        delete_level(level_id(BRANCH_START_TEMPLE, 1));
         you.chapter = CHAPTER_ORB_HUNTING;
     }
 

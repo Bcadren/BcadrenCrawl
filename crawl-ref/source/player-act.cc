@@ -141,7 +141,7 @@ bool player::extra_balanced() const
     const dungeon_feature_type grid = grd(pos());
     return species == SP_GREY_DRACONIAN
               || form == transformation::tree
-		      || you.attribute [ATTR_ROOTED]
+              || you.attribute [ATTR_ROOTED]
               || grid == DNGN_SHALLOW_WATER
                   && (species == SP_NAGA // tails, not feet
                       || body_size(PSIZE_BODY) >= SIZE_LARGE)
@@ -204,14 +204,14 @@ int player::damage_type(int)
  */
 brand_type player::damage_brand(int which_attack)
 {
-	equipment_type slot; 
-	
-	if (which_attack == 0)
-		slot = EQ_WEAPON0;
-	if (which_attack == 1)
-		slot = EQ_WEAPON1;
+    equipment_type slot; 
+    
+    if (which_attack == 0)
+        slot = EQ_WEAPON0;
+    if (which_attack == 1)
+        slot = EQ_WEAPON1;
 
-	const int wpn = equip[slot];
+    const int wpn = equip[slot];
 
     if (wpn != -1 && !melded[slot])
     {
@@ -242,14 +242,14 @@ brand_type player::damage_brand(int which_attack)
 random_var player::attack_delay(const item_def *projectile, bool rescale) const
 {
     item_def* weap0 = weapon(0);
-	item_def* weap1 = weapon(1);
+    item_def* weap1 = weapon(1);
     random_var attk_delay (100);
     // a semi-arbitrary multiplier, to minimize loss of precision from integer
     // math.
     const int DELAY_SCALE = 20;
 
-	// Old Version Applies when a Single Weapon is used (this Weap being that weapon).
-	item_def * weap;
+    // Old Version Applies when a Single Weapon is used (this Weap being that weapon).
+    item_def * weap;
 
     if (projectile && is_launched(this, weap0, weap1, *projectile) == launch_retval::THROWN)
     {
@@ -265,74 +265,74 @@ random_var player::attack_delay(const item_def *projectile, bool rescale) const
                 random_var(FASTEST_PLAYER_THROWING_SPEED));
     }
 
-	// UC; now always 5.
+    // UC; now always 5.
     else if (!projectile && !weap0 && !weap1)
     {
         attk_delay = random_var(5);
     }
 
-	// Thrown Weapons. (Left Alone for Now).
-	else if (projectile && is_launched(this, weap0, weap1, *projectile) == launch_retval::THROWN)
-	{
-		// Thrown weapons use 10 + projectile damage to determine base delay.
-		const skill_type wpn_skill = SK_THROWING;
-		const int projectile_delay = 10 + property(*projectile, PWPN_DAMAGE) / 2;
-		attk_delay = random_var(projectile_delay);
-		attk_delay -= div_rand_round(random_var(you.skill(wpn_skill, 10)),
-			DELAY_SCALE);
+    // Thrown Weapons. (Left Alone for Now).
+    else if (projectile && is_launched(this, weap0, weap1, *projectile) == launch_retval::THROWN)
+    {
+        // Thrown weapons use 10 + projectile damage to determine base delay.
+        const skill_type wpn_skill = SK_THROWING;
+        const int projectile_delay = 10 + property(*projectile, PWPN_DAMAGE) / 2;
+        attk_delay = random_var(projectile_delay);
+        attk_delay -= div_rand_round(random_var(you.skill(wpn_skill, 10)),
+            DELAY_SCALE);
 
-		// apply minimum to weapon skill modification
-		attk_delay = rv::max(attk_delay,
-			random_var(FASTEST_PLAYER_THROWING_SPEED));
-	}
+        // apply minimum to weapon skill modification
+        attk_delay = rv::max(attk_delay,
+            random_var(FASTEST_PLAYER_THROWING_SPEED));
+    }
 
-	// Dual Wielding Version
-	else if (weap0 && weap1 && is_melee_weapon(*weap0) && is_melee_weapon(*weap1) && !projectile)
-	{
-		const skill_type wpn_skill0 = item_attack_skill(*weap0);
-		const skill_type wpn_skill1 = item_attack_skill(*weap1);
+    // Dual Wielding Version
+    else if (weap0 && weap1 && is_melee_weapon(*weap0) && is_melee_weapon(*weap1) && !projectile)
+    {
+        const skill_type wpn_skill0 = item_attack_skill(*weap0);
+        const skill_type wpn_skill1 = item_attack_skill(*weap1);
 
-		attk_delay = random_var(dual_wield_base_delay(*weap0, *weap1));
+        attk_delay = random_var(dual_wield_base_delay(*weap0, *weap1));
 
-		// Two weapons that use the same skill
-		if (wpn_skill0 == wpn_skill1)
-		{
-			const int wpn_sklev = min(you.skill(wpn_skill0, 10), 10 * dual_wield_mindelay_skill(*weap0, *weap1));
+        // Two weapons that use the same skill
+        if (wpn_skill0 == wpn_skill1)
+        {
+            const int wpn_sklev = min(you.skill(wpn_skill0, 10), 10 * dual_wield_mindelay_skill(*weap0, *weap1));
 
-			if (wpn_sklev >= 27)
-				attk_delay -= random_var(div_round_up(wpn_sklev, DELAY_SCALE));
-			else
-    			attk_delay -= div_rand_round(random_var(wpn_sklev), DELAY_SCALE);
-		}
+            if (wpn_sklev >= 27)
+                attk_delay -= random_var(div_round_up(wpn_sklev, DELAY_SCALE));
+            else
+                attk_delay -= div_rand_round(random_var(wpn_sklev), DELAY_SCALE);
+        }
 
-		else
-		{
-			const int skill0 = min(you.skill(wpn_skill0, 10), 10 * (4 + weapon_min_delay_skill(*weap0)));
-			const int skill1 = min(you.skill(wpn_skill1, 10), 10 * (4 + weapon_min_delay_skill(*weap1)));
-			attk_delay -= div_rand_round(random_var((skill0 + skill1) / 2), DELAY_SCALE);
-		}
+        else
+        {
+            const int skill0 = min(you.skill(wpn_skill0, 10), 10 * (4 + weapon_min_delay_skill(*weap0)));
+            const int skill1 = min(you.skill(wpn_skill1, 10), 10 * (4 + weapon_min_delay_skill(*weap1)));
+            attk_delay -= div_rand_round(random_var((skill0 + skill1) / 2), DELAY_SCALE);
+        }
 
-		if (weap0->base_type == OBJ_WEAPONS && get_weapon_brand(*weap0) == SPWPN_SPEED)
-			attk_delay = div_rand_round(attk_delay * 8, 10);
-		if (weap1->base_type == OBJ_WEAPONS && get_weapon_brand(*weap1) == SPWPN_SPEED)
-			attk_delay = div_rand_round(attk_delay * 8, 10);
-	}
+        if (weap0->base_type == OBJ_WEAPONS && get_weapon_brand(*weap0) == SPWPN_SPEED)
+            attk_delay = div_rand_round(attk_delay * 8, 10);
+        if (weap1->base_type == OBJ_WEAPONS && get_weapon_brand(*weap1) == SPWPN_SPEED)
+            attk_delay = div_rand_round(attk_delay * 8, 10);
+    }
 
-	// The old version; only changed to accommodate shield/weapon hybrids.
-	else
+    // The old version; only changed to accommodate shield/weapon hybrids.
+    else
     {
 
-		if (weap0 && !weap1) // Single Melee Weapon (either 2H or with Offhand Punch)
-			weap = weap0;
+        if (weap0 && !weap1) // Single Melee Weapon (either 2H or with Offhand Punch)
+            weap = weap0;
 
-		else if (weap1 && !weap0) // Single Melee Weapon (either 2H or with Offhand Punch)
-			weap = weap1;
+        else if (weap1 && !weap0) // Single Melee Weapon (either 2H or with Offhand Punch)
+            weap = weap1;
 
-		else if (weap0 && projectile && projectile->launched_by(*weap0)) // Ranged
-			weap = weap0;
+        else if (weap0 && projectile && projectile->launched_by(*weap0)) // Ranged
+            weap = weap0;
 
-		else if (is_range_weapon(*weap0) && is_melee_weapon(*weap1)) // Melee weapon and Ranged weapon (only melee used)
-			weap = weap1;
+        else if (is_range_weapon(*weap0) && is_melee_weapon(*weap1)) // Melee weapon and Ranged weapon (only melee used)
+            weap = weap1;
 
         const skill_type wpn_skill = item_attack_skill(*weap);
         // Cap skill contribution to mindelay skill, so that rounding
@@ -340,29 +340,29 @@ random_var player::attack_delay(const item_def *projectile, bool rescale) const
         const int wpn_sklev = min(you.skill(wpn_skill, 10),
                                   10 * weapon_min_delay_skill(*weap));
 
-		if (weap->base_type == OBJ_SHIELDS)
-		{
-			attk_delay = random_var(property(*weap, PSHD_SPEED));
-			attk_delay -= div_rand_round(random_var(wpn_sklev), DELAY_SCALE);
+        if (weap->base_type == OBJ_SHIELDS)
+        {
+            attk_delay = random_var(property(*weap, PSHD_SPEED));
+            attk_delay -= div_rand_round(random_var(wpn_sklev), DELAY_SCALE);
 
-			if (get_weapon_brand(*weap) == SPWPN_SPEED)
-				attk_delay = div_rand_round(attk_delay * 2, 3);
-		}
+            if (get_weapon_brand(*weap) == SPWPN_SPEED)
+                attk_delay = div_rand_round(attk_delay * 2, 3);
+        }
 
-		else
-		{
-			attk_delay = random_var(property(*weap, PWPN_SPEED));
-			attk_delay -= div_rand_round(random_var(wpn_sklev), DELAY_SCALE);
-			if (get_weapon_brand(*weap) == SPWPN_SPEED)
-				attk_delay = div_rand_round(attk_delay * 2, 3);
-		}
+        else
+        {
+            attk_delay = random_var(property(*weap, PWPN_SPEED));
+            attk_delay -= div_rand_round(random_var(wpn_sklev), DELAY_SCALE);
+            if (get_weapon_brand(*weap) == SPWPN_SPEED)
+                attk_delay = div_rand_round(attk_delay * 2, 3);
+        }
     }
 
     // At the moment it never gets this low anyway.
     attk_delay = rv::max(attk_delay, random_var(3));
 
-	if (you.duration[DUR_CLUMSY])
-		attk_delay = attk_delay * 2;
+    if (you.duration[DUR_CLUMSY])
+        attk_delay = attk_delay * 2;
 
     if (you.duration[DUR_FINESSE])
     {
@@ -396,21 +396,21 @@ item_def *player::slot_item(equipment_type eq, bool include_melded) const
 // Returns the item in the player's weapon slot.
 item_def *player::weapon(int which_attack) const
 {
-	if (which_attack < 1)
-	{
-		if (melded[EQ_WEAPON0])
-			return nullptr;
+    if (which_attack < 1)
+    {
+        if (melded[EQ_WEAPON0])
+            return nullptr;
 
-		return slot_item(EQ_WEAPON0, false);
-	}
-	else
-	{
-		if (melded[EQ_WEAPON1])
-			return nullptr;
+        return slot_item(EQ_WEAPON0, false);
+    }
+    else
+    {
+        if (melded[EQ_WEAPON1])
+            return nullptr;
 
-		return slot_item(EQ_WEAPON1, false);
+        return slot_item(EQ_WEAPON1, false);
 
-	}
+    }
 }
 
 // Give hands required to wield weapon.
@@ -460,25 +460,25 @@ bool player::could_wield(const item_def &item, bool ignore_brand,
         return false;
     }
 
-	if (item.base_type != OBJ_WEAPONS && item.base_type != OBJ_SHIELDS
-		&& item.base_type != OBJ_STAVES)
-	{
-		if (!quiet)
-			mpr("You can't wield that.");
-		return false;
-	}
+    if (item.base_type != OBJ_WEAPONS && item.base_type != OBJ_SHIELDS
+        && item.base_type != OBJ_STAVES)
+    {
+        if (!quiet)
+            mpr("You can't wield that.");
+        return false;
+    }
 
     const size_type bsize = body_size(PSIZE_TORSO, ignore_transform);
     // Small species wielding large weapons...
     if (!is_weapon_wieldable(item, bsize))
     {
-		if (!quiet)
-		{
-			if (you.body_size(PSIZE_TORSO,true) < SIZE_MEDIUM)
-				mpr("That's too large for you to wield.");
-			else
-				mpr("That's too small for you to wield.");
-		}
+        if (!quiet)
+        {
+            if (you.body_size(PSIZE_TORSO,true) < SIZE_MEDIUM)
+                mpr("That's too large for you to wield.");
+            else
+                mpr("That's too small for you to wield.");
+        }
         return false;
     }
 
@@ -488,12 +488,12 @@ bool player::could_wield(const item_def &item, bool ignore_brand,
         return false;
     }
 
-	if (you.char_class == JOB_DEMONSPAWN && item.base_type == OBJ_WEAPONS && get_weapon_brand(item) == SPWPN_SILVER)
-	{
-		if (!quiet)
-			mpr("The silver starts to burn your flesh as you try to hold it.");
-		return false;
-	}
+    if (you.char_class == JOB_DEMONSPAWN && item.base_type == OBJ_WEAPONS && get_weapon_brand(item) == SPWPN_SILVER)
+    {
+        if (!quiet)
+            mpr("The silver starts to burn your flesh as you try to hold it.");
+        return false;
+    }
 
     // don't let undead/demonspawn wield holy weapons/scrolls (out of spite)
     if (!ignore_brand && undead_or_demonic() && is_holy_item(item))
@@ -509,24 +509,24 @@ bool player::could_wield(const item_def &item, bool ignore_brand,
 // Returns the shield the player is wielding, or nullptr if none.
 item_def *player::shield() const
 {
-	item_def * item0 = slot_item(EQ_WEAPON0, false);
-	item_def * item1 = slot_item(EQ_WEAPON1, false);
-	if (item0 && item0->base_type == OBJ_SHIELDS)
-	{
-		if (item1 && item1->base_type == OBJ_SHIELDS)
-		{
-			if (coinflip())
-				return item0;
-			else
-				return item1;
-		}
-		else
-			return item0;
-	}
-	else if (item1 && item1->base_type == OBJ_SHIELDS)
-		return item1;
-	else 
-		return nullptr;
+    item_def * item0 = slot_item(EQ_WEAPON0, false);
+    item_def * item1 = slot_item(EQ_WEAPON1, false);
+    if (item0 && item0->base_type == OBJ_SHIELDS)
+    {
+        if (item1 && item1->base_type == OBJ_SHIELDS)
+        {
+            if (coinflip())
+                return item0;
+            else
+                return item1;
+        }
+        else
+            return item0;
+    }
+    else if (item1 && item1->base_type == OBJ_SHIELDS)
+        return item1;
+    else 
+        return nullptr;
 }
 
 void player::make_hungry(int hunger_increase, bool silent)
@@ -741,11 +741,11 @@ bool player::fumbles_attack()
             learned_something_new(HINT_FUMBLING_SHALLOW_WATER);
     }
 
-	if (you.drowning())
-	{
-		mpr("You can't attack effectively from deep water.");
-		did_fumble = true;
-	}
+    if (you.drowning())
+    {
+        mpr("You can't attack effectively from deep water.");
+        did_fumble = true;
+    }
 
     return did_fumble;
 }
@@ -883,13 +883,13 @@ bool player::can_go_berserk(bool intentional, bool potion, bool quiet,
         msg = "You are too terrified to rage.";
     else if (!intentional && !potion && clarity() && temp)
         msg = "You're too calm and focused to rage.";
-	else if (is_lifeless_undead(temp)) 
-	{
-		if (you.undead_state() == US_GHOST)
-			msg = "You cannot raise a blood rage in your spectral form.";
-		else
-			msg = "You cannot raise a blood rage in your lifeless body.";
-	}
+    else if (is_lifeless_undead(temp)) 
+    {
+        if (you.undead_state() == US_GHOST)
+            msg = "You cannot raise a blood rage in your spectral form.";
+        else
+            msg = "You cannot raise a blood rage in your lifeless body.";
+    }
     else if (stasis())
         msg = "Your stasis prevents you from going berserk.";
     else
@@ -924,12 +924,12 @@ bool player::antimagic_susceptible() const
 bool player::is_web_immune() const
 {
     // Spider form
-	if (form == transformation::spider)
-		return true;
-	else if (you.get_mutation_level(MUT_GHOST) == 1)
-		return true;
-	else
-		return false;
+    if (form == transformation::spider)
+        return true;
+    else if (you.get_mutation_level(MUT_GHOST) == 1)
+        return true;
+    else
+        return false;
 }
 
 bool player::shove(const char* feat_name)

@@ -469,22 +469,22 @@ int chei_stat_boost(int piety)
 {
     if (!have_passive(passive_t::stat_boost))
         return 0;
-	if (you.get_mutation_level(MUT_GODS_PITY) > 1)
-	{
-		if (piety < piety_breakpoint(0))  // Since you've already begun to slow down.
-			return 2;
-		if (piety >= piety_breakpoint(5))
-			return 22;
-		return (piety - 10) / 7;
-	}
-	else
-	{
-		if (piety < piety_breakpoint(0))  // Since you've already begun to slow down.
-			return 1;
-		if (piety >= piety_breakpoint(5))
-			return 15;
-		return (piety - 10) / 10;
-	}
+    if (you.get_mutation_level(MUT_GODS_PITY) > 1)
+    {
+        if (piety < piety_breakpoint(0))  // Since you've already begun to slow down.
+            return 2;
+        if (piety >= piety_breakpoint(5))
+            return 22;
+        return (piety - 10) / 7;
+    }
+    else
+    {
+        if (piety < piety_breakpoint(0))  // Since you've already begun to slow down.
+            return 1;
+        if (piety >= piety_breakpoint(5))
+            return 15;
+        return (piety - 10) / 10;
+    }
 }
 
 // Eat from one random off-level item stack.
@@ -554,9 +554,9 @@ void jiyva_eat_offlevel_items()
 // Effect of God's Pity II on Passives
 int apply_pity(int power)
 {
-	if (you.get_mutation_level(MUT_GODS_PITY) > 1)
-		return (power * 15) / 10;
-	return power;
+    if (you.get_mutation_level(MUT_GODS_PITY) > 1)
+        return (power * 15) / 10;
+    return power;
 }
 
 void ash_init_bondage(player *y)
@@ -637,7 +637,7 @@ void ash_check_bondage(bool msg)
                     {
                         cursed[ET_RIGHT] = 2;
                     }
-					else
+                    else
                     {
                         cursed[s]++;
                         if (i == EQ_BODY_ARMOUR && is_unrandom_artefact(item, UNRAND_LEAR))
@@ -811,13 +811,13 @@ bool passive_id_item(item_def& item, bool silent)
     if ((item.base_type == OBJ_JEWELLERY || item.base_type == OBJ_STAVES)
         && item_needs_autopickup(item))
         
-		item.props["needs_autopickup"] = true;
+        item.props["needs_autopickup"] = true;
 
     if (is_weapon(item) || item.base_type == OBJ_SHIELDS || item.base_type == OBJ_ARMOURS
-		|| item.base_type == OBJ_JEWELLERY || item.base_type == OBJ_SCROLLS 
-		|| item.base_type == OBJ_POTIONS || item.base_type == OBJ_WANDS)
-		
-		ided |= ISFLAG_IDENT_MASK;
+        || item.base_type == OBJ_JEWELLERY || item.base_type == OBJ_SCROLLS 
+        || item.base_type == OBJ_POTIONS || item.base_type == OBJ_WANDS)
+        
+        ided |= ISFLAG_IDENT_MASK;
 
     if (ided & ~old_ided)
     {
@@ -944,7 +944,7 @@ map<skill_type, int8_t> ash_get_boosted_skills(eq_type type)
 
     // Include melded.
     const item_def* right = you.slot_item(EQ_WEAPON0, true);
-	const item_def* left = you.slot_item(EQ_WEAPON1, true);
+    const item_def* left = you.slot_item(EQ_WEAPON1, true);
     const item_def* armour = you.slot_item(EQ_BODY_ARMOUR, true);
     const int evp = armour ? -property(*armour, PARM_EVASION) / 10 : 0;
     switch (type)
@@ -978,32 +978,32 @@ map<skill_type, int8_t> ash_get_boosted_skills(eq_type type)
         break;
 
     case (ET_LEFT):
-		ASSERT(left);
+        ASSERT(left);
 
-		// Boost weapon skill. Plain "staff" means an unrand magical staff,
-		// boosted later.
-		if ((left->base_type == OBJ_WEAPONS || left->base_type == OBJ_SHIELDS)
-			&& left->sub_type != WPN_STAFF)
-		{
-			boost[item_attack_skill(*left)] = bondage;
-		}
-		// Staves that have a melee effect, powered by evocations.
-		if (staff_uses_evocations(*left))
-		{
-			boost[SK_EVOCATIONS] = 1;
-			boost[SK_MACES_STAVES] = 1;
+        // Boost weapon skill. Plain "staff" means an unrand magical staff,
+        // boosted later.
+        if ((left->base_type == OBJ_WEAPONS || left->base_type == OBJ_SHIELDS)
+            && left->sub_type != WPN_STAFF)
+        {
+            boost[item_attack_skill(*left)] = bondage;
+        }
+        // Staves that have a melee effect, powered by evocations.
+        if (staff_uses_evocations(*left))
+        {
+            boost[SK_EVOCATIONS] = 1;
+            boost[SK_MACES_STAVES] = 1;
 
-		}
-		// Staves with an evokable ability but no melee effect.
-		else if (is_weapon(*left)
-			&& item_is_evokable(*left, false, false, false, false))
-		{
-			boost[SK_EVOCATIONS] = 2;
-		}
-		// Other magical staves.
-		else if (left->base_type == OBJ_STAVES)
-			boost[SK_SPELLCASTING] = 2;
-		break;
+        }
+        // Staves with an evokable ability but no melee effect.
+        else if (is_weapon(*left)
+            && item_is_evokable(*left, false, false, false, false))
+        {
+            boost[SK_EVOCATIONS] = 2;
+        }
+        // Other magical staves.
+        else if (left->base_type == OBJ_STAVES)
+            boost[SK_SPELLCASTING] = 2;
+        break;
 
     // Bonus for bounded armour depends on body armour type.
     case (ET_ARMOUR):
@@ -1062,32 +1062,32 @@ unsigned int ash_skill_point_boost(skill_type sk, int scaled_skill)
 
 int ash_skill_boost(skill_type sk, int scale)
 {
-	// It gives a bonus to skill points. The formula is:
-	// factor * (piety_rank + 1) * skill_level
-	// low bonus    -> factor = 3
-	// medium bonus -> factor = 5
-	// high bonus   -> factor = 7
+    // It gives a bonus to skill points. The formula is:
+    // factor * (piety_rank + 1) * skill_level
+    // low bonus    -> factor = 3
+    // medium bonus -> factor = 5
+    // high bonus   -> factor = 7
 
-	unsigned int skill_points = you.skill_points[sk]
-		+ get_crosstrain_points(sk)
-		+ ash_skill_point_boost(sk, you.skill(sk, 10, true));
+    unsigned int skill_points = you.skill_points[sk]
+        + get_crosstrain_points(sk)
+        + ash_skill_point_boost(sk, you.skill(sk, 10, true));
 
-	const int past_27_cost = 2500 * species_apt_factor(sk);
-	int level = you.skills[sk];
-	while (level < MAX_SKILL_LEVEL && skill_points >= skill_exp_needed(level + 1, sk))
-		++level;
-	if (level >= MAX_SKILL_LEVEL)
+    const int past_27_cost = 2500 * species_apt_factor(sk);
+    int level = you.skills[sk];
+    while (level < MAX_SKILL_LEVEL && skill_points >= skill_exp_needed(level + 1, sk))
+        ++level;
+    if (level >= MAX_SKILL_LEVEL)
         skill_points -= skill_exp_needed(27, sk);
-	while (level >= MAX_SKILL_LEVEL && skill_points >= past_27_cost)
-	{
-		skill_points -= past_27_cost;
-		++level;
-	}
+    while (level >= MAX_SKILL_LEVEL && skill_points >= past_27_cost)
+    {
+        skill_points -= past_27_cost;
+        ++level;
+    }
 
-	if (level <= MAX_SKILL_LEVEL)
-		level = level * scale + get_skill_progress(sk, level, skill_points, scale);
-	else
-		level = level * scale + div_round_up(skill_points,past_27_cost);
+    if (level <= MAX_SKILL_LEVEL)
+        level = level * scale + get_skill_progress(sk, level, skill_points, scale);
+    else
+        level = level * scale + div_round_up(skill_points,past_27_cost);
 
     return level;
 }
@@ -1117,8 +1117,8 @@ int qazlal_sh_boost(int piety)
     if (!have_passive(passive_t::storm_shield))
         return 0;
 
-	if (you.get_mutation_level(MUT_GODS_PITY) > 1)
-		return min(piety, piety_breakpoint(5)) / 7;
+    if (you.get_mutation_level(MUT_GODS_PITY) > 1)
+        return min(piety, piety_breakpoint(5)) / 7;
     return min(piety, piety_breakpoint(5)) / 10;
 }
 
@@ -1138,10 +1138,10 @@ void qazlal_storm_clouds()
         return;
 
     // You are a *storm*. You are pretty loud!
-	// Silent Spectres never make noise unless they intentionally send
-	// things outside their aura.
-	if (you.species != SP_SILENT_SPECTRE)
-	    noisy(min((int)you.piety, piety_breakpoint(5)) / 10, you.pos());
+    // Silent Spectres never make noise unless they intentionally send
+    // things outside their aura.
+    if (you.species != SP_SILENT_SPECTRE)
+        noisy(min((int)you.piety, piety_breakpoint(5)) / 10, you.pos());
 
     const int radius = you.piety >= piety_breakpoint(3) ? 2 : 1;
 
@@ -1227,7 +1227,7 @@ void qazlal_element_adapt(beam_type flavour, int strength)
             descript = "fire";
             break;
         case BEAM_COLD:
-		case BEAM_FREEZE:
+        case BEAM_FREEZE:
         case BEAM_ICE:
             what = BEAM_COLD;
             dur = DUR_QAZLAL_COLD_RES;
@@ -1279,10 +1279,10 @@ void qazlal_element_adapt(beam_type flavour, int strength)
 
     // was scaled by 10 * strength. But the strength parameter is used so inconsistently that
     // it seems like a constant would be better, based on the typical value of 2.
-	if (you.get_mutation_level(MUT_GODS_PITY) > 1)
-		you.increase_duration(dur, 30, 120);
-	else
-	    you.increase_duration(dur, 20, 80);
+    if (you.get_mutation_level(MUT_GODS_PITY) > 1)
+        you.increase_duration(dur, 30, 120);
+    else
+        you.increase_duration(dur, 20, 80);
 
     if (what == BEAM_MISSILE)
         you.redraw_armour_class = true;
@@ -1367,16 +1367,16 @@ monster* shadow_monster(bool equip)
             new_item.sub_type  = WPN_STAFF;
         }
 
-		// Hack to prevent a crash. BCADDO: Remove if/when enemies are able to use shield hybrids as weapons.
+        // Hack to prevent a crash. BCADDO: Remove if/when enemies are able to use shield hybrids as weapons.
 
-		if (wpn->base_type == OBJ_SHIELDS)
-		{
-			new_item.base_type = OBJ_WEAPONS;
-			if (wpn->sub_type == SHD_SAI)
-				new_item.sub_type = WPN_DAGGER;
-			else
-				new_item.sub_type = WPN_QUARTERSTAFF;
-		}
+        if (wpn->base_type == OBJ_SHIELDS)
+        {
+            new_item.base_type = OBJ_WEAPONS;
+            if (wpn->sub_type == SHD_SAI)
+                new_item.sub_type = WPN_DAGGER;
+            else
+                new_item.sub_type = WPN_QUARTERSTAFF;
+        }
 
         else
         {
@@ -1671,12 +1671,12 @@ static bool _wu_jian_lunge(const coord_def& old_pos)
     if (!mons || !_can_attack_martial(mons) || !mons->alive())
         return false;
 
-	if (you.attribute[ATTR_HEAVENLY_STORM] > 0)
-	{
-		if (player_spec_invo())
-			you.attribute[ATTR_HEAVENLY_STORM]++;
-		you.attribute[ATTR_HEAVENLY_STORM] += 2;
-	}
+    if (you.attribute[ATTR_HEAVENLY_STORM] > 0)
+    {
+        if (player_spec_invo())
+            you.attribute[ATTR_HEAVENLY_STORM]++;
+        you.attribute[ATTR_HEAVENLY_STORM] += 2;
+    }
 
     you.apply_berserk_penalty = false;
 
@@ -1741,12 +1741,12 @@ static bool _wu_jian_whirlwind(const coord_def& old_pos)
         if (!mons->alive())
             continue;
 
-		if (you.attribute[ATTR_HEAVENLY_STORM] > 0) 
-		{
-			if (player_spec_invo())
-				you.attribute[ATTR_HEAVENLY_STORM]++;
-			you.attribute[ATTR_HEAVENLY_STORM] += 2;
-		}
+        if (you.attribute[ATTR_HEAVENLY_STORM] > 0) 
+        {
+            if (player_spec_invo())
+                you.attribute[ATTR_HEAVENLY_STORM]++;
+            you.attribute[ATTR_HEAVENLY_STORM] += 2;
+        }
 
         // Pin has a longer duration than one player turn, but gets cleared
         // before its duration expires by wu_jian_end_of_turn_effects. This is
@@ -1826,12 +1826,12 @@ void wu_jian_wall_jump_effects(const coord_def& old_pos)
         if (!target->alive())
             continue;
 
-		if (you.attribute[ATTR_HEAVENLY_STORM] > 0)
-		{
-			if (player_spec_invo())
-				you.attribute[ATTR_HEAVENLY_STORM]++;
-			you.attribute[ATTR_HEAVENLY_STORM] += 2;
-		}
+        if (you.attribute[ATTR_HEAVENLY_STORM] > 0)
+        {
+            if (player_spec_invo())
+                you.attribute[ATTR_HEAVENLY_STORM]++;
+            you.attribute[ATTR_HEAVENLY_STORM] += 2;
+        }
 
         you.apply_berserk_penalty = false;
 

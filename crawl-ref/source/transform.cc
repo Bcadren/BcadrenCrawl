@@ -92,7 +92,7 @@ Form::Form(const form_entry &fe)
       str_mod(fe.str_mod), dex_mod(fe.dex_mod),
       blocked_slots(fe.blocked_slots), size(fe.size), hp_mod(fe.hp_mod),
       can_cast(fe.can_cast), spellcasting_penalty(fe.spellcasting_penalty),
-	  uc_colour(fe.uc_colour),
+      uc_colour(fe.uc_colour),
       uc_attack_verbs(fe.uc_attack_verbs),
       can_bleed(fe.can_bleed), breathes(fe.breathes),
       keeps_mutations(fe.keeps_mutations),
@@ -1113,21 +1113,21 @@ static set<equipment_type>
 _init_equipment_removal(transformation form)
 {
     set<equipment_type> result;
-	if (!form_can_wield(form))
-	{
-		if (you.weapon(0) || you.melded[EQ_WEAPON0])
-			result.insert(EQ_WEAPON0);
-		if (you.weapon(1) || you.melded[EQ_WEAPON1])
-			result.insert(EQ_WEAPON1);
-	}
+    if (!form_can_wield(form))
+    {
+        if (you.weapon(0) || you.melded[EQ_WEAPON0])
+            result.insert(EQ_WEAPON0);
+        if (you.weapon(1) || you.melded[EQ_WEAPON1])
+            result.insert(EQ_WEAPON1);
+    }
 
     // Liches can't wield holy weapons.
     if (form == transformation::lich)
-	{
-		if (you.weapon(0) && is_holy_item(*you.weapon(0)))
-		   result.insert(EQ_WEAPON0);
-		if (you.weapon(1) && is_holy_item(*you.weapon(1)))
-			result.insert(EQ_WEAPON1);
+    {
+        if (you.weapon(0) && is_holy_item(*you.weapon(0)))
+           result.insert(EQ_WEAPON0);
+        if (you.weapon(1) && is_holy_item(*you.weapon(1)))
+            result.insert(EQ_WEAPON1);
     }
 
     for (int i = EQ_FIRST_EQUIP; i < NUM_EQUIP; ++i)
@@ -1174,8 +1174,8 @@ static void _remove_equipment(const set<equipment_type>& removed,
         {
             if (e == EQ_WEAPON0)
                 unwield_item(true, true);
-			if (e == EQ_WEAPON1)
-				unwield_item(false, true);
+            if (e == EQ_WEAPON1)
+                unwield_item(false, true);
             else
                 unequip_item(e);
 
@@ -1212,12 +1212,12 @@ static void _unmeld_equipment_type(equipment_type e)
         // If you switched weapons during the transformation, make
         // sure you can still wear your shield.
         // (This is only possible with Statue Form.)
-		if (you.weapon(0) && you.weapon(1) && (you.hands_reqd(*you.weapon(0), true) == HANDS_TWO || you.hands_reqd(*you.weapon(1), true) == HANDS_TWO))
-			force_remove = true;
-		if (you.weapon(0) && !can_wield(you.weapon(0), false, true, false, true))
-			force_remove = true;
-		if (you.weapon(1) && !can_wield(you.weapon(1), false, true, false, false))
-			force_remove = true;
+        if (you.weapon(0) && you.weapon(1) && (you.hands_reqd(*you.weapon(0), true) == HANDS_TWO || you.hands_reqd(*you.weapon(1), true) == HANDS_TWO))
+            force_remove = true;
+        if (you.weapon(0) && !can_wield(you.weapon(0), false, true, false, true))
+            force_remove = true;
+        if (you.weapon(1) && !can_wield(you.weapon(1), false, true, false, false))
+            force_remove = true;
     }
 
     if (force_remove)
@@ -1530,13 +1530,13 @@ undead_form_reason lifeless_prevents_form(transformation which_trans,
     if (which_trans == transformation::shadow)
         return UFR_GOOD; // even the undead can use dith's shadow form
 
-	if (you.species == SP_SILENT_SPECTRE) {
-		
-		if (which_trans == transformation::lich || which_trans == transformation::statue)
-			return UFR_TOO_SOLID;
-		else 
-			return UFR_GOOD;
-	}
+    if (you.species == SP_SILENT_SPECTRE) {
+        
+        if (which_trans == transformation::lich || which_trans == transformation::statue)
+            return UFR_TOO_SOLID;
+        else 
+            return UFR_GOOD;
+    }
 
     if (you.species != SP_VAMPIRE)
         return UFR_TOO_DEAD; // ghouls & mummies can't become anything else
@@ -1600,11 +1600,11 @@ bool transform(int pow, transformation which_trans, bool involuntary,
     if (!involuntary && crawl_state.is_god_acting())
         involuntary = true;
 
-	if (you.attribute[ATTR_ROOTED])
-	{
-		msg = "You can't change form while your roots are underground!";
-		success = false;
-	}
+    if (you.attribute[ATTR_ROOTED])
+    {
+        msg = "You can't change form while your roots are underground!";
+        success = false;
+    }
     if (you.transform_uncancellable)
     {
         msg = "You are stuck in your current form!";
@@ -1664,33 +1664,33 @@ bool transform(int pow, transformation which_trans, bool involuntary,
         msg = "Your unliving flesh cannot be transformed in this way.";
         success = false;
     }
-	else if (lifeless_prevents_form(which_trans, involuntary) == UFR_TOO_SOLID)
-	{
-		if (which_trans == transformation::statue)
-			msg = "You're ghostly form cannot become solid enough.";
-		else if (which_trans == transformation::lich)
-			msg = "You're already undead.";
-		success = false;
-	}
+    else if (lifeless_prevents_form(which_trans, involuntary) == UFR_TOO_SOLID)
+    {
+        if (which_trans == transformation::statue)
+            msg = "You're ghostly form cannot become solid enough.";
+        else if (which_trans == transformation::lich)
+            msg = "You're already undead.";
+        success = false;
+    }
     else if (which_trans == transformation::lich
              && you.duration[DUR_DEATHS_DOOR])
     {
         msg = "You cannot become a lich while in death's door.";
         success = false;
     }
-	else if (you.species == SP_LIGNIFITE)
-	{
-		if (which_trans == transformation::tree)
-		{
-			msg = "You're already a tree.";
-			success = false;
-		}
-		else if (which_trans == transformation::lich)
-		{
-			msg = "An undead tree; what a novel thought. Doesn't work though.";
-			success = false;
-		}
-	}
+    else if (you.species == SP_LIGNIFITE)
+    {
+        if (which_trans == transformation::tree)
+        {
+            msg = "You're already a tree.";
+            success = false;
+        }
+        else if (which_trans == transformation::lich)
+        {
+            msg = "An undead tree; what a novel thought. Doesn't work though.";
+            success = false;
+        }
+    }
 
     if (!just_check && previous_trans != transformation::none)
         untransform(true);
@@ -1703,7 +1703,7 @@ bool transform(int pow, transformation which_trans, bool involuntary,
     nil_item.link = -1;
     if (just_check && !involuntary
         && which_trans == transformation::lich
-		&& (rem_stuff.count(EQ_WEAPON0) || rem_stuff.count(EQ_WEAPON1))
+        && (rem_stuff.count(EQ_WEAPON0) || rem_stuff.count(EQ_WEAPON1))
         && !check_old_item_warning(nil_item, OPER_WIELD))
     {
         canned_msg(MSG_OK);

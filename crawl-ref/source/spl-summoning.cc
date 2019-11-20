@@ -747,7 +747,7 @@ bool tukima_affects(const actor &target)
            && is_weapon(*wpn)
            && !is_range_weapon(*wpn)
            && !is_special_unrandom_artefact(*wpn)
-		   && wpn->base_type != OBJ_SHIELDS // BCADNOTE: Again, enemies can't properly use the new shields.
+           && wpn->base_type != OBJ_SHIELDS // BCADNOTE: Again, enemies can't properly use the new shields.
            && !mons_class_is_animated_weapon(target.type)
            && !mons_is_hepliaklqana_ancestor(target.type);
 }
@@ -901,18 +901,18 @@ void cast_tukimas_dance(int pow, actor* target)
 {
     ASSERT(target);
 
-	int weap_slot = 0;
+    int weap_slot = 0;
 
-	if (_check_tukima_validity(target, 0))
-	{
-		if (_check_tukima_validity(target, 1))
-			weap_slot = coinflip() ? 0 : 1;
-		else
-			weap_slot = 0;
-	}
-	else if (_check_tukima_validity(target, 1))
-		weap_slot = 1;
-	else
+    if (_check_tukima_validity(target, 0))
+    {
+        if (_check_tukima_validity(target, 1))
+            weap_slot = coinflip() ? 0 : 1;
+        else
+            weap_slot = 0;
+    }
+    else if (_check_tukima_validity(target, 1))
+        weap_slot = 1;
+    else
         return;
 
     _animate_weapon(pow, target, weap_slot);
@@ -2671,52 +2671,52 @@ void end_battlesphere(monster* mons, bool killed)
 
 bool battlesphere_can_mirror(spell_type spell)
 {
-	return (spell == SPELL_FREEZE
-		|| spell == SPELL_STICKY_FLAME
-		|| spell == SPELL_SANDBLAST
-		|| spell == SPELL_AIRSTRIKE
-		|| spell == SPELL_BLINDING_SPRAY
-		|| spell == SPELL_STING
-		|| spell == SPELL_FIREBALL
-		|| spell == SPELL_BOLT_OF_FIRE
-		|| spell == SPELL_BOLT_OF_COLD
-		|| spell == SPELL_LIGHTNING_BOLT
-		|| spell == SPELL_BOLT_OF_MAGMA
-		|| spell == SPELL_THROW_FLAME
-		|| spell == SPELL_THROW_FROST
-		|| spell == SPELL_FREEZING_CLOUD
-		|| spell == SPELL_MEPHITIC_CLOUD
-		|| spell == SPELL_VENOM_BOLT
-		|| spell == SPELL_BOLT_OF_DRAINING
-		|| spell == SPELL_LEHUDIBS_CRYSTAL_SPEAR
-		|| spell == SPELL_POISONOUS_CLOUD
-		|| spell == SPELL_POISONOUS_VAPOURS
-		|| spell == SPELL_FIRE_STORM
-		|| spell == SPELL_VAMPIRIC_DRAINING
-		|| spell == SPELL_POISON_ARROW
-		|| spell == SPELL_HURL_DAMNATION
-		|| spell == SPELL_IRON_SHOT
-		|| spell == SPELL_STONE_ARROW
-		|| spell == SPELL_SHOCK
-		|| spell == SPELL_THROW_ICICLE
-		|| spell == SPELL_GLACIATE
-		|| spell == SPELL_FLAME_TONGUE
-		|| spell == SPELL_STEAM_BALL
-		|| spell == SPELL_ENERGY_BOLT
-		|| spell == SPELL_PRIMAL_WAVE
-		|| spell == SPELL_STICKY_FLAME_RANGE
-		|| spell == SPELL_THUNDERBOLT
-		|| spell == SPELL_BLINDING_SPRAY
-		|| spell == SPELL_FORCE_LANCE
-		|| spell == SPELL_GHOSTLY_FIREBALL
-		|| spell == SPELL_WATERSTRIKE
-		|| spell == SPELL_WIND_BLAST
-		|| spell == SPELL_FLASH_FREEZE
-		|| spell == SPELL_CRYSTAL_BOLT
-		|| spell == SPELL_CORROSIVE_BOLT
-		|| spell == SPELL_ELECTRICAL_BOLT
-		|| spell == SPELL_ICEBLAST
-		|| spell == SPELL_SEARING_RAY);
+    return (spell == SPELL_FREEZE
+        || spell == SPELL_STICKY_FLAME
+        || spell == SPELL_SANDBLAST
+        || spell == SPELL_AIRSTRIKE
+        || spell == SPELL_BLINDING_SPRAY
+        || spell == SPELL_STING
+        || spell == SPELL_FIREBALL
+        || spell == SPELL_BOLT_OF_FIRE
+        || spell == SPELL_BOLT_OF_COLD
+        || spell == SPELL_LIGHTNING_BOLT
+        || spell == SPELL_BOLT_OF_MAGMA
+        || spell == SPELL_THROW_FLAME
+        || spell == SPELL_THROW_FROST
+        || spell == SPELL_FREEZING_CLOUD
+        || spell == SPELL_MEPHITIC_CLOUD
+        || spell == SPELL_VENOM_BOLT
+        || spell == SPELL_BOLT_OF_DRAINING
+        || spell == SPELL_LEHUDIBS_CRYSTAL_SPEAR
+        || spell == SPELL_POISONOUS_CLOUD
+        || spell == SPELL_POISONOUS_VAPOURS
+        || spell == SPELL_FIRE_STORM
+        || spell == SPELL_VAMPIRIC_DRAINING
+        || spell == SPELL_POISON_ARROW
+        || spell == SPELL_HURL_DAMNATION
+        || spell == SPELL_IRON_SHOT
+        || spell == SPELL_STONE_ARROW
+        || spell == SPELL_SHOCK
+        || spell == SPELL_THROW_ICICLE
+        || spell == SPELL_GLACIATE
+        || spell == SPELL_FLAME_TONGUE
+        || spell == SPELL_STEAM_BALL
+        || spell == SPELL_ENERGY_BOLT
+        || spell == SPELL_PRIMAL_WAVE
+        || spell == SPELL_STICKY_FLAME_RANGE
+        || spell == SPELL_THUNDERBOLT
+        || spell == SPELL_BLINDING_SPRAY
+        || spell == SPELL_FORCE_LANCE
+        || spell == SPELL_GHOSTLY_FIREBALL
+        || spell == SPELL_WATERSTRIKE
+        || spell == SPELL_WIND_BLAST
+        || spell == SPELL_FLASH_FREEZE
+        || spell == SPELL_CRYSTAL_BOLT
+        || spell == SPELL_CORROSIVE_BOLT
+        || spell == SPELL_ELECTRICAL_BOLT
+        || spell == SPELL_ICEBLAST
+        || spell == SPELL_SEARING_RAY);
 }
 
 bool aim_battlesphere(actor* agent, spell_type spell, int powc, bolt& beam)
@@ -3115,7 +3115,7 @@ bool weapon_can_be_spectral(const item_def *wpn)
 {
     return wpn && is_weapon(*wpn) && !is_range_weapon(*wpn)
         && !is_special_unrandom_artefact(*wpn)
-		&& wpn->base_type != OBJ_SHIELDS;
+        && wpn->base_type != OBJ_SHIELDS;
 }
 
 spret cast_spectral_weapon(actor *agent, int pow, god_type god, bool fail)
@@ -3130,23 +3130,23 @@ spret cast_spectral_weapon(actor *agent, int pow, god_type god, bool fail)
     {
         if (agent->is_player())
         {
-			if (you.weapon(1) && weapon_can_be_spectral(you.weapon(1)))
-				wpn = you.weapon(1);
+            if (you.weapon(1) && weapon_can_be_spectral(you.weapon(1)))
+                wpn = you.weapon(1);
             else if (wpn)
             {
                 mprf("%s vibrate%s crazily for a second.",
                      wpn->name(DESC_YOUR).c_str(),
                      wpn->quantity > 1 ? "" : "s");
-				return spret::abort;
+                return spret::abort;
             }
-			else
-			{
-				mpr(you.hands_act("twitch", "."));
-				return spret::abort;
-			}
+            else
+            {
+                mpr(you.hands_act("twitch", "."));
+                return spret::abort;
+            }
         }
-		else
-			return spret::abort;
+        else
+            return spret::abort;
     }
 
     fail_check();

@@ -94,7 +94,7 @@ monster_type summon_any_demon(monster_type dct, bool use_local_demons = false);
 bool drac_colour_incompatible(int drac, int colour);
 
 bool monster_habitable_grid(const monster* mon, dungeon_feature_type actual_grid,
-							bool ai_check = true);
+                            bool ai_check = true);
 bool monster_habitable_grid(monster_type mt, dungeon_feature_type actual_grid,
                             dungeon_feature_type wanted_grid = DNGN_UNSEEN,
                             bool flies = false, bool ai_check = true);

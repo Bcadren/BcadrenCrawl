@@ -292,10 +292,10 @@ static int _apply_spellcasting_success_boosts(spell_type spell, int chance)
     {
         // [dshaligram] Fail rate multiplier used to be .5, scaled
         // back to 67%.
-		if (you.get_mutation_level(MUT_GODS_PITY) > 1)
-			fail_reduce = 50;
-		else
-	        fail_reduce = 67;
+        if (you.get_mutation_level(MUT_GODS_PITY) > 1)
+            fail_reduce = 50;
+        else
+            fail_reduce = 67;
     }
 
     const int wizardry = player_wizardry(spell);
@@ -378,9 +378,9 @@ int raw_spell_fail(spell_type spell)
     chance2 += get_form()->spellcasting_penalty;
 
     chance2 -= 2 * you.get_mutation_level(MUT_SUBDUED_MAGIC);
-	if (silenced(you.pos()))
-		chance2 += 3 * you.get_mutation_level(MUT_SILENT_CAST);
-	chance2 += 4 * you.get_mutation_level(MUT_WILD_MAGIC);
+    if (silenced(you.pos()))
+        chance2 += 3 * you.get_mutation_level(MUT_SILENT_CAST);
+    chance2 += 4 * you.get_mutation_level(MUT_WILD_MAGIC);
     chance2 += 4 * you.get_mutation_level(MUT_ANTI_WIZARDRY);
 
     if (you.props.exists(SAP_MAGIC_KEY))
@@ -598,12 +598,12 @@ bool can_cast_spells(bool quiet)
         return false;
     }
 
-	if (you.drowning())
-	{
-		if (!quiet)
-			mpr("You cannot cast spells while struggling to keep your head above water!");
-		return false;
-	}
+    if (you.drowning())
+    {
+        if (!quiet)
+            mpr("You cannot cast spells while struggling to keep your head above water!");
+        return false;
+    }
 
     if (you.duration[DUR_BRAINLESS])
     {
@@ -1182,8 +1182,8 @@ static unique_ptr<targeter> _spell_targeter(spell_type spell, int pow,
                 you.props[THUNDERBOLT_AIM_KEY].get_coord() : coord_def());
     case SPELL_LRD:
         return make_unique<targeter_fragment>(&you, pow, range);
-	case SPELL_SMD:
-		return make_unique<targeter_smite>(&you, 1, 0, 0, true);
+    case SPELL_SMD:
+        return make_unique<targeter_smite>(&you, 1, 0, 0, true);
     case SPELL_FULMINANT_PRISM:
         return make_unique<targeter_smite>(&you, range, 0, 2);
     case SPELL_BLINDING_SPRAY:
@@ -1520,8 +1520,8 @@ spret your_spells(spell_type spell, int powc, bool allow_fail,
             simple_god_message(" does not allow the disloyal to dabble in "
                                "destruction!", GOD_VEHUMET);
 
-			const spschool which_miscast = random_choose(spschool::fire, spschool::ice,
-				                                         spschool::air, spschool::earth);
+            const spschool which_miscast = random_choose(spschool::fire, spschool::ice,
+                                                         spschool::air, spschool::earth);
 
             // The spell still goes through, but you get a miscast anyway.
             MiscastEffect(&you, nullptr, {miscast_source::god, GOD_VEHUMET},
@@ -1536,13 +1536,13 @@ spret your_spells(spell_type spell, int powc, bool allow_fail,
             fail = spfail_chance - spfl;
     }
 
-	if ((you.res_poison() < 2) && !you.is_unbreathing() && !evoked_item &&
-		cloud_at(you.pos()) && cloud_at(you.pos())->type == CLOUD_MEPHITIC &&
-		one_chance_in(1 + div_round_up(you.experience_level, 8)))
-	{
-		mpr("You choke on the fumes and fail to recite the spell correctly.");
-		fail = antimagic = true;
-	}
+    if ((you.res_poison() < 2) && !you.is_unbreathing() && !evoked_item &&
+        cloud_at(you.pos()) && cloud_at(you.pos())->type == CLOUD_MEPHITIC &&
+        one_chance_in(1 + div_round_up(you.experience_level, 8)))
+    {
+        mpr("You choke on the fumes and fail to recite the spell correctly.");
+        fail = antimagic = true;
+    }
 
     dprf("Spell #%d, power=%d", spell, powc);
 
@@ -1690,8 +1690,8 @@ static spret _do_cast(spell_type spell, int powc, const dist& spd,
     case SPELL_LRD:
         return cast_fragmentation(powc, &you, spd.target, fail);
 
-	case SPELL_SMD:
-		return cast_SMD(spd.target, powc, fail);
+    case SPELL_SMD:
+        return cast_SMD(spd.target, powc, fail);
 
     case SPELL_GRAVITAS:
         return cast_gravitas(powc, beam.target, fail);

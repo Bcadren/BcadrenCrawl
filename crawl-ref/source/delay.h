@@ -375,7 +375,7 @@ public:
 class PasswallDelay : public Delay
 {
     coord_def dest;
-	bool prompted = false;
+    bool prompted = false;
     void start() override;
 
     void tick() override
@@ -399,49 +399,49 @@ public:
 
 class SMDDelay : public Delay
 {
-	coord_def target;
-	bool prompted = false;
+    coord_def target;
+    bool prompted = false;
 
-	void start() override;
+    void start() override;
 
-	void tick() override;
+    void tick() override;
 
-	void finish() override;
+    void finish() override;
 
 public:
-	SMDDelay(int dur, coord_def pos) :
-		Delay(dur), target{ pos }
-	{ }
+    SMDDelay(int dur, coord_def pos) :
+        Delay(dur), target{ pos }
+    { }
 
-	bool try_interrupt() override;
+    bool try_interrupt() override;
 
-	const char* name() const override
-	{
-		return "methodical destruction";
-	}
+    const char* name() const override
+    {
+        return "methodical destruction";
+    }
 };
 
 class DerootDelay : public Delay
 {
-	bool was_prompted = false;
-	void start() override;
+    bool was_prompted = false;
+    void start() override;
 
-	void tick() override
-	{
-		mprf(MSGCH_MULTITURN_ACTION, "You keep digging out your roots.");
-	}
+    void tick() override
+    {
+        mprf(MSGCH_MULTITURN_ACTION, "You keep digging out your roots.");
+    }
 
-	void finish() override;
+    void finish() override;
 public:
-	DerootDelay(int dur) : Delay(dur)
-	{ }
+    DerootDelay(int dur) : Delay(dur)
+    { }
 
-	bool try_interrupt() override;
+    bool try_interrupt() override;
 
-	const char* name() const override
-	{
-		return "uprooting";
-	}
+    const char* name() const override
+    {
+        return "uprooting";
+    }
 };
 
 class DropItemDelay : public Delay
@@ -690,7 +690,7 @@ public:
 
 class ShaftSelfDelay : public Delay
 {
-	bool prompted = false;
+    bool prompted = false;
 
     void start() override;
 

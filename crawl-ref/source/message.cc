@@ -1779,9 +1779,9 @@ void canned_msg(canned_message_type which_message)
 {
     switch (which_message)
     {
-		case MSG_BRAINLESS:
-			mprf("You have forgotten how to read.");
-			break;
+        case MSG_BRAINLESS:
+            mprf("You have forgotten how to read.");
+            break;
         case MSG_SOMETHING_APPEARS:
             mprf("Something appears %s!",
                  player_has_feet() ? "at your feet" : "before you");
@@ -1847,25 +1847,25 @@ void canned_msg(canned_message_type which_message)
             crawl_state.cancel_cmd_repeat();
             break;
         case MSG_EMPTY_HANDED_ALREADY:
-			if (you.has_usable_claws(true))
-				mpr("Your claws are already primed for unarmed combat.");
-			else if (you.has_usable_tentacles(true))
-				mpr("Your tentacles are already primed for unarmed combat.");
-			else if (you.get_mutation_level(MUT_MISSING_HAND) > 0)
-				mpr("Your fist is already primed for unarmed combat.");
-			else
-				mpr("Your fists are already primed for unarmed combat.");
-			break;
+            if (you.has_usable_claws(true))
+                mpr("Your claws are already primed for unarmed combat.");
+            else if (you.has_usable_tentacles(true))
+                mpr("Your tentacles are already primed for unarmed combat.");
+            else if (you.get_mutation_level(MUT_MISSING_HAND) > 0)
+                mpr("Your fist is already primed for unarmed combat.");
+            else
+                mpr("Your fists are already primed for unarmed combat.");
+            break;
         case MSG_EMPTY_HANDED_NOW:
-			if (you.has_usable_claws(true))
-				mpr("You prep your claws for unarmed combat!");
-			else if (you.has_usable_tentacles(true))
-				mpr("You prep your tentacles for unarmed combat!");
-			else if (you.get_mutation_level(MUT_MISSING_HAND) > 0 || you.weapon(0) || you.weapon(1))
-				mpr("You prep your fist for unarmed combat!");
-			else
-				mpr("You prep your fists for unarmed combat!");
-			break;
+            if (you.has_usable_claws(true))
+                mpr("You prep your claws for unarmed combat!");
+            else if (you.has_usable_tentacles(true))
+                mpr("You prep your tentacles for unarmed combat!");
+            else if (you.get_mutation_level(MUT_MISSING_HAND) > 0 || you.weapon(0) || you.weapon(1))
+                mpr("You prep your fist for unarmed combat!");
+            else
+                mpr("You prep your fists for unarmed combat!");
+            break;
         case MSG_YOU_BLINK:
             mpr("You blink.");
             break;

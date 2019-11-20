@@ -4897,7 +4897,7 @@ int str_to_ego(object_class_type item_type, string ego_str)
 #endif
         "repulsion",
         "cloud_immunity",
-		"high_priest",
+        "high_priest",
         nullptr
     };
     COMPILE_CHECK(ARRAYSZ(armour_egos) == NUM_REAL_SPECIAL_ARMOURS);
@@ -4936,8 +4936,8 @@ int str_to_ego(object_class_type item_type, string ego_str)
 #endif
         "penetration",
         "reaping",
-		"silver",
-		"acid",
+        "silver",
+        "acid",
         nullptr
     };
     COMPILE_CHECK(ARRAYSZ(weapon_brands) == NUM_REAL_SPECIAL_WEAPONS);
@@ -5550,7 +5550,7 @@ bool item_list::parse_single_spec(item_spec& result, string s)
     if (result.base_type != OBJ_WEAPONS
         && result.base_type != OBJ_MISSILES
         && result.base_type != OBJ_ARMOURS
-		&& result.base_type != OBJ_SHIELDS)
+        && result.base_type != OBJ_SHIELDS)
     {
         error = "An ego can only be applied to a weapon, missile, "
             "shield or armour.";
@@ -5563,17 +5563,17 @@ bool item_list::parse_single_spec(item_spec& result, string s)
         return true;
     }
 
-	int ego = 0;
+    int ego = 0;
 
-	if (result.base_type == OBJ_SHIELDS)
-	{
-		if (is_hybrid(result.sub_type))
-			ego = str_to_ego(OBJ_WEAPONS, ego_str);
-		else
-			ego = str_to_ego(OBJ_ARMOURS, ego_str);
-	}
-	else 
-		ego = str_to_ego(result.base_type, ego_str);
+    if (result.base_type == OBJ_SHIELDS)
+    {
+        if (is_hybrid(result.sub_type))
+            ego = str_to_ego(OBJ_WEAPONS, ego_str);
+        else
+            ego = str_to_ego(OBJ_ARMOURS, ego_str);
+    }
+    else 
+        ego = str_to_ego(result.base_type, ego_str);
 
     if (ego == 0)
     {

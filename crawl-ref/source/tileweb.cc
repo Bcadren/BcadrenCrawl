@@ -862,10 +862,10 @@ void TilesFramework::_send_player(bool force_full)
     {
         prank = 2;
     }
-	else if (you.char_class == JOB_PRIEST && !had_gods())
-	{
-		prank = 1;
-	}
+    else if (you.char_class == JOB_PRIEST && !had_gods())
+    {
+        prank = 1;
+    }
 
     _update_int(force_full, c.piety_rank, prank, "piety_rank");
 

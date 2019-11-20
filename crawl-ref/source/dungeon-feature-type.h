@@ -28,7 +28,7 @@ enum dungeon_feature_type
 
     // Walls
 #if TAG_MAJOR_VERSION > 34
-	DNGN_SILVER_WALL,                  // Zin-Blessed Metal Walls (rare outside of Imprison (a)bility).
+    DNGN_SILVER_WALL,                  // Zin-Blessed Metal Walls (rare outside of Imprison (a)bility).
 #endif
     DNGN_METAL_WALL,
     DNGN_CRYSTAL_WALL,
@@ -235,8 +235,8 @@ enum dungeon_feature_type
 
     DNGN_ENTER_ZIGGURAT,
     DNGN_ENTER_BAZAAR,
-	DNGN_ENTER_START_TEMPLE,
-	DNGN_ENTER_START_MARKET,
+    DNGN_ENTER_START_TEMPLE,
+    DNGN_ENTER_START_MARKET,
     DNGN_ENTER_TROVE,
     DNGN_ENTER_SEWER,
     DNGN_ENTER_OSSUARY,
@@ -251,8 +251,8 @@ enum dungeon_feature_type
 
     DNGN_EXIT_ZIGGURAT,
     DNGN_EXIT_BAZAAR,
-	DNGN_EXIT_START_TEMPLE,
-	DNGN_EXIT_START_MARKET,
+    DNGN_EXIT_START_TEMPLE,
+    DNGN_EXIT_START_MARKET,
     DNGN_EXIT_TROVE,
     DNGN_EXIT_SEWER,
     DNGN_EXIT_OSSUARY,
@@ -285,7 +285,7 @@ enum dungeon_feature_type
     DNGN_TRANSPORTER,
     DNGN_TRANSPORTER_LANDING,
 
-	DNGN_SILVER_WALL,
+    DNGN_SILVER_WALL,
 
     DNGN_ICE,
     DNGN_OBSIDIAN,

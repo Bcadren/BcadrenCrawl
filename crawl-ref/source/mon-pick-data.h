@@ -919,12 +919,12 @@ static const pop_entry pop_zig[] =
 
 static const pop_entry pop_starttemple[] =
 { // Starting Temple for Priests
-	{ 0,0,0,FLAT,MONS_0 }
+    { 0,0,0,FLAT,MONS_0 }
 };
 
 static const pop_entry pop_startmarket[] =
 { // Starting Market for Nobles
-	{ 0,0,0,FLAT,MONS_0 }
+    { 0,0,0,FLAT,MONS_0 }
 };
 
 static const pop_entry pop_gauntlet[] =
@@ -1140,8 +1140,8 @@ static const population_list population[] =
     POP(depths),
 #endif
     POP(desolation),
-	POP(starttemple),
-	POP(startmarket),
+    POP(starttemple),
+    POP(startmarket),
 #if TAG_MAJOR_VERSION == 34
     POP(gauntlet),
 #endif
@@ -1259,8 +1259,8 @@ static const population_list population_zombie[] =
     POP(depths),
 #endif
     POP(desolation),
-	POP(starttemple),
-	POP(startmarket),
+    POP(starttemple),
+    POP(startmarket),
 #if TAG_MAJOR_VERSION == 34
     POP(gauntlet),
 #endif
@@ -1377,8 +1377,8 @@ static const population_list population_water[] =
     POP(water_depths),
 #endif
     POP(water_generic), // Desolation
-	POP(water_generic), // Start Market
-	POP(water_generic), // Start Temple
+    POP(water_generic), // Start Market
+    POP(water_generic), // Start Temple
 #if TAG_MAJOR_VERSION == 34
     POP(water_generic), // Gauntlet
 #endif
@@ -1491,8 +1491,8 @@ static const population_list population_lava[] =
     POP(lava_depths),
 #endif
     POP(lava_generic), // Desolation
-	POP(lava_generic), // Start Market
-	POP(lava_generic), // Start Temple
+    POP(lava_generic), // Start Market
+    POP(lava_generic), // Start Temple
 #if TAG_MAJOR_VERSION == 34
     POP(lava_generic), // Gauntlet
 #endif

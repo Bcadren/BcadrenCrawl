@@ -157,8 +157,8 @@ int artefact_value(const item_def &item)
     if (prop[ ARTP_NOISE ])
         ret -= 5;
 
-	if (prop[ ARTP_INACCURACY ])
-		ret -= 8;
+    if (prop[ ARTP_INACCURACY ])
+        ret -= 8;
 
     if (prop[ ARTP_PREVENT_TELEPORTATION ])
         ret -= 8;
@@ -192,78 +192,78 @@ int artefact_value(const item_def &item)
 
 static int _weapon_brand_value(item_def item)
 {
-	switch (get_weapon_brand(item))
-	{
-		case SPWPN_NORMAL:
-		default:            // randart
-			return 10;
+    switch (get_weapon_brand(item))
+    {
+        case SPWPN_NORMAL:
+        default:            // randart
+            return 10;
 
-		case SPWPN_SPEED:
-		case SPWPN_VAMPIRISM:
-		case SPWPN_ANTIMAGIC:
-			return 30;
+        case SPWPN_SPEED:
+        case SPWPN_VAMPIRISM:
+        case SPWPN_ANTIMAGIC:
+            return 30;
 
-		case SPWPN_DISTORTION:
-		case SPWPN_ELECTROCUTION:
-		case SPWPN_PAIN:
-		case SPWPN_ACID:
-		case SPWPN_PENETRATION: // Unrand-only.
-			return 25;
+        case SPWPN_DISTORTION:
+        case SPWPN_ELECTROCUTION:
+        case SPWPN_PAIN:
+        case SPWPN_ACID:
+        case SPWPN_PENETRATION: // Unrand-only.
+            return 25;
 
-		case SPWPN_CHAOS:
-		case SPWPN_DRAINING: // Unrand-only.
-		case SPWPN_MOLTEN:
-		case SPWPN_FREEZING:
-		case SPWPN_HOLY_WRATH:
-		case SPWPN_SILVER:
-		case SPWPN_VENOM:
-			return 18;
+        case SPWPN_CHAOS:
+        case SPWPN_DRAINING: // Unrand-only.
+        case SPWPN_MOLTEN:
+        case SPWPN_FREEZING:
+        case SPWPN_HOLY_WRATH:
+        case SPWPN_SILVER:
+        case SPWPN_VENOM:
+            return 18;
 
-		case SPWPN_VORPAL:
-			return 15;
+        case SPWPN_VORPAL:
+            return 15;
 
-		case SPWPN_PROTECTION:
-			return 12;
-	}
+        case SPWPN_PROTECTION:
+            return 12;
+    }
 }
 
 static int _armour_brand_value(special_armour_type sparm)
 {
-	switch (sparm)
-	{
-	case SPARM_RUNNING:
-	case SPARM_ARCHMAGI:
-	case SPARM_HIGH_PRIEST:
-	case SPARM_RESISTANCE:
-		return 250;
+    switch (sparm)
+    {
+    case SPARM_RUNNING:
+    case SPARM_ARCHMAGI:
+    case SPARM_HIGH_PRIEST:
+    case SPARM_RESISTANCE:
+        return 250;
 
-	case SPARM_COLD_RESISTANCE:
-	case SPARM_DEXTERITY:
-	case SPARM_FIRE_RESISTANCE:
-	case SPARM_IMPROVED_VISION:
-	case SPARM_INTELLIGENCE:
-	case SPARM_STEALTH:
-	case SPARM_STRENGTH:
-	case SPARM_INVISIBILITY:
-	case SPARM_MAGIC_RESISTANCE:
-	case SPARM_PROTECTION:
-	case SPARM_ARCHERY:
-	case SPARM_REPULSION:
-		return 50;
+    case SPARM_COLD_RESISTANCE:
+    case SPARM_DEXTERITY:
+    case SPARM_FIRE_RESISTANCE:
+    case SPARM_IMPROVED_VISION:
+    case SPARM_INTELLIGENCE:
+    case SPARM_STEALTH:
+    case SPARM_STRENGTH:
+    case SPARM_INVISIBILITY:
+    case SPARM_MAGIC_RESISTANCE:
+    case SPARM_PROTECTION:
+    case SPARM_ARCHERY:
+    case SPARM_REPULSION:
+        return 50;
 
-	case SPARM_POSITIVE_ENERGY:
-	case SPARM_POISON_RESISTANCE:
-	case SPARM_REFLECTION:
-	case SPARM_SPIRIT_SHIELD:
-		return 20;
+    case SPARM_POSITIVE_ENERGY:
+    case SPARM_POISON_RESISTANCE:
+    case SPARM_REFLECTION:
+    case SPARM_SPIRIT_SHIELD:
+        return 20;
 
-	case SPARM_PONDEROUSNESS:
-		return -250;
+    case SPARM_PONDEROUSNESS:
+        return -250;
 
-	case SPARM_NORMAL:
-	default:
-		return 0;
-	}
+    case SPARM_NORMAL:
+    default:
+        return 0;
+    }
 }
 unsigned int item_value(item_def item, bool ident)
 {
@@ -288,7 +288,7 @@ unsigned int item_value(item_def item, bool ident)
 
         if (item_type_known(item))
         {
-			valued *= _weapon_brand_value(item);
+            valued *= _weapon_brand_value(item);
             valued /= 10;
         }
 
@@ -368,48 +368,48 @@ unsigned int item_value(item_def item, bool ident)
         }
         break;
 
-	case OBJ_SHIELDS:
-		valued += shield_base_price((shield_type)item.sub_type);
+    case OBJ_SHIELDS:
+        valued += shield_base_price((shield_type)item.sub_type);
 
-		if (item_type_known(item))
-		{
-			if (is_hybrid(item.sub_type))
-			{
-				valued *= _weapon_brand_value(item);
-				valued /= 10;
-			}
-			else
-				valued += _armour_brand_value(get_armour_ego_type(item));
-		}
+        if (item_type_known(item))
+        {
+            if (is_hybrid(item.sub_type))
+            {
+                valued *= _weapon_brand_value(item);
+                valued /= 10;
+            }
+            else
+                valued += _armour_brand_value(get_armour_ego_type(item));
+        }
 
-		if (item_ident(item, ISFLAG_KNOW_PLUSES))
-			valued += 50 * item.plus;
+        if (item_ident(item, ISFLAG_KNOW_PLUSES))
+            valued += 50 * item.plus;
 
-		if (is_artefact(item))
-		{
-			if (item_type_known(item))
-				valued += (7 * artefact_value(item));
-			else
-				valued += 50;
-		
-		}
+        if (is_artefact(item))
+        {
+            if (item_type_known(item))
+                valued += (7 * artefact_value(item));
+            else
+                valued += 50;
+        
+        }
 
-		else if (!(item.flags & ISFLAG_IDENT_MASK)
-			&& (get_equip_desc(item) != 0))
-		{
-			valued += 30; // un-id'd "glowing" - arbitrary added cost
-		}
+        else if (!(item.flags & ISFLAG_IDENT_MASK)
+            && (get_equip_desc(item) != 0))
+        {
+            valued += 30; // un-id'd "glowing" - arbitrary added cost
+        }
 
-		if (item_known_cursed(item))
-			valued -= 30;
+        if (item_known_cursed(item))
+            valued -= 30;
 
-		break;
+        break;
 
     case OBJ_ARMOURS:
         valued += armour_base_price((armour_type)item.sub_type);
 
         if (item_type_known(item))
-			valued += _armour_brand_value(get_armour_ego_type(item));
+            valued += _armour_brand_value(get_armour_ego_type(item));
 
         if (item_ident(item, ISFLAG_KNOW_PLUSES))
             valued += 50 * item.plus;
@@ -548,7 +548,7 @@ unsigned int item_value(item_def item, bool ident)
             case POT_PORRIDGE:
             case POT_SLOWING:
             case POT_DECAY:
-			case POT_FLIGHT:
+            case POT_FLIGHT:
 #endif
             case POT_BLOOD:
 #if TAG_MAJOR_VERSION == 34
@@ -602,7 +602,7 @@ unsigned int item_value(item_def item, bool ident)
                 break;
 
             case SCR_BLINKING:
-			case SCR_ENCHANT:
+            case SCR_ENCHANT:
             case SCR_TORMENT:
             case SCR_HOLY_WORD:
             case SCR_SILENCE:
@@ -613,7 +613,7 @@ unsigned int item_value(item_def item, bool ident)
             case SCR_AMNESIA:
             case SCR_FEAR:
             case SCR_IMMOLATION:
-			case SCR_NOISE:
+            case SCR_NOISE:
             case SCR_MAGIC_MAPPING:
                 valued += 35;
                 break;
@@ -625,7 +625,7 @@ unsigned int item_value(item_def item, bool ident)
 
             case SCR_FOG:
 #if TAG_MAJOR_VERSION == 34
-			case SCR_IDENTIFY:
+            case SCR_IDENTIFY:
             case SCR_CURSE_ARMOUR:
             case SCR_CURSE_WEAPON:
             case SCR_CURSE_JEWELLERY:
@@ -662,7 +662,7 @@ unsigned int item_value(item_def item, bool ident)
             {
                 // Formula: price = kn(n+1) / 2, where k depends on the subtype,
                 // n is the power. (The base variable is equal to 2n.)
-				// Removing this since pluses on Jewelry no longer exist in bCrawl.
+                // Removing this since pluses on Jewelry no longer exist in bCrawl.
                 int base = 0;
                 int coefficient = 0;
                 if (item.sub_type == RING_SLAYING)

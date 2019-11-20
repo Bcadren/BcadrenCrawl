@@ -65,7 +65,7 @@ enum item_base_type
     ITEM_BOOKS,
     ITEM_ARTEBOOKS,
     ITEM_MANUALS,
-	ITEM_SHIELDS,
+    ITEM_SHIELDS,
     NUM_ITEM_BASE_TYPES,
     ITEM_IGNORE = 100,
 };
@@ -242,9 +242,9 @@ static item_base_type _item_base_type(const item_def &item)
     case OBJ_ARMOURS:
         type = ITEM_ARMOUR;
         break;
-	case OBJ_SHIELDS:
-		type = ITEM_SHIELDS;
-		break;
+    case OBJ_SHIELDS:
+        type = ITEM_SHIELDS;
+        break;
     case OBJ_JEWELLERY:
         type = ITEM_JEWELLERY;
         break;
@@ -284,9 +284,9 @@ static object_class_type _item_orig_base_type(item_base_type base_type)
     case ITEM_STAVES:
         type = OBJ_STAVES;
         break;
-	case ITEM_SHIELDS:
-		type = OBJ_SHIELDS;
-		break;
+    case ITEM_SHIELDS:
+        type = OBJ_SHIELDS;
+        break;
     case ITEM_ARMOUR:
         type = OBJ_ARMOURS;
         break;

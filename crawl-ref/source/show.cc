@@ -217,7 +217,7 @@ static show_item_type _item_to_show_code(const item_def &item)
     case OBJ_GOLD:       return SHOW_ITEM_GOLD;
     case OBJ_DETECTED:   return SHOW_ITEM_DETECTED;
     case OBJ_RUNES:      return SHOW_ITEM_RUNE;
-	case OBJ_SHIELDS:    return SHOW_ITEM_SHIELDS;
+    case OBJ_SHIELDS:    return SHOW_ITEM_SHIELDS;
     default:             return SHOW_ITEM_ORB; // bad item character
     }
 }

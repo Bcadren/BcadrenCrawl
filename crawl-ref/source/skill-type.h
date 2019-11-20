@@ -38,7 +38,7 @@ enum skill_type
     SK_CONJURATIONS,
 #endif
     SK_HEXES,
-	SK_FIRST_MAGIC_SCHOOL = SK_HEXES, // not SK_FIRST_MAGIC as no Spc
+    SK_FIRST_MAGIC_SCHOOL = SK_HEXES, // not SK_FIRST_MAGIC as no Spc
     SK_CHARMS,
     SK_SUMMONINGS,
     SK_NECROMANCY,

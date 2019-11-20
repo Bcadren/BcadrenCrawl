@@ -84,11 +84,11 @@ static bool _reaching_weapon_attack(const item_def& wpn)
         return false;
     }
 
-	if (you.drowning())
-	{
-		mpr("You can't attack while struggling to swim!");
-		return false;
-	}
+    if (you.drowning())
+    {
+        mpr("You can't attack while struggling to swim!");
+        return false;
+    }
 
     if (you.caught())
     {
@@ -1494,11 +1494,11 @@ static spret _phantom_mirror()
 
 bool evoke_check(int slot, bool quiet)
 {
-	if (slot == -1)
-		return true;
+    if (slot == -1)
+        return true;
 
     const bool reaching =  ((slot == you.equip[EQ_WEAPON0] && you.weapon(0) && weapon_reach(*you.weapon(0)) > REACH_NONE && !you.melded[EQ_WEAPON0]) ||
-							(slot == you.equip[EQ_WEAPON1] && you.weapon(1) && weapon_reach(*you.weapon(1)) > REACH_NONE && !you.melded[EQ_WEAPON1]));
+                            (slot == you.equip[EQ_WEAPON1] && you.weapon(1) && weapon_reach(*you.weapon(1)) > REACH_NONE && !you.melded[EQ_WEAPON1]));
 
     if (you.berserk() && !reaching)
     {
@@ -1506,7 +1506,7 @@ bool evoke_check(int slot, bool quiet)
             canned_msg(MSG_TOO_BERSERK);
         return false;
     }
-	
+    
     return (item_is_evokable(you.inv[slot]));
 }
 
@@ -1523,11 +1523,11 @@ bool evoke_item(int slot, bool check_range)
         if (prompt_failed(slot))
             return false;
     }
-	else if (!check_warning_inscriptions(you.inv[slot], OPER_EVOKE))
-	{
-		canned_msg(MSG_OK);
-		return false;
-	}
+    else if (!check_warning_inscriptions(you.inv[slot], OPER_EVOKE))
+    {
+        canned_msg(MSG_OK);
+        return false;
+    }
 
     ASSERT(slot >= 0);
 
@@ -1571,9 +1571,9 @@ bool evoke_item(int slot, bool check_range)
         zap_wand(slot);
         return true;
 
-	// No Evocable Shields exist right now.
-	case OBJ_SHIELDS:
-		return false;
+    // No Evocable Shields exist right now.
+    case OBJ_SHIELDS:
+        return false;
 
     case OBJ_WEAPONS:
         ASSERT(wielded);

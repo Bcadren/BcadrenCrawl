@@ -861,7 +861,7 @@ static void _print_stats_ac(int x, int y)
 
     ac += make_stringf("(%d%%) ", you.gdr_perc());
     
-	textcolour(text_col);
+    textcolour(text_col);
     CGOTOXY(x+4, y, GOTO_STAT);
     CPRINTF("%-12s", ac.c_str());
 
@@ -1195,8 +1195,8 @@ static void _draw_wizmode_flag(const char *word)
 
 static void _redraw_title()
 {
-	if (you.xom_name == "")
-		you.xom_name = you.your_name;
+    if (you.xom_name == "")
+        you.xom_name = you.your_name;
     const unsigned int WIDTH = crawl_view.hudsz.x;
     string title = you.xom_name + " " + filtered_lang(player_title());
     const bool small_layout =
@@ -1253,7 +1253,7 @@ static void _redraw_title()
         if ((you.char_class == JOB_MONK || you.char_class == JOB_PRIEST) && you.species != SP_DEMIGOD
             && !had_gods())
         {
-			string godpiety = "**....";
+            string godpiety = "**....";
             textcolour(DARKGREY);
             if ((unsigned int)(strwidth(species) + strwidth(godpiety) + 1) <= WIDTH)
                 NOWRAP_EOL_CPRINTF(" %s", godpiety.c_str());
@@ -1404,14 +1404,14 @@ void print_stats()
         // render code. We should find a better place for this.
         you.m_quiver.on_weapon_changed();
         _print_stats_wp(0, 9 + yhack);
-		_print_stats_wp(1, 10 + yhack);
+        _print_stats_wp(1, 10 + yhack);
     }
     you.wield_change  = false;
 
-	/*
+    /*
     else if (you.redraw_quiver || you.wield_change)
         _print_stats_qv(11 + yhack);
-	*/
+    */
 
     you.redraw_quiver = false;
 
@@ -1955,7 +1955,7 @@ static void _print_overview_screen_equip(column_composer& cols,
     {
         if (you.species == SP_OCTOPODE
             && eqslot != EQ_WEAPON0
-			&& eqslot != EQ_WEAPON1
+            && eqslot != EQ_WEAPON1
             && !you_can_wear(eqslot))
         {
             continue;
@@ -2443,7 +2443,7 @@ static vector<formatted_string> _get_overview_resistances(
     out.clear();
     cwidth = 9;
     const int rinvi = you.vision(calc_unid);
-		
+        
     out += _resist_composer("Vision", cwidth, rinvi, 1, true) + "\n";
 
     const int gourmand = you.gourmand(calc_unid);

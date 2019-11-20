@@ -347,15 +347,15 @@ static void _post_init(bool newc)
         you.entering_level = false;
         you.transit_stair = DNGN_UNSEEN;
         you.depth = 1;
-		// Abyssal Knights start out in the Abyss.
-		if (you.char_class == JOB_ABYSSAL_KNIGHT)
-			you.where_are_you = BRANCH_ABYSS;
-		else if (you.char_class == JOB_PRIEST)
-			you.where_are_you = BRANCH_START_TEMPLE;
-		else if (you.char_class == JOB_NOBLE)
-			you.where_are_you = BRANCH_START_MARKET;
-		else
-			you.where_are_you = root_branch;
+        // Abyssal Knights start out in the Abyss.
+        if (you.char_class == JOB_ABYSSAL_KNIGHT)
+            you.where_are_you = BRANCH_ABYSS;
+        else if (you.char_class == JOB_PRIEST)
+            you.where_are_you = BRANCH_START_TEMPLE;
+        else if (you.char_class == JOB_NOBLE)
+            you.where_are_you = BRANCH_START_MARKET;
+        else
+            you.where_are_you = root_branch;
     }
 
     // XXX: Any invalid level_id should do.

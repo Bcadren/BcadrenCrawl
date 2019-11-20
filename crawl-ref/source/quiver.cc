@@ -234,13 +234,13 @@ void player_quiver::on_item_fired(const item_def& item, bool explicitly_chosen)
         m_last_used_of_type[t].quantity = 1;    // 0 makes it invalid :(
         m_last_used_type = t;
     }
-	else if (you.weapon(1) && item.launched_by(*you.weapon(1)))
-	{
-		const ammo_t t = _get_weapon_ammo_type(you.weapon(1));
-		m_last_used_of_type[t] = item;
-		m_last_used_of_type[t].quantity = 1;    // 0 makes it invalid :(
-		m_last_used_type = t;
-	}
+    else if (you.weapon(1) && item.launched_by(*you.weapon(1)))
+    {
+        const ammo_t t = _get_weapon_ammo_type(you.weapon(1));
+        m_last_used_of_type[t] = item;
+        m_last_used_of_type[t].quantity = 1;    // 0 makes it invalid :(
+        m_last_used_type = t;
+    }
     else
     {
         const launch_retval projected = is_launched(&you, you.weapon(0), you.weapon(1),
@@ -320,12 +320,12 @@ void player_quiver::_maybe_fill_empty_slot()
     if (you.species == SP_FELID)
         return;
 
-	item_def* weapon;
-	
-	if (you.weapon(0) && is_range_weapon(*you.weapon(0)))
-		weapon = you.weapon(0);
-	else
-		weapon = you.weapon(1);
+    item_def* weapon;
+    
+    if (you.weapon(0) && is_range_weapon(*you.weapon(0)))
+        weapon = you.weapon(0);
+    else
+        weapon = you.weapon(1);
 
     const ammo_t slot = _get_weapon_ammo_type(weapon);
 

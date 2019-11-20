@@ -256,8 +256,8 @@ static branch_type single_portals[] =
     BRANCH_VOLCANO,
     BRANCH_WIZLAB,
     BRANCH_DESOLATION,
-	BRANCH_START_MARKET,
-	BRANCH_START_TEMPLE,
+    BRANCH_START_MARKET,
+    BRANCH_START_TEMPLE,
 #if TAG_MAJOR_VERSION == 34
     BRANCH_LABYRINTH,
 #endif
@@ -1244,9 +1244,9 @@ static const char* _aux_attack_names[1 + UNAT_LAST_ATTACK] =
     "Bite",
     "Pseudopods",
     "T. Squeeze",
-	"T. Slap",
-	"T. Smack",
-	"T. Thwack",
+    "T. Slap",
+    "T. Smack",
+    "T. Thwack",
 };
 
 static string _describe_action_subtype(caction_type type, int compound_subtype)
@@ -1285,10 +1285,10 @@ static string _describe_action_subtype(caction_type type, int compound_subtype)
                 return uppercase_first(tn);
             subtype = get_unrand_entry(subtype)->sub_type;
         }
-		else if (subtype == -2)
-		{
-			return uppercase_first(item_base_name(OBJ_SHIELDS, auxtype));
-		}
+        else if (subtype == -2)
+        {
+            return uppercase_first(item_base_name(OBJ_SHIELDS, auxtype));
+        }
         return uppercase_first(item_base_name(OBJ_WEAPONS, subtype));
     case CACT_ARMOUR:
         return (subtype == -1) ? "Skin"

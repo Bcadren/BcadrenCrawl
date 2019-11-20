@@ -324,23 +324,23 @@ brand_type determine_weapon_brand(const item_def& item, int item_level)
     if (item.brand != 0)
         return static_cast<brand_type>(item.brand);
 
-	weapon_type wpn_type;
-	if (item.base_type == OBJ_SHIELDS)
-	{
-		switch (item.sub_type)
-		{
-		case SHD_SAI:
-			wpn_type = WPN_DAGGER;
-		case SHD_NUNCHAKU:
-			wpn_type = WPN_QUARTERSTAFF;
-		case SHD_TARGE:
-			wpn_type = WPN_DIRE_FLAIL;
-		}
-	}
-	else
-	{
-		wpn_type = static_cast<weapon_type>(item.sub_type);
-	}
+    weapon_type wpn_type;
+    if (item.base_type == OBJ_SHIELDS)
+    {
+        switch (item.sub_type)
+        {
+        case SHD_SAI:
+            wpn_type = WPN_DAGGER;
+        case SHD_NUNCHAKU:
+            wpn_type = WPN_QUARTERSTAFF;
+        case SHD_TARGE:
+            wpn_type = WPN_DIRE_FLAIL;
+        }
+    }
+    else
+    {
+        wpn_type = static_cast<weapon_type>(item.sub_type);
+    }
     const int tries       = _num_brand_tries(item, item_level);
     brand_type rc         = SPWPN_NORMAL;
 
@@ -381,7 +381,7 @@ bool is_weapon_brand_ok(int type, int brand, bool strict)
     case SPWPN_ELECTROCUTION:
     case SPWPN_MOLTEN:
     case SPWPN_FREEZING:
-	case SPWPN_ACID: // Melee-only, except punk.
+    case SPWPN_ACID: // Melee-only, except punk.
         break;
 
     // Melee-only brands.
@@ -390,7 +390,7 @@ bool is_weapon_brand_ok(int type, int brand, bool strict)
     case SPWPN_PAIN:
     case SPWPN_DISTORTION:
     case SPWPN_ANTIMAGIC:
-	case SPWPN_SILVER:
+    case SPWPN_SILVER:
     case SPWPN_REAPING: // only exists on Sword of Zonguldrok
         if (is_range_weapon(item))
             return false;
@@ -441,16 +441,16 @@ static void _roll_weapon_type(item_def& item, int item_level)
 
 static void _roll_shield_type(item_def& item)
 {
-	while (true)
-	{
-		const int shieldtype = random2(NUM_SHIELDS);
+    while (true)
+    {
+        const int shieldtype = random2(NUM_SHIELDS);
 
-		if (x_chance_in_y(shield_rarity(shieldtype), 100))
-		{
-			item.sub_type = static_cast<shield_type>(shieldtype);
-			return;
-		}
-	}
+        if (x_chance_in_y(shield_rarity(shieldtype), 100))
+        {
+            item.sub_type = static_cast<shield_type>(shieldtype);
+            return;
+        }
+    }
 }
 
 /// Plusses for a non-artefact weapon with positive plusses.
@@ -582,9 +582,9 @@ static void _generate_weapon_item(item_def& item, bool allow_uniques,
 
 static special_armour_type _defensive_shield_brand ()
 {
-	return random_choose_weighted(1, SPARM_RESISTANCE,
-							      3, SPARM_FIRE_RESISTANCE,
-		                          3, SPARM_COLD_RESISTANCE,
+    return random_choose_weighted(1, SPARM_RESISTANCE,
+                                  3, SPARM_FIRE_RESISTANCE,
+                                  3, SPARM_COLD_RESISTANCE,
                                   3, SPARM_POISON_RESISTANCE,
                                   3, SPARM_POSITIVE_ENERGY,
                                   6, SPARM_REFLECTION,
@@ -592,111 +592,111 @@ static special_armour_type _defensive_shield_brand ()
 }
 
 static void _generate_shield_item(item_def& item, bool allow_uniques,
-	int force_type, int item_level,
-	int agent = NO_AGENT)
+    int force_type, int item_level,
+    int agent = NO_AGENT)
 {
-	// Determine shield type.
-	if (force_type != OBJ_RANDOM)
-		item.sub_type = force_type;
-	else
-		_roll_shield_type(item);
+    // Determine shield type.
+    if (force_type != OBJ_RANDOM)
+        item.sub_type = force_type;
+    else
+        _roll_shield_type(item);
 
-	item.quantity = 1;
-	
-	// Forced randart.
-	if (item_level == ISPEC_RANDART)
-	{
-		int ego = item.brand;
-		for (int i = 0; i < 100; ++i)
-			if (_try_make_shield_artefact(item, force_type, 0, true, agent)
-				&& is_artefact(item))
-			{
-				if (is_hybrid (item.sub_type) && ego > SPWPN_NORMAL)
-					item.props[ARTEFACT_PROPS_KEY].get_vector()[ARTP_BRAND].get_short() = ego;
-				if (randart_is_bad(item)) // recheck, the brand changed
-				{
-					force_type = item.sub_type;
-					item.clear();
-					item.quantity = 1;
-					item.base_type = OBJ_SHIELDS;
-					item.sub_type = force_type;
-					continue;
-				}
-				return;
-			}
-		// fall back to an ordinary item
-		item_level = ISPEC_GOOD_ITEM;
-	}
+    item.quantity = 1;
+    
+    // Forced randart.
+    if (item_level == ISPEC_RANDART)
+    {
+        int ego = item.brand;
+        for (int i = 0; i < 100; ++i)
+            if (_try_make_shield_artefact(item, force_type, 0, true, agent)
+                && is_artefact(item))
+            {
+                if (is_hybrid (item.sub_type) && ego > SPWPN_NORMAL)
+                    item.props[ARTEFACT_PROPS_KEY].get_vector()[ARTP_BRAND].get_short() = ego;
+                if (randart_is_bad(item)) // recheck, the brand changed
+                {
+                    force_type = item.sub_type;
+                    item.clear();
+                    item.quantity = 1;
+                    item.base_type = OBJ_SHIELDS;
+                    item.sub_type = force_type;
+                    continue;
+                }
+                return;
+            }
+        // fall back to an ordinary item
+        item_level = ISPEC_GOOD_ITEM;
+    }
 
-	// If we make the unique roll, no further generation necessary.
-	if (allow_uniques
-		&& _try_make_shield_artefact(item, force_type, item_level, false, agent))
-	{
-		return;
-	}
+    // If we make the unique roll, no further generation necessary.
+    if (allow_uniques
+        && _try_make_shield_artefact(item, force_type, item_level, false, agent))
+    {
+        return;
+    }
 
-	ASSERT(!is_artefact(item));
+    ASSERT(!is_artefact(item));
 
-	// Artefacts handled, let's make a normal item.
+    // Artefacts handled, let's make a normal item.
 
-	const bool force_good = item_level >= ISPEC_GIFT;
-	const bool forced_ego = item.brand > 0;
-	const bool no_brand = item.brand == SPWPN_FORBID_BRAND;
+    const bool force_good = item_level >= ISPEC_GIFT;
+    const bool forced_ego = item.brand > 0;
+    const bool no_brand = item.brand == SPWPN_FORBID_BRAND;
 
-	if (no_brand)
-		set_item_ego_type(item, OBJ_WEAPONS, SPWPN_NORMAL);
+    if (no_brand)
+        set_item_ego_type(item, OBJ_WEAPONS, SPWPN_NORMAL);
 
-	item.plus = 0;
+    item.plus = 0;
 
-	if (item_level < 0)
-	{
-		// Thoroughly damaged, could had been good once.
-		if (!no_brand && (forced_ego || one_chance_in(4)))
-		{
-			// Brand is set as for "good" items.
-			if (is_hybrid(item.sub_type))
-				set_item_ego_type(item, OBJ_WEAPONS, determine_weapon_brand(item, 2 + 2 * env.absdepth0));
-			else
-				set_item_ego_type(item, OBJ_ARMOURS, _defensive_shield_brand());
-		}
-		item.plus -= 1 + random2(3);
+    if (item_level < 0)
+    {
+        // Thoroughly damaged, could had been good once.
+        if (!no_brand && (forced_ego || one_chance_in(4)))
+        {
+            // Brand is set as for "good" items.
+            if (is_hybrid(item.sub_type))
+                set_item_ego_type(item, OBJ_WEAPONS, determine_weapon_brand(item, 2 + 2 * env.absdepth0));
+            else
+                set_item_ego_type(item, OBJ_ARMOURS, _defensive_shield_brand());
+        }
+        item.plus -= 1 + random2(3);
 
-		if (item_level == ISPEC_BAD)
-			do_curse_item(item);
-	}
-	else if ((force_good || forced_ego
-		|| x_chance_in_y(51 + item_level, 200))
-		&& (!item.is_mundane() || force_good))
-	{
-		// Make a better item (possibly ego).
-		if (!no_brand)
-		{
-			if (is_hybrid(item.sub_type))
-				set_item_ego_type(item, OBJ_WEAPONS, determine_weapon_brand(item, item_level));
-			else
-				set_item_ego_type(item, OBJ_ARMOURS, _defensive_shield_brand());
-		}
+        if (item_level == ISPEC_BAD)
+            do_curse_item(item);
+    }
+    else if ((force_good || forced_ego
+        || x_chance_in_y(51 + item_level, 200))
+        && (!item.is_mundane() || force_good))
+    {
+        // Make a better item (possibly ego).
+        if (!no_brand)
+        {
+            if (is_hybrid(item.sub_type))
+                set_item_ego_type(item, OBJ_WEAPONS, determine_weapon_brand(item, item_level));
+            else
+                set_item_ego_type(item, OBJ_ARMOURS, _defensive_shield_brand());
+        }
 
-		// if acquired item still not ego... enchant it up a bit.
-		if (force_good && item.brand == SPWPN_NORMAL)
-			item.plus += 2 + random2(3);
+        // if acquired item still not ego... enchant it up a bit.
+        if (force_good && item.brand == SPWPN_NORMAL)
+            item.plus += 2 + random2(3);
 
-		item.plus += determine_nice_weapon_plusses(item_level);
+        item.plus += determine_nice_weapon_plusses(item_level);
 
-		// squash boring items.
-		if (!force_good && item.brand == SPWPN_NORMAL && item.plus < 3)
-			item.plus = 0;
-	}
-	else
-	{
-		if (one_chance_in(12))
-		{
-			// Make a cursed item.
-			do_curse_item(item);
-			item.plus -= random2(4);
-			set_item_ego_type(item, OBJ_SHIELDS, SPWPN_NORMAL);
-		}
-	}
+        // squash boring items.
+        if (!force_good && item.brand == SPWPN_NORMAL && item.plus < 3)
+            item.plus = 0;
+    }
+    else
+    {
+        if (one_chance_in(12))
+        {
+            // Make a cursed item.
+            do_curse_item(item);
+            item.plus -= random2(4);
+            set_item_ego_type(item, OBJ_SHIELDS, SPWPN_NORMAL);
+        }
+    }
 }
 
 // Current list is based on dpeg's original post to the Wiki, found at the
@@ -1047,7 +1047,7 @@ static special_armour_type _generate_armour_type_ego(armour_type type,
     case ARM_ROBE:
         return random_choose_weighted(1, SPARM_RESISTANCE,
                                       1, SPARM_ARCHMAGI,
-			                          1, SPARM_HIGH_PRIEST,
+                                      1, SPARM_HIGH_PRIEST,
                                       2, SPARM_NORMAL,
                                       2, SPARM_COLD_RESISTANCE,
                                       2, SPARM_FIRE_RESISTANCE,
@@ -1059,8 +1059,8 @@ static special_armour_type _generate_armour_type_ego(armour_type type,
                                       26, SPARM_COLD_RESISTANCE,
                                       19, SPARM_POISON_RESISTANCE,
                                       15, SPARM_MAGIC_RESISTANCE,
-									  15, SPARM_HIGH_PRIEST,
-									   7, SPARM_ARCHMAGI,
+                                      15, SPARM_HIGH_PRIEST,
+                                       7, SPARM_ARCHMAGI,
                                        7, SPARM_POSITIVE_ENERGY,
                                        7, SPARM_PONDEROUSNESS);
 
@@ -1106,11 +1106,11 @@ static special_armour_type _generate_armour_ego(const item_def& item,
                                     item_level);
 
     if (is_armour_brand_ok(item.sub_type, ego, true))
-		return ego;
-	if (item.base_type == OBJ_SHIELDS)
-		return ego;
-	// Hacky if it causes weird behavior we may need to restore the assert.
-	return SPARM_NORMAL;
+        return ego;
+    if (item.base_type == OBJ_SHIELDS)
+        return ego;
+    // Hacky if it causes weird behavior we may need to restore the assert.
+    return SPARM_NORMAL;
 }
 
 bool is_armour_brand_ok(int type, int brand, bool strict)
@@ -1141,9 +1141,9 @@ bool is_armour_brand_ok(int type, int brand, bool strict)
         return slot == EQ_BOOTS;
 
     case SPARM_ARCHMAGI:
-	case SPARM_HIGH_PRIEST:
+    case SPARM_HIGH_PRIEST:
         return !strict || type == ARM_ROBE
-			|| type == ARM_PLATE_ARMOUR;
+            || type == ARM_PLATE_ARMOUR;
 
     case SPARM_PONDEROUSNESS:
         return true;
@@ -1202,8 +1202,8 @@ bool is_armour_brand_ok(int type, int brand, bool strict)
     case SPARM_CLOUD_IMMUNE:
         return type == ARM_SCARF;
 
-	default:
-		return false; // Shouldn't happen; but we come here if a shield-unique brand ends up on normal armour.
+    default:
+        return false; // Shouldn't happen; but we come here if a shield-unique brand ends up on normal armour.
 
     case NUM_SPECIAL_ARMOURS:
     case NUM_REAL_SPECIAL_ARMOURS:
@@ -1630,7 +1630,7 @@ static void _generate_scroll_item(item_def& item, int force_type,
                  27, (depth_mod < 4 ? NUM_SCROLLS : SCR_VULNERABILITY),
                  17, (depth_mod < 4 ? NUM_SCROLLS : SCR_SUMMONING),
                  15, (depth_mod < 4 ? NUM_SCROLLS : SCR_ACQUIREMENT),
-				 15, (depth_mod < 4 ? NUM_SCROLLS : SCR_NOISE),
+                 15, (depth_mod < 4 ? NUM_SCROLLS : SCR_NOISE),
                  15, (depth_mod < 4 ? NUM_SCROLLS : SCR_SILENCE),
                  15, (depth_mod < 4 ? NUM_SCROLLS : SCR_BRAND_WEAPON),
                  15, (depth_mod < 4 ? NUM_SCROLLS : SCR_TORMENT),
@@ -1937,7 +1937,7 @@ int items(bool allow_uniques,
     ASSERT(force_ego <= 0
            || force_class == OBJ_WEAPONS
            || force_class == OBJ_ARMOURS
-		   || force_class == OBJ_SHIELDS
+           || force_class == OBJ_SHIELDS
            || force_class == OBJ_MISSILES
            || force_class == OBJ_MISCELLANY && is_deck_type(force_type));
 
@@ -1950,7 +1950,7 @@ int items(bool allow_uniques,
 
     const bool force_good = item_level >= ISPEC_GIFT;
 
-	item.brand = force_ego;
+    item.brand = force_ego;
 
     if (force_ego != 0)
         allow_uniques = false;
@@ -1973,7 +1973,7 @@ int items(bool allow_uniques,
                                     10, OBJ_STAVES,
                                     30, OBJ_BOOKS,
                                     45, OBJ_JEWELLERY,
-									45, OBJ_SHIELDS,
+                                    45, OBJ_SHIELDS,
                                     70, OBJ_WANDS,
                                    140, OBJ_FOOD,
                                    212, OBJ_ARMOURS,
@@ -2056,10 +2056,10 @@ int items(bool allow_uniques,
                               item_level, agent);
         break;
 
-	case OBJ_SHIELDS:
-		_generate_shield_item(item, allow_uniques, force_type,
-			                  item_level, agent);
-		break;
+    case OBJ_SHIELDS:
+        _generate_shield_item(item, allow_uniques, force_type,
+                              item_level, agent);
+        break;
 
     case OBJ_MISSILES:
         _generate_missile_item(item, force_type, item_level);
@@ -2217,13 +2217,13 @@ static bool _armour_is_visibly_special(const item_def &item)
 
 static bool _shield_is_visibly_special(const item_def &item)
 {
-	if (is_hybrid(item.sub_type))
-		return _weapon_is_visibly_special(item);
+    if (is_hybrid(item.sub_type))
+        return _weapon_is_visibly_special(item);
 
-	else
-		return _armour_is_visibly_special(item);
+    else
+        return _armour_is_visibly_special(item);
 
-	return false;
+    return false;
 }
 
 jewellery_type get_random_amulet_type()
@@ -2278,10 +2278,10 @@ void item_set_appearance(item_def &item)
             set_equip_desc(item, random_choose(ISFLAG_GLOWING, ISFLAG_RUNED));
         break;
 
-	case OBJ_SHIELDS:
-		if (_shield_is_visibly_special(item))
-			set_equip_desc(item, ISFLAG_RUNED);
-		break;
+    case OBJ_SHIELDS:
+        if (_shield_is_visibly_special(item))
+            set_equip_desc(item, ISFLAG_RUNED);
+        break;
 
     case OBJ_ARMOURS:
         if (_armour_is_visibly_special(item))
@@ -2356,8 +2356,8 @@ void makeitem_tests()
 #if TAG_MAJOR_VERSION == 34
         if (type == ARM_CAP)
             type = ARM_HAT;
-		if (type == ARM_BUCKLER || type == ARM_SHIELD || type == ARM_LARGE_SHIELD)
-			type = ARM_ROBE;
+        if (type == ARM_BUCKLER || type == ARM_SHIELD || type == ARM_LARGE_SHIELD)
+            type = ARM_ROBE;
 #endif
         _generate_armour_item(item,
                               coinflip(),

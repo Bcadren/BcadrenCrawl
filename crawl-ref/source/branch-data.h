@@ -353,21 +353,21 @@ const Branch branches[NUM_BRANCHES] =
       '0', {}, branch_noise::loud },
 #endif
 
-	{ BRANCH_START_TEMPLE, NUM_BRANCHES, -1, -1, 1, 4,
+    { BRANCH_START_TEMPLE, NUM_BRANCHES, -1, -1, 1, 4,
       brflag::no_x_level_travel | brflag::no_items,
-	  DNGN_ENTER_START_TEMPLE, DNGN_EXIT_START_TEMPLE, NUM_FEATURES,
-	  "Temple", "a Temple outside the Dungeon", "Start Temple",
-	  "You enter a Temple.",
-	  LIGHTGREY, BROWN,
-	  '+',{}, branch_noise::loud },
+      DNGN_ENTER_START_TEMPLE, DNGN_EXIT_START_TEMPLE, NUM_FEATURES,
+      "Temple", "a Temple outside the Dungeon", "Start Temple",
+      "You enter a Temple.",
+      LIGHTGREY, BROWN,
+      '+',{}, branch_noise::loud },
 
-	{ BRANCH_START_MARKET, NUM_BRANCHES, -1, -1, 1, 4,
+    { BRANCH_START_MARKET, NUM_BRANCHES, -1, -1, 1, 4,
       brflag::no_x_level_travel | brflag::no_items,
       DNGN_ENTER_START_MARKET, DNGN_EXIT_START_MARKET, NUM_FEATURES,
-	  "Market", "a Market outside the Dungeon", "Start Market",
-	  "You go to the shops.",
-	  LIGHTGREY, BROWN,
-	  '-',{}, branch_noise::loud },
+      "Market", "a Market outside the Dungeon", "Start Market",
+      "You go to the shops.",
+      LIGHTGREY, BROWN,
+      '-',{}, branch_noise::loud },
 
 #if TAG_MAJOR_VERSION == 34
 

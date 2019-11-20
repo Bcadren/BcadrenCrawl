@@ -2341,9 +2341,9 @@ static void _place_feature_mimics()
         if (map_masked(pos, MMT_NO_MIMIC))
             continue;
 
-		// I used the tag and was still getting occasional mimics; this better fix it.
-		if (you.where_are_you == BRANCH_START_MARKET || you.where_are_you == BRANCH_START_TEMPLE)
-			continue;
+        // I used the tag and was still getting occasional mimics; this better fix it.
+        if (you.where_are_you == BRANCH_START_MARKET || you.where_are_you == BRANCH_START_TEMPLE)
+            continue;
 
         // Only features valid for mimicing.
         if (!feat_is_mimicable(feat))
@@ -4296,7 +4296,7 @@ static object_class_type _acquirement_object_class()
         OBJ_WANDS,
         OBJ_MISCELLANY, // Felids stop here
         OBJ_WEAPONS,
-		OBJ_SHIELDS,
+        OBJ_SHIELDS,
         OBJ_ARMOURS,
         OBJ_STAVES,
     };
@@ -4439,7 +4439,7 @@ static bool _apply_item_props(item_def &item, const item_spec &spec,
         item.charges = props["charges"].get_int();
     if ((item.base_type == OBJ_WEAPONS || item.base_type == OBJ_ARMOURS
          || item.base_type == OBJ_JEWELLERY || item.base_type == OBJ_SHIELDS
-		 || item.base_type == OBJ_MISSILES)
+         || item.base_type == OBJ_MISSILES)
         && props.exists("plus") && !is_unrandom_artefact(item))
     {
         item.plus = props["plus"].get_int();
@@ -4476,7 +4476,7 @@ static object_class_type _superb_object_class()
 {
     return random_choose_weighted(
             20, OBJ_WEAPONS,
-			 5, OBJ_SHIELDS,
+             5, OBJ_SHIELDS,
             10, OBJ_ARMOURS,
             10, OBJ_JEWELLERY,
             10, OBJ_BOOKS,
@@ -4943,7 +4943,7 @@ static dungeon_feature_type _glyph_to_feat(int glyph,
            (glyph == 'X') ? DNGN_PERMAROCK_WALL :
            (glyph == 'c') ? DNGN_STONE_WALL :
            (glyph == 'v') ? DNGN_METAL_WALL :
-		   (glyph == 'y') ? DNGN_SILVER_WALL :
+           (glyph == 'y') ? DNGN_SILVER_WALL :
            (glyph == 'b') ? DNGN_CRYSTAL_WALL :
            (glyph == 'm') ? DNGN_CLEAR_ROCK_WALL :
            (glyph == 'n') ? DNGN_CLEAR_STONE_WALL :

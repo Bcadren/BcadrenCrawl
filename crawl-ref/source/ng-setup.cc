@@ -142,20 +142,20 @@ item_def* newgame_make_item(object_class_type base,
     // Make sure we didn't get a stack of shields or such nonsense.
     ASSERT(item.quantity == 1 || is_stackable_item(item));
 
-	if (item.base_type == OBJ_SHIELDS)
-	{
-		if (you.body_size(PSIZE_TORSO,true) < SIZE_MEDIUM)
-			item.sub_type = SHD_BUCKLER;
-		else if (!can_wield(&item,false,false))
-			item.sub_type = SHD_SHIELD;
-	}
+    if (item.base_type == OBJ_SHIELDS)
+    {
+        if (you.body_size(PSIZE_TORSO,true) < SIZE_MEDIUM)
+            item.sub_type = SHD_BUCKLER;
+        else if (!can_wield(&item,false,false))
+            item.sub_type = SHD_SHIELD;
+    }
 
-	// If that didn't help, nothing will.
-	if (is_useless_item(item))
-	{
-		item = item_def();
-		return nullptr;
-	}
+    // If that didn't help, nothing will.
+    if (is_useless_item(item))
+    {
+        item = item_def();
+        return nullptr;
+    }
 
     if ((item.base_type == OBJ_WEAPONS && can_wield(&item, false, false)
         || item.base_type == OBJ_ARMOURS && can_wear_armour(item, false, false))
@@ -164,8 +164,8 @@ item_def* newgame_make_item(object_class_type base,
         you.equip[get_item_slot(item)] = slot;
     }
 
-	if (item.base_type == OBJ_SHIELDS && can_wield(&item, false, false))
-		you.equip[EQ_WEAPON1] = slot;
+    if (item.base_type == OBJ_SHIELDS && can_wield(&item, false, false))
+        you.equip[EQ_WEAPON1] = slot;
 
     if (item.base_type == OBJ_MISSILES)
         _autopickup_ammo(static_cast<missile_type>(item.sub_type));
@@ -276,24 +276,24 @@ static void _give_items_skills(const newgame_def& ng)
     case JOB_ABYSSAL_KNIGHT:
         you.religion = GOD_LUGONU;
         you.piety = 38;
-		if (!crawl_state.game_is_sprint())
-			you.chapter = CHAPTER_NONDUNGEON_START;
+        if (!crawl_state.game_is_sprint())
+            you.chapter = CHAPTER_NONDUNGEON_START;
         if (species_apt(SK_ARMOUR) < species_apt(SK_DODGING))
             you.skills[SK_DODGING]++;
         else
             you.skills[SK_ARMOUR]++;
-		break;
+        break;
 
-	case JOB_PRIEST:
-		if (!crawl_state.game_is_sprint())
-			you.chapter = CHAPTER_NONDUNGEON_START;
-		break;
+    case JOB_PRIEST:
+        if (!crawl_state.game_is_sprint())
+            you.chapter = CHAPTER_NONDUNGEON_START;
+        break;
 
-	case JOB_NOBLE:
-		you.gold = 1000;
-		if (!crawl_state.game_is_sprint())
-			you.chapter = CHAPTER_NONDUNGEON_START;
-		break;
+    case JOB_NOBLE:
+        you.gold = 1000;
+        if (!crawl_state.game_is_sprint())
+            you.chapter = CHAPTER_NONDUNGEON_START;
+        break;
     
     case JOB_WANDERER:
         create_wanderer();
@@ -309,27 +309,27 @@ static void _give_items_skills(const newgame_def& ng)
         newgame_make_item(OBJ_WEAPONS, ng.weapon, 1, 0, SPWPN_CHAOS);
     else if (job_gets_ranged_weapons(you.char_class))
         _give_ranged_weapon(ng.weapon, you.char_class == JOB_HUNTER ? 1 : 0);
-	else if (job_custom_stats(you.char_class))
-	{
-		if (ng.weapon == WPN_STRONG)
-		{
-			you.base_stats[STAT_STR] += 4;
-			you.base_stats[STAT_INT] -= 2;
-			you.base_stats[STAT_DEX] -= 2;
-		}
-		if (ng.weapon == WPN_INTELLIGENT)
-		{
-			you.base_stats[STAT_STR] -= 2;
-			you.base_stats[STAT_INT] += 4;
-			you.base_stats[STAT_DEX] -= 2;
-		}
-		if (ng.weapon == WPN_DEFT)
-		{
-			you.base_stats[STAT_STR] -= 2;
-			you.base_stats[STAT_INT] -= 2;
-			you.base_stats[STAT_DEX] += 4;
-		}
-	}
+    else if (job_custom_stats(you.char_class))
+    {
+        if (ng.weapon == WPN_STRONG)
+        {
+            you.base_stats[STAT_STR] += 4;
+            you.base_stats[STAT_INT] -= 2;
+            you.base_stats[STAT_DEX] -= 2;
+        }
+        if (ng.weapon == WPN_INTELLIGENT)
+        {
+            you.base_stats[STAT_STR] -= 2;
+            you.base_stats[STAT_INT] += 4;
+            you.base_stats[STAT_DEX] -= 2;
+        }
+        if (ng.weapon == WPN_DEFT)
+        {
+            you.base_stats[STAT_STR] -= 2;
+            you.base_stats[STAT_INT] -= 2;
+            you.base_stats[STAT_DEX] += 4;
+        }
+    }
     else if (job_has_weapon_choice(you.char_class))
         newgame_make_item(OBJ_WEAPONS, ng.weapon);
 
@@ -534,7 +534,7 @@ static void _setup_generic(const newgame_def& ng)
     shopping_list.refresh();
 
     you.your_name  = ng.name;
-	you.xom_name = ng.name;
+    you.xom_name = ng.name;
     you.species    = ng.species;
     you.char_class = ng.job;
 

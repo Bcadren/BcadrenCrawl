@@ -144,7 +144,7 @@ static const int conflict[][3] =
     { MUT_REGENERATION,        MUT_INHIBITED_REGENERATION,  1},
     { MUT_ACUTE_VISION,        MUT_IMPAIRED_VISION,         1},
     { MUT_BERSERK,             MUT_CLARITY,                 1},
-	{ MUT_GHOST,               MUT_BERSERK                 -1},
+    { MUT_GHOST,               MUT_BERSERK                 -1},
     { MUT_GHOST,               MUT_POISON_RESISTANCE       -1},
     { MUT_GHOST,               MUT_THIN_SKELETAL_STRUCTURE -1},
     { MUT_GHOST,               MUT_LARGE_BONE_PLATES       -1},
@@ -641,7 +641,7 @@ string describe_mutations(bool drop_title)
                     make_stringf("Your %s. (AC +%d)",
                        you.species == SP_NAGA ? "serpentine skin is tough" :
                        you.species == SP_GARGOYLE ? "stone body is resilient" :
-					   you.species == SP_LIGNIFITE ? "bark is resilient" :
+                       you.species == SP_LIGNIFITE ? "bark is resilient" :
                                                     scale_clause.c_str(),
                        you.racial_ac(false) / 100),
                     player_is_shapechanged()
@@ -659,16 +659,16 @@ string describe_mutations(bool drop_title)
             result += "<green>Your natural rate of healing is unusually fast.</green>\n";
     }
 
-	if (you.species == SP_LIGNIFITE)
-	{
-		result += _annotate_form_based(
-			make_stringf("A tangle of shorter branches protects your body from attack. (+%d SH)",
-				you.branch_SH(false)),
-			!form_keeps_mutations());
-		if (you.experience_level > 12)
-			result += _annotate_form_based("You can plant your roots to grant stasis and boost your AC and Regeneration.",
-				!form_keeps_mutations());
-	}
+    if (you.species == SP_LIGNIFITE)
+    {
+        result += _annotate_form_based(
+            make_stringf("A tangle of shorter branches protects your body from attack. (+%d SH)",
+                you.branch_SH(false)),
+            !form_keeps_mutations());
+        if (you.experience_level > 12)
+            result += _annotate_form_based("You can plant your roots to grant stasis and boost your AC and Regeneration.",
+                !form_keeps_mutations());
+    }
 
     if (you.species == SP_OCTOPODE)
     {
@@ -701,11 +701,11 @@ string describe_mutations(bool drop_title)
         case SIZE_LARGE:
             result += "You are too large for most types of armour.\n";
             break;
-		case SIZE_GIANT:
-			result += "Your enormous size allows you to wade in deep water.\n"
-				      "You are too large for most types of armour.\n"
-				      "Webs and nets cannot contain a creature of your size.\n";
-			break;
+        case SIZE_GIANT:
+            result += "Your enormous size allows you to wade in deep water.\n"
+                      "You are too large for most types of armour.\n"
+                      "Webs and nets cannot contain a creature of your size.\n";
+            break;
         default:
             break;
         }
@@ -1231,10 +1231,10 @@ static int _body_covered()
 
 bool physiology_mutation_conflict(mutation_type mutat, bool ds_roll)
 {
-	// If demonspawn, and mutat is a scale, see if they were going
-	// to get it sometime in the future anyway; otherwise, conflict.
-	if ((you.species == SP_DEMONSPAWN || you.char_class == JOB_DEMONSPAWN)
-		&& !ds_roll && _is_covering(mutat)
+    // If demonspawn, and mutat is a scale, see if they were going
+    // to get it sometime in the future anyway; otherwise, conflict.
+    if ((you.species == SP_DEMONSPAWN || you.char_class == JOB_DEMONSPAWN)
+        && !ds_roll && _is_covering(mutat)
         && find(_all_scales, _all_scales+ARRAYSZ(_all_scales), mutat) !=
                 _all_scales+ARRAYSZ(_all_scales))
     {
@@ -1497,26 +1497,26 @@ bool mutate(mutation_type which_mutation, const string &reason, bool failMsg,
     // Undead bodies don't mutate, they fall apart. -- bwr
     if (undead_mutation_rot() && !((you.undead_state() == US_GHOST) && god_gift))
     {
-		switch (mutclass)
-		{
-		case MUTCLASS_TEMPORARY:
-			if (coinflip())
-				return false;
-			// fallthrough to normal mut
-		case MUTCLASS_NORMAL:
-			if (you.undead_state() == US_GHOST)
-				mprf(MSGCH_MUTATION, "Wild energies bleed away your essence!");
-			else 
-				mprf(MSGCH_MUTATION, "Your body decomposes!");
-			lose_stat(STAT_RANDOM, 1);
-			return true;
-		case MUTCLASS_INNATE:
-			// You can't miss out on innate mutations just because you're
-			// temporarily undead.
-			break;
-		default:
-			die("bad fall through");
-			return false;
+        switch (mutclass)
+        {
+        case MUTCLASS_TEMPORARY:
+            if (coinflip())
+                return false;
+            // fallthrough to normal mut
+        case MUTCLASS_NORMAL:
+            if (you.undead_state() == US_GHOST)
+                mprf(MSGCH_MUTATION, "Wild energies bleed away your essence!");
+            else 
+                mprf(MSGCH_MUTATION, "Your body decomposes!");
+            lose_stat(STAT_RANDOM, 1);
+            return true;
+        case MUTCLASS_INNATE:
+            // You can't miss out on innate mutations just because you're
+            // temporarily undead.
+            break;
+        default:
+            die("bad fall through");
+            return false;
         }
     }
 
@@ -2471,7 +2471,7 @@ try_again:
             while (!_works_at_tier(*next_facet, tier)
                    || facets_used.count(next_facet)
                    || !_slot_is_unique(next_facet->muts, facets_used)
-				   || physiology_mutation_conflict(next_facet->muts[2], true));
+                   || physiology_mutation_conflict(next_facet->muts[2], true));
 
             facets_used.insert(next_facet);
 

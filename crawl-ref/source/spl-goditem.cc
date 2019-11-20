@@ -295,7 +295,7 @@ static vector<string> _desc_pacify_chance(const monster_info& mi, const int pow)
         descs.push_back("mindless");
     else if (!unpacifiable_reason(mi).empty()
              || _pacification_sides(mi.type, pow) 
-		         <= mons_avg_hp(mi.type) + 1)
+                 <= mons_avg_hp(mi.type) + 1)
         descs.push_back("uninterested");
     else
     {

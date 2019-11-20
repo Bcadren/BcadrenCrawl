@@ -83,14 +83,14 @@ bool backlight_monster(monster* mons)
     const int lvl = bklt.degree + zin_bklt.degree;
 
     mons->add_ench(mon_enchant(ENCH_MAGIC_CANDLE, 1));
-	string local_name = mons->name(DESC_THE);
+    string local_name = mons->name(DESC_THE);
 
     if (lvl == 0)
         mpr(make_stringf("The magic candle sticks upon %s", local_name.c_str()));
     else if (lvl == 4)
-		mpr(make_stringf("The magic candle, stuck upon %s, cannot burn any brighter.", local_name.c_str()));
+        mpr(make_stringf("The magic candle, stuck upon %s, cannot burn any brighter.", local_name.c_str()));
     else
-		mpr("The additional candle sticks to the first, reinforcing the light.");
+        mpr("The additional candle sticks to the first, reinforcing the light.");
 
     return true;
 }

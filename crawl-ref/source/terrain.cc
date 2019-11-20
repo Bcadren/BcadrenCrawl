@@ -1619,71 +1619,71 @@ bool slide_feature_over(const coord_def &src, coord_def preferred_dest,
  */
 void actor_apply_terrain(actor* act, dungeon_feature_type terrain)
 {
-	int original = 0;
-	int hurted = 0;
-	monster *mon = act->as_monster();
-	if (feat_is_lava(terrain))
-	{
-		if (act->is_player())
-		{
-			original = (12 + roll_dice(3, 21));
-			hurted = resist_adjust_damage(act, BEAM_FIRE, original);
-			if (hurted > original)
-				mpr("The lava burns you terribly!");
-			else
-				mpr("The lava burns!");
-			if (hurted < original)
-				canned_msg(MSG_YOU_RESIST);
-			ouch(timescale_damage(act, hurted) , KILLED_BY_LAVA, MID_NOBODY, "Lava");
-		}
-		else
-		{
-			original = (8 + roll_dice(3, 14));
-			hurted = resist_adjust_damage(act, BEAM_FIRE, original);
-			if (mons_primary_habitat(*mon) == HT_LAVA || mons_primary_habitat(*mon) == HT_AMPHIBIOUS_LAVA)
-				hurted = 0;
-			if (you.can_see(*act) && hurted > 0)
-				mpr(make_stringf("The lava burns %s%s%s", act->name(DESC_THE).c_str(), hurted > original ? " terribly!" : ".", hurted < original ? " It resists." : ""));
-			act->hurt(nullptr, hurted, BEAM_FIRE, KILLED_BY_LAVA, "Lava", "", true, true);
-		}
-	}
-	else if (terrain == DNGN_DEEP_WATER)
-	{
-		if (act->is_player())
-		{
-			if (you.drowning())
-			{
-				if (!you.res_water_drowning() && you.petrified())
-				{
-					mpr("You are drowning!");
-					ouch(timescale_damage(act, roll_dice(2, 10)), KILLED_BY_WATER, MID_NOBODY, "Deep Water");
-				}
-				else if (coinflip())
-				{
-					if (!silenced(you.pos()))
-					{
-						mpr("Your struggles to swim create loud splashing noises!");
-						noisy(25, you.position);
-					}
-				}
-				else if (!you.res_water_drowning() && coinflip())
-				{
-					if (coinflip())
-						mpr("Your lungs burn in need of oxygen!");
-					else if (coinflip())
-						mpr("You are drowning!");
-					else
-						mpr("You inhale water!");
-					ouch(timescale_damage(act, roll_dice(2, 10)), KILLED_BY_WATER, MID_NOBODY, "Deep Water");
-				}
-			}
-		}
-		else if (!act->res_water_drowning() && (mons_primary_habitat(*mon) != HT_WATER) &&
-			(mons_primary_habitat(*mon) != HT_AMPHIBIOUS) && (mon->body_size(PSIZE_BODY) < SIZE_GIANT))
-		{
-			act->hurt(nullptr, timescale_damage(act, roll_dice(2, 7)), BEAM_WATER, KILLED_BY_WATER, "Deep Water", "", true, true);
-		}
-	}
+    int original = 0;
+    int hurted = 0;
+    monster *mon = act->as_monster();
+    if (feat_is_lava(terrain))
+    {
+        if (act->is_player())
+        {
+            original = (12 + roll_dice(3, 21));
+            hurted = resist_adjust_damage(act, BEAM_FIRE, original);
+            if (hurted > original)
+                mpr("The lava burns you terribly!");
+            else
+                mpr("The lava burns!");
+            if (hurted < original)
+                canned_msg(MSG_YOU_RESIST);
+            ouch(timescale_damage(act, hurted) , KILLED_BY_LAVA, MID_NOBODY, "Lava");
+        }
+        else
+        {
+            original = (8 + roll_dice(3, 14));
+            hurted = resist_adjust_damage(act, BEAM_FIRE, original);
+            if (mons_primary_habitat(*mon) == HT_LAVA || mons_primary_habitat(*mon) == HT_AMPHIBIOUS_LAVA)
+                hurted = 0;
+            if (you.can_see(*act) && hurted > 0)
+                mpr(make_stringf("The lava burns %s%s%s", act->name(DESC_THE).c_str(), hurted > original ? " terribly!" : ".", hurted < original ? " It resists." : ""));
+            act->hurt(nullptr, hurted, BEAM_FIRE, KILLED_BY_LAVA, "Lava", "", true, true);
+        }
+    }
+    else if (terrain == DNGN_DEEP_WATER)
+    {
+        if (act->is_player())
+        {
+            if (you.drowning())
+            {
+                if (!you.res_water_drowning() && you.petrified())
+                {
+                    mpr("You are drowning!");
+                    ouch(timescale_damage(act, roll_dice(2, 10)), KILLED_BY_WATER, MID_NOBODY, "Deep Water");
+                }
+                else if (coinflip())
+                {
+                    if (!silenced(you.pos()))
+                    {
+                        mpr("Your struggles to swim create loud splashing noises!");
+                        noisy(25, you.position);
+                    }
+                }
+                else if (!you.res_water_drowning() && coinflip())
+                {
+                    if (coinflip())
+                        mpr("Your lungs burn in need of oxygen!");
+                    else if (coinflip())
+                        mpr("You are drowning!");
+                    else
+                        mpr("You inhale water!");
+                    ouch(timescale_damage(act, roll_dice(2, 10)), KILLED_BY_WATER, MID_NOBODY, "Deep Water");
+                }
+            }
+        }
+        else if (!act->res_water_drowning() && (mons_primary_habitat(*mon) != HT_WATER) &&
+            (mons_primary_habitat(*mon) != HT_AMPHIBIOUS) && (mon->body_size(PSIZE_BODY) < SIZE_GIANT))
+        {
+            act->hurt(nullptr, timescale_damage(act, roll_dice(2, 7)), BEAM_WATER, KILLED_BY_WATER, "Deep Water", "", true, true);
+        }
+    }
 }
 
 typedef map<string, dungeon_feature_type> feat_desc_map;
@@ -2075,18 +2075,18 @@ dungeon_feature_type orig_terrain(coord_def pos)
 
 void mutate_terrain_change_duration(coord_def pos, int delta, bool replace)
 {
-	map_marker *mark = env.markers.find(pos, MAT_TERRAIN_CHANGE);
-	map_terrain_change_marker *terch = dynamic_cast<map_terrain_change_marker *>(mark);
+    map_marker *mark = env.markers.find(pos, MAT_TERRAIN_CHANGE);
+    map_terrain_change_marker *terch = dynamic_cast<map_terrain_change_marker *>(mark);
 
-	if (replace)
-	{
-		if (delta > terch->duration)
-			terch->duration = delta;
-		else
-			terch->duration += div_rand_round(delta, 10);
-	}
-	else
-		terch->duration += delta;
+    if (replace)
+    {
+        if (delta > terch->duration)
+            terch->duration = delta;
+        else
+            terch->duration += div_rand_round(delta, 10);
+    }
+    else
+        terch->duration += delta;
 }
 
 void temp_change_terrain(coord_def pos, dungeon_feature_type newfeat, int dur,

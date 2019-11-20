@@ -108,15 +108,15 @@ enum armour_type
 
 enum shield_type
 {
-	SHD_BUCKLER,
-	SHD_FIRST_NORM = SHD_BUCKLER,
-	SHD_SHIELD,
-	SHD_LARGE_SHIELD,
-	SHD_LAST_NORM = SHD_LARGE_SHIELD,
-	SHD_SAI,
-	SHD_TARGE,
-	SHD_NUNCHAKU,
-	NUM_SHIELDS
+    SHD_BUCKLER,
+    SHD_FIRST_NORM = SHD_BUCKLER,
+    SHD_SHIELD,
+    SHD_LARGE_SHIELD,
+    SHD_LAST_NORM = SHD_LARGE_SHIELD,
+    SHD_SAI,
+    SHD_TARGE,
+    SHD_NUNCHAKU,
+    NUM_SHIELDS
 };
 
 enum armour_property_type
@@ -172,8 +172,8 @@ enum brand_type // item_def.special
 #endif
     SPWPN_PENETRATION,
     SPWPN_REAPING,
-	SPWPN_SILVER,
-	SPWPN_ACID,
+    SPWPN_SILVER,
+    SPWPN_ACID,
 
 // From this point on save compat is irrelevant.
     NUM_REAL_SPECIAL_WEAPONS,
@@ -418,7 +418,7 @@ enum rune_type
 enum scroll_type
 {
 #if TAG_MAJOR_VERSION == 34
-	SCR_IDENTIFY,
+    SCR_IDENTIFY,
 #endif
     SCR_TELEPORTATION,
     SCR_FEAR,
@@ -493,7 +493,7 @@ enum special_armour_type
 #endif
     SPARM_REPULSION,
     SPARM_CLOUD_IMMUNE,
-	SPARM_HIGH_PRIEST,
+    SPARM_HIGH_PRIEST,
     NUM_REAL_SPECIAL_ARMOURS,
     NUM_SPECIAL_ARMOURS,
 };
@@ -672,11 +672,11 @@ enum weapon_type
     WPN_CUTLASS,
 #endif
 
-	// These are only used as part of a hacky way of getting semi-customizable start stats
-	WPN_AVERAGE,
-	WPN_STRONG,
-	WPN_INTELLIGENT,
-	WPN_DEFT,
+    // These are only used as part of a hacky way of getting semi-customizable start stats
+    WPN_AVERAGE,
+    WPN_STRONG,
+    WPN_INTELLIGENT,
+    WPN_DEFT,
 
     NUM_WEAPONS,
 
@@ -700,12 +700,12 @@ enum weapon_property_type
 
 enum shield_property_type
 {
-	PSHD_HYBRID,
-	PSHD_SH,
-	PSHD_ER,
-	PSHD_HIT,
-	PSHD_DAMAGE,
-	PSHD_SPEED,
+    PSHD_HYBRID,
+    PSHD_SH,
+    PSHD_ER,
+    PSHD_HIT,
+    PSHD_DAMAGE,
+    PSHD_SPEED,
 };
 
 enum vorpal_damage_type
@@ -716,7 +716,7 @@ enum vorpal_damage_type
     DAM_BLUDGEON        = 0x0001,       // crushing
     DAM_SLICE           = 0x0002,       // slicing/chopping
     DAM_PIERCE          = 0x0004,       // stabbing/piercing
-	DAM_PENETRATE       = 0x0008,       // I'm so going to hell for this
+    DAM_PENETRATE       = 0x0008,       // I'm so going to hell for this
     DAM_WHIP            = 0x0010,       // whip slashing
     DAM_MAX_TYPE        = DAM_WHIP,
 
@@ -732,8 +732,8 @@ enum vorpal_damage_type
     DVORP_CLAWING       = 0x6000,       // claw damage
     DVORP_TENTACLE      = 0x7000,       // tentacle damage
 
-	DVORP_DP            = 0x8000,       // I hope people that find this laugh
-	DVORP_TP            = 0x9000,       // either way I'm going to hell
+    DVORP_DP            = 0x8000,       // I hope people that find this laugh
+    DVORP_TP            = 0x9000,       // either way I'm going to hell
 
     // These are shortcuts to tie vorpal/damage types for easy setting...
     // as above, setting more than one vorpal type is trouble.
@@ -743,8 +743,8 @@ enum vorpal_damage_type
     DAMV_PIERCING       = DVORP_PIERCING | DAM_PIERCE,
     DAMV_CHOPPING       = DVORP_CHOPPING | DAM_SLICE,
     DAMV_SLASHING       = DVORP_SLASHING | DAM_WHIP,
-	DAMV_DP             = DVORP_DP       | DAM_PENETRATE,
-	DAMV_TP             = DVORP_TP       | DAM_PENETRATE,
+    DAMV_DP             = DVORP_DP       | DAM_PENETRATE,
+    DAMV_TP             = DVORP_TP       | DAM_PENETRATE,
 
     DAM_MASK            = 0x0fff,       // strips vorpal specification
     DAMV_MASK           = 0xf000,       // strips non-vorpal specification

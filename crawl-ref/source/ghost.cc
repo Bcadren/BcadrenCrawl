@@ -70,7 +70,7 @@ static spell_type search_order_selfench[] =
     SPELL_INVISIBILITY,
     SPELL_BLINK,
     SPELL_BLINKBOLT,
-	SPELL_CONDENSATION_SHIELD,
+    SPELL_CONDENSATION_SHIELD,
 };
 
 // Pan lord summoning spell list.
@@ -276,8 +276,8 @@ void ghost_demon::init_player_ghost(bool actual_ghost)
                                                  FixedBitVector<NUM_EQUIP>());
     unwind_var<bool> fishtail(you.fishtail, false);
 
-	if (you.xom_name == "")
-		you.xom_name == you.your_name;
+    if (you.xom_name == "")
+        you.xom_name == you.your_name;
     name   = you.xom_name;
     max_hp = min(get_real_hp(false, false), MAX_GHOST_HP);
     ev     = min(you.evasion(ev_ignore::helpless), MAX_GHOST_EVASION);
@@ -732,7 +732,7 @@ void ghost_demon::find_extra_ghosts(vector<ghost_demon> &gs)
 
 static const set<branch_type> ghosts_nosave =
             { BRANCH_ABYSS, BRANCH_WIZLAB, BRANCH_DESOLATION, BRANCH_TEMPLE,
-	          BRANCH_START_TEMPLE, BRANCH_START_MARKET,
+              BRANCH_START_TEMPLE, BRANCH_START_MARKET,
 #if TAG_MAJOR_VERSION == 34
               BRANCH_LABYRINTH,
 #endif

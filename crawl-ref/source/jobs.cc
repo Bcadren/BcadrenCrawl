@@ -41,12 +41,12 @@ const char *get_job_name(job_type which_job)
     if (which_job == JOB_UNKNOWN)
         return "Unemployed";
 
-	if (which_job == JOB_XOM)
-	{
-		if (you.xom_insult == "")
-			xom_insult_name();
-		return you.xom_insult.c_str();
-	}
+    if (which_job == JOB_XOM)
+    {
+        if (you.xom_insult == "")
+            xom_insult_name();
+        return you.xom_insult.c_str();
+    }
     return _job_def(which_job).name;
 }
 
@@ -111,7 +111,7 @@ bool job_gets_ranged_weapons(job_type job)
 
 bool job_custom_stats(job_type job)
 {
-	return _job_def(job).wchoice == WCHOICE_STAT;
+    return _job_def(job).wchoice == WCHOICE_STAT;
 }
 
 void give_job_equipment(job_type job)

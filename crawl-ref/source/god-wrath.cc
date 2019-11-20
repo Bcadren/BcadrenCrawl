@@ -772,11 +772,11 @@ static bool _trog_retribution()
             break;
 
         case 3:
-			if (!you.duration[DUR_PETRIFIED])
-			{
-				you.petrify(nullptr);
-				break;
-			}
+            if (!you.duration[DUR_PETRIFIED])
+            {
+                you.petrify(nullptr);
+                break;
+            }
             return false;
 
         case 4:

@@ -411,7 +411,7 @@ bool InventoryRegion::update_tip_text(string& tip)
             // first equipable categories
             case OBJ_WEAPONS:
             case OBJ_STAVES:
-			case OBJ_SHIELDS:
+            case OBJ_SHIELDS:
                 if (you.species != SP_FELID)
                 {
                     _handle_wield_tip(tmp, cmd);

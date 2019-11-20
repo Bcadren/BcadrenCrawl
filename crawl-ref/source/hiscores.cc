@@ -2264,8 +2264,8 @@ string scorefile_entry::death_description(death_desc_verbosity verbosity) const
         {
             if (race == SP_MUMMY || you.char_class == JOB_MUMMY)
                 desc += "Turned to ash by lava";
-			if (race == SP_SILENT_SPECTRE)
-				desc += "Lost beneath molten lava";
+            if (race == SP_SILENT_SPECTRE)
+                desc += "Lost beneath molten lava";
             else
                 desc += "Took a swim in molten lava";
         }
@@ -2274,12 +2274,12 @@ string scorefile_entry::death_description(death_desc_verbosity verbosity) const
     case KILLED_BY_WATER:
         if (you.undead_state())
         {
-			if (race == SP_SILENT_SPECTRE) {
-				if (terse)
-					desc = "sank";
-				else
-					desc = "Lost beneath the waves";
-			}
+            if (race == SP_SILENT_SPECTRE) {
+                if (terse)
+                    desc = "sank";
+                else
+                    desc = "Lost beneath the waves";
+            }
             if (terse)
                 desc = "fell apart";
             else if (race == SP_MUMMY || you.char_class == JOB_MUMMY)
@@ -2554,10 +2554,10 @@ string scorefile_entry::death_description(death_desc_verbosity verbosity) const
         needs_damage = true;
         break;
 
-	case KILLED_BY_FALLING:
-		desc += terse ? "crashed down" : "Crashed down when petrified while flying";
-		needs_damage = true;
-		break;
+    case KILLED_BY_FALLING:
+        desc += terse ? "crashed down" : "Crashed down when petrified while flying";
+        needs_damage = true;
+        break;
 
     case KILLED_BY_ACID:
         if (terse)

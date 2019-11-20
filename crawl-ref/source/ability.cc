@@ -1269,7 +1269,7 @@ static bool _check_ability_possible(const ability_def& abil, bool quiet = false)
         return false;
     }
 
-	string local_prompt = "";
+    string local_prompt = "";
 
     // Doing these would outright kill the player.
     // (or, in the case of the stat-zeros, they'd at least be extremely
@@ -1278,8 +1278,8 @@ static bool _check_ability_possible(const ability_def& abil, bool quiet = false)
     {
         if (is_feat_dangerous(grd(you.pos()), false, true))
         {
-			local_prompt = make_stringf("Stopping flight right now would cause you to %s! Are you sure you want to stop flying?",
-				env.grid(you.pos()) == DNGN_LAVA ? "burn" : "drown");
+            local_prompt = make_stringf("Stopping flight right now would cause you to %s! Are you sure you want to stop flying?",
+                env.grid(you.pos()) == DNGN_LAVA ? "burn" : "drown");
 
             return yesno(local_prompt.c_str(), true, 'n');
         }
@@ -1288,10 +1288,10 @@ static bool _check_ability_possible(const ability_def& abil, bool quiet = false)
     {
         if (feat_dangerous_for_form(transformation::none, env.grid(you.pos())))
         {
-			local_prompt = make_stringf("Turning back now would cause you to %s! Are you sure you want end your transformation?",
-				env.grid(you.pos()) == DNGN_LAVA ? "burn" : "drown");
+            local_prompt = make_stringf("Turning back now would cause you to %s! Are you sure you want end your transformation?",
+                env.grid(you.pos()) == DNGN_LAVA ? "burn" : "drown");
 
-			return yesno(local_prompt.c_str(), true, 'n');
+            return yesno(local_prompt.c_str(), true, 'n');
         }
     }
 
@@ -1321,7 +1321,7 @@ static bool _check_ability_possible(const ability_def& abil, bool quiet = false)
     // Silence and water elementals
     if (silenced(you.pos()) && you.get_mutation_level(MUT_SILENT_CAST) == 0
         || you.duration[DUR_WATER_HOLD] && !you.res_water_drowning()
-		|| you.drowning())
+        || you.drowning())
     {
         talent tal = get_talent(abil.ability, false);
         if (tal.is_invocation)
@@ -1330,7 +1330,7 @@ static bool _check_ability_possible(const ability_def& abil, bool quiet = false)
             {
                 mprf("You cannot call out to %s while %s.",
                      god_name(you.religion).c_str(),
-					 silenced(you.pos())		  ? "silenced"
+                     silenced(you.pos())          ? "silenced"
                                                   : "unable to breathe");
             }
             return false;
@@ -1537,13 +1537,13 @@ static bool _check_ability_possible(const ability_def& abil, bool quiet = false)
                 canned_msg(MSG_CANNOT_DO_YET);
             return false;
         }
-		if (!you.is_unbreathing() && you.res_poison() < 2
-			&& cloud_at(you.pos()) && cloud_at(you.pos())->type == CLOUD_MEPHITIC
-			&& one_chance_in(1 + div_round_up(you.experience_level, 8)))
-		{
-			mpr("You sharply inhale and choke on fumes!");
-			return false;
-		}
+        if (!you.is_unbreathing() && you.res_poison() < 2
+            && cloud_at(you.pos()) && cloud_at(you.pos())->type == CLOUD_MEPHITIC
+            && one_chance_in(1 + div_round_up(you.experience_level, 8)))
+        {
+            mpr("You sharply inhale and choke on fumes!");
+            return false;
+        }
 
         return true;
 
@@ -2050,16 +2050,16 @@ static spret _do_ability(const ability_def& abil, bool fail)
             mpr("You feel very comfortable in the air.");
         break;
 
-	case ABIL_PLANT_ROOTS:
-		fail_check();
-		mpr("Your roots penetrate the ground.");
-		you.attribute[ATTR_ROOTED] = 1;
-		break;
+    case ABIL_PLANT_ROOTS:
+        fail_check();
+        mpr("Your roots penetrate the ground.");
+        you.attribute[ATTR_ROOTED] = 1;
+        break;
 
-	case ABIL_DEROOT:
-		fail_check();
-		start_delay<DerootDelay>(8);
-		break;
+    case ABIL_DEROOT:
+        fail_check();
+        start_delay<DerootDelay>(8);
+        break;
 
     // DEMONIC POWERS:
     case ABIL_DAMNATION:
@@ -2299,8 +2299,8 @@ static spret _do_ability(const ability_def& abil, bool fail)
     case ABIL_YRED_INJURY_MIRROR:
         fail_check();
 
-		you.duration[DUR_MIRROR_DAMAGE] = apply_invo_enhancer(9 * BASELINE_DELAY
-			+ random2avg(you.piety * BASELINE_DELAY, 2) / 10, true);
+        you.duration[DUR_MIRROR_DAMAGE] = apply_invo_enhancer(9 * BASELINE_DELAY
+            + random2avg(you.piety * BASELINE_DELAY, 2) / 10, true);
 
         if (yred_injury_mirror())
             mpr("Another wave of unholy energy enters you.");
@@ -2340,7 +2340,7 @@ static spret _do_ability(const ability_def& abil, bool fail)
         int damage = 0;
         const spret result =
             fire_los_attack_spell(SPELL_DRAIN_LIFE, apply_invo_enhancer(
-								  you.skill_rdiv(SK_INVOCATIONS), true),
+                                  you.skill_rdiv(SK_INVOCATIONS), true),
                                   &you, nullptr, fail, &damage);
         if (result != spret::success)
             return result;
@@ -2396,17 +2396,17 @@ static spret _do_ability(const ability_def& abil, bool fail)
 
     case ABIL_OKAWARU_HEROISM:
         fail_check();
-		previously_on = false;
-		if (you.duration[DUR_HEROISM])
-			previously_on = true;
+        previously_on = false;
+        if (you.duration[DUR_HEROISM])
+            previously_on = true;
 
         you.increase_duration(DUR_HEROISM,
                               apply_invo_enhancer(10 + random2avg(you.skill(SK_INVOCATIONS, 6), 2),true),
                               100);
 
-		mprf(MSGCH_DURATION, previously_on
-			? "You feel more confident with your borrowed prowess."
-			: "You gain the combat prowess of a mighty hero.");
+        mprf(MSGCH_DURATION, previously_on
+            ? "You feel more confident with your borrowed prowess."
+            : "You gain the combat prowess of a mighty hero.");
 
         you.redraw_evasion      = true;
         you.redraw_armour_class = true;
@@ -2414,22 +2414,22 @@ static spret _do_ability(const ability_def& abil, bool fail)
 
     case ABIL_OKAWARU_FINESSE:
         fail_check();
-		previously_on = false;
-		if (you.duration[DUR_FINESSE])
-			previously_on = true;
+        previously_on = false;
+        if (you.duration[DUR_FINESSE])
+            previously_on = true;
         
         you.increase_duration(DUR_FINESSE,
                               apply_invo_enhancer(10 + random2avg(you.skill(SK_INVOCATIONS, 6), 2),true),
                               100);
 
-		if (previously_on)
-		{
-			// "Your [hand(s)] get{s} new energy."
-			mprf(MSGCH_DURATION, "%s",
-				you.hands_act("get", "new energy.").c_str());
-		}
-		else
-			mprf(MSGCH_DURATION, "You can now deal lightning-fast blows.");
+        if (previously_on)
+        {
+            // "Your [hand(s)] get{s} new energy."
+            mprf(MSGCH_DURATION, "%s",
+                you.hands_act("get", "new energy.").c_str());
+        }
+        else
+            mprf(MSGCH_DURATION, "You can now deal lightning-fast blows.");
 
         did_god_conduct(DID_HASTY, 8); // Currently irrelevant.
         break;
@@ -2611,8 +2611,8 @@ static spret _do_ability(const ability_def& abil, bool fail)
 
     case ABIL_LUGONU_BEND_SPACE:
         fail_check();
-		if (!lugonu_bend_space())
-			return spret::abort;
+        if (!lugonu_bend_space())
+            return spret::abort;
         break;
 
     case ABIL_LUGONU_BANISH:
@@ -2770,30 +2770,30 @@ static spret _do_ability(const ability_def& abil, bool fail)
     }
 
     case ABIL_JIYVA_SLIMIFY:
-	{
-		fail_check();
+    {
+        fail_check();
 
-		if (you.weapon(0) && ((you.weapon(0)->base_type == OBJ_SHIELDS && !is_hybrid(you.weapon(0)->sub_type)) || is_range_weapon(*you.weapon(0))))
-		{ 
-			if (you.hands_reqd(*you.weapon(0)) == HANDS_TWO)
-			{
-				mpr("You need a free hand or a melee weapon in one hand to use this ability.");
-				return spret::abort;
-			}
-			else if (you.weapon(1) && ((you.weapon(1)->base_type == OBJ_SHIELDS && !is_hybrid(you.weapon(1)->sub_type)) || is_range_weapon(*you.weapon(1))))
-			{
-				mpr("You need a free hand or a melee weapon in one hand to use this ability.");
-				return spret::abort;
-			}
-		}
+        if (you.weapon(0) && ((you.weapon(0)->base_type == OBJ_SHIELDS && !is_hybrid(you.weapon(0)->sub_type)) || is_range_weapon(*you.weapon(0))))
+        { 
+            if (you.hands_reqd(*you.weapon(0)) == HANDS_TWO)
+            {
+                mpr("You need a free hand or a melee weapon in one hand to use this ability.");
+                return spret::abort;
+            }
+            else if (you.weapon(1) && ((you.weapon(1)->base_type == OBJ_SHIELDS && !is_hybrid(you.weapon(1)->sub_type)) || is_range_weapon(*you.weapon(1))))
+            {
+                mpr("You need a free hand or a melee weapon in one hand to use this ability.");
+                return spret::abort;
+            }
+        }
 
-		string msg = "";
-		if (you.weapon(0) && is_melee_weapon(*you.weapon(0)))
-			msg = you.weapon(0)->name(DESC_YOUR);
-		else if (you.weapon(1) && is_melee_weapon(*you.weapon(1)))
-			msg = you.weapon(1)->name(DESC_YOUR);
-		else
-			msg = "your " + you.hand_name(true);
+        string msg = "";
+        if (you.weapon(0) && is_melee_weapon(*you.weapon(0)))
+            msg = you.weapon(0)->name(DESC_YOUR);
+        else if (you.weapon(1) && is_melee_weapon(*you.weapon(1)))
+            msg = you.weapon(1)->name(DESC_YOUR);
+        else
+            msg = "your " + you.hand_name(true);
         mprf(MSGCH_DURATION, "A thick mucus forms on %s.", msg.c_str());
         you.increase_duration(DUR_SLIMIFY,
                               apply_invo_enhancer(random2avg(you.piety / 4, 2) + 3,false), 100);
@@ -2855,10 +2855,10 @@ static spret _do_ability(const ability_def& abil, bool fail)
     case ABIL_ASHENZARI_SCRYING:
         fail_check();
         you.duration[DUR_SCRYING] = apply_invo_enhancer(100 + random2avg(you.piety * 2, 2),true);
-		if (you.duration[DUR_SCRYING])
-			mpr("You extend your astral sight.");
-		else
-			mpr("You gain astral sight.");
+        if (you.duration[DUR_SCRYING])
+            mpr("You extend your astral sight.");
+        else
+            mpr("You gain astral sight.");
         you.xray_vision = true;
         viewwindow(true);
         break;
@@ -3076,7 +3076,7 @@ static spret _do_ability(const ability_def& abil, bool fail)
             return spret::abort;
         }
         fail_check();
-		you.attribute[ATTR_SERPENTS_LASH] = apply_invo_enhancer(2, true);
+        you.attribute[ATTR_SERPENTS_LASH] = apply_invo_enhancer(2, true);
         mprf(MSGCH_GOD, "Your muscles tense, ready for explosive movement...");
         you.redraw_status_lights = true;
         return spret::success;
@@ -3084,7 +3084,7 @@ static spret _do_ability(const ability_def& abil, bool fail)
     case ABIL_WU_JIAN_HEAVENLY_STORM:
         fail_check();
 
-		you.attribute[ATTR_HEAVENLY_STORM] = apply_invo_enhancer(12, true);
+        you.attribute[ATTR_HEAVENLY_STORM] = apply_invo_enhancer(12, true);
 
         mprf(MSGCH_GOD, "The air is filled with shimmering golden clouds!");
         wu_jian_sifu_message(" says: The storm will not cease as long as you "
@@ -3409,12 +3409,12 @@ vector<talent> your_talents(bool check_confused, bool include_unusable)
         _add_talent(talents, ABIL_FLY, check_confused);
     }
 
-	if (you.species == SP_LIGNIFITE && you.experience_level > 12 
-		&& !you.attribute[ATTR_ROOTED] && form_keeps_mutations())
-		_add_talent(talents, ABIL_PLANT_ROOTS, check_confused);
+    if (you.species == SP_LIGNIFITE && you.experience_level > 12 
+        && !you.attribute[ATTR_ROOTED] && form_keeps_mutations())
+        _add_talent(talents, ABIL_PLANT_ROOTS, check_confused);
 
-	if (you.attribute[ATTR_ROOTED])
-		_add_talent(talents, ABIL_DEROOT, check_confused);
+    if (you.attribute[ATTR_ROOTED])
+        _add_talent(talents, ABIL_DEROOT, check_confused);
 
     if (you.attribute[ATTR_PERM_FLIGHT] && you.racial_permanent_flight())
         _add_talent(talents, ABIL_STOP_FLYING, check_confused);

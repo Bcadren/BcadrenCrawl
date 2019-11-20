@@ -104,7 +104,7 @@ class item_def_printer:
         ty = str(self.val['base_type'])
         sub_type_type = {
             'OBJ_WEAPONS':   'weapon_type',
-			'OBJ_SHIELDS':   'shield_type',
+            'OBJ_SHIELDS':   'shield_type',
             'OBJ_MISSILES':  'missile_type',
             'OBJ_ARMOURS':   'armour_type',
             'OBJ_WANDS':     'wand_type',

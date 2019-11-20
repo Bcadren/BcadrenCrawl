@@ -208,30 +208,30 @@ static int _acquirement_shield_subtype(bool /*divine*/, int& /*quantity*/)
 {
     const int scale = 256;
 
-	if (random2(you.skill(SK_SHORT_BLADES, 10, false, false, false)) > random2(you.skill(SK_SHIELDS, 10, false, false, false)))
-		return SHD_SAI;
+    if (random2(you.skill(SK_SHORT_BLADES, 10, false, false, false)) > random2(you.skill(SK_SHIELDS, 10, false, false, false)))
+        return SHD_SAI;
 
-	if (random2(you.skill(SK_SHIELDS, 10, false, false, false)) < 50 || one_chance_in(5))
-	{
-		if (one_chance_in(2))
-			return SHD_NUNCHAKU;
-		else if (one_chance_in(2))
-			return SHD_SAI;
-	}
+    if (random2(you.skill(SK_SHIELDS, 10, false, false, false)) < 50 || one_chance_in(5))
+    {
+        if (one_chance_in(2))
+            return SHD_NUNCHAKU;
+        else if (one_chance_in(2))
+            return SHD_SAI;
+    }
 
     vector<pair<shield_type, int>> weights = {
         { SHD_BUCKLER,       player_shield_racial_factor() * 4 * scale
                                 - _skill_rdiv(SK_SHIELDS, scale) },
         { SHD_SHIELD,        6 * scale },
-		{ SHD_TARGE,         4 * scale },
+        { SHD_TARGE,         4 * scale },
         { SHD_LARGE_SHIELD,  20 * scale
                              - player_shield_racial_factor() * 4 * scale
                              + _skill_rdiv(SK_SHIELDS, scale / 2) },
     };
 
-	const shield_type* shield_ptr = random_choose_weighted(weights);
-	ASSERT(shield_ptr);
-	return *shield_ptr;
+    const shield_type* shield_ptr = random_choose_weighted(weights);
+    ASSERT(shield_ptr);
+    return *shield_ptr;
 }
 
 /**
@@ -742,7 +742,7 @@ static const acquirement_subtype_finder _subtype_finders[] =
     0, // no rods
 #endif
     0, // no runes either
-	_acquirement_shield_subtype,
+    _acquirement_shield_subtype,
 };
 
 static int _find_acquirement_subtype(object_class_type &class_wanted,
@@ -1046,7 +1046,7 @@ static int _weapon_brand_quality(int brand, bool range)
     case SPWPN_DISTORTION:
     case SPWPN_HOLY_WRATH:
     case SPWPN_REAPING:
-	case SPWPN_SILVER:
+    case SPWPN_SILVER:
         return 3;
     case SPWPN_CHAOS:
         return 2;
@@ -1484,7 +1484,7 @@ bool acquirement(object_class_type class_wanted, int agent,
     if (you.species == SP_FELID)
     {
         bad_class.set(OBJ_WEAPONS);
-		bad_class.set(OBJ_SHIELDS);
+        bad_class.set(OBJ_SHIELDS);
         bad_class.set(OBJ_MISSILES);
         bad_class.set(OBJ_ARMOURS);
         bad_class.set(OBJ_STAVES);
@@ -1497,7 +1497,7 @@ bool acquirement(object_class_type class_wanted, int agent,
     static struct { object_class_type type; const char* name; } acq_classes[] =
     {
         { OBJ_WEAPONS,    "Weapon" },
-	    { OBJ_SHIELDS,    "Shield" },
+        { OBJ_SHIELDS,    "Shield" },
         { OBJ_ARMOURS,    "Armour" },
         { OBJ_JEWELLERY,  "Jewellery" },
         { OBJ_BOOKS,      "Book" },

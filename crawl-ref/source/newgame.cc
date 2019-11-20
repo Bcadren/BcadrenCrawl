@@ -1228,16 +1228,16 @@ static job_group jobs_order[] =
         coord_def(0, 7), 15,
         { JOB_ARTIFICER, JOB_WANDERER }
     },
-	{
-		"Custom",
-		coord_def(15, 7), 20,
+    {
+        "Custom",
+        coord_def(15, 7), 20,
         { JOB_PRIEST , JOB_NOBLE }
-	},
-	{
-		"Hybrid",
-		coord_def(35, 7), 21,
+    },
+    {
+        "Hybrid",
+        coord_def(35, 7), 21,
         { JOB_DEMIGOD , JOB_DEMONSPAWN, JOB_MUMMY }
-	},
+    },
     {
         "Zealot",
         coord_def(15, 0), 20,
@@ -1904,10 +1904,10 @@ static bool _prompt_weapon(const newgame_def& ng, newgame_def& ng_choice,
     welcome.textcolour(BROWN);
     welcome.cprintf("%s\n", _welcome(ng).c_str());
     welcome.textcolour(CYAN);
-	if (job_custom_stats(ng.job))
-	    welcome.cprintf("\nYou have a choice of base stats:  ");
-	else
-		welcome.cprintf("\nYou have a choice of weapons:  ");
+    if (job_custom_stats(ng.job))
+        welcome.cprintf("\nYou have a choice of base stats:  ");
+    else
+        welcome.cprintf("\nYou have a choice of weapons:  ");
     welcome_text->set_text(welcome.to_colour_string());
     welcome_text->set_bounds(coord_def(1, 1), coord_def(ui_w+1, 5));
     welcome_text->set_visible(true);
@@ -2028,8 +2028,8 @@ static weapon_type _starting_weapon_upgrade(weapon_type wp, job_type job,
         return fighter && size <= SIZE_SMALL  ? wp : WPN_TRIDENT;
     case WPN_FALCHION:
         return WPN_LONG_SWORD;
-	case WPN_MACE:
-		return fighter ? WPN_MORNINGSTAR : WPN_QUARTERSTAFF;
+    case WPN_MACE:
+        return fighter ? WPN_MORNINGSTAR : WPN_QUARTERSTAFF;
     default:
         return wp;
     }
@@ -2053,20 +2053,20 @@ static vector<weapon_choice> _get_weapons(const newgame_def& ng)
                 weapons.push_back(wp);
         }
     }
-	else if (job_custom_stats(ng.job))
-	{
-		weapon_type startwep[4] = { WPN_AVERAGE, WPN_STRONG,
-									WPN_INTELLIGENT, WPN_DEFT };       
-		for (int i = 0; i < 4; i++)
-		{
-			weapon_choice wp;
-			wp.first = startwep[i];
+    else if (job_custom_stats(ng.job))
+    {
+        weapon_type startwep[4] = { WPN_AVERAGE, WPN_STRONG,
+                                    WPN_INTELLIGENT, WPN_DEFT };       
+        for (int i = 0; i < 4; i++)
+        {
+            weapon_choice wp;
+            wp.first = startwep[i];
 
-			wp.second = weapon_restriction(wp.first, ng);
+            wp.second = weapon_restriction(wp.first, ng);
 
-			weapons.push_back(wp);
-		}
-	}
+            weapons.push_back(wp);
+        }
+    }
     else
     {
         weapon_type startwep[7] = { WPN_SHORT_SWORD, WPN_WHIP, WPN_HAND_AXE,

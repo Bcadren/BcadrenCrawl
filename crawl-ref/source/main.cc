@@ -771,7 +771,7 @@ static bool _cmd_is_repeatable(command_type cmd, bool is_again = false)
     case CMD_GO_DOWNSTAIRS:
     case CMD_WIELD_WEAPON:
     case CMD_WEAPON_SWAP:
-	case CMD_DOUBLE_SWAP:
+    case CMD_DOUBLE_SWAP:
     case CMD_WEAR_JEWELLERY:
     case CMD_REMOVE_JEWELLERY:
     case CMD_MEMORISE_SPELL:
@@ -1842,7 +1842,7 @@ void process_command(command_type cmd)
     case CMD_SHOUT:                issue_orders();           break;
     case CMD_THROW_ITEM_NO_QUIVER: throw_item_no_quiver();   break;
     case CMD_WEAPON_SWAP:          wield_weapon(true);       break;
-	case CMD_DOUBLE_SWAP:          double_swap();            break;
+    case CMD_DOUBLE_SWAP:          double_swap();            break;
     case CMD_WEAR_ARMOUR:          wear_armour();            break;
     case CMD_WEAR_JEWELLERY:       puton_ring(-1);           break;
     case CMD_WIELD_WEAPON:         wield_weapon(false);      break;
@@ -1863,18 +1863,18 @@ void process_command(command_type cmd)
 
     case CMD_EVOKE_WIELDED:
     case CMD_FORCE_EVOKE_WIELDED:
-		if (you.weapon(0) && evoke_check(you.equip[EQ_WEAPON0]))
-		{
-			if (!evoke_item(you.equip[EQ_WEAPON0], cmd != CMD_FORCE_EVOKE_WIELDED))
-				flush_input_buffer(FLUSH_ON_FAILURE);
-		}
-		else if (you.weapon(1) && evoke_check(you.equip[EQ_WEAPON1]))
-		{
-			if (!evoke_item(you.equip[EQ_WEAPON1], cmd != CMD_FORCE_EVOKE_WIELDED))
-				flush_input_buffer(FLUSH_ON_FAILURE);
-		}
-		else if (!evoke_item())
-			flush_input_buffer(FLUSH_ON_FAILURE);
+        if (you.weapon(0) && evoke_check(you.equip[EQ_WEAPON0]))
+        {
+            if (!evoke_item(you.equip[EQ_WEAPON0], cmd != CMD_FORCE_EVOKE_WIELDED))
+                flush_input_buffer(FLUSH_ON_FAILURE);
+        }
+        else if (you.weapon(1) && evoke_check(you.equip[EQ_WEAPON1]))
+        {
+            if (!evoke_item(you.equip[EQ_WEAPON1], cmd != CMD_FORCE_EVOKE_WIELDED))
+                flush_input_buffer(FLUSH_ON_FAILURE);
+        }
+        else if (!evoke_item())
+            flush_input_buffer(FLUSH_ON_FAILURE);
         break;
 
     case CMD_MEMORISE_SPELL:
@@ -2408,11 +2408,11 @@ static void _swing_at_target(coord_def move)
         return;
     }
 
-	if (you.drowning())
-	{
-		mpr("You can't attack, while struggling to swim!");
-		return;
-	}
+    if (you.drowning())
+    {
+        mpr("You can't attack, while struggling to swim!");
+        return;
+    }
 
     if (you.confused())
     {

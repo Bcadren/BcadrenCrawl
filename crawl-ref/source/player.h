@@ -117,13 +117,13 @@ public:
     // ---------------
     // Permanent data:
     // ---------------
-	string your_name;
+    string your_name;
     species_type species;
     job_type char_class;
 
-	// Only used by Xom.
-	string xom_name;
-	string xom_insult;
+    // Only used by Xom.
+    string xom_name;
+    string xom_insult;
 
     // This field is here even in non-WIZARD compiles, since the
     // player might have been playing previously under wiz mode.
@@ -493,7 +493,7 @@ public:
     int max_dex() const;
 
     bool in_water() const;
-	bool in_lava() const;
+    bool in_lava() const;
     bool in_liquid() const;
     bool can_swim(bool permanently = false) const;
     bool can_water_walk() const;
@@ -505,7 +505,7 @@ public:
     bool cannot_speak() const;
     bool invisible() const override;
     bool can_see_invisible(bool calc_unid = true) const override;
-	int vision(bool calc_unid = true) const;
+    int vision(bool calc_unid = true) const;
     int innate_vision() const;
     bool visible_to(const actor *looker) const override;
     bool can_see(const actor& a) const override;
@@ -622,7 +622,7 @@ public:
     int       has_usable_pseudopods(bool allow_tran = true) const;
     int       has_tentacles(bool allow_tran = true) const;
     int       has_usable_tentacles(bool allow_tran = true) const;
-	int       branch_SH(bool allow_tran = true) const;
+    int       branch_SH(bool allow_tran = true) const;
 
     // Information about player mutations. Implemented in mutation.cc
     int       get_base_mutation_level(mutation_type mut, bool innate=true, bool temp=true, bool normal=true) const;
@@ -678,7 +678,7 @@ public:
     string unarmed_attack_name() const;
 
     bool fumbles_attack() override;
-	bool drowning();
+    bool drowning();
     bool fights_well_unarmed(int heavy_armour_penalty) override;
 
     void attacking(actor *other, bool ranged = false) override;

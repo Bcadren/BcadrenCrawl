@@ -466,7 +466,7 @@ static void _add_randart_weapon_brand(const item_def &item,
     {
         item_props[ARTP_BRAND] = random_choose_weighted(
             2, SPWPN_SPEED,
-			2, SPWPN_CHAOS,
+            2, SPWPN_CHAOS,
             4, SPWPN_VENOM,
             4, SPWPN_VORPAL,
             4, SPWPN_MOLTEN,
@@ -583,11 +583,11 @@ static bool _artp_can_go_on_item(artefact_prop_type prop, const item_def &item,
                    && (item_class != OBJ_JEWELLERY
                        || jewellery_is_amulet(item));
 
-		case ARTP_ACCURACY:
-		case ARTP_IMPROVED_VISION:
-			return (!extant_props[ARTP_INACCURACY] && !item.is_type(OBJ_ARMOURS, ARM_NAGA_BARDING)); //contradictory properties.
-		case ARTP_INACCURACY:
-			return !extant_props[ARTP_IMPROVED_VISION] && !extant_props[ARTP_ACCURACY]; //contradictory properties.
+        case ARTP_ACCURACY:
+        case ARTP_IMPROVED_VISION:
+            return (!extant_props[ARTP_INACCURACY] && !item.is_type(OBJ_ARMOURS, ARM_NAGA_BARDING)); //contradictory properties.
+        case ARTP_INACCURACY:
+            return !extant_props[ARTP_IMPROVED_VISION] && !extant_props[ARTP_ACCURACY]; //contradictory properties.
         case ARTP_HARM:
             return item_class != OBJ_JEWELLERY && extant_props[ARTP_DRAIN];
             // only get harm with *Drain
@@ -1122,8 +1122,8 @@ static string _get_artefact_type(const item_def &item, bool appear = false)
         if (get_item_slot(item) == EQ_BODY_ARMOUR)
             return "body armour";
         return "armour";
-	case OBJ_SHIELDS:
-		return "shield";
+    case OBJ_SHIELDS:
+        return "shield";
     case OBJ_JEWELLERY:
         // Distinguish between amulets and rings only in appearance.
         if (!appear)
@@ -1170,11 +1170,11 @@ string make_artefact_name(const item_def &item, bool appearance)
     ASSERT(is_artefact(item));
 
     ASSERT(item.base_type == OBJ_WEAPONS
-		   || item.base_type == OBJ_SHIELDS
+           || item.base_type == OBJ_SHIELDS
            || item.base_type == OBJ_ARMOURS
            || item.base_type == OBJ_JEWELLERY
            || item.base_type == OBJ_BOOKS
-		   || item.base_type == OBJ_SHIELDS);
+           || item.base_type == OBJ_SHIELDS);
 
     if (is_unrandom_artefact(item))
     {
@@ -1504,8 +1504,8 @@ static bool _randart_is_redundant(const item_def &item,
         provides = ARTP_DRAIN;
         break;
 
-	default:
-		break;
+    default:
+        break;
     }
 
     if (provides == ARTP_NUM_PROPERTIES)
@@ -1632,7 +1632,7 @@ bool make_item_randart(item_def &item, bool force_mundane)
     if (item.base_type != OBJ_WEAPONS
         && item.base_type != OBJ_ARMOURS
         && item.base_type != OBJ_JEWELLERY
-		&& item.base_type != OBJ_SHIELDS)
+        && item.base_type != OBJ_SHIELDS)
     {
         return false;
     }
@@ -1810,8 +1810,8 @@ void unrand_reacts()
     item_def*  weapon0     = you.weapon(0);
     const int  old_plus0   = weapon0 ? weapon0->plus : 0;
 
-	item_def*  weapon1 = you.weapon(1);
-	const int  old_plus1 = weapon1 ? weapon1->plus : 0;
+    item_def*  weapon1 = you.weapon(1);
+    const int  old_plus1 = weapon1 ? weapon1->plus : 0;
 
     for (int i = 0; i < NUM_EQUIP; i++)
     {
@@ -1826,8 +1826,8 @@ void unrand_reacts()
 
     if (weapon0 && (old_plus0 != weapon0->plus))
         you.wield_change = true;
-	if (weapon1 && (old_plus1 != weapon1->plus))
-		you.wield_change = true;
+    if (weapon1 && (old_plus1 != weapon1->plus))
+        you.wield_change = true;
 }
 
 void artefact_set_property(item_def          &item,

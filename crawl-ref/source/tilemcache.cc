@@ -294,20 +294,20 @@ mcache_monster::mcache_monster(const monster_info& mon)
     {
         const item_info* mon_shield = mon.inv[MSLOT_SHIELD].get();
         m_shd_tile = (mon_shield != nullptr) ? tilep_equ_hand2(*mon_shield) : 0;
-		switch (m_shd_tile)
-		{
-			case TILEP_HAND1_SHIELD_DONALD:
-				m_shd_tile = TILEP_HAND2_SHIELD_DONALD;
-				break;
-			case TILEP_HAND1_BUCKLER_SPRIGGAN:
-				m_shd_tile = TILEP_HAND2_BUCKLER_SPRIGGAN;
-				break;
-			case TILEP_HAND1_LSHIELD_LOUISE:
-				m_shd_tile = TILEP_HAND2_LSHIELD_LOUISE;
-				break;
-			default:
-				break;
-		}
+        switch (m_shd_tile)
+        {
+            case TILEP_HAND1_SHIELD_DONALD:
+                m_shd_tile = TILEP_HAND2_SHIELD_DONALD;
+                break;
+            case TILEP_HAND1_BUCKLER_SPRIGGAN:
+                m_shd_tile = TILEP_HAND2_BUCKLER_SPRIGGAN;
+                break;
+            case TILEP_HAND1_LSHIELD_LOUISE:
+                m_shd_tile = TILEP_HAND2_LSHIELD_LOUISE;
+                break;
+            default:
+                break;
+        }
     }
 }
 
@@ -340,11 +340,11 @@ bool mcache_monster::get_weapon_offset(tileidx_t mon_tile,
     case TILEP_MONS_ZOMBIE_OCTOPODE:
     case TILEP_MONS_ANCESTOR:
     case TILEP_MONS_ANCESTOR_KNIGHT:
-	case TILEP_MONS_ANCESTOR_KNIGHT_2:
-	case TILEP_MONS_ANCESTOR_KNIGHT_3:
+    case TILEP_MONS_ANCESTOR_KNIGHT_2:
+    case TILEP_MONS_ANCESTOR_KNIGHT_3:
     case TILEP_MONS_ANCESTOR_BATTLEMAGE:
-	case TILEP_MONS_ANCESTOR_BATTLEMAGE_2:
-	case TILEP_MONS_ANCESTOR_BATTLEMAGE_3:
+    case TILEP_MONS_ANCESTOR_BATTLEMAGE_2:
+    case TILEP_MONS_ANCESTOR_BATTLEMAGE_3:
     case TILEP_MONS_RAGGED_HIEROPHANT:
         *ofs_x = 0;
         *ofs_y = 0;
@@ -537,8 +537,8 @@ bool mcache_monster::get_weapon_offset(tileidx_t mon_tile,
     case TILEP_MONS_ANGEL:
     case TILEP_MONS_DAEVA:
     case TILEP_MONS_ANCESTOR_HEXER:
-	case TILEP_MONS_ANCESTOR_HEXER_2:
-	case TILEP_MONS_ANCESTOR_HEXER_3:
+    case TILEP_MONS_ANCESTOR_HEXER_2:
+    case TILEP_MONS_ANCESTOR_HEXER_3:
         *ofs_x = 1;
         *ofs_y = -1;
         break;
@@ -892,8 +892,8 @@ bool mcache_monster::get_shield_offset(tileidx_t mon_tile,
 
     case TILEP_MONS_DONALD:
     case TILEP_MONS_ANCESTOR_KNIGHT:
-	case TILEP_MONS_ANCESTOR_KNIGHT_2:
-	case TILEP_MONS_ANCESTOR_KNIGHT_3:
+    case TILEP_MONS_ANCESTOR_KNIGHT_2:
+    case TILEP_MONS_ANCESTOR_KNIGHT_3:
         *ofs_x = -1;
         *ofs_y = -1;
         break;
@@ -1390,7 +1390,7 @@ mcache_ghost::mcache_ghost(const monster_info& mon)
 
     switch (sk)
     {
-		// BCADDO: Consider reworking these tile choices.
+        // BCADDO: Consider reworking these tile choices.
 
     case SK_WHIPS_FLAILS:
         if (dam > 30)

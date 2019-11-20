@@ -681,7 +681,7 @@ static bool _setup_missile_beam(const actor *agent, bolt &beam, item_def &item,
 static void _throw_noise(actor* act, const bolt &pbolt, const item_def &ammo, const item_def &launcher)
 {
     ASSERT(act); // XXX: change to actor &act
-	
+
     if (launcher.base_type != OBJ_WEAPONS)
         return;
 
@@ -779,8 +779,8 @@ bool throw_it(bolt &pbolt, int throw_2, dist *target)
     item_def& thrown = you.inv[throw_2];
     ASSERT(thrown.defined());
 
-	// Figure out if we're thrown or launched.
-	const launch_retval projected = is_launched(&you, you.weapon(0), you.weapon(1), thrown);
+    // Figure out if we're thrown or launched.
+    const launch_retval projected = is_launched(&you, you.weapon(0), you.weapon(1), thrown);
 
     // Making a copy of the item: changed only for venom launchers.
     item_def item = thrown;
@@ -898,11 +898,11 @@ bool throw_it(bolt &pbolt, int throw_2, dist *target)
     {
     case launch_retval::LAUNCHED:
     {
-		item_def *launcher;
-		if (you.weapon(0) && is_range_weapon(*you.weapon(0)))
-			launcher = you.weapon(0);
-		else
-			launcher = you.weapon(1);
+        item_def *launcher;
+        if (you.weapon(0) && is_range_weapon(*you.weapon(0)))
+            launcher = you.weapon(0);
+        else
+            launcher = you.weapon(1);
         ASSERT(launcher);
         practise_launching(*launcher);
         if (is_unrandom_artefact(*launcher)
@@ -977,10 +977,10 @@ bool throw_it(bolt &pbolt, int throw_2, dist *target)
     }
     else
     {
-		if (crawl_state.game_is_hints())
+        if (crawl_state.game_is_hints())
             Hints.hints_throw_counter++;
 
-		// Dropping item copy, since the launched item might be different.
+        // Dropping item copy, since the launched item might be different.
         pbolt.drop_item = !did_return;
         pbolt.fire();
 
@@ -1022,15 +1022,15 @@ bool throw_it(bolt &pbolt, int throw_2, dist *target)
             msg::stream << item.name(DESC_THE)
                         << " fails to return to your pack!" << endl;
         }
-		dec_inv_item_quantity(throw_2, 1);
+        dec_inv_item_quantity(throw_2, 1);
         if (unwielded)
             canned_msg(MSG_EMPTY_HANDED_NOW);
     }
 
-	if (you.weapon(0) && is_range_weapon(*you.weapon(0)))
-	    _throw_noise(&you, pbolt, thrown, *you.weapon(0));
+    if (you.weapon(0) && is_range_weapon(*you.weapon(0)))
+        _throw_noise(&you, pbolt, thrown, *you.weapon(0));
 
-	// BCAD NOTE: If we ever allow dual wielding ranged weapons this will take some rework.
+    // BCAD NOTE: If we ever allow dual wielding ranged weapons this will take some rework.
 
     // ...any monster nearby can see that something has been thrown, even
     // if it didn't make any noise.
@@ -1146,8 +1146,8 @@ bool mons_throw(monster* mons, bolt &beam, int msl, bool teleport)
         mpr(msg);
     }
 
-	if (projected == launch_retval::LAUNCHED)
-	   _throw_noise(mons, beam, item, *mons->mslot_item(MSLOT_WEAPON));
+    if (projected == launch_retval::LAUNCHED)
+       _throw_noise(mons, beam, item, *mons->mslot_item(MSLOT_WEAPON));
 
     // decrease inventory
     bool really_returns;

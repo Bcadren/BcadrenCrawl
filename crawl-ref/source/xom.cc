@@ -1878,11 +1878,11 @@ static void _xom_pseudo_miscast(int /*sever*/)
                               "wall!");
     }
 
-	if (in_view[DNGN_SILVER_WALL])
-	{
-		messages.emplace_back("You swear you can see Zin's face scowling at "
-			"your reflection in the silver wall!");
-	}
+    if (in_view[DNGN_SILVER_WALL])
+    {
+        messages.emplace_back("You swear you can see Zin's face scowling at "
+            "your reflection in the silver wall!");
+    }
 
     if (in_view[DNGN_FOUNTAIN_BLUE] || in_view[DNGN_FOUNTAIN_SPARKLING])
     {
@@ -2147,7 +2147,7 @@ static void _get_hand_type(string &hand, bool &can_plural)
         plural_vec.push_back(true);
     }
     else if (you.species != SP_MUMMY && you.species != SP_OCTOPODE
-			 && you.char_class != JOB_MUMMY
+             && you.char_class != JOB_MUMMY
              && !you.get_mutation_level(MUT_BEAK)
           || form_changed_physiology())
     {
@@ -2157,7 +2157,7 @@ static void _get_hand_type(string &hand, bool &can_plural)
 
     if (you.form == transformation::bat
         || you.species != SP_MUMMY && you.species != SP_OCTOPODE
-		   &&you.char_class != JOB_MUMMY
+           &&you.char_class != JOB_MUMMY
            && !form_changed_physiology())
     {
         hand_vec.emplace_back("ear");
@@ -2578,11 +2578,11 @@ static void _xom_cloud_trail(int /*sever*/)
 
 static void _xom_name(int /*sever*/)
 {
-	you.xom_name = make_name();
-	take_note(Note(NOTE_XOM_EFFECT, you.piety, -1, "renaming"), true);
-	god_speaks(GOD_XOM,"Your name was boring. This one is much better.");
-	mprf(MSGCH_GOD, "Xom changes your name to %s", you.xom_name.c_str());
-	you.redraw_title = true;
+    you.xom_name = make_name();
+    take_note(Note(NOTE_XOM_EFFECT, you.piety, -1, "renaming"), true);
+    god_speaks(GOD_XOM,"Your name was boring. This one is much better.");
+    mprf(MSGCH_GOD, "Xom changes your name to %s", you.xom_name.c_str());
+    you.redraw_title = true;
 }
 
 static void _xom_statloss(int /*sever*/)
@@ -2963,10 +2963,10 @@ static xom_event_type _xom_choose_good_action(int sever, int tension)
         return XOM_GOOD_CLOUD_TRAIL;
     }
 
-	if (tension <= 0 && x_chance_in_y(5, sever) && you.religion == GOD_XOM)
-	{
-		return XOM_GOOD_NAME;
-	}
+    if (tension <= 0 && x_chance_in_y(5, sever) && you.religion == GOD_XOM)
+    {
+        return XOM_GOOD_NAME;
+    }
 
     if (tension > 0 && x_chance_in_y(5, sever)
         && mon_nearby([](monster& mon){ return !mon.wont_attack(); }))
@@ -3676,7 +3676,7 @@ static const map<xom_event_type, xom_event> xom_events = {
                                   _xom_good_enchant_monster }},
     { XOM_GOOD_FOG, { "fog", _xom_fog }},
     { XOM_GOOD_CLOUD_TRAIL, { "cloud trail", _xom_cloud_trail }},
-	{ XOM_GOOD_NAME, { "renaming", _xom_name }},
+    { XOM_GOOD_NAME, { "renaming", _xom_name }},
     { XOM_GOOD_CLEAVING, { "cleaving", _xom_cleaving }},
 
     { XOM_BAD_MISCAST_PSEUDO, { "pseudo-miscast", _xom_pseudo_miscast, 10}},

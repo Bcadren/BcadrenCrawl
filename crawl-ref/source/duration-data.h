@@ -161,11 +161,11 @@ static const duration_def duration_data[] =
       "confused", "conf",
       "You are confused.", D_DISPELLABLE,
       {{ "You feel less confused." }}},
-	 { DUR_LAVA_CAKE,
-	   RED, "Caked",
-	   "stuck in stone", "lava cake",
-	   "You are partially encased in stone.", D_NO_FLAGS,
-	  { { "The brittle obsidian encasing you breaks away." } } },
+     { DUR_LAVA_CAKE,
+       RED, "Caked",
+       "stuck in stone", "lava cake",
+       "You are partially encased in stone.", D_NO_FLAGS,
+      { { "The brittle obsidian encasing you breaks away." } } },
     { DUR_CONFUSING_TOUCH,
       LIGHTBLUE, "Touch",
       "confusing touch", "",
@@ -482,14 +482,14 @@ static const duration_def duration_data[] =
       RED, "-Potion",
       "no potions", "",
       you.species == SP_LIGNIFITE ? "Pouring potions on your roots has no effect" :
-		  "You cannot drink potions.", D_NO_FLAGS,
+          "You cannot drink potions.", D_NO_FLAGS,
       {{ "", []() {
-		  if (!you_foodless())
-			  {
-			      if (you.species != SP_LIGNIFITE)
-				      mprf(MSGCH_RECOVERY, "You can drink potions again.");
-				  else mprf(MSGCH_RECOVERY, "You may absorb potions through your roots again.");
-			  }
+          if (!you_foodless())
+              {
+                  if (you.species != SP_LIGNIFITE)
+                      mprf(MSGCH_RECOVERY, "You can drink potions again.");
+                  else mprf(MSGCH_RECOVERY, "You may absorb potions through your roots again.");
+              }
       }}}},
     { DUR_QAZLAL_FIRE_RES,
       LIGHTBLUE, "rF+",
@@ -658,7 +658,7 @@ static const duration_def duration_data[] =
     { DUR_MAGIC_ARMOUR, 0, "", "", "old magic armour", "", D_NO_FLAGS},
     { DUR_MAGIC_SHIELD, 0, "", "", "old magic shield", "", D_NO_FLAGS},
     { DUR_FORTITUDE, 0, "", "", "old fortitude", "", D_NO_FLAGS},
-	{ DUR_SPWPN_PROTECTION, 0, "", "", "old protection aura", "", D_NO_FLAGS },
+    { DUR_SPWPN_PROTECTION, 0, "", "", "old protection aura", "", D_NO_FLAGS },
     { DUR_WATER_HOLD_IMMUNITY, 0, "", "", "old drowning immunity", "", D_NO_FLAGS, {{""}}},
 #endif
 };

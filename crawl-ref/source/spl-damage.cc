@@ -830,187 +830,187 @@ spret cast_freeze(int pow, monster* mons, bool fail)
 
 void cloud_strike(actor * caster, actor * foe, int damage)
 {
-	if (!cloud_at(foe->pos()))
-		return;
-	cloud_type cloud = cloud_at(foe->pos())->type;
+    if (!cloud_at(foe->pos()))
+        return;
+    cloud_type cloud = cloud_at(foe->pos())->type;
 
-	if (cloud == CLOUD_CHAOS)
-	{
-		int x = random2(8);
-		switch (x)
-		{
-		case 0:
-			cloud = CLOUD_HOLY;
-		case 1:
-			cloud = CLOUD_ACID;
-		case 2:
-			cloud = CLOUD_FIRE;
-		case 3:
-			cloud = CLOUD_COLD;
-		case 4:
-			cloud = CLOUD_NEGATIVE_ENERGY;
-		case 5:
-			cloud = CLOUD_MIASMA;
-		case 6:
-			cloud = CLOUD_PETRIFY;
-		case 7:
-			cloud = CLOUD_BLACK_SMOKE;
-		case 8:
-			cloud = CLOUD_STORM;
-		default:
-			cloud = CLOUD_HOLY;
-		}
+    if (cloud == CLOUD_CHAOS)
+    {
+        int x = random2(8);
+        switch (x)
+        {
+        case 0:
+            cloud = CLOUD_HOLY;
+        case 1:
+            cloud = CLOUD_ACID;
+        case 2:
+            cloud = CLOUD_FIRE;
+        case 3:
+            cloud = CLOUD_COLD;
+        case 4:
+            cloud = CLOUD_NEGATIVE_ENERGY;
+        case 5:
+            cloud = CLOUD_MIASMA;
+        case 6:
+            cloud = CLOUD_PETRIFY;
+        case 7:
+            cloud = CLOUD_BLACK_SMOKE;
+        case 8:
+            cloud = CLOUD_STORM;
+        default:
+            cloud = CLOUD_HOLY;
+        }
 
-	}
+    }
 
-	switch (cloud)
-	{
-	case CLOUD_NONE:
-		return;
-	case CLOUD_FIRE:
-	case CLOUD_FOREST_FIRE:
-	case CLOUD_STEAM:
-		damage = resist_adjust_damage(foe, BEAM_FIRE, damage);
-		if (damage > 0)
-		{
-			foe->hurt(caster, damage, BEAM_FIRE, KILLED_BY_BEAM,
-				"", "by the air");
-			if (foe->is_player())
-			    mpr("You are burned by the wild clouds!");
-			else 
-			    simple_monster_message(*foe->as_monster(), " is engulfed in scorching flames!");
-		}
-		break;
-	case CLOUD_MEPHITIC:
-	case CLOUD_POISON:
-	case CLOUD_MIASMA:
-		damage = resist_adjust_damage(foe, BEAM_POISON, damage);
-		if (damage > 0)
-		{
-			foe->hurt(caster, damage, BEAM_POISON, KILLED_BY_BEAM,
-				"", "by the air");
-			if (foe->is_player())
-			{
-				poison_player(1, "the air");
-				mpr("You are engulfed by the poisonous vapours!");
-			}
-			else
-			{
-				poison_monster(foe->as_monster(), caster);
-				simple_monster_message(*foe->as_monster(), " is engulfed in poisonous vapours!");
-			}
-		}
-		break;
-	case CLOUD_COLD:
-		damage = resist_adjust_damage(foe, BEAM_COLD, damage);
-		if (damage > 0)
-		{
-			foe->hurt(caster, damage, BEAM_COLD, KILLED_BY_BEAM,
-				"", "by the air");
-			if (foe->is_player())
-				mpr("The freezing vapours engulf you!");
-			else
-			    simple_monster_message(*foe->as_monster(), " is engulfed in freezing air!");
-		}
-		break;
-	case CLOUD_HOLY:
-		damage = resist_adjust_damage(foe, BEAM_HOLY, damage);
-		if (damage > 0)
-		{
-			foe->hurt(caster, damage, BEAM_HOLY, KILLED_BY_BEAM,
-				"", "by the air");
-			if (foe->is_player())
-				mpr("You are rebuked by the blessed clouds!");
-			else
-				simple_monster_message(*foe->as_monster(), " is rebuked by the holy cloud!");
-		}
-		break;
-	case CLOUD_BLACK_SMOKE:
-	case CLOUD_GREY_SMOKE:
-	case CLOUD_BLUE_SMOKE:
-	case CLOUD_PURPLE_SMOKE:
-	case CLOUD_TLOC_ENERGY:
-	case CLOUD_MIST:
-	case CLOUD_RAIN:
-	case CLOUD_MAGIC_TRAIL:
-	case CLOUD_DUST:
-	case CLOUD_XOM_TRAIL:
-	case CLOUD_SALT:
-	case CLOUD_FLUFFY:
-		damage = foe->apply_ac(damage);
-		if (damage > 0)
-		{
-			foe->hurt(caster, damage, BEAM_COLD, KILLED_BY_BEAM,
-				"", "by the air");
-			if (foe->is_player())
-				mpr("The cloud makes the air strike you more forcefully!");
-			else
-				simple_monster_message(*foe->as_monster(), " is struck by the cloud!");
-		}
-		break;
-	case CLOUD_MUTAGENIC:
-	case CLOUD_PETRIFY:
-	case CLOUD_TORNADO:
-	case CLOUD_GOLD_DUST:
-		damage = foe->apply_ac(damage * 2);
-		if (damage > 0)
-		{
-			foe->hurt(caster, damage, BEAM_COLD, KILLED_BY_BEAM,
-				"", "by the air");
-			if (foe->is_player())
-				mpr("The dense cloud makes the air strike wildly!");
-			else
-				simple_monster_message(*foe->as_monster(), " is struck by the thick clouds!");
-		}
-		break;
+    switch (cloud)
+    {
+    case CLOUD_NONE:
+        return;
+    case CLOUD_FIRE:
+    case CLOUD_FOREST_FIRE:
+    case CLOUD_STEAM:
+        damage = resist_adjust_damage(foe, BEAM_FIRE, damage);
+        if (damage > 0)
+        {
+            foe->hurt(caster, damage, BEAM_FIRE, KILLED_BY_BEAM,
+                "", "by the air");
+            if (foe->is_player())
+                mpr("You are burned by the wild clouds!");
+            else 
+                simple_monster_message(*foe->as_monster(), " is engulfed in scorching flames!");
+        }
+        break;
+    case CLOUD_MEPHITIC:
+    case CLOUD_POISON:
+    case CLOUD_MIASMA:
+        damage = resist_adjust_damage(foe, BEAM_POISON, damage);
+        if (damage > 0)
+        {
+            foe->hurt(caster, damage, BEAM_POISON, KILLED_BY_BEAM,
+                "", "by the air");
+            if (foe->is_player())
+            {
+                poison_player(1, "the air");
+                mpr("You are engulfed by the poisonous vapours!");
+            }
+            else
+            {
+                poison_monster(foe->as_monster(), caster);
+                simple_monster_message(*foe->as_monster(), " is engulfed in poisonous vapours!");
+            }
+        }
+        break;
+    case CLOUD_COLD:
+        damage = resist_adjust_damage(foe, BEAM_COLD, damage);
+        if (damage > 0)
+        {
+            foe->hurt(caster, damage, BEAM_COLD, KILLED_BY_BEAM,
+                "", "by the air");
+            if (foe->is_player())
+                mpr("The freezing vapours engulf you!");
+            else
+                simple_monster_message(*foe->as_monster(), " is engulfed in freezing air!");
+        }
+        break;
+    case CLOUD_HOLY:
+        damage = resist_adjust_damage(foe, BEAM_HOLY, damage);
+        if (damage > 0)
+        {
+            foe->hurt(caster, damage, BEAM_HOLY, KILLED_BY_BEAM,
+                "", "by the air");
+            if (foe->is_player())
+                mpr("You are rebuked by the blessed clouds!");
+            else
+                simple_monster_message(*foe->as_monster(), " is rebuked by the holy cloud!");
+        }
+        break;
+    case CLOUD_BLACK_SMOKE:
+    case CLOUD_GREY_SMOKE:
+    case CLOUD_BLUE_SMOKE:
+    case CLOUD_PURPLE_SMOKE:
+    case CLOUD_TLOC_ENERGY:
+    case CLOUD_MIST:
+    case CLOUD_RAIN:
+    case CLOUD_MAGIC_TRAIL:
+    case CLOUD_DUST:
+    case CLOUD_XOM_TRAIL:
+    case CLOUD_SALT:
+    case CLOUD_FLUFFY:
+        damage = foe->apply_ac(damage);
+        if (damage > 0)
+        {
+            foe->hurt(caster, damage, BEAM_COLD, KILLED_BY_BEAM,
+                "", "by the air");
+            if (foe->is_player())
+                mpr("The cloud makes the air strike you more forcefully!");
+            else
+                simple_monster_message(*foe->as_monster(), " is struck by the cloud!");
+        }
+        break;
+    case CLOUD_MUTAGENIC:
+    case CLOUD_PETRIFY:
+    case CLOUD_TORNADO:
+    case CLOUD_GOLD_DUST:
+        damage = foe->apply_ac(damage * 2);
+        if (damage > 0)
+        {
+            foe->hurt(caster, damage, BEAM_COLD, KILLED_BY_BEAM,
+                "", "by the air");
+            if (foe->is_player())
+                mpr("The dense cloud makes the air strike wildly!");
+            else
+                simple_monster_message(*foe->as_monster(), " is struck by the thick clouds!");
+        }
+        break;
 
-	case CLOUD_NEGATIVE_ENERGY:
-	case CLOUD_SPECTRAL:
-		damage = resist_adjust_damage(foe, BEAM_NEG, damage);
-		if (damage > 0)
-		{
-			foe->hurt(caster, damage, BEAM_NEG, KILLED_BY_BEAM,
-				"", "by the air");
-			if (foe->is_player())
-			{
-				mpr("You are drained as the cloud strikes you!");
-				drain_player();
-			}
-			else
-			{
-				simple_monster_message(*foe->as_monster(), " is drained by the clouds!");
-			}
-		}
-		break;
-	case CLOUD_ACID:
-		damage = resist_adjust_damage(foe, BEAM_ACID, damage);
-		if (damage > 0)
-		{
-			foe->hurt(caster, damage, BEAM_ACID, KILLED_BY_BEAM,
-				"", "by the air");
-			if (foe->is_player())
-				mpr("You are engulfed in acidic fog!");
-			else
-				simple_monster_message(*foe->as_monster(), " is engulfed in acidic fog!");
-		}
-		break;
-	case CLOUD_STORM:
-		damage = resist_adjust_damage(foe, BEAM_ELECTRICITY, damage);
-		if (damage > 0)
-		{
-			foe->hurt(caster, damage, BEAM_ELECTRICITY, KILLED_BY_BEAM,
-				"", "by the air");
-			if (foe->is_player())
-				mpr("The airstrike triggers a lightning strike through you!");
-			else
-				simple_monster_message(*foe->as_monster(), " is struck by lightning!");
-			noisy(15, foe->pos());
-		}
-		break;
-	default:
-		break;
-	}
-	return;
+    case CLOUD_NEGATIVE_ENERGY:
+    case CLOUD_SPECTRAL:
+        damage = resist_adjust_damage(foe, BEAM_NEG, damage);
+        if (damage > 0)
+        {
+            foe->hurt(caster, damage, BEAM_NEG, KILLED_BY_BEAM,
+                "", "by the air");
+            if (foe->is_player())
+            {
+                mpr("You are drained as the cloud strikes you!");
+                drain_player();
+            }
+            else
+            {
+                simple_monster_message(*foe->as_monster(), " is drained by the clouds!");
+            }
+        }
+        break;
+    case CLOUD_ACID:
+        damage = resist_adjust_damage(foe, BEAM_ACID, damage);
+        if (damage > 0)
+        {
+            foe->hurt(caster, damage, BEAM_ACID, KILLED_BY_BEAM,
+                "", "by the air");
+            if (foe->is_player())
+                mpr("You are engulfed in acidic fog!");
+            else
+                simple_monster_message(*foe->as_monster(), " is engulfed in acidic fog!");
+        }
+        break;
+    case CLOUD_STORM:
+        damage = resist_adjust_damage(foe, BEAM_ELECTRICITY, damage);
+        if (damage > 0)
+        {
+            foe->hurt(caster, damage, BEAM_ELECTRICITY, KILLED_BY_BEAM,
+                "", "by the air");
+            if (foe->is_player())
+                mpr("The airstrike triggers a lightning strike through you!");
+            else
+                simple_monster_message(*foe->as_monster(), " is struck by lightning!");
+            noisy(15, foe->pos());
+        }
+        break;
+    default:
+        break;
+    }
+    return;
 }
 
 spret cast_airstrike(int pow, const dist &beam, bool fail)
@@ -1041,19 +1041,19 @@ spret cast_airstrike(int pow, const dist &beam, bool fail)
     bolt pbeam;
     pbeam.flavour = BEAM_AIR;
 
-	int dam = 8 + random2avg(2 + div_rand_round(pow, 7), 3);
+    int dam = 8 + random2avg(2 + div_rand_round(pow, 7), 3);
     int hurted = mons->apply_ac(mons->beam_resists(pbeam, dam, false));
     dprf("preac: %d, postac: %d", dam, hurted);
 
-	mprf("The air twists around and %sstrikes %s%s%s",
-		mons->airborne() ? "violently " : "",
-		mons->name(DESC_THE).c_str(),
-		hurted ? "" : " but does no damage",
-		attack_strength_punctuation(hurted).c_str());
-	_player_hurt_monster(*mons, hurted, pbeam.flavour);
+    mprf("The air twists around and %sstrikes %s%s%s",
+        mons->airborne() ? "violently " : "",
+        mons->name(DESC_THE).c_str(),
+        hurted ? "" : " but does no damage",
+        attack_strength_punctuation(hurted).c_str());
+    _player_hurt_monster(*mons, hurted, pbeam.flavour);
 
-	if (mons->alive())
-		cloud_strike(&you, mons, dam);
+    if (mons->alive())
+        cloud_strike(&you, mons, dam);
 
     return spret::success;
 }
@@ -1086,12 +1086,12 @@ static int _shatter_mon_dice(const monster *mon)
         return 6;
 
     default:
-		if (mon->is_insubstantial())
-			return 0;
+        if (mon->is_insubstantial())
+            return 0;
         if (mon->petrifying()) 
             return 4;
-		if (mon->petrified())
-			return 6;
+        if (mon->petrified())
+            return 6;
         else if (mon->is_skeletal() || mon->is_icy())
             return 6;
         else if (mon->airborne() || mons_is_slime(*mon))
@@ -1160,7 +1160,7 @@ static int _shatter_walls(coord_def where, int pow, actor *agent)
         chance = 100;
         break;
 
-	case DNGN_SILVER_WALL:
+    case DNGN_SILVER_WALL:
     case DNGN_METAL_WALL:
         chance = 15;
         break;
@@ -1201,9 +1201,9 @@ static int _shatter_player_dice()
 {
     if (you.is_insubstantial())
         return 0;
-	if (you.petrified())
-		return 6;
-	if (you.petrifying())
+    if (you.petrified())
+        return 6;
+    if (you.petrifying())
         return 4; 
     else if (you.form == transformation::statue
              || you.form == transformation::ice_beast
@@ -1223,7 +1223,7 @@ static int _shatter_player_dice()
  */
 static bool _shatterable(const actor *act)
 {
-	return !act->is_insubstantial();
+    return !act->is_insubstantial();
 }
 
 spret cast_shatter(int pow, bool fail)
@@ -1912,36 +1912,36 @@ spret cast_ignition(const actor *agent, int pow, bool fail)
         // Fake "shaped" radius 1 explosions (skipping squares with friends).
         for (coord_def pos : blast_sources)
         {
-			for (adjacent_iterator ai(pos); ai; ++ai)
-			{
-				if (cell_is_solid(*ai))
-				{
-					if (feat_is_tree(grd(*ai)) || feat_is_door(grd(*ai)))
-					{
-						if (feat_is_tree(grd(*ai)) && agent->is_player())
-							did_god_conduct(DID_KILL_PLANT, 1, true);
-						// Destroy the wall.
-						destroy_wall(*ai);
-						if (you.see_cell(*ai))
-						{
-							if (feat_is_door(grd(*ai)))
-								mpr("The door bursts into flame!");
-							else if (player_in_branch(BRANCH_SWAMP))
-								mpr("The tree smoulders and burns.");
-							else
-								mpr("The tree burns like a torch!");
-						}
-						else if (you.can_smell())
-							mpr("You smell burning wood.");
+            for (adjacent_iterator ai(pos); ai; ++ai)
+            {
+                if (cell_is_solid(*ai))
+                {
+                    if (feat_is_tree(grd(*ai)) || feat_is_door(grd(*ai)))
+                    {
+                        if (feat_is_tree(grd(*ai)) && agent->is_player())
+                            did_god_conduct(DID_KILL_PLANT, 1, true);
+                        // Destroy the wall.
+                        destroy_wall(*ai);
+                        if (you.see_cell(*ai))
+                        {
+                            if (feat_is_door(grd(*ai)))
+                                mpr("The door bursts into flame!");
+                            else if (player_in_branch(BRANCH_SWAMP))
+                                mpr("The tree smoulders and burns.");
+                            else
+                                mpr("The tree burns like a torch!");
+                        }
+                        else if (you.can_smell())
+                            mpr("You smell burning wood.");
 
-						// Trees do not burn so readily in a wet environment.
-						if (player_in_branch(BRANCH_SWAMP))
-							place_cloud(CLOUD_FIRE, *ai, random2(12) + 5, agent);
-						else
-							place_cloud(CLOUD_FOREST_FIRE, *ai, random2(30) + 25, agent);
-					}
-					continue;
-				}
+                        // Trees do not burn so readily in a wet environment.
+                        if (player_in_branch(BRANCH_SWAMP))
+                            place_cloud(CLOUD_FIRE, *ai, random2(12) + 5, agent);
+                        else
+                            place_cloud(CLOUD_FOREST_FIRE, *ai, random2(30) + 25, agent);
+                    }
+                    continue;
+                }
                 actor *act = actor_at(*ai);
 
                 // Friendly creature, don't blast this square.
@@ -2152,7 +2152,7 @@ bool setup_fragmentation_beam(bolt &beam, int pow, const actor *caster,
     monster* mon = monster_at(target);
     const dungeon_feature_type grid = grd(target);
 
-	destroy = false;
+    destroy = false;
 
     if (target == you.pos())
     {
@@ -2287,74 +2287,74 @@ bool setup_fragmentation_beam(bolt &beam, int pow, const actor *caster,
     case DNGN_ORCISH_IDOL:
         if (what && *what == nullptr)
             *what = "stone idol";
-    	destroy = true;
+        destroy = true;
         // fall-through
     case DNGN_ROCK_WALL:
-	case DNGN_CLEAR_ROCK_WALL:
+    case DNGN_CLEAR_ROCK_WALL:
     case DNGN_SLIMY_WALL:
-		if (what && *what == nullptr)
-			*what = "wall";
+        if (what && *what == nullptr)
+            *what = "wall";
 
-		beam.name = "blast of rock fragments";
-		beam.damage.num = 2;
+        beam.name = "blast of rock fragments";
+        beam.damage.num = 2;
 
-		if (x_chance_in_y(pow, 500))
-		{
-			destroy = true;
-			beam.ex_size++;
-			beam.damage.num++;
-		}
+        if (x_chance_in_y(pow, 500))
+        {
+            destroy = true;
+            beam.ex_size++;
+            beam.damage.num++;
+        }
 
-		break;
+        break;
     case DNGN_STONE_WALL:
     case DNGN_CLEAR_STONE_WALL:
         if (what && *what == nullptr)
             *what = "wall";
 
-		beam.name = "blast of stone fragments";
-		beam.damage.num = 3;
+        beam.name = "blast of stone fragments";
+        beam.damage.num = 3;
 
-		if (x_chance_in_y(pow, 1600))
-		{
-			beam.ex_size++;
-			beam.damage.num++;
-			destroy = true;
-		}
-		break;
+        if (x_chance_in_y(pow, 1600))
+        {
+            beam.ex_size++;
+            beam.damage.num++;
+            destroy = true;
+        }
+        break;
     case DNGN_GRANITE_STATUE:
         if (what && *what == nullptr)
             *what = "statue";
 
         beam.name       = "blast of granite fragments";
         beam.damage.num = 4;
-    	destroy = true;
+        destroy = true;
         break;
 
     // Metal -- small but nasty explosion
     case DNGN_METAL_WALL:
         if (what)
             *what = "metal wall";
-		beam.name = "blast of metal fragments";
-		beam.damage.num = 4;
-		break;
+        beam.name = "blast of metal fragments";
+        beam.damage.num = 4;
+        break;
 
     case DNGN_GRATE:
         if (what && *what == nullptr)
             *what = "iron grate";
-		beam.name = "blast of metal fragments";
-		beam.damage.num = 4;
-		destroy = true;
+        beam.name = "blast of metal fragments";
+        beam.damage.num = 4;
+        destroy = true;
         break;
 
-	// Silver
-	case DNGN_SILVER_WALL: // Zin's blessed silver walls do bonus damage to chaotics.
-		if (what)
-			*what = "silver wall";
-		beam.name = "blast of silver fragments";
-		beam.colour = WHITE;
-		beam.damage.num = 4;
-		beam.flavour = BEAM_SILVER_FRAG;
-		break;
+    // Silver
+    case DNGN_SILVER_WALL: // Zin's blessed silver walls do bonus damage to chaotics.
+        if (what)
+            *what = "silver wall";
+        beam.name = "blast of silver fragments";
+        beam.colour = WHITE;
+        beam.damage.num = 4;
+        beam.flavour = BEAM_SILVER_FRAG;
+        break;
 
     // Crystal
     case DNGN_CRYSTAL_WALL:       // crystal -- large & nasty explosion
@@ -2363,12 +2363,12 @@ bool setup_fragmentation_beam(bolt &beam, int pow, const actor *caster,
         beam.ex_size    = 2;
         beam.name       = "blast of crystal shards";
         beam.damage.num = 4;
-		if (coinflip())
-		{
-			beam.ex_size++;
-			beam.damage.num++;
-			destroy = true;
-		}
+        if (coinflip())
+        {
+            beam.ex_size++;
+            beam.damage.num++;
+            destroy = true;
+        }
         break;
 
     // Stone arches
@@ -2378,8 +2378,8 @@ bool setup_fragmentation_beam(bolt &beam, int pow, const actor *caster,
         hole            = false;  // to hit monsters standing on doors
         beam.name       = "blast of rock fragments";
         beam.damage.num = 3;
-		if (x_chance_in_y(pow, 1600))
-			destroy = true;
+        if (x_chance_in_y(pow, 1600))
+            destroy = true;
         break;
 
     default:
@@ -2407,7 +2407,7 @@ spret cast_fragmentation(int pow, const actor *caster,
                               const coord_def target, bool fail)
 {
     bool hole                = true;
-	bool destroy             = false;
+    bool destroy             = false;
     const char *what         = nullptr;
 
     bolt beam;
@@ -2439,8 +2439,8 @@ spret cast_fragmentation(int pow, const actor *caster,
         if (you.see_cell(target))
             mprf("The %s shatters!", what);
 
-		if (destroy)
-		    destroy_wall(target);
+        if (destroy)
+            destroy_wall(target);
     }
     else if (target == you.pos()) // You explode.
     {
@@ -3031,7 +3031,7 @@ void handle_searing_ray()
     bolt beam;
     beam.thrower = KILL_YOU_MISSILE;
     beam.range   = calc_spell_range(SPELL_SEARING_RAY, pow);
-	beam.flavour = BEAM_FIRE;
+    beam.flavour = BEAM_FIRE;
     beam.source  = you.pos();
     beam.target  = you.props["searing_ray_target"].get_coord();
     beam.aimed_at_spot = you.props["searing_ray_aimed_at_spot"].get_bool();

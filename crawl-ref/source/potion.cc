@@ -400,8 +400,8 @@ public:
 
     bool effect(bool=true, int pow = 40, bool=true) const override
     {
-		mpr("The removed item fails to make you fly anymore");
-		return false;
+        mpr("The removed item fails to make you fly anymore");
+        return false;
     }
 };
 

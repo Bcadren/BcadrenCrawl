@@ -86,10 +86,10 @@ static feature_def feat_defs[] =
 },
 
 {
-	DNGN_SILVER_WALL, "silver wall", "silver_wall",
-	DCHAR_WALL, DCHAR_WALL_MAGIC,
-	COLOUR_IS(WHITE),
-	FFT_OPAQUE | FFT_WALL | FFT_SOLID, MF_WALL,
+    DNGN_SILVER_WALL, "silver wall", "silver_wall",
+    DCHAR_WALL, DCHAR_WALL_MAGIC,
+    COLOUR_IS(WHITE),
+    FFT_OPAQUE | FFT_WALL | FFT_SOLID, MF_WALL,
 },
 
 {
@@ -226,17 +226,17 @@ static feature_def feat_defs[] =
 },
 
 {
-	DNGN_ICE, "ice", "ice",
-	DCHAR_FLOOR, DCHAR_FLOOR_MAGIC,
-	COLOUR_IS(WHITE),
-	FFT_NONE, MF_FLOOR,
+    DNGN_ICE, "ice", "ice",
+    DCHAR_FLOOR, DCHAR_FLOOR_MAGIC,
+    COLOUR_IS(WHITE),
+    FFT_NONE, MF_FLOOR,
 },
 
 {
-	DNGN_OBSIDIAN, "obsidian", "obsidian",
-	DCHAR_FLOOR, DCHAR_FLOOR_MAGIC,
-	COLOUR_IS(BLACK),
-	FFT_NONE, MF_FLOOR,
+    DNGN_OBSIDIAN, "obsidian", "obsidian",
+    DCHAR_FLOOR, DCHAR_FLOOR_MAGIC,
+    COLOUR_IS(BLACK),
+    FFT_NONE, MF_FLOOR,
 },
 
 #if TAG_MAJOR_VERSION == 34

@@ -325,7 +325,7 @@ static resists_t _apply_holiness_resists(resists_t resists, mon_holy_type mh)
     // benefit of the monster_info constructor. If you change this, also
     // change monster::res_negative_energy.
     if (!(mh & MH_NATURAL) && !(mh & MH_DEMONIC))
-		resists = (resists & ~(MR_RES_NEG * 7)) | (MR_RES_NEG * 3);
+        resists = (resists & ~(MR_RES_NEG * 7)) | (MR_RES_NEG * 3);
 
     return resists;
 }
@@ -1238,13 +1238,13 @@ size_type mons_class_body_size(monster_type mc)
 {
     // Should pass base_type to get the right size for zombies, skeletons &c.
     // For normal monsters, base_type is set to type in the constructor.
-	if (mons_is_hepliaklqana_ancestor(mc))
-		return (get_species_def(you.species).size);
-	else
-	{
-		const monsterentry *e = get_monster_data(mc);
-		return e ? e->size : SIZE_MEDIUM;
-	}
+    if (mons_is_hepliaklqana_ancestor(mc))
+        return (get_species_def(you.species).size);
+    else
+    {
+        const monsterentry *e = get_monster_data(mc);
+        return e ? e->size : SIZE_MEDIUM;
+    }
 }
 
 int max_corpse_chunks(monster_type mc)
@@ -1933,41 +1933,41 @@ static mon_attack_def _mutant_beast_attack(const monster &mon, int attk_number)
 static mon_attack_def _hepliaklqana_ancestor_attack(const monster &mon,
                                                      int attk_number)
 {
-	const int HD = mon.get_experience_level();
-	const int dam = HD + 3; // 4 at 1 HD, 21 at 18 HD (max)
-	
-	if (attk_number == 0)
-	{
-		
-		int dam_mult = 1;
-		if (you.species == SP_FELID || you.species == SP_TROLL)
-		{
-			dam_mult = 2;
-			return { AT_CLAW, AF_PLAIN, dam * dam_mult };
-		}
-		dam_mult = mon.type == MONS_ANCESTOR_BATTLEMAGE ? 2 : 1;
-		return { AT_HIT, AF_PLAIN, dam * dam_mult };
+    const int HD = mon.get_experience_level();
+    const int dam = HD + 3; // 4 at 1 HD, 21 at 18 HD (max)
+    
+    if (attk_number == 0)
+    {
+        
+        int dam_mult = 1;
+        if (you.species == SP_FELID || you.species == SP_TROLL)
+        {
+            dam_mult = 2;
+            return { AT_CLAW, AF_PLAIN, dam * dam_mult };
+        }
+        dam_mult = mon.type == MONS_ANCESTOR_BATTLEMAGE ? 2 : 1;
+        return { AT_HIT, AF_PLAIN, dam * dam_mult };
 
-	}   
-	else if (attk_number == 1)
-	{
-		if (you.species == SP_NAGA || you.species == SP_OCTOPODE)
-			return { AT_CONSTRICT, AF_CRUSH, dam / 2 };
-		else if (you.species == SP_VINE_STALKER)
-			return { AT_BITE, AF_ANTIMAGIC, dam / 3 };
-		else if (you.species == SP_MERFOLK || species_is_draconian(you.species))
-			return { AT_TAIL_SLAP, AF_PLAIN, dam / 2 };
-		else if (you.species == SP_MINOTAUR)
-			return { AT_GORE, AF_PLAIN, dam / 2 };
-		else if (you.species == SP_TENGU)
-			return { AT_PECK, AF_PLAIN, dam / 2 };
-		else if (you.species == SP_FELID)
-			return { AT_BITE, AF_PLAIN, dam };
-		else
-			return {};
-	}
-	else
-		return {};
+    }   
+    else if (attk_number == 1)
+    {
+        if (you.species == SP_NAGA || you.species == SP_OCTOPODE)
+            return { AT_CONSTRICT, AF_CRUSH, dam / 2 };
+        else if (you.species == SP_VINE_STALKER)
+            return { AT_BITE, AF_ANTIMAGIC, dam / 3 };
+        else if (you.species == SP_MERFOLK || species_is_draconian(you.species))
+            return { AT_TAIL_SLAP, AF_PLAIN, dam / 2 };
+        else if (you.species == SP_MINOTAUR)
+            return { AT_GORE, AF_PLAIN, dam / 2 };
+        else if (you.species == SP_TENGU)
+            return { AT_PECK, AF_PLAIN, dam / 2 };
+        else if (you.species == SP_FELID)
+            return { AT_BITE, AF_PLAIN, dam };
+        else
+            return {};
+    }
+    else
+        return {};
 }
 
 /** Get the attack type, attack flavour and damage for a monster attack.
@@ -3313,8 +3313,8 @@ mon_energy_usage mons_energy(const monster& mon)
 {
     mon_energy_usage meu = mons_class_energy(mons_base_type(mon));
 
-	if (mons_is_hepliaklqana_ancestor(mon.type))
-		meu.move = meu.swim = hepliakqlana_ally_movement_speed();
+    if (mons_is_hepliaklqana_ancestor(mon.type))
+        meu.move = meu.swim = hepliakqlana_ally_movement_speed();
 
     if (mon.ghost)
         meu.move = meu.swim = mon.ghost->move_energy;
@@ -3860,7 +3860,7 @@ bool mons_has_incapacitating_spell(const monster& mon, const actor& foe)
         case SPELL_CONFUSE:
         case SPELL_MASS_CONFUSION:
         case SPELL_PARALYSE:
-		case SPELL_PETRIFY:
+        case SPELL_PETRIFY:
             return true;
 
         default:
@@ -4241,8 +4241,8 @@ mon_inv_type item_to_mslot(const item_def &item)
         return MSLOT_WEAPON;
     case OBJ_MISSILES:
         return MSLOT_MISSILE;
-	case OBJ_SHIELDS:
-		return MSLOT_SHIELD;
+    case OBJ_SHIELDS:
+        return MSLOT_SHIELD;
     case OBJ_ARMOURS:
         return equip_slot_to_mslot(get_armour_slot(item));
     case OBJ_JEWELLERY:
@@ -4325,9 +4325,9 @@ static string _get_species_insult(const string &species, const string &type)
 
 void xom_insult_name()
 {
-	string genus = species_name(you.species, SPNAME_GENUS);
-	you.xom_insult = make_stringf("%s %s", uppercase_first(_get_species_insult(genus, "adj1")).c_str(),
-		uppercase_first(_get_species_insult(genus, "noun")).c_str());
+    string genus = species_name(you.species, SPNAME_GENUS);
+    you.xom_insult = make_stringf("%s %s", uppercase_first(_get_species_insult(genus, "adj1")).c_str(),
+        uppercase_first(_get_species_insult(genus, "noun")).c_str());
 }
 
 // From should be of the form "prefix @tag@". Replaces all substrings
@@ -4732,42 +4732,42 @@ mon_body_shape get_mon_shape(const monster& mon)
  */
 mon_body_shape get_mon_shape(const monster_type mc)
 {
-	if (mc == MONS_CHAOS_SPAWN)
-	{
-		return static_cast<mon_body_shape>(random_range(MON_SHAPE_HUMANOID,
-			MON_SHAPE_MISC));
-	}
+    if (mc == MONS_CHAOS_SPAWN)
+    {
+        return static_cast<mon_body_shape>(random_range(MON_SHAPE_HUMANOID,
+            MON_SHAPE_MISC));
+    }
 
-	if (mons_is_hepliaklqana_ancestor(mc))
-	{
-		if (species_is_draconian(you.species))
-			return static_cast<mon_body_shape>(MON_SHAPE_HUMANOID_WINGED_TAILED);
-		else
-		{
-			switch (you.species)
-			{
-			case SP_FELID:
-				return static_cast<mon_body_shape>(MON_SHAPE_QUADRUPED);
-				break;
-			case SP_MERFOLK:
-			case SP_NAGA:
-				return static_cast<mon_body_shape>(MON_SHAPE_NAGA);
-				break;
-			case SP_OCTOPODE:
-				return static_cast<mon_body_shape>(MON_SHAPE_MISC);
-				break;
-			case SP_TENGU:
-			case SP_GARGOYLE:
-				return static_cast<mon_body_shape>(MON_SHAPE_HUMANOID_WINGED);
-				break;
-			case SP_CENTAUR:
-				return static_cast<mon_body_shape>(MON_SHAPE_CENTAUR);
-			default:
-				return static_cast<mon_body_shape>(MON_SHAPE_HUMANOID);
-				break;
-			}
-		}
-	}
+    if (mons_is_hepliaklqana_ancestor(mc))
+    {
+        if (species_is_draconian(you.species))
+            return static_cast<mon_body_shape>(MON_SHAPE_HUMANOID_WINGED_TAILED);
+        else
+        {
+            switch (you.species)
+            {
+            case SP_FELID:
+                return static_cast<mon_body_shape>(MON_SHAPE_QUADRUPED);
+                break;
+            case SP_MERFOLK:
+            case SP_NAGA:
+                return static_cast<mon_body_shape>(MON_SHAPE_NAGA);
+                break;
+            case SP_OCTOPODE:
+                return static_cast<mon_body_shape>(MON_SHAPE_MISC);
+                break;
+            case SP_TENGU:
+            case SP_GARGOYLE:
+                return static_cast<mon_body_shape>(MON_SHAPE_HUMANOID_WINGED);
+                break;
+            case SP_CENTAUR:
+                return static_cast<mon_body_shape>(MON_SHAPE_CENTAUR);
+            default:
+                return static_cast<mon_body_shape>(MON_SHAPE_HUMANOID);
+                break;
+            }
+        }
+    }
 
     ASSERT_smc();
     return smc->shape;
@@ -5694,10 +5694,10 @@ void throw_monster_bits(const monster& mon)
 /// Add an ancestor spell to the given list.
 static void _add_ancestor_spell(monster_spells &spells, spell_type spell)
 {
-	if (you.species == SP_SILENT_SPECTRE)
-		spells.emplace_back(spell, 25, MON_SPELL_MAGICAL);
-	else
-		spells.emplace_back(spell, 25, MON_SPELL_WIZARD);
+    if (you.species == SP_SILENT_SPECTRE)
+        spells.emplace_back(spell, 25, MON_SPELL_MAGICAL);
+    else
+        spells.emplace_back(spell, 25, MON_SPELL_WIZARD);
 }
 
 /**
@@ -5719,87 +5719,87 @@ void set_ancestor_spells(monster &ancestor, bool notify)
     const int HD = ancestor.get_experience_level();
     switch (ancestor.type)
     {
-	case MONS_ANCESTOR_KNIGHT:
-		if (you.species == SP_FELID)
-		{
-			_add_ancestor_spell(ancestor.spells, SPELL_OZOCUBUS_ARMOUR);
-			_add_ancestor_spell(ancestor.spells, SPELL_CONDENSATION_SHIELD);
-		}
-		else if (you.species == SP_OCTOPODE || species_is_draconian(you.species))
-			_add_ancestor_spell(ancestor.spells, SPELL_OZOCUBUS_ARMOUR);
-		break;
+    case MONS_ANCESTOR_KNIGHT:
+        if (you.species == SP_FELID)
+        {
+            _add_ancestor_spell(ancestor.spells, SPELL_OZOCUBUS_ARMOUR);
+            _add_ancestor_spell(ancestor.spells, SPELL_CONDENSATION_SHIELD);
+        }
+        else if (you.species == SP_OCTOPODE || species_is_draconian(you.species))
+            _add_ancestor_spell(ancestor.spells, SPELL_OZOCUBUS_ARMOUR);
+        break;
     case MONS_ANCESTOR_BATTLEMAGE:
-		// Few fun special cases for a couple races, nothing OP.
-		if (you.species == SP_MERFOLK)
-		{
-			_add_ancestor_spell(ancestor.spells, SPELL_PRIMAL_WAVE);
-			_add_ancestor_spell(ancestor.spells, HD >= 14 ?
-				SPELL_BOLT_OF_COLD :
-				SPELL_THROW_ICICLE);
-		}
-		else if (species_is_draconian(you.species)) // SCORCHER! 
-		{
-			_add_ancestor_spell(ancestor.spells, HD >= 17 ?
-				SPELL_HURL_DAMNATION :
-				SPELL_FIREBALL);
-			_add_ancestor_spell(ancestor.spells, HD >= 13 ?
-				SPELL_BOLT_OF_FIRE :
-				SPELL_THROW_FLAME);
-		}
-		else if (you.species == SP_TENGU)
-		{
-			_add_ancestor_spell(ancestor.spells, HD >= 12 ?
-				SPELL_BATTLESPHERE :
-				SPELL_THROW_FROST);
-			_add_ancestor_spell(ancestor.spells, HD >= 16 ?
-				SPELL_CORROSIVE_BOLT :
-				SPELL_FORCE_LANCE);
-			_add_ancestor_spell(ancestor.spells, HD >= 13 ?
-				SPELL_LIGHTNING_BOLT :
-				SPELL_SHOCK);
-			_add_ancestor_spell(ancestor.spells, SPELL_AIRSTRIKE);
-		}
-		else if (you.species == SP_NAGA || you.species == SP_OCTOPODE)
-		{
-			_add_ancestor_spell(ancestor.spells, HD >= 12 ?
-				SPELL_POISON_ARROW :
-				SPELL_VENOM_BOLT);
-			_add_ancestor_spell(ancestor.spells, HD >= 16 ?
-				SPELL_LEHUDIBS_CRYSTAL_SPEAR :
-				SPELL_STONE_ARROW);
-			_add_ancestor_spell(ancestor.spells, SPELL_OLGREBS_TOXIC_RADIANCE);
-		}
-		else if (you.species == SP_HILL_ORC)
-		{
-			_add_ancestor_spell(ancestor.spells, HD >= 12 ?
-				SPELL_BOLT_OF_DRAINING :
-				SPELL_PAIN);
-			_add_ancestor_spell(ancestor.spells, HD >= 16 ?
-				SPELL_BOLT_OF_FIRE :
-				SPELL_THROW_FLAME);
-		}
-		else if (you.species == SP_MUMMY || you.char_class == JOB_MUMMY ||  you.species == SP_GHOUL)
-		{
-			_add_ancestor_spell(ancestor.spells, HD >= 10 ?
-				SPELL_AGONY :
-				SPELL_CORPSE_ROT);
-			_add_ancestor_spell(ancestor.spells, HD >= 12 ?
-				SPELL_BOLT_OF_DRAINING :
-				SPELL_PAIN);
-			_add_ancestor_spell(ancestor.spells, HD >= 12 ?
-				SPELL_BOLT_OF_COLD :
-				SPELL_THROW_FROST);
-			_add_ancestor_spell(ancestor.spells, SPELL_DISPEL_UNDEAD);
-		}
-		else
-		{
-			_add_ancestor_spell(ancestor.spells, HD >= 10 ?
-				SPELL_BOLT_OF_MAGMA :
-				SPELL_THROW_FROST);
-			_add_ancestor_spell(ancestor.spells, HD >= 16 ?
-				SPELL_LEHUDIBS_CRYSTAL_SPEAR :
-				SPELL_STONE_ARROW);
-		}
+        // Few fun special cases for a couple races, nothing OP.
+        if (you.species == SP_MERFOLK)
+        {
+            _add_ancestor_spell(ancestor.spells, SPELL_PRIMAL_WAVE);
+            _add_ancestor_spell(ancestor.spells, HD >= 14 ?
+                SPELL_BOLT_OF_COLD :
+                SPELL_THROW_ICICLE);
+        }
+        else if (species_is_draconian(you.species)) // SCORCHER! 
+        {
+            _add_ancestor_spell(ancestor.spells, HD >= 17 ?
+                SPELL_HURL_DAMNATION :
+                SPELL_FIREBALL);
+            _add_ancestor_spell(ancestor.spells, HD >= 13 ?
+                SPELL_BOLT_OF_FIRE :
+                SPELL_THROW_FLAME);
+        }
+        else if (you.species == SP_TENGU)
+        {
+            _add_ancestor_spell(ancestor.spells, HD >= 12 ?
+                SPELL_BATTLESPHERE :
+                SPELL_THROW_FROST);
+            _add_ancestor_spell(ancestor.spells, HD >= 16 ?
+                SPELL_CORROSIVE_BOLT :
+                SPELL_FORCE_LANCE);
+            _add_ancestor_spell(ancestor.spells, HD >= 13 ?
+                SPELL_LIGHTNING_BOLT :
+                SPELL_SHOCK);
+            _add_ancestor_spell(ancestor.spells, SPELL_AIRSTRIKE);
+        }
+        else if (you.species == SP_NAGA || you.species == SP_OCTOPODE)
+        {
+            _add_ancestor_spell(ancestor.spells, HD >= 12 ?
+                SPELL_POISON_ARROW :
+                SPELL_VENOM_BOLT);
+            _add_ancestor_spell(ancestor.spells, HD >= 16 ?
+                SPELL_LEHUDIBS_CRYSTAL_SPEAR :
+                SPELL_STONE_ARROW);
+            _add_ancestor_spell(ancestor.spells, SPELL_OLGREBS_TOXIC_RADIANCE);
+        }
+        else if (you.species == SP_HILL_ORC)
+        {
+            _add_ancestor_spell(ancestor.spells, HD >= 12 ?
+                SPELL_BOLT_OF_DRAINING :
+                SPELL_PAIN);
+            _add_ancestor_spell(ancestor.spells, HD >= 16 ?
+                SPELL_BOLT_OF_FIRE :
+                SPELL_THROW_FLAME);
+        }
+        else if (you.species == SP_MUMMY || you.char_class == JOB_MUMMY ||  you.species == SP_GHOUL)
+        {
+            _add_ancestor_spell(ancestor.spells, HD >= 10 ?
+                SPELL_AGONY :
+                SPELL_CORPSE_ROT);
+            _add_ancestor_spell(ancestor.spells, HD >= 12 ?
+                SPELL_BOLT_OF_DRAINING :
+                SPELL_PAIN);
+            _add_ancestor_spell(ancestor.spells, HD >= 12 ?
+                SPELL_BOLT_OF_COLD :
+                SPELL_THROW_FROST);
+            _add_ancestor_spell(ancestor.spells, SPELL_DISPEL_UNDEAD);
+        }
+        else
+        {
+            _add_ancestor_spell(ancestor.spells, HD >= 10 ?
+                SPELL_BOLT_OF_MAGMA :
+                SPELL_THROW_FROST);
+            _add_ancestor_spell(ancestor.spells, HD >= 16 ?
+                SPELL_LEHUDIBS_CRYSTAL_SPEAR :
+                SPELL_STONE_ARROW);
+        }
         break;
     case MONS_ANCESTOR_HEXER:
         _add_ancestor_spell(ancestor.spells, HD >= 10 ? SPELL_PETRIFY
@@ -5811,41 +5811,41 @@ void set_ancestor_spells(monster &ancestor, bool notify)
         break;
     }
 
-	// Add Racial abilities to make your ancestor more like your species.
+    // Add Racial abilities to make your ancestor more like your species.
 
-	if (you.species == SP_NAGA)
-		ancestor.spells.emplace_back(SPELL_SPIT_POISON, 25, MON_SPELL_NATURAL | MON_SPELL_BREATH);
+    if (you.species == SP_NAGA)
+        ancestor.spells.emplace_back(SPELL_SPIT_POISON, 25, MON_SPELL_NATURAL | MON_SPELL_BREATH);
 
-	if (you.species == SP_RED_DRACONIAN)
-		ancestor.spells.emplace_back(SPELL_SEARING_BREATH, 25, MON_SPELL_NATURAL | MON_SPELL_BREATH);
+    if (you.species == SP_RED_DRACONIAN)
+        ancestor.spells.emplace_back(SPELL_SEARING_BREATH, 25, MON_SPELL_NATURAL | MON_SPELL_BREATH);
 
-	if (you.species == SP_YELLOW_DRACONIAN)
-		ancestor.spells.emplace_back(SPELL_ACID_SPLASH, 25, MON_SPELL_NATURAL | MON_SPELL_BREATH);
+    if (you.species == SP_YELLOW_DRACONIAN)
+        ancestor.spells.emplace_back(SPELL_ACID_SPLASH, 25, MON_SPELL_NATURAL | MON_SPELL_BREATH);
 
-	if (you.species == SP_WHITE_DRACONIAN)
-		ancestor.spells.emplace_back(SPELL_CHILLING_BREATH, 25, MON_SPELL_NATURAL | MON_SPELL_BREATH);
+    if (you.species == SP_WHITE_DRACONIAN)
+        ancestor.spells.emplace_back(SPELL_CHILLING_BREATH, 25, MON_SPELL_NATURAL | MON_SPELL_BREATH);
 
-	if (you.species == SP_GREEN_DRACONIAN)
-		ancestor.spells.emplace_back(SPELL_POISONOUS_CLOUD, 25, MON_SPELL_NATURAL | MON_SPELL_BREATH);
+    if (you.species == SP_GREEN_DRACONIAN)
+        ancestor.spells.emplace_back(SPELL_POISONOUS_CLOUD, 25, MON_SPELL_NATURAL | MON_SPELL_BREATH);
 
-	if (you.species == SP_PALE_DRACONIAN)
-		ancestor.spells.emplace_back(SPELL_STEAM_BALL, 25, MON_SPELL_NATURAL | MON_SPELL_BREATH);
+    if (you.species == SP_PALE_DRACONIAN)
+        ancestor.spells.emplace_back(SPELL_STEAM_BALL, 25, MON_SPELL_NATURAL | MON_SPELL_BREATH);
 
-	if (you.species == SP_BLACK_DRACONIAN)
-		ancestor.spells.emplace_back(SPELL_LIGHTNING_BOLT, 25, MON_SPELL_NATURAL | MON_SPELL_BREATH);
+    if (you.species == SP_BLACK_DRACONIAN)
+        ancestor.spells.emplace_back(SPELL_LIGHTNING_BOLT, 25, MON_SPELL_NATURAL | MON_SPELL_BREATH);
 
-	if (you.species == SP_PURPLE_DRACONIAN)
-		ancestor.spells.emplace_back(SPELL_QUICKSILVER_BOLT, 25, MON_SPELL_NATURAL | MON_SPELL_BREATH);
+    if (you.species == SP_PURPLE_DRACONIAN)
+        ancestor.spells.emplace_back(SPELL_QUICKSILVER_BOLT, 25, MON_SPELL_NATURAL | MON_SPELL_BREATH);
 
-	if (HD >= 13)
-	{
-		if (you.species == SP_SILENT_SPECTRE)
-			ancestor.spells.emplace_back(SPELL_HASTE, 25, MON_SPELL_MAGICAL);
-		else if (you.species == SP_FORMICID)
-			ancestor.spells.emplace_back(SPELL_MIGHT, 25, MON_SPELL_WIZARD);
-		else
-			ancestor.spells.emplace_back(SPELL_HASTE, 25, MON_SPELL_WIZARD);
-	}
+    if (HD >= 13)
+    {
+        if (you.species == SP_SILENT_SPECTRE)
+            ancestor.spells.emplace_back(SPELL_HASTE, 25, MON_SPELL_MAGICAL);
+        else if (you.species == SP_FORMICID)
+            ancestor.spells.emplace_back(SPELL_MIGHT, 25, MON_SPELL_WIZARD);
+        else
+            ancestor.spells.emplace_back(SPELL_HASTE, 25, MON_SPELL_WIZARD);
+    }
 
     if (ancestor.spells.size())
         ancestor.props[CUSTOM_SPELLS_KEY] = true;

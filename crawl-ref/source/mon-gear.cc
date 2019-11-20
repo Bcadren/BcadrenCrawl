@@ -57,7 +57,7 @@ void give_specific_item(monster* mon, int thing)
     if (!is_artefact(mthing)
         && (mthing.base_type == OBJ_WEAPONS
          || mthing.base_type == OBJ_ARMOURS
-		 || mthing.base_type == OBJ_SHIELDS
+         || mthing.base_type == OBJ_SHIELDS
          || mthing.base_type == OBJ_MISSILES))
     {
         bool enchanted = mthing.plus;
@@ -80,7 +80,7 @@ void give_specific_item(monster* mon, int thing)
     }
     if (!mthing.defined()) // missiles merged into an existing stack
         return;
-	ASSERT(mthing.holding_monster() == mon);
+    ASSERT(mthing.holding_monster() == mon);
 
     if (!mthing.appearance_initialized())
         item_colour(mthing);
@@ -396,14 +396,14 @@ int make_mons_weapon(monster_type type, int level, bool melee_only)
         { WPN_SCIMITAR,         2 },
         { WPN_LONG_SWORD,       1 } },
       { 1, 2, 5 },
-	  { { SPWPN_HOLY_WRATH,     2 }, {SPWPN_SILVER, 1 } } };
+      { { SPWPN_HOLY_WRATH,     2 }, {SPWPN_SILVER, 1 } } };
     static const vector<pair<brand_type, int>> HELL_KNIGHT_BRANDS = // sum 45
     {   { SPWPN_MOLTEN,        13 },
         { SPWPN_ACID,           4 },
         { SPWPN_VORPAL,         4 },
         { SPWPN_DISTORTION,     2 },
         { SPWPN_PAIN,           2 },
-		{ SPWPN_CHAOS,          2 },
+        { SPWPN_CHAOS,          2 },
         { NUM_SPECIAL_WEAPONS,  10 }, // 5/9 chance of brand
     };
     static const weapon_list URUG_WEAPONS =
@@ -706,7 +706,7 @@ int make_mons_weapon(monster_type type, int level, bool melee_only)
             { { WPN_WHIP,               3 },
               { WPN_SACRED_SCOURGE,     1 }, },
             { 1, 1, 3 },
-			{ { SPWPN_HOLY_WRATH, 2 }, {SPWPN_SILVER, 1} },
+            { { SPWPN_HOLY_WRATH, 2 }, {SPWPN_SILVER, 1} },
         } },
         { MONS_CHERUB,
             { { { WPN_FLAIL,            1 },
@@ -858,7 +858,7 @@ int make_mons_weapon(monster_type type, int level, bool melee_only)
               { SPWPN_FREEZING,      4 },
               { SPWPN_MOLTEN,       4 },
               { SPWPN_PAIN,          2 },
-			  { SPWPN_CHAOS,         2 },
+              { SPWPN_CHAOS,         2 },
               { NUM_SPECIAL_WEAPONS, 15 } }, // 2/3 chance of brand
         } },
         { MONS_SOJOBO, {
@@ -1656,7 +1656,7 @@ static void _give_shield(monster* mon, int level)
         {
             if (coinflip())
             {
-				set_item_ego_type(*shield, OBJ_SHIELDS, SPARM_REFLECTION);
+                set_item_ego_type(*shield, OBJ_SHIELDS, SPARM_REFLECTION);
                 set_equip_desc(*shield, ISFLAG_GLOWING);
             }
             if (!is_artefact(*shield))
@@ -1698,16 +1698,16 @@ static void _give_shield(monster* mon, int level)
                               ISPEC_GOOD_ITEM);
         break;
 
-	case MONS_ANCESTOR_BATTLEMAGE:
-	case MONS_ANCESTOR_HEXER:
+    case MONS_ANCESTOR_BATTLEMAGE:
+    case MONS_ANCESTOR_HEXER:
     case MONS_ANCESTOR_KNIGHT:
     {
         item_def shld;
         upgrade_hepliaklqana_shield(*mon, shld);
 
-		// Embedding a Nikola Hack, hope this works.
-		if (you.species == SP_FELID && mon->get_experience_level() >= 12)
-			make_item_for_monster(mon, OBJ_JEWELLERY, AMU_REFLECTION, 6, 0, ISFLAG_KNOW_TYPE | ISFLAG_SUMMONED);
+        // Embedding a Nikola Hack, hope this works.
+        if (you.species == SP_FELID && mon->get_experience_level() >= 12)
+            make_item_for_monster(mon, OBJ_JEWELLERY, AMU_REFLECTION, 6, 0, ISFLAG_KNOW_TYPE | ISFLAG_SUMMONED);
 
         if (!shld.defined())
             break;

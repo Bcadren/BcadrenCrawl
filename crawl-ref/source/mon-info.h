@@ -138,7 +138,7 @@ enum monster_info_flags
     MB_ICEMAIL,
     MB_AGILE,
     MB_FROZEN,
-	MB_LAVA_CAKE,
+    MB_LAVA_CAKE,
     MB_BLACK_MARK,
     MB_SAP_MAGIC,
     MB_SHROUD,
@@ -151,7 +151,7 @@ enum monster_info_flags
 #if TAG_MAJOR_VERSION == 34
     MB_NEGATIVE_VULN,
 #endif
-	MB_CONDENSATION_SHIELD,
+    MB_CONDENSATION_SHIELD,
     MB_RESISTANCE,
     MB_HEXED,
 #if TAG_MAJOR_VERSION == 34

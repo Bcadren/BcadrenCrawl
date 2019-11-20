@@ -256,66 +256,66 @@ bool DescendingStairsDelay::try_interrupt()
 
 bool PasswallDelay::try_interrupt()
 {
-	if (!prompted)
-	{
-		if (!crawl_state.disables[DIS_CONFIRMATIONS]
-			&& !yesno("Continue meditating on the wall?", false, 0, false))
-		{
-			mpr("Your Your meditation is interrupted.");
-			return true;
-		}
-		else
-			prompted = true;
-	}
-	return false;
+    if (!prompted)
+    {
+        if (!crawl_state.disables[DIS_CONFIRMATIONS]
+            && !yesno("Continue meditating on the wall?", false, 0, false))
+        {
+            mpr("Your Your meditation is interrupted.");
+            return true;
+        }
+        else
+            prompted = true;
+    }
+    return false;
 }
 
 bool ShaftSelfDelay::try_interrupt()
 {
-	if (!prompted)
-	{
-		if (!crawl_state.disables[DIS_CONFIRMATIONS]
-			&& !yesno("Continue digging your shaft?", false, 0, false))
-		{
-			mpr("You stop digging.");
-			return true;
-		}
-		else
-			prompted = true;
-	}
+    if (!prompted)
+    {
+        if (!crawl_state.disables[DIS_CONFIRMATIONS]
+            && !yesno("Continue digging your shaft?", false, 0, false))
+        {
+            mpr("You stop digging.");
+            return true;
+        }
+        else
+            prompted = true;
+    }
     return true;
 }
 
 bool SMDDelay::try_interrupt()
 {
-	if (!prompted)
-	{
-		if (!crawl_state.disables[DIS_CONFIRMATIONS]
-			&& !yesno("Continue your destruction?", false, 0, false))
-		{
-			mpr("Your destruction attempt is interrupted.");
-			return true;
-		}
-		else
-			prompted = true;
-	}
-	return false;
+    if (!prompted)
+    {
+        if (!crawl_state.disables[DIS_CONFIRMATIONS]
+            && !yesno("Continue your destruction?", false, 0, false))
+        {
+            mpr("Your destruction attempt is interrupted.");
+            return true;
+        }
+        else
+            prompted = true;
+    }
+    return false;
 }
 
 bool DerootDelay::try_interrupt()
 {
-	if (duration > 1 && !was_prompted)
-	{
-		if (!crawl_state.disables[DIS_CONFIRMATIONS]
-			&& !yesno("Keep uprooting?", false, 0, false))
-		{
-			mpr("You stop digging up your roots.");
-			return true;
-		}
-		else
-			was_prompted = true;
-	}
-	return false;
+    if (duration > 1 && !was_prompted)
+    {
+        if (!crawl_state.disables[DIS_CONFIRMATIONS]
+            && !yesno("Keep uprooting?", false, 0, false))
+        {
+            mpr("You stop digging up your roots.");
+            return true;
+        }
+        else
+            was_prompted = true;
+    }
+    return false;
 }
 
 void stop_delay(bool stop_stair_travel)
@@ -528,13 +528,13 @@ void PasswallDelay::start()
 
 void SMDDelay::start()
 {
-	noisy(20, target);
-	mprf(MSGCH_SOUND, "The wall sings out as you magically vibrate it to determine its weaknesses.");
+    noisy(20, target);
+    mprf(MSGCH_SOUND, "The wall sings out as you magically vibrate it to determine its weaknesses.");
 }
 
 void DerootDelay::start()
 {
-	mprf(MSGCH_MULTITURN_ACTION, "You begin to carefully uproot yourself.");
+    mprf(MSGCH_MULTITURN_ACTION, "You begin to carefully uproot yourself.");
 }
 
 void ShaftSelfDelay::start()
@@ -713,12 +713,12 @@ void MultidropDelay::tick()
 
 void SMDDelay::tick()
 {
-	if (one_chance_in(3))
-	{
-		mprf(MSGCH_SOUND, "The wall makes a loud rumbling!");
-		noisy(random_range(4,30), target);
-	}
-	mprf(MSGCH_MULTITURN_ACTION, "You continue focusing on collapsing the wall.");
+    if (one_chance_in(3))
+    {
+        mprf(MSGCH_SOUND, "The wall makes a loud rumbling!");
+        noisy(random_range(4,30), target);
+    }
+    mprf(MSGCH_MULTITURN_ACTION, "You continue focusing on collapsing the wall.");
 }
 
 void JewelleryOnDelay::tick()
@@ -935,21 +935,21 @@ void ShaftSelfDelay::finish()
 
 void DerootDelay::finish()
 {
-	you.attribute[ATTR_ROOTED] = 0;
-	mpr("You finish extracting your roots and can move again.");
+    you.attribute[ATTR_ROOTED] = 0;
+    mpr("You finish extracting your roots and can move again.");
 }
 
 void SMDDelay::finish()
 {
-	mprf(MSGCH_SOUND, "You intensely vibrate the wall and it collapses in on itself with a thud.");
-	noisy(2 + random2(4), target);
-	destroy_wall(target);
-	place_cloud(CLOUD_DUST, target, random2(10) + 5, &you);
-	for (adjacent_iterator ai(target, false); ai; ++ai)
-	{
-		if (!cell_is_solid(*ai) && !cloud_at(*ai) && !one_chance_in(3))
-			place_cloud(CLOUD_DUST, *ai, 5 + random2(10), &you);
-	}
+    mprf(MSGCH_SOUND, "You intensely vibrate the wall and it collapses in on itself with a thud.");
+    noisy(2 + random2(4), target);
+    destroy_wall(target);
+    place_cloud(CLOUD_DUST, target, random2(10) + 5, &you);
+    for (adjacent_iterator ai(target, false); ai; ++ai)
+    {
+        if (!cell_is_solid(*ai) && !cloud_at(*ai) && !one_chance_in(3))
+            place_cloud(CLOUD_DUST, *ai, 5 + random2(10), &you);
+    }
 }
 
 void BlurryScrollDelay::finish()
@@ -1390,8 +1390,8 @@ void autotoggle_autopickup(bool off)
 bool interrupt_activity(activity_interrupt ai,
                         const activity_interrupt_data &at,
                         vector<string>* msgs_buf)
-{	
-	if (interrupt_block::blocked())
+{    
+    if (interrupt_block::blocked())
         return false;
 
     const interrupt_block block_recursive_interrupts;

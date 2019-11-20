@@ -23,7 +23,7 @@ enum unarmed_attack_type
     UNAT_TENTACLES4,
     UNAT_FIRST_ATTACK = UNAT_CONSTRICT,
     UNAT_LAST_ATTACK = UNAT_TENTACLES4,
-	NUM_UNARMED_ATTACKS,
+    NUM_UNARMED_ATTACKS,
 };
 
 class melee_attack : public attack

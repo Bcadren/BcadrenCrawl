@@ -311,16 +311,16 @@ static bool _iood_hit(monster& mon, const coord_def &pos, bool big_boom = false)
     beam.source_name = mon.props[IOOD_CASTER].get_string();
 
     int pow = mon.props[IOOD_POW].get_short();
-	const int dist = mon.props[IOOD_DIST].get_int();
-	pow = div_rand_round(pow * 10 + pow * dist, 10);
+    const int dist = mon.props[IOOD_DIST].get_int();
+    pow = div_rand_round(pow * 10 + pow * dist, 10);
     pow = stepdown_value(pow, 30, 30, 200, -1);
     ASSERT(dist >= 0);
     if (dist < 4)
         pow = pow * (dist*2+3) / 10;
     beam.damage = dice_def(9, pow / 4);
 
-	if (dist > 7)
-		beam.name = "huge " + beam.name;
+    if (dist > 7)
+        beam.name = "huge " + beam.name;
     if (dist < 3)
         beam.name = "small " + beam.name;
     if (dist < 2)
@@ -482,14 +482,14 @@ move_again:
             }
             else
             {
-				if (mon.observable())
-					mpr("The snowballs collide in a blinding cloud of snow!");
+                if (mon.observable())
+                    mpr("The snowballs collide in a blinding cloud of snow!");
                 else
                     mpr("You hear a loud icy crash!");
                 noisy(40, pos);
                 monster_die(*mons, KILL_DISMISSED, NON_MONSTER);
                 _iood_hit(mon, pos, true);
-				place_cloud(CLOUD_COLD, pos, 3, &mon);
+                place_cloud(CLOUD_COLD, pos, 3, &mon);
                 return true;
             }
         }

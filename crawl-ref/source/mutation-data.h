@@ -606,7 +606,7 @@ static const mutation_def mut_data[] =
 },
 
 { MUT_UNBREATHING_FORM, 0, 1, mutflag::good, false,
-	"unbreathing",
+    "unbreathing",
 
    { "You can survive without breathing.", "", "" },
    { "You feel breathless.", "", "" },
@@ -1906,14 +1906,14 @@ static const mutation_def mut_data[] =
 },
 
 { MUT_GODS_PITY, 0, 2, mutflag::good, false,
-	"god's pity",
+    "god's pity",
 
 { "The pity of the gods increases the power of your invoked divine abilities.",
-	"The pity of the gods increases the power of your passive and invoked divine abilities.", "" },
+    "The pity of the gods increases the power of your passive and invoked divine abilities.", "" },
 { "The dieties of the dungeon take pity on you.",
-	"The dieties of the dungeon take greater pity upon you.", "" },
+    "The dieties of the dungeon take greater pity upon you.", "" },
 { "The dieties treat you like any other subject.",
-	"The pity of the gods is waning.", "" },
+    "The pity of the gods is waning.", "" },
 },
 
 { MUT_STRONG_NOSE, 0, 1, mutflag::good, false,

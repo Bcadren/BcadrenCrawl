@@ -216,18 +216,18 @@ static void _decrement_petrification(int delay)
                                         "flesh" :
                                         get_form()->flesh_equivalent;
 
-		if (you.species == SP_LIGNIFITE)
-			flesh_equiv = "wood";
-		if (you.species == SP_SILENT_SPECTRE)
-			flesh_equiv = "vapour";
-		if (you.religion == GOD_JIYVA && you.undead_state() == US_ALIVE)
-			flesh_equiv = "slime";
-		
-		if (you.species == SP_GARGOYLE || you.form == transformation::statue)
-			mprf(MSGCH_DURATION, "Your stony form becomes more flexible, allowing you to move again.");
-		else
-			mprf(MSGCH_DURATION, "You turn to %s and can move again.",
-				flesh_equiv.c_str());
+        if (you.species == SP_LIGNIFITE)
+            flesh_equiv = "wood";
+        if (you.species == SP_SILENT_SPECTRE)
+            flesh_equiv = "vapour";
+        if (you.religion == GOD_JIYVA && you.undead_state() == US_ALIVE)
+            flesh_equiv = "slime";
+        
+        if (you.species == SP_GARGOYLE || you.form == transformation::statue)
+            mprf(MSGCH_DURATION, "Your stony form becomes more flexible, allowing you to move again.");
+        else
+            mprf(MSGCH_DURATION, "You turn to %s and can move again.",
+                flesh_equiv.c_str());
 
         if (you.props.exists(PETRIFIED_BY_KEY))
             you.props.erase(PETRIFIED_BY_KEY);
@@ -974,8 +974,8 @@ void player_reacts()
 
     actor_apply_cloud(&you);
 
-	if (!you.airborne())
-		actor_apply_terrain(&you, env.grid(you.pos()));
+    if (!you.airborne())
+        actor_apply_terrain(&you, env.grid(you.pos()));
 
     if (env.level_state & LSTATE_SLIMY_WALL)
         slime_wall_damage(&you, you.time_taken);

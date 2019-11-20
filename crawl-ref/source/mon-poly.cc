@@ -166,7 +166,7 @@ static bool _valid_morph(monster* mons, monster_type new_mclass)
     }
 
     // Let monsters die if polied into something that can't survive where they are.
-	return true;
+    return true;
 }
 
 static bool _is_poly_power_unsuitable(poly_power_type power,

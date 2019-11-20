@@ -105,7 +105,7 @@ void tile_default_flv(branch_type br, int depth, tile_flavour &flv)
         return;
 
     case BRANCH_TEMPLE:
-	case BRANCH_START_TEMPLE:
+    case BRANCH_START_TEMPLE:
         flv.wall  = TILE_WALL_VINES;
         flv.floor = TILE_FLOOR_VINES;
         return;
@@ -261,10 +261,10 @@ void tile_default_flv(branch_type br, int depth, tile_flavour &flv)
         flv.floor = TILE_FLOOR_SANDSTONE;
         return;
 
-	case BRANCH_START_MARKET:
-		flv.floor = TILE_FLOOR_GRASS_1;
-		flv.wall = TILE_WALL_ABYSS_WHITE;
-		return;
+    case BRANCH_START_MARKET:
+        flv.floor = TILE_FLOOR_GRASS_1;
+        flv.wall = TILE_WALL_ABYSS_WHITE;
+        return;
 
     case BRANCH_BAILEY:
         flv.wall  = TILE_WALL_BRICK_BROWN;

@@ -123,7 +123,7 @@ static const armour_def Armour_prop[] =
 
     { ARM_HELMET,               "helmet",                 1,   0,   45,
         EQ_HELMET,      SIZE_SMALL,  SIZE_MEDIUM, true },
-		
+        
 #if TAG_MAJOR_VERSION == 34
     { ARM_CAP,                  "cap",                    0,   0,   45,
         EQ_HELMET,      SIZE_LITTLE, SIZE_LARGE, true },
@@ -183,41 +183,41 @@ static const armour_def Armour_prop[] =
 /// The standard properties for a given shield type. (E.g. falchions)
 struct shield_def
 {
-	/// The shield_type enum for this shield type.
-	int                 id;
-	/// The name of this shield type. (E.g. "buckler".)
-	const char         *name;
+    /// The shield_type enum for this shield type.
+    int                 id;
+    /// The name of this shield type. (E.g. "buckler".)
+    const char         *name;
 
-	/// Weapon Stats for Hybrids.
-	/// The base damage of the weapon. (0 for non-hybrids)
-	int                 dam;
-	/// The base to-hit bonus of the weapon.
-	int                 hit;
-	/// The number of aut it takes to swing the weapon with 0 skill.
-	int                 speed;
-	/// The weapon skill corresponding to this weapon's use.
-	skill_type          skill;
-	/// A union of vorpal_damage_type flags (slash, crush, etc)
-	int                 dam_type;
+    /// Weapon Stats for Hybrids.
+    /// The base damage of the weapon. (0 for non-hybrids)
+    int                 dam;
+    /// The base to-hit bonus of the weapon.
+    int                 hit;
+    /// The number of aut it takes to swing the weapon with 0 skill.
+    int                 speed;
+    /// The weapon skill corresponding to this weapon's use.
+    skill_type          skill;
+    /// A union of vorpal_damage_type flags (slash, crush, etc)
+    int                 dam_type;
 
-	/// Global Shield Stats
-	/// Shield Hand provided
-	int                 sh;
-	/// Encumbrance rating for casting penalties
-	int                 er;
+    /// Global Shield Stats
+    /// Shield Hand provided
+    int                 sh;
+    /// Encumbrance rating for casting penalties
+    int                 er;
 
-	/// The size of the smallest creature that can wield the shield.
-	size_type           min_2h_size;
-	/// The smallest creature that can wield the shield one-handed.
-	size_type           min_1h_size;
-	/// The largest creature that can wield the shield.
-	size_type           max_size;
+    /// The size of the smallest creature that can wield the shield.
+    size_type           min_2h_size;
+    /// The smallest creature that can wield the shield one-handed.
+    size_type           min_1h_size;
+    /// The largest creature that can wield the shield.
+    size_type           max_size;
 
 
-	/// Used in *some* item generation code; higher = generated more often.
-	int                 commonness;
-	/// Base pricing for shops, before egos, enchantment, etc.
-	int                 price;
+    /// Used in *some* item generation code; higher = generated more often.
+    int                 commonness;
+    /// Base pricing for shops, before egos, enchantment, etc.
+    int                 price;
 };
 
 
@@ -225,24 +225,24 @@ struct shield_def
 static int Shield_index[NUM_SHIELDS];
 static const shield_def Shield_prop[] =
 {
-	// Standard Shields
-	{ SHD_BUCKLER, "buckler", 0, 0, 8, SK_SHIELDS, DAMV_CRUSHING,
-		3, -8, SIZE_TINY, SIZE_LITTLE, SIZE_MEDIUM, 20, 45 },
-	{ SHD_SHIELD, "heater shield", 0, 0, 12, SK_SHIELDS, DAMV_CRUSHING,
-		8, -30, SIZE_LITTLE, SIZE_SMALL, SIZE_LARGE, 20, 45 },
-	{ SHD_LARGE_SHIELD, "scutum", 0, 0, 14, SK_SHIELDS, DAMV_CRUSHING,
-		13, -50, SIZE_SMALL, SIZE_MEDIUM, SIZE_GIANT, 5, 45 },
+    // Standard Shields
+    { SHD_BUCKLER, "buckler", 0, 0, 8, SK_SHIELDS, DAMV_CRUSHING,
+        3, -8, SIZE_TINY, SIZE_LITTLE, SIZE_MEDIUM, 20, 45 },
+    { SHD_SHIELD, "heater shield", 0, 0, 12, SK_SHIELDS, DAMV_CRUSHING,
+        8, -30, SIZE_LITTLE, SIZE_SMALL, SIZE_LARGE, 20, 45 },
+    { SHD_LARGE_SHIELD, "scutum", 0, 0, 14, SK_SHIELDS, DAMV_CRUSHING,
+        13, -50, SIZE_SMALL, SIZE_MEDIUM, SIZE_GIANT, 5, 45 },
 
-	// Hybrid Shield/Weapons
-	{ SHD_SAI, "sai",
-		5, 3, 12, SK_SHORT_BLADES, DAMV_PIERCING,
-		3, -5, SIZE_TINY, SIZE_LITTLE, SIZE_MEDIUM, 5, 130 },
-	{ SHD_TARGE, "targe",
-		7, 0, 13, SK_SHIELDS, DAMV_CRUSHING,
-		7, -35, SIZE_LITTLE, SIZE_SMALL, SIZE_GIANT, 10, 130 },
-	{ SHD_NUNCHAKU, "nunchaku",
-		9, 2, 12, SK_WHIPS_FLAILS, DAMV_CRUSHING,
-		4, -15, SIZE_LITTLE, SIZE_LITTLE, SIZE_LARGE, 5, 200 },
+    // Hybrid Shield/Weapons
+    { SHD_SAI, "sai",
+        5, 3, 12, SK_SHORT_BLADES, DAMV_PIERCING,
+        3, -5, SIZE_TINY, SIZE_LITTLE, SIZE_MEDIUM, 5, 130 },
+    { SHD_TARGE, "targe",
+        7, 0, 13, SK_SHIELDS, DAMV_CRUSHING,
+        7, -35, SIZE_LITTLE, SIZE_SMALL, SIZE_GIANT, 10, 130 },
+    { SHD_NUNCHAKU, "nunchaku",
+        9, 2, 12, SK_WHIPS_FLAILS, DAMV_CRUSHING,
+        4, -15, SIZE_LITTLE, SIZE_LITTLE, SIZE_LARGE, 5, 200 },
 };
 
 typedef pair<brand_type, int> brand_weight_tuple;
@@ -333,7 +333,7 @@ static const vector<brand_weight_tuple> SBL_BRANDS = {
     { SPWPN_FREEZING, 4 },
     { SPWPN_DISTORTION, 2 },
     { SPWPN_ANTIMAGIC, 1 },
-	{ SPWPN_CHAOS, 1 },
+    { SPWPN_CHAOS, 1 },
 };
 
 /// brand weights for most m&f weapons
@@ -347,7 +347,7 @@ static const vector<brand_weight_tuple> M_AND_F_BRANDS = {
     { SPWPN_DISTORTION,      2 },
     { SPWPN_ANTIMAGIC,       1 },
     { SPWPN_PAIN,            1 },
-	{ SPWPN_CHAOS,           1 },
+    { SPWPN_CHAOS,           1 },
 };
 
 /// brand weights for demon weapons (whip, blade, trident)
@@ -367,19 +367,19 @@ static const vector<brand_weight_tuple> DEMON_BRANDS = {
 
 /// brand weights for long blades.
 static const vector<brand_weight_tuple> LBL_BRANDS = {
-	{ SPWPN_HOLY_WRATH,     22 },
-	{ SPWPN_NORMAL,         19 },
-	{ SPWPN_VORPAL,         15 },
-	{ SPWPN_ELECTROCUTION,  10 },
-	{ SPWPN_PROTECTION,      8 },
-	{ SPWPN_FREEZING,        5 },
-	{ SPWPN_MOLTEN,          5 },
-	{ SPWPN_ACID,            5 },
-	{ SPWPN_VAMPIRISM,       4 },
-	{ SPWPN_VENOM,           2 },
-	{ SPWPN_DISTORTION,      2 },
-	{ SPWPN_PAIN,            1 },
-	{ SPWPN_ANTIMAGIC,       1 },
+    { SPWPN_HOLY_WRATH,     22 },
+    { SPWPN_NORMAL,         19 },
+    { SPWPN_VORPAL,         15 },
+    { SPWPN_ELECTROCUTION,  10 },
+    { SPWPN_PROTECTION,      8 },
+    { SPWPN_FREEZING,        5 },
+    { SPWPN_MOLTEN,          5 },
+    { SPWPN_ACID,            5 },
+    { SPWPN_VAMPIRISM,       4 },
+    { SPWPN_VENOM,           2 },
+    { SPWPN_DISTORTION,      2 },
+    { SPWPN_PAIN,            1 },
+    { SPWPN_ANTIMAGIC,       1 },
     { SPWPN_CHAOS,           1 },
 };
 
@@ -397,7 +397,7 @@ static const vector<brand_weight_tuple> AXE_BRANDS = {
     { SPWPN_ANTIMAGIC,       2 },
     { SPWPN_PAIN,            1 },
     { SPWPN_HOLY_WRATH,      1 },
-	{ SPWPN_CHAOS,           1 },
+    { SPWPN_CHAOS,           1 },
 };
 
 /// brand weights for most polearms.
@@ -463,7 +463,7 @@ static const weapon_def Weapon_prop[] =
         }},
 #if TAG_MAJOR_VERSION == 34
     { WPN_HAMMER,            "hammer",              7,  3, 13,
-	    SK_MACES_STAVES, SIZE_LITTLE, SIZE_LITTLE, MI_NONE,
+        SK_MACES_STAVES, SIZE_LITTLE, SIZE_LITTLE, MI_NONE,
         DAMV_CRUSHING, 0, 0, 0, M_AND_F_BRANDS },
 #endif
     { WPN_MACE,              "mace",                8,  3, 14,
@@ -473,7 +473,7 @@ static const weapon_def Weapon_prop[] =
         SK_WHIPS_FLAILS, SIZE_LITTLE, SIZE_LITTLE, MI_NONE,
         DAMV_CRUSHING, 8, 10, 35, M_AND_F_BRANDS },
     { WPN_MORNINGSTAR,       "morningstar",        13, -2, 15,
-	    SK_MACES_STAVES, SIZE_LITTLE, SIZE_LITTLE, MI_NONE,
+        SK_MACES_STAVES, SIZE_LITTLE, SIZE_LITTLE, MI_NONE,
         DAMV_CRUSHING | DAM_PIERCE, 7, 10, 40, {
             { SPWPN_PROTECTION,     30 },
             { SPWPN_NORMAL,         15 },
@@ -499,7 +499,7 @@ static const weapon_def Weapon_prop[] =
         SK_WHIPS_FLAILS, SIZE_MEDIUM, SIZE_BIG, MI_NONE,
         DAMV_CRUSHING | DAM_PIERCE, 2, 10, 40, M_AND_F_BRANDS },
     { WPN_EVENINGSTAR,       "eveningstar",        15, -1, 15,
-	    SK_MACES_STAVES, SIZE_LITTLE, SIZE_LITTLE, MI_NONE,
+        SK_MACES_STAVES, SIZE_LITTLE, SIZE_LITTLE, MI_NONE,
         DAMV_CRUSHING | DAM_PIERCE, 0, 2, 150, {
             { SPWPN_PROTECTION,     30 },
             { SPWPN_ACID,           17 },
@@ -516,10 +516,10 @@ static const weapon_def Weapon_prop[] =
             { SPWPN_CHAOS,           2 },
         }},
     { WPN_GREAT_MACE,        "great mace",         25, -4, 17,
-	    SK_MACES_STAVES, SIZE_MEDIUM, NUM_SIZE_LEVELS, MI_NONE,
+        SK_MACES_STAVES, SIZE_MEDIUM, NUM_SIZE_LEVELS, MI_NONE,
         DAMV_CRUSHING, 3, 10, 65, M_AND_F_BRANDS },
     { WPN_GIANT_CLUB,        "giant club",         30, -6, 16,
-	    SK_MACES_STAVES, SIZE_LARGE, NUM_SIZE_LEVELS, MI_NONE,
+        SK_MACES_STAVES, SIZE_LARGE, NUM_SIZE_LEVELS, MI_NONE,
         DAMV_CRUSHING, 1, 10, 17, {} },
     { WPN_GIANT_SPIKED_CLUB, "giant spiked club",  34, -7, 18,
         SK_MACES_STAVES, SIZE_LARGE, NUM_SIZE_LEVELS, MI_NONE,
@@ -539,7 +539,7 @@ static const weapon_def Weapon_prop[] =
             { SPWPN_VAMPIRISM,       4 },
             { SPWPN_MOLTEN,          4 },
             { SPWPN_FREEZING,        4 },
-		    { SPWPN_CHAOS,           3 },
+            { SPWPN_CHAOS,           3 },
             { SPWPN_PAIN,            2 },
             { SPWPN_DISTORTION,      1 },
             { SPWPN_ANTIMAGIC,       1 },
@@ -636,7 +636,7 @@ static const weapon_def Weapon_prop[] =
             { SPWPN_DISTORTION,  2 },
             { SPWPN_PAIN,        2 },
             { SPWPN_ANTIMAGIC,   2 },
-			{ SPWPN_CHAOS,       2 },
+            { SPWPN_CHAOS,       2 },
         }},
     { WPN_TRIDENT,           "trident",             9,  1, 13,
         SK_POLEARMS,     SIZE_LITTLE, SIZE_MEDIUM, MI_NONE,
@@ -677,7 +677,7 @@ static const weapon_def Weapon_prop[] =
             { SPWPN_PAIN,        2 },
             { SPWPN_HOLY_WRATH,  2 },
             { SPWPN_ANTIMAGIC,   2 },
-		    { SPWPN_CHAOS,       2 },
+            { SPWPN_CHAOS,       2 },
         }},
     { WPN_LAJATANG,          "lajatang",            24,-3, 14,
         SK_MACES_STAVES,       SIZE_LITTLE, NUM_SIZE_LEVELS, MI_NONE,
@@ -691,24 +691,24 @@ static const weapon_def Weapon_prop[] =
             { SPWPN_PAIN,            7 },
             { SPWPN_ANTIMAGIC,       4 },
             { SPWPN_DISTORTION,      3 },
-		    { SPWPN_CHAOS,           3 },
+            { SPWPN_CHAOS,           3 },
         }},
 
-		// Virtuals, these aren't supposed to spawn; just part of 
-		// a hack, if forced to spawn they are all plain staves.
-	{ WPN_AVERAGE,             "average (4/4/4)",               5,  5, 12,
-	    SK_MACES_STAVES,       SIZE_LITTLE, SIZE_MEDIUM, MI_NONE,
-	    DAMV_CRUSHING, 0, 0, 15,{} },
+        // Virtuals, these aren't supposed to spawn; just part of 
+        // a hack, if forced to spawn they are all plain staves.
+    { WPN_AVERAGE,             "average (4/4/4)",               5,  5, 12,
+        SK_MACES_STAVES,       SIZE_LITTLE, SIZE_MEDIUM, MI_NONE,
+        DAMV_CRUSHING, 0, 0, 15,{} },
 
-	{ WPN_STRONG, "strong (8/2/2)", 5, 5, 12,
-		SK_MACES_STAVES, SIZE_LITTLE, SIZE_MEDIUM, MI_NONE,
-		DAMV_CRUSHING, 0, 0, 15, {} },
-	{ WPN_INTELLIGENT, "intelligent (2/8/2)", 5, 5, 12,
-		SK_MACES_STAVES, SIZE_LITTLE, SIZE_MEDIUM, MI_NONE,
-		DAMV_CRUSHING, 0, 0, 15, {} },
-	{ WPN_DEFT, "deft (2/2/8)", 5, 5, 12,
-		SK_MACES_STAVES, SIZE_LITTLE, SIZE_MEDIUM, MI_NONE,
-		DAMV_CRUSHING, 0, 0, 15, {} },
+    { WPN_STRONG, "strong (8/2/2)", 5, 5, 12,
+        SK_MACES_STAVES, SIZE_LITTLE, SIZE_MEDIUM, MI_NONE,
+        DAMV_CRUSHING, 0, 0, 15, {} },
+    { WPN_INTELLIGENT, "intelligent (2/8/2)", 5, 5, 12,
+        SK_MACES_STAVES, SIZE_LITTLE, SIZE_MEDIUM, MI_NONE,
+        DAMV_CRUSHING, 0, 0, 15, {} },
+    { WPN_DEFT, "deft (2/2/8)", 5, 5, 12,
+        SK_MACES_STAVES, SIZE_LITTLE, SIZE_MEDIUM, MI_NONE,
+        DAMV_CRUSHING, 0, 0, 15, {} },
 
     // Range weapons
     { WPN_BLOWGUN,           "blowgun",             0,  2, 10,
@@ -818,7 +818,7 @@ void init_properties()
     COMPILE_CHECK(NUM_ARMOURS  == ARRAYSZ(Armour_prop));
     COMPILE_CHECK(NUM_WEAPONS  == ARRAYSZ(Weapon_prop));
     COMPILE_CHECK(NUM_MISSILES == ARRAYSZ(Missile_prop));
-	COMPILE_CHECK(NUM_SHIELDS  == ARRAYSZ(Shield_prop));
+    COMPILE_CHECK(NUM_SHIELDS  == ARRAYSZ(Shield_prop));
     COMPILE_CHECK(NUM_FOODS    == ARRAYSZ(Food_prop));
 
     for (int i = 0; i < NUM_ARMOURS; i++)
@@ -827,8 +827,8 @@ void init_properties()
     for (int i = 0; i < NUM_WEAPONS; i++)
         Weapon_index[ Weapon_prop[i].id ] = i;
 
-	for (int i = 0; i < NUM_SHIELDS; i++)
-		Shield_index[ Shield_prop[i].id] = i;
+    for (int i = 0; i < NUM_SHIELDS; i++)
+        Shield_index[ Shield_prop[i].id] = i;
 
     for (int i = 0; i < NUM_MISSILES; i++)
         Missile_index[ Missile_prop[i].id ] = i;
@@ -1024,7 +1024,7 @@ void do_curse_item(item_def &item, bool quiet)
 
     if (!is_weapon(item) && item.base_type != OBJ_ARMOURS
         && item.base_type != OBJ_JEWELLERY
-		&& item.base_type != OBJ_SHIELDS)
+        && item.base_type != OBJ_SHIELDS)
     {
         return;
     }
@@ -1298,7 +1298,7 @@ static iflags_t _full_ident_mask(const item_def& item)
             flagset = 0;
         break;
     case OBJ_WEAPONS:
-	case OBJ_SHIELDS:
+    case OBJ_SHIELDS:
     case OBJ_ARMOURS:
         // All flags necessary for full identification.
     default:
@@ -1769,41 +1769,41 @@ bool is_offensive_wand(const item_def& item)
 
 bool is_enchantable_item(const item_def &item)
 {
-	if (is_artefact(item))
-		return false;
+    if (is_artefact(item))
+        return false;
 
-	if (item.base_type == OBJ_ARMOURS)
-	{
-		// Armour types that can never be enchanted.
-		if (!armour_is_enchantable(item))
-			return false;
+    if (item.base_type == OBJ_ARMOURS)
+    {
+        // Armour types that can never be enchanted.
+        if (!armour_is_enchantable(item))
+            return false;
 
-		// Artefacts or highly enchanted armour cannot be enchanted.
-		if (item.plus >= armour_max_enchant(item))
-			return false;
+        // Artefacts or highly enchanted armour cannot be enchanted.
+        if (item.plus >= armour_max_enchant(item))
+            return false;
 
-		return true;
-	}
-	if (item.base_type == OBJ_SHIELDS)
-	{
-		if (is_hybrid(item.sub_type))
-		{
-			if (item.plus >= MAX_WPN_ENCHANT)
-				return false;
-			return true;
-		}
-		if (item.plus >= property(item, PSHD_SH))
-			return false;
-		return true;
-	}
-	if (item.base_type == OBJ_WEAPONS)
-	{
-		if (item.plus >= MAX_WPN_ENCHANT)
-			return false;
-		return true;
-	}
-	
-	return false;
+        return true;
+    }
+    if (item.base_type == OBJ_SHIELDS)
+    {
+        if (is_hybrid(item.sub_type))
+        {
+            if (item.plus >= MAX_WPN_ENCHANT)
+                return false;
+            return true;
+        }
+        if (item.plus >= property(item, PSHD_SH))
+            return false;
+        return true;
+    }
+    if (item.base_type == OBJ_WEAPONS)
+    {
+        if (item.plus >= MAX_WPN_ENCHANT)
+            return false;
+        return true;
+    }
+    
+    return false;
 }
 
 //
@@ -1821,13 +1821,13 @@ int weapon_rarity(int w_type)
 // Out of 100 for shields.
 int shield_rarity(int s_type)
 {
-	return Shield_prop[Shield_index[s_type]].commonness;
+    return Shield_prop[Shield_index[s_type]].commonness;
 }
 
 // Is the given shield type a defensive shield or a weapon hybrid.
 bool is_hybrid(int s_type)
 {
-	return Shield_prop[Shield_index[s_type]].dam > 0;
+    return Shield_prop[Shield_index[s_type]].dam > 0;
 }
 
 int get_vorpal_type(const item_def &item)
@@ -1837,8 +1837,8 @@ int get_vorpal_type(const item_def &item)
     if (item.base_type == OBJ_WEAPONS)
         ret = (Weapon_prop[Weapon_index[item.sub_type]].dam_type & DAMV_MASK);
 
-	if (item.base_type == OBJ_SHIELDS && is_hybrid(item.sub_type))
-		ret = (Shield_prop[Shield_index[item.sub_type]].dam_type & DAMV_MASK);
+    if (item.base_type == OBJ_SHIELDS && is_hybrid(item.sub_type))
+        ret = (Shield_prop[Shield_index[item.sub_type]].dam_type & DAMV_MASK);
 
     return ret;
 }
@@ -1848,8 +1848,8 @@ int get_damage_type(const item_def &item)
     if (item.base_type == OBJ_WEAPONS)
         return Weapon_prop[Weapon_index[item.sub_type]].dam_type & DAM_MASK;
 
-	if (item.base_type == OBJ_SHIELDS && is_hybrid(item.sub_type))
-		return Shield_prop[Shield_index[item.sub_type]].dam_type & DAM_MASK;
+    if (item.base_type == OBJ_SHIELDS && is_hybrid(item.sub_type))
+        return Shield_prop[Shield_index[item.sub_type]].dam_type & DAM_MASK;
 
     return DAM_BASH;
 }
@@ -1884,17 +1884,17 @@ int single_damage_type(const item_def &item)
 // Not adjusted by species or anything, which is why it's "basic".
 hands_reqd_type basic_hands_reqd(const item_def &item, size_type size)
 {
-	if (is_unrandom_artefact(item, UNRAND_GYRE))
-		return HANDS_TWO;
-	if (item.base_type == OBJ_SHIELDS)
-		return size >= Shield_prop[Shield_index[item.sub_type]].min_1h_size ? HANDS_ONE
-																			: HANDS_TWO;
-	const int wpn_type = OBJ_WEAPONS == item.base_type ? item.sub_type :
-				          OBJ_STAVES == item.base_type ? WPN_STAFF :
-														 WPN_UNKNOWN;
+    if (is_unrandom_artefact(item, UNRAND_GYRE))
+        return HANDS_TWO;
+    if (item.base_type == OBJ_SHIELDS)
+        return size >= Shield_prop[Shield_index[item.sub_type]].min_1h_size ? HANDS_ONE
+                                                                            : HANDS_TWO;
+    const int wpn_type = OBJ_WEAPONS == item.base_type ? item.sub_type :
+                          OBJ_STAVES == item.base_type ? WPN_STAFF :
+                                                         WPN_UNKNOWN;
 
-	if (wpn_type == WPN_UNKNOWN)
-		return HANDS_ONE;
+    if (wpn_type == WPN_UNKNOWN)
+        return HANDS_ONE;
 
     return size >= Weapon_prop[Weapon_index[wpn_type]].min_1h_size ? HANDS_ONE
                                                                    : HANDS_TWO;
@@ -2052,23 +2052,23 @@ bool convert2bad(item_def &item)
 bool is_brandable_weapon(const item_def &wpn, bool allow_ranged, bool divine)
 {
 
-	if (is_artefact(wpn))
-		return false;
+    if (is_artefact(wpn))
+        return false;
 
-	if (wpn.base_type == OBJ_WEAPONS)
-	{
+    if (wpn.base_type == OBJ_WEAPONS)
+    {
 
-		if (!allow_ranged && is_range_weapon(wpn))
-			return false;
+        if (!allow_ranged && is_range_weapon(wpn))
+            return false;
 
-		// Only gods can rebrand blessed weapons, and they revert back to their
-		// old base type in the process.
-		if (is_blessed(wpn) && !divine)
-			return false;
+        // Only gods can rebrand blessed weapons, and they revert back to their
+        // old base type in the process.
+        if (is_blessed(wpn) && !divine)
+            return false;
 
-		return true;
+        return true;
 
-	}
+    }
 
     if (wpn.base_type == OBJ_SHIELDS && is_hybrid(wpn.sub_type))
         return true;
@@ -2085,12 +2085,12 @@ bool is_brandable_weapon(const item_def &wpn, bool allow_ranged, bool divine)
  */
 skill_type item_attack_skill(const item_def &item)
 {
-	if (item.base_type == OBJ_WEAPONS)
-		return Weapon_prop[Weapon_index[item.sub_type]].skill;
-	else if (item.base_type == OBJ_STAVES)
-		return SK_MACES_STAVES;
-	else if (item.base_type == OBJ_SHIELDS)
-		return Shield_prop[Shield_index[item.sub_type]].skill;
+    if (item.base_type == OBJ_WEAPONS)
+        return Weapon_prop[Weapon_index[item.sub_type]].skill;
+    else if (item.base_type == OBJ_STAVES)
+        return SK_MACES_STAVES;
+    else if (item.base_type == OBJ_SHIELDS)
+        return Shield_prop[Shield_index[item.sub_type]].skill;
     else if (item.base_type == OBJ_MISSILES && !has_launcher(item))
         return SK_THROWING;
 
@@ -2199,22 +2199,22 @@ bool item_skills(const item_def &item, set<skill_type> &skills)
  */
 bool is_weapon_wieldable(const item_def &item, size_type size)
 {
-	if (item.base_type == OBJ_SHIELDS)
-	{
-		if (Shield_prop[Shield_index[item.sub_type]].min_1h_size > size)
-			return false;
-		if (Shield_prop[Shield_index[item.sub_type]].max_size < size)
-			return false;
-		return true;
-	}
+    if (item.base_type == OBJ_SHIELDS)
+    {
+        if (Shield_prop[Shield_index[item.sub_type]].min_1h_size > size)
+            return false;
+        if (Shield_prop[Shield_index[item.sub_type]].max_size < size)
+            return false;
+        return true;
+    }
 
-	const int subtype = OBJ_STAVES == item.base_type ? WPN_STAFF
-													 : item.sub_type;
+    const int subtype = OBJ_STAVES == item.base_type ? WPN_STAFF
+                                                     : item.sub_type;
 
-	if (item.base_type == OBJ_WEAPONS || item.base_type == OBJ_STAVES)
-		return Weapon_prop[Weapon_index[subtype]].min_2h_size <= size;
+    if (item.base_type == OBJ_WEAPONS || item.base_type == OBJ_STAVES)
+        return Weapon_prop[Weapon_index[subtype]].min_2h_size <= size;
 
-	return false; // Shouldn't get here, but just in case.
+    return false; // Shouldn't get here, but just in case.
 }
 
 //
@@ -2290,7 +2290,7 @@ bool is_throwable(const actor *actor, const item_def &wpn, bool force)
 
 // Decide if something is launched or thrown.
 launch_retval is_launched(const actor *actor, const item_def *launcher0,
-						  const item_def *launcher1, const item_def &missile)
+                          const item_def *launcher1, const item_def &missile)
 {
     if (missile.base_type != OBJ_MISSILES)
         return launch_retval::FUMBLED;
@@ -2298,8 +2298,8 @@ launch_retval is_launched(const actor *actor, const item_def *launcher0,
     if (launcher0 && missile.launched_by(*launcher0))
         return launch_retval::LAUNCHED;
 
-	if (launcher1 && missile.launched_by(*launcher1))
-		return launch_retval::LAUNCHED;
+    if (launcher1 && missile.launched_by(*launcher1))
+        return launch_retval::LAUNCHED;
 
     return is_throwable(actor, missile) ? launch_retval::THROWN : launch_retval::FUMBLED;
 }
@@ -2427,13 +2427,13 @@ bool ring_has_stackable_effect(const item_def &item)
     case RING_WIZARDRY:
     case RING_FIRE:
     case RING_ICE:
-	case RING_SLAYING:
-	case RING_PROTECTION:
-	case RING_EVASION:
-	case RING_STRENGTH:
-	case RING_INTELLIGENCE:
-	case RING_DEXTERITY:
-		return true;
+    case RING_SLAYING:
+    case RING_PROTECTION:
+    case RING_EVASION:
+    case RING_STRENGTH:
+    case RING_INTELLIGENCE:
+    case RING_DEXTERITY:
+        return true;
 
     default:
         break;
@@ -2773,24 +2773,24 @@ bool get_jewellery_improved_vision(const item_def &ring, bool check_artp)
 
 int weapon_damage(const item_def &item)
 {
-	if (item.base_type == OBJ_SHIELDS)
-		return property(item, PSHD_DAMAGE);
+    if (item.base_type == OBJ_SHIELDS)
+        return property(item, PSHD_DAMAGE);
 
-	return property(item, PWPN_DAMAGE);
+    return property(item, PWPN_DAMAGE);
 }
 
 int weapon_delay(const item_def &item)
 {
-	int mod = 0;
-	
-	if (item.base_type == OBJ_SHIELDS)
-	{
-		if (!is_hybrid(item.sub_type))
-			mod = (SIZE_MEDIUM - you.body_size(PSIZE_TORSO, true)) * 2;
-		return property(item, PSHD_SPEED + mod);
-	}
+    int mod = 0;
+    
+    if (item.base_type == OBJ_SHIELDS)
+    {
+        if (!is_hybrid(item.sub_type))
+            mod = (SIZE_MEDIUM - you.body_size(PSIZE_TORSO, true)) * 2;
+        return property(item, PSHD_SPEED + mod);
+    }
 
-	return property(item, PWPN_SPEED);
+    return property(item, PWPN_SPEED);
 }
 
 int property(const item_def &item, int prop_type)
@@ -2802,20 +2802,20 @@ int property(const item_def &item, int prop_type)
     case OBJ_ARMOURS:
         return armour_prop(item.sub_type, prop_type);
 
-	case OBJ_SHIELDS:
-		switch (prop_type)
-		{
-		case PSHD_SH:
-			return Shield_prop[Shield_index[item.sub_type]].sh;
-		case PSHD_ER:
-			return Shield_prop[Shield_index[item.sub_type]].er;
-		case PSHD_SPEED:
-			return Shield_prop[Shield_index[item.sub_type]].speed;
-		case PSHD_DAMAGE:
-			return Shield_prop[Shield_index[item.sub_type]].dam;
-		case PSHD_HIT:
-			return Shield_prop[Shield_index[item.sub_type]].hit;
-		}
+    case OBJ_SHIELDS:
+        switch (prop_type)
+        {
+        case PSHD_SH:
+            return Shield_prop[Shield_index[item.sub_type]].sh;
+        case PSHD_ER:
+            return Shield_prop[Shield_index[item.sub_type]].er;
+        case PSHD_SPEED:
+            return Shield_prop[Shield_index[item.sub_type]].speed;
+        case PSHD_DAMAGE:
+            return Shield_prop[Shield_index[item.sub_type]].dam;
+        case PSHD_HIT:
+            return Shield_prop[Shield_index[item.sub_type]].hit;
+        }
 
     case OBJ_WEAPONS:
         if (is_unrandom_artefact(item))
@@ -3042,7 +3042,7 @@ equipment_type get_item_slot(object_class_type type, int sub_type)
     {
     case OBJ_WEAPONS:
     case OBJ_STAVES:
-	case OBJ_SHIELDS:
+    case OBJ_SHIELDS:
 #if TAG_MAJOR_VERSION == 34
     case OBJ_RODS:
 #endif
@@ -3069,10 +3069,10 @@ bool is_shield(const item_def &item)
 
 bool shield_reflects(const item_def &shield)
 {   
-	if (is_shield(shield) && !is_hybrid(shield.sub_type))
-		return get_armour_ego_type(shield) == SPARM_REFLECTION;
-	else
-		return false;
+    if (is_shield(shield) && !is_hybrid(shield.sub_type))
+        return get_armour_ego_type(shield) == SPARM_REFLECTION;
+    else
+        return false;
 }
 
 void ident_reflector(item_def *item)
@@ -3096,8 +3096,8 @@ string item_base_name(object_class_type type, int sub_type)
         return Missile_prop[Missile_index[sub_type]].name;
     case OBJ_ARMOURS:
         return Armour_prop[Armour_index[sub_type]].name;
-	case OBJ_SHIELDS:
-		return Shield_prop[Shield_index[sub_type]].name;
+    case OBJ_SHIELDS:
+        return Shield_prop[Shield_index[sub_type]].name;
     case OBJ_JEWELLERY:
         return jewellery_is_amulet(sub_type) ? "amulet" : "ring";
     default:
@@ -3336,5 +3336,5 @@ int armour_base_price(armour_type type)
 
 int shield_base_price(shield_type type)
 {
-	return Shield_prop[Shield_index[type]].price;
+    return Shield_prop[Shield_index[type]].price;
 }

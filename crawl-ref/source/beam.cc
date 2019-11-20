@@ -498,12 +498,12 @@ void zappy(zap_type z_type, int power, bool is_monster, bolt &pbolt)
                                              : zinfo->player_tohit;
         ASSERT(hit_calc);
         pbolt.hit = (*hit_calc)(power);
-		if (pbolt.hit != AUTOMATIC_HIT && !is_monster)
-		{
-			pbolt.hit *= (20 + you.vision());
-			pbolt.hit /= 20;
-			pbolt.hit = max(0, pbolt.hit);
-		}
+        if (pbolt.hit != AUTOMATIC_HIT && !is_monster)
+        {
+            pbolt.hit *= (20 + you.vision());
+            pbolt.hit /= 20;
+            pbolt.hit = max(0, pbolt.hit);
+        }
     }
 
     dam_deducer* dam_calc = is_monster ? zinfo->monster_damage
@@ -892,8 +892,8 @@ void bolt::burn_wall_effect()
     destroy_wall(pos());
     if (you.see_cell(pos()))
     {
-		if (feat_is_door(feat))
-			emit_message("The door bursts into flame!");
+        if (feat_is_door(feat))
+            emit_message("The door bursts into flame!");
         else if (player_in_branch(BRANCH_SWAMP))
             emit_message("The tree smoulders and burns.");
         else
@@ -1344,8 +1344,8 @@ int mons_adjust_flavoured(monster* mons, bolt &pbolt, int hurted,
     // damage check only.
     // Do not print messages or apply any side effects!
     int original = hurted;
-	string msg; // I hate putting this here since only one case uses it;
-	// but it didn't play nice with putting it in the middle.
+    string msg; // I hate putting this here since only one case uses it;
+    // but it didn't play nice with putting it in the middle.
 
     switch (pbolt.flavour)
     {
@@ -1404,16 +1404,16 @@ int mons_adjust_flavoured(monster* mons, bolt &pbolt, int hurted,
         }
         break;
 
-	case BEAM_SILVER_FRAG:
-	{
-		if (doFlavouredEffects)
-		{
-			silver_damages_victim(mons, hurted, msg);
-			if (!msg.empty())
-				mpr(msg);
-		}
-		break;
-	}
+    case BEAM_SILVER_FRAG:
+    {
+        if (doFlavouredEffects)
+        {
+            silver_damages_victim(mons, hurted, msg);
+            if (!msg.empty())
+                mpr(msg);
+        }
+        break;
+    }
 
     case BEAM_ELECTRICITY:
         hurted = resist_adjust_damage(mons, pbolt.flavour, hurted);
@@ -1443,18 +1443,18 @@ int mons_adjust_flavoured(monster* mons, bolt &pbolt, int hurted,
             if (original > 0 && doFlavouredEffects)
                 simple_monster_message(*mons, " completely resists.");
         }
-		
-		if (original > hurted)
-		{
-			if (doFlavouredEffects)
-				simple_monster_message(*mons, " resists.");
-		}
-		
-		if (original < hurted)
-		{
-			if (doFlavouredEffects)
-				simple_monster_message(*mons, " is burned terribly!");
-		}
+        
+        if (original > hurted)
+        {
+            if (doFlavouredEffects)
+                simple_monster_message(*mons, " resists.");
+        }
+        
+        if (original < hurted)
+        {
+            if (doFlavouredEffects)
+                simple_monster_message(*mons, " is burned terribly!");
+        }
 
         if (hurted && mons->res_acid() <= 2 && doFlavouredEffects)
             mons->splash_with_acid(pbolt.agent(), div_round_up(hurted, 10));
@@ -1465,14 +1465,14 @@ int mons_adjust_flavoured(monster* mons, bolt &pbolt, int hurted,
     {
         hurted = resist_adjust_damage(mons, pbolt.flavour, hurted);
 
-		if (!hurted && doFlavouredEffects)
-		{
-			simple_monster_message(*mons,
-				(original > 0) ? " completely resists."
-				: " appears unharmed.");
-		}
-		else if (hurted < original)
-			simple_monster_message(*mons, " partially resists.");
+        if (!hurted && doFlavouredEffects)
+        {
+            simple_monster_message(*mons,
+                (original > 0) ? " completely resists."
+                : " appears unharmed.");
+        }
+        else if (hurted < original)
+            simple_monster_message(*mons, " partially resists.");
         else if (doFlavouredEffects)
             poison_monster(mons, pbolt.agent());
 
@@ -1561,7 +1561,7 @@ int mons_adjust_flavoured(monster* mons, bolt &pbolt, int hurted,
         break;
     }
 
-	case BEAM_FREEZE:
+    case BEAM_FREEZE:
     case BEAM_ICE:
         // ice - 40% of damage is cold, other 60% is impact and
         // can't be resisted (except by AC, of course)
@@ -1621,9 +1621,9 @@ int mons_adjust_flavoured(monster* mons, bolt &pbolt, int hurted,
         }
         break;
 
-	case BEAM_MAGIC_CANDLE:
-		hurted = 0;
-		break;
+    case BEAM_MAGIC_CANDLE:
+        hurted = 0;
+        break;
 
     case BEAM_SPORE:
         if (mons->type == MONS_BALLISTOMYCETE)
@@ -2122,24 +2122,24 @@ void create_feat_splash(coord_def center,
                             TERRAIN_CHANGE_FLOOD);
     }
 
-	if (grd(center) == DNGN_LAVA)
-	{
-		temp_change_terrain(center, DNGN_OBSIDIAN, 100 + random2(100),
-			                TERRAIN_CHANGE_FROZEN);
-	}
+    if (grd(center) == DNGN_LAVA)
+    {
+        temp_change_terrain(center, DNGN_OBSIDIAN, 100 + random2(100),
+                            TERRAIN_CHANGE_FROZEN);
+    }
 
     for (int i = 0; i < nattempts; ++i)
     {
         const coord_def newp(_random_point_hittable_from(center, radius));
         if (newp.origin() || (grd(newp) != DNGN_FLOOR && grd(newp) != DNGN_SHALLOW_WATER && grd(newp) != DNGN_LAVA))
             continue;
-		
-		if (grd(newp) == DNGN_LAVA)
-			temp_change_terrain(newp, DNGN_OBSIDIAN, 100 + random2(100),
-				TERRAIN_CHANGE_FROZEN);
-		else
-			temp_change_terrain(newp, DNGN_SHALLOW_WATER, 100 + random2(100),
-				TERRAIN_CHANGE_FLOOD);
+        
+        if (grd(newp) == DNGN_LAVA)
+            temp_change_terrain(newp, DNGN_OBSIDIAN, 100 + random2(100),
+                TERRAIN_CHANGE_FROZEN);
+        else
+            temp_change_terrain(newp, DNGN_SHALLOW_WATER, 100 + random2(100),
+                TERRAIN_CHANGE_FLOOD);
 
     }
 }
@@ -2229,7 +2229,7 @@ static void _maybe_imb_explosion(bolt *parent, coord_def center)
     beam.obvious_effect = true;
     beam.pierce         = false;
     beam.is_explosion   = false;
-	beam.flavour        = BEAM_ICE;
+    beam.flavour        = BEAM_ICE;
     // So as not to recur infinitely
     beam.origin_spell = SPELL_NO_SPELL;
     beam.passed_target  = true; // The centre was the target.
@@ -2516,30 +2516,30 @@ void bolt::affect_endpoint()
         if (!path_taken.empty())
             place_cloud(CLOUD_FIRE, pos(), 5 + random2(5), agent());
 
-	case SPELL_MAGIC_CANDLE:
-	{
-		if (hit_count.empty())
-		{
-			if (feat_is_water(grd(pos())) || grd(pos()) == DNGN_LAVA)
-			{
-				noisy(2, pos(), source_id);
-				noise_generated = true;
-				if (!silenced(you.pos()))
-				{
-					string x = "";
-					if (grd(pos()) == DNGN_LAVA)
-						x = " sizzling";
-					mprf("You hear a%s splash.", x.c_str());
-				}
-			}
-			else
-			{
-				mpr("The magic candle falls to the ground, lighting the tile it fell upon for a short while.");
-				const int expiry = you.elapsed_time + 60;
-				env.sunlight.emplace_back(pos(), expiry);
-			}
-		}
-	}
+    case SPELL_MAGIC_CANDLE:
+    {
+        if (hit_count.empty())
+        {
+            if (feat_is_water(grd(pos())) || grd(pos()) == DNGN_LAVA)
+            {
+                noisy(2, pos(), source_id);
+                noise_generated = true;
+                if (!silenced(you.pos()))
+                {
+                    string x = "";
+                    if (grd(pos()) == DNGN_LAVA)
+                        x = " sizzling";
+                    mprf("You hear a%s splash.", x.c_str());
+                }
+            }
+            else
+            {
+                mpr("The magic candle falls to the ground, lighting the tile it fell upon for a short while.");
+                const int expiry = you.elapsed_time + 60;
+                env.sunlight.emplace_back(pos(), expiry);
+            }
+        }
+    }
 
     default:
         break;
@@ -2672,9 +2672,9 @@ bool bolt::can_burn_trees() const
            || origin_spell == SPELL_BOLT_OF_MAGMA
            || origin_spell == SPELL_FIREBALL
            || origin_spell == SPELL_INNER_FLAME
-		   || origin_spell == SPELL_IGNITION
-		   || origin_spell == SPELL_FIRE_STORM
-		   || origin_spell == SPELL_CONJURE_BALL_LIGHTNING;
+           || origin_spell == SPELL_IGNITION
+           || origin_spell == SPELL_FIRE_STORM
+           || origin_spell == SPELL_CONJURE_BALL_LIGHTNING;
 }
 
 bool bolt::can_affect_wall(const coord_def& p, bool map_knowledge) const
@@ -2709,81 +2709,81 @@ void bolt::affect_place_clouds()
         affect_place_explosion_clouds();
 
     const coord_def p = pos();
-	const dungeon_feature_type feat = grd(p);
-	actor * defender = actor_at(p);
-	bool see_destruction = false;
-	bool see_preservation = false;
+    const dungeon_feature_type feat = grd(p);
+    actor * defender = actor_at(p);
+    bool see_destruction = false;
+    bool see_preservation = false;
 
-	// Terrain changes don't care about the clouds.
-	if (feat == DNGN_LAVA && (flavour == BEAM_COLD || flavour == BEAM_FREEZE))
-	{	
-		if (defender && !defender->airborne())
-		{
-			if (defender->is_player())
-			{
-				mprf(MSGCH_WARN, "The lava turns into stone around your %s.", you.foot_name(true).c_str());
-				you.increase_duration(DUR_LAVA_CAKE, 5 + random2(damage.size/3));
-			}
-			else
-			{
-				mprf("%s is trapped by lava hardening to stone.",
-					defender->name(DESC_THE).c_str());
-				defender->as_monster()->add_ench(
-					mon_enchant(ENCH_LAVA_CAKE, 0, agent(),
-					(5 + random2(damage.size/3))));
-			}
-		}
-		temp_change_terrain(p, DNGN_OBSIDIAN, damage.roll() * 5, TERRAIN_CHANGE_FROZEN);
-	}
+    // Terrain changes don't care about the clouds.
+    if (feat == DNGN_LAVA && (flavour == BEAM_COLD || flavour == BEAM_FREEZE))
+    {    
+        if (defender && !defender->airborne())
+        {
+            if (defender->is_player())
+            {
+                mprf(MSGCH_WARN, "The lava turns into stone around your %s.", you.foot_name(true).c_str());
+                you.increase_duration(DUR_LAVA_CAKE, 5 + random2(damage.size/3));
+            }
+            else
+            {
+                mprf("%s is trapped by lava hardening to stone.",
+                    defender->name(DESC_THE).c_str());
+                defender->as_monster()->add_ench(
+                    mon_enchant(ENCH_LAVA_CAKE, 0, agent(),
+                    (5 + random2(damage.size/3))));
+            }
+        }
+        temp_change_terrain(p, DNGN_OBSIDIAN, damage.roll() * 5, TERRAIN_CHANGE_FROZEN);
+    }
 
-	if (feat_is_water(feat) && (flavour == BEAM_COLD || flavour == BEAM_FREEZE))
-	{
-		if (defender && !defender->airborne())
-		{
-			if (defender->is_player())
-			{
-				mprf(MSGCH_WARN, "You are encased in ice.");
-				you.increase_duration(DUR_FROZEN, 5 + random2(damage.size/3));
-			}
-			else
-			{
-				mprf("%s is flash-frozen.",
-					defender->name(DESC_THE).c_str());
-				defender->as_monster()->add_ench(
-					mon_enchant(ENCH_FROZEN, 0, agent(),
-					(5 + random2(damage.size/3))));
-			}
-		}
-		else 
-			for (stack_iterator si(p); si; ++si)
-			{
-				if (!is_artefact(*si))
-				{
-					item_was_destroyed(*si);
-					destroy_item(si->index());
-					if (player_likes_water())
-						see_destruction = true;
-				}
-				else
-					see_preservation = true;
-			}
-			temp_change_terrain(p, DNGN_ICE, damage.roll() * 5, TERRAIN_CHANGE_FROZEN);
-	}
+    if (feat_is_water(feat) && (flavour == BEAM_COLD || flavour == BEAM_FREEZE))
+    {
+        if (defender && !defender->airborne())
+        {
+            if (defender->is_player())
+            {
+                mprf(MSGCH_WARN, "You are encased in ice.");
+                you.increase_duration(DUR_FROZEN, 5 + random2(damage.size/3));
+            }
+            else
+            {
+                mprf("%s is flash-frozen.",
+                    defender->name(DESC_THE).c_str());
+                defender->as_monster()->add_ench(
+                    mon_enchant(ENCH_FROZEN, 0, agent(),
+                    (5 + random2(damage.size/3))));
+            }
+        }
+        else 
+            for (stack_iterator si(p); si; ++si)
+            {
+                if (!is_artefact(*si))
+                {
+                    item_was_destroyed(*si);
+                    destroy_item(si->index());
+                    if (player_likes_water())
+                        see_destruction = true;
+                }
+                else
+                    see_preservation = true;
+            }
+            temp_change_terrain(p, DNGN_ICE, damage.roll() * 5, TERRAIN_CHANGE_FROZEN);
+    }
 
-	if (see_destruction)
-		mpr("Ice forming cracks and breaks items beneath the surface."); // Not the best solution, but at least it's one that seems logical.
+    if (see_destruction)
+        mpr("Ice forming cracks and breaks items beneath the surface."); // Not the best solution, but at least it's one that seems logical.
 
-	if (see_preservation)
-		mpr("A magical artifact is magically pushed up through the ice!");
+    if (see_preservation)
+        mpr("A magical artifact is magically pushed up through the ice!");
 
-	if ((feat == DNGN_ICE || feat == DNGN_OBSIDIAN) && (flavour == BEAM_COLD || flavour == BEAM_FREEZE))
-		mutate_terrain_change_duration(p, damage.roll() * 5, true);
+    if ((feat == DNGN_ICE || feat == DNGN_OBSIDIAN) && (flavour == BEAM_COLD || flavour == BEAM_FREEZE))
+        mutate_terrain_change_duration(p, damage.roll() * 5, true);
 
-	if (feat == DNGN_ICE && is_fiery())
-	{
-		mpr("The fire melts away some of the ice.");
-		mutate_terrain_change_duration(p, damage.roll() * -1);
-	}
+    if (feat == DNGN_ICE && is_fiery())
+    {
+        mpr("The fire melts away some of the ice.");
+        mutate_terrain_change_duration(p, damage.roll() * -1);
+    }
 
     // Is there already a cloud here?
     if (cloud_struct* cloud = cloud_at(p))
@@ -2864,11 +2864,11 @@ void bolt::affect_place_explosion_clouds()
         return;
     }
 
-	if (feat_is_door(grd(p)) && is_fiery())
-	{
-		destroy_wall(p);
-		place_cloud(CLOUD_FIRE, p, 2 + random2(5), agent());
-	}
+    if (feat_is_door(grd(p)) && is_fiery())
+    {
+        destroy_wall(p);
+        place_cloud(CLOUD_FIRE, p, 2 + random2(5), agent());
+    }
 
     if (flavour == BEAM_MEPHITIC)
     {
@@ -2941,7 +2941,7 @@ void bolt::internal_ouch(int dam)
              source_name.empty() ? nullptr : source_name.c_str());
     }
     else if (flavour == BEAM_DISINTEGRATION || flavour == BEAM_DEVASTATION
-		|| flavour == BEAM_ENERGY)
+        || flavour == BEAM_ENERGY)
     {
         ouch(dam, KILLED_BY_DISINT, source_id, what, true,
              source_name.empty() ? nullptr : source_name.c_str());
@@ -3946,7 +3946,7 @@ void bolt::affect_player()
 
     // Roll the damage.
     if (!(origin_spell == SPELL_FLASH_FREEZE && you.duration[DUR_FROZEN]))
-	    pre_ac_dam += (damage.roll() + damage.roll() + damage.roll());
+        pre_ac_dam += (damage.roll() + damage.roll() + damage.roll());
 
     pre_ac_dam /= 3;
 
@@ -4069,23 +4069,23 @@ void bolt::affect_player()
     // Manticore spikes
     if (origin_spell == SPELL_THROW_BARBS && final_dam > 0)
     {
-		if (you.get_mutation_level(MUT_GHOST) == 1)
-			mpr("The barbed spikes sting slightly as they fall through your immaterial body.");
-		else {
-			mpr("The barbed spikes become lodged in your body.");
-			if (!you.duration[DUR_BARBS])
-				you.set_duration(DUR_BARBS, random_range(4, 8));
-			else
-				you.increase_duration(DUR_BARBS, random_range(2, 4), 12);
+        if (you.get_mutation_level(MUT_GHOST) == 1)
+            mpr("The barbed spikes sting slightly as they fall through your immaterial body.");
+        else {
+            mpr("The barbed spikes become lodged in your body.");
+            if (!you.duration[DUR_BARBS])
+                you.set_duration(DUR_BARBS, random_range(4, 8));
+            else
+                you.increase_duration(DUR_BARBS, random_range(2, 4), 12);
 
-			if (you.attribute[ATTR_BARBS_POW])
-			{
-				you.attribute[ATTR_BARBS_POW] =
-					min(6, you.attribute[ATTR_BARBS_POW]++);
-			}
-			else
-				you.attribute[ATTR_BARBS_POW] = 4;
-		}
+            if (you.attribute[ATTR_BARBS_POW])
+            {
+                you.attribute[ATTR_BARBS_POW] =
+                    min(6, you.attribute[ATTR_BARBS_POW]++);
+            }
+            else
+                you.attribute[ATTR_BARBS_POW] = 4;
+        }
     }
 
     if (flavour == BEAM_ENSNARE)
@@ -4167,7 +4167,7 @@ int bolt::apply_AC(const actor *victim, int hurted)
     case BEAM_ELECTRICITY:
         ac_rule = ac_type::half; break;
     case BEAM_FRAG:
-	case BEAM_SILVER_FRAG: // fallthrough
+    case BEAM_SILVER_FRAG: // fallthrough
         ac_rule = ac_type::triple; break;
     default: ;
     }
@@ -4281,11 +4281,11 @@ bool bolt::determine_damage(monster* mon, int& preac, int& postac, int& final,
         // Was mean between min and max;
         preac = preac_max_damage;
     }
-	else if (!freeze_immune)
-	{
-		preac = damage.roll() + damage.roll() + damage.roll();
-		preac /= 3;
-	}
+    else if (!freeze_immune)
+    {
+        preac = damage.roll() + damage.roll() + damage.roll();
+        preac /= 3;
+    }
 
     int tracer_postac_max = preac_max_damage;
 
@@ -5306,7 +5306,7 @@ bool ench_flavour_affects_monster(beam_type flavour, const monster* mon,
 
     case BEAM_SLOW:
     case BEAM_HASTE:
-	case BEAM_PETRIFY:
+    case BEAM_PETRIFY:
         rc = !mon->stasis();
         break;
 
@@ -6193,9 +6193,9 @@ bool bolt::explode(bool show_more, bool hole_in_the_middle)
     // Run DFS to determine which cells are influenced
     explosion_map exp_map;
     exp_map.init(INT_MAX);
-	if (can_burn_trees())
-		determine_affected_cells(exp_map, coord_def(), 0, r, true, true, false);
-	else
+    if (can_burn_trees())
+        determine_affected_cells(exp_map, coord_def(), 0, r, true, true, false);
+    else
         determine_affected_cells(exp_map, coord_def(), 0, r, true, true);
 
     // We get a bit fancy, drawing all radius 0 effects, then radius
@@ -6341,12 +6341,12 @@ void bolt::determine_affected_cells(explosion_map& m, const coord_def& delta,
             at_wall = true;
     }
 
-	if (feat_is_tree(dngn_feat) || feat_is_closed_door(dngn_feat))
-	{
-		if (!stop_at_trees)
-			return;
-		at_wall = true;
-	}
+    if (feat_is_tree(dngn_feat) || feat_is_closed_door(dngn_feat))
+    {
+        if (!stop_at_trees)
+            return;
+        at_wall = true;
+    }
 
     if (feat_is_solid(dngn_feat) && !feat_is_wall(dngn_feat)
         && !can_affect_wall(loc) && stop_at_statues)
@@ -6655,10 +6655,10 @@ static string _beam_type_name(beam_type type)
     case BEAM_ENERGY:                return "energy";
     case BEAM_HOLY:                  return "cleansing flame";
     case BEAM_FRAG:                  return "fragments";
-	case BEAM_SILVER_FRAG:           return "silver fragments";
+    case BEAM_SILVER_FRAG:           return "silver fragments";
     case BEAM_LAVA:                  return "magma";
     case BEAM_ICE:                   // fallthrough
-	case BEAM_FREEZE:                return "ice";
+    case BEAM_FREEZE:                return "ice";
     case BEAM_DEVASTATION:           return "devastation";
     case BEAM_RANDOM:                return "random";
     case BEAM_CHAOS:                 return "chaos";

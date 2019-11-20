@@ -268,10 +268,10 @@ int actor::archmagi(bool calc_unid, bool items) const
 
 int actor::high_priest(bool calc_unid, bool items) const
 {
-	if (!items)
-		return 0;
+    if (!items)
+        return 0;
 
-	return wearing_ego(EQ_ALL_ARMOUR, SPARM_HIGH_PRIEST, calc_unid);
+    return wearing_ego(EQ_ALL_ARMOUR, SPARM_HIGH_PRIEST, calc_unid);
 }
 
 /**

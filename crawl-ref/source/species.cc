@@ -154,21 +154,21 @@ bool species_has_hair(species_type species)
 size_type species_size(species_type species, size_part_type psize)
 {
 
-	if (species == SP_LIGNIFITE)
-	{
-		if (you.experience_level < 7)
-			return SIZE_LITTLE;
-		else if (you.experience_level < 13)
-			return SIZE_SMALL;
-		else if (you.experience_level < 19)
-			return SIZE_MEDIUM;
-		else if (you.experience_level < 25)
-			return SIZE_LARGE;
-		else
-			return SIZE_GIANT;
-	}
+    if (species == SP_LIGNIFITE)
+    {
+        if (you.experience_level < 7)
+            return SIZE_LITTLE;
+        else if (you.experience_level < 13)
+            return SIZE_SMALL;
+        else if (you.experience_level < 19)
+            return SIZE_MEDIUM;
+        else if (you.experience_level < 25)
+            return SIZE_LARGE;
+        else
+            return SIZE_GIANT;
+    }
 
-	const size_type size = get_species_def(species).size;
+    const size_type size = get_species_def(species).size;
 
     if (psize == PSIZE_TORSO
         && bool(get_species_def(species).flags & SPF_SMALL_TORSO))
@@ -314,20 +314,20 @@ void give_basic_mutations(species_type species)
         if (lum.xp_level == 1)
             you.mutation[lum.mut] = you.innate_mutation[lum.mut] = lum.mut_level;
 
-	if (you.char_class == JOB_DEMIGOD && you.get_mutation_level(MUT_HIGH_MAGIC) < 3)
-		you.mutation[MUT_HIGH_MAGIC] = you.innate_mutation[MUT_HIGH_MAGIC] = (you.get_mutation_level(MUT_HIGH_MAGIC) + 1);
-	
-	// Ineligant, but the more 'refined' way of doing it is no better and is more work.
-	if (you.char_class == JOB_MUMMY)
-	{
-		you.mutation[MUT_NEGATIVE_ENERGY_RESISTANCE] = you.innate_mutation[MUT_NEGATIVE_ENERGY_RESISTANCE] = 3;
-		you.mutation[MUT_COLD_RESISTANCE] = you.innate_mutation[MUT_COLD_RESISTANCE] = (you.get_mutation_level(MUT_COLD_RESISTANCE) + 1);
-		you.mutation[MUT_TORMENT_RESISTANCE] = you.innate_mutation[MUT_TORMENT_RESISTANCE] = 1;
-		you.mutation[MUT_UNBREATHING] = you.innate_mutation[MUT_UNBREATHING] = 1;
-		you.mutation[MUT_NECRO_ENHANCER] = you.innate_mutation[MUT_NECRO_ENHANCER] = 1;
-		you.mutation[MUT_HEAT_VULNERABILITY] = you.innate_mutation[MUT_HEAT_VULNERABILITY] = 1;
-		you.mutation[MUT_COLD_BLOODED] = you.innate_mutation[MUT_COLD_BLOODED] = 0; // Taking this back away from things that have it because it makes no sense on undead.
-	}
+    if (you.char_class == JOB_DEMIGOD && you.get_mutation_level(MUT_HIGH_MAGIC) < 3)
+        you.mutation[MUT_HIGH_MAGIC] = you.innate_mutation[MUT_HIGH_MAGIC] = (you.get_mutation_level(MUT_HIGH_MAGIC) + 1);
+    
+    // Ineligant, but the more 'refined' way of doing it is no better and is more work.
+    if (you.char_class == JOB_MUMMY)
+    {
+        you.mutation[MUT_NEGATIVE_ENERGY_RESISTANCE] = you.innate_mutation[MUT_NEGATIVE_ENERGY_RESISTANCE] = 3;
+        you.mutation[MUT_COLD_RESISTANCE] = you.innate_mutation[MUT_COLD_RESISTANCE] = (you.get_mutation_level(MUT_COLD_RESISTANCE) + 1);
+        you.mutation[MUT_TORMENT_RESISTANCE] = you.innate_mutation[MUT_TORMENT_RESISTANCE] = 1;
+        you.mutation[MUT_UNBREATHING] = you.innate_mutation[MUT_UNBREATHING] = 1;
+        you.mutation[MUT_NECRO_ENHANCER] = you.innate_mutation[MUT_NECRO_ENHANCER] = 1;
+        you.mutation[MUT_HEAT_VULNERABILITY] = you.innate_mutation[MUT_HEAT_VULNERABILITY] = 1;
+        you.mutation[MUT_COLD_BLOODED] = you.innate_mutation[MUT_COLD_BLOODED] = 0; // Taking this back away from things that have it because it makes no sense on undead.
+    }
 }
 
 void give_level_mutations(species_type species, int xp_level)
@@ -338,29 +338,29 @@ void give_level_mutations(species_type species, int xp_level)
             perma_mutate(lum.mut, lum.mut_level,
                          species_name(species) + " growth");
         }
-	if (you.char_class == JOB_MUMMY && xp_level == 13)
-		perma_mutate(MUT_NECRO_ENHANCER, 2, "mummy growth");
+    if (you.char_class == JOB_MUMMY && xp_level == 13)
+        perma_mutate(MUT_NECRO_ENHANCER, 2, "mummy growth");
 
-	// Ineligant, make something more refined if losing mutations with level becomes more common.
-	// Also doing this way instead of perma_mutate() to use custom messaging.
-	if (you.species == SP_LIGNIFITE)
-	{
-		if (xp_level == 7)
-			you.mutation[MUT_FAST] = you.innate_mutation[MUT_FAST] = 1;
-		if (xp_level == 13)
-			you.mutation[MUT_FAST] = you.innate_mutation[MUT_FAST] = 0;
-		if (xp_level == 19)
-			you.mutation[MUT_SLOW] = you.innate_mutation[MUT_SLOW] = 1;
-		if (xp_level == 25)
-			you.mutation[MUT_SLOW] = you.innate_mutation[MUT_SLOW] = 2;
-	}
+    // Ineligant, make something more refined if losing mutations with level becomes more common.
+    // Also doing this way instead of perma_mutate() to use custom messaging.
+    if (you.species == SP_LIGNIFITE)
+    {
+        if (xp_level == 7)
+            you.mutation[MUT_FAST] = you.innate_mutation[MUT_FAST] = 1;
+        if (xp_level == 13)
+            you.mutation[MUT_FAST] = you.innate_mutation[MUT_FAST] = 0;
+        if (xp_level == 19)
+            you.mutation[MUT_SLOW] = you.innate_mutation[MUT_SLOW] = 1;
+        if (xp_level == 25)
+            you.mutation[MUT_SLOW] = you.innate_mutation[MUT_SLOW] = 2;
+    }
 
-	// Right now this only happens to lignifites; but leave it open to possibly happen to
-	// any race later (Demonspawn get bigger/smaller as a facet? maybe).
-	if (you.weapon(0) && !is_weapon_wieldable(*you.weapon(0), you.body_size(PSIZE_TORSO, true)))
-		remove_one_equip(EQ_WEAPON0, false, true);
-	if (you.weapon(1) && !is_weapon_wieldable(*you.weapon(1), you.body_size(PSIZE_TORSO, true)))
-		remove_one_equip(EQ_WEAPON1, false, true);
+    // Right now this only happens to lignifites; but leave it open to possibly happen to
+    // any race later (Demonspawn get bigger/smaller as a facet? maybe).
+    if (you.weapon(0) && !is_weapon_wieldable(*you.weapon(0), you.body_size(PSIZE_TORSO, true)))
+        remove_one_equip(EQ_WEAPON0, false, true);
+    if (you.weapon(1) && !is_weapon_wieldable(*you.weapon(1), you.body_size(PSIZE_TORSO, true)))
+        remove_one_equip(EQ_WEAPON1, false, true);
 }
 
 int species_exp_modifier(species_type species)
@@ -370,10 +370,10 @@ int species_exp_modifier(species_type species)
 
 int species_hp_modifier(species_type species)
 {
-	if (you.char_class == JOB_DEMIGOD)
-		return get_species_def(species).hp_mod + 1;
-	if (you.species == SP_LIGNIFITE)
-		return (-2 + div_round_up(you.experience_level - 1, 6));
+    if (you.char_class == JOB_DEMIGOD)
+        return get_species_def(species).hp_mod + 1;
+    if (you.species == SP_LIGNIFITE)
+        return (-2 + div_round_up(you.experience_level - 1, 6));
     return get_species_def(species).hp_mod;
 }
 
@@ -409,11 +409,11 @@ void species_stat_init(species_type species)
 void species_stat_gain(species_type species)
 {
     const species_def& sd = get_species_def(species);
-	if (you.char_class == JOB_MUMMY)
-	{
-		if (you.experience_level % (sd.how_often + 1) == 0)
-			modify_stat(*random_iterator(sd.level_stats), 1, false);
-	}
+    if (you.char_class == JOB_MUMMY)
+    {
+        if (you.experience_level % (sd.how_often + 1) == 0)
+            modify_stat(*random_iterator(sd.level_stats), 1, false);
+    }
     else if (sd.level_stats.size() > 0 && you.experience_level % sd.how_often == 0)
         modify_stat(*random_iterator(sd.level_stats), 1, false);
 }

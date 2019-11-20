@@ -59,7 +59,7 @@ inline constexpr bool item_type_has_curses(object_class_type base_type)
 {
         return base_type == OBJ_WEAPONS || base_type == OBJ_ARMOURS
                || base_type == OBJ_JEWELLERY || base_type == OBJ_STAVES
-			   || base_type == OBJ_SHIELDS;
+               || base_type == OBJ_SHIELDS;
 }
 
 // stationary:
@@ -254,7 +254,7 @@ void seen_item(const item_def &item);
 static inline bool is_weapon(const item_def &item)
 {
     return item.base_type == OBJ_WEAPONS || item.base_type == OBJ_STAVES
-		|| (item.base_type == OBJ_SHIELDS && is_hybrid(item.sub_type));
+        || (item.base_type == OBJ_SHIELDS && is_hybrid(item.sub_type));
 }
 
 void remove_whitespace(string &str);

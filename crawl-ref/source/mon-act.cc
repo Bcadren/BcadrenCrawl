@@ -1440,24 +1440,24 @@ static void _pre_monster_move(monster& mons)
 
     _monster_add_energy(mons);
 
-	if (!mons.airborne() && !mons.is_wall_clinging())
-		actor_apply_terrain(&mons, env.grid(mons.position));
+    if (!mons.airborne() && !mons.is_wall_clinging())
+        actor_apply_terrain(&mons, env.grid(mons.position));
 
-	if ((mons_primary_habitat(mons) == HT_WATER || mons_primary_habitat(mons) == HT_LAVA)
-		&& env.grid(mons.position) == DNGN_FLOOR)
-		mons.add_ench(ENCH_AQUATIC_LAND);
+    if ((mons_primary_habitat(mons) == HT_WATER || mons_primary_habitat(mons) == HT_LAVA)
+        && env.grid(mons.position) == DNGN_FLOOR)
+        mons.add_ench(ENCH_AQUATIC_LAND);
 
-	// Figure this out later. Want to make them unable to attack from water and only unsubmerge through
-	// Movement, but that's not exactly how the existing enchantment works, so...more work, lol.
-/*	if (mons_primary_habitat(mons) == HT_LAND && mons.body_size(PSIZE_BODY) < SIZE_GIANT
-		&& env.grid(mons.pos()) == DNGN_DEEP_WATER && !mons.has_ench(ENCH_SUBMERGED))
-	{
-		if (you.can_see(mons))
-			mpr(make_stringf("%s sinks like a stone.", mons.name(DESC_THE).c_str()));
-		mons.add_ench(ENCH_SUBMERGED);
-	}
+    // Figure this out later. Want to make them unable to attack from water and only unsubmerge through
+    // Movement, but that's not exactly how the existing enchantment works, so...more work, lol.
+/*    if (mons_primary_habitat(mons) == HT_LAND && mons.body_size(PSIZE_BODY) < SIZE_GIANT
+        && env.grid(mons.pos()) == DNGN_DEEP_WATER && !mons.has_ench(ENCH_SUBMERGED))
+    {
+        if (you.can_see(mons))
+            mpr(make_stringf("%s sinks like a stone.", mons.name(DESC_THE).c_str()));
+        mons.add_ench(ENCH_SUBMERGED);
+    }
 */
-	// Handle clouds on nonmoving monsters.
+    // Handle clouds on nonmoving monsters.
     if (mons.speed == 0)
     {
         _mons_in_cloud(mons);
@@ -2803,40 +2803,40 @@ static bool _check_slime_walls(const monster *mon,
 // will it path through it to get to you faster?
 bool mon_avoids_terrain(const monster* mons, dungeon_feature_type terrain)
 {
-	habitat_type habitat = mons_primary_habitat(*mons);
-	
-	switch (habitat)
-	{
-	case HT_WATER:				return (!feat_is_watery (terrain));
-	case HT_AMPHIBIOUS_LAVA:	return (feat_is_watery (terrain));
-	case HT_AMPHIBIOUS:         return (feat_is_lava(terrain));
-	case HT_LAVA:               return (!feat_is_lava(terrain));
-	case HT_LAND: 
-		if (mons->airborne())
-			return false;
-		if (mons_intel(*mons) <= I_BRAINLESS && you.can_see(*mons))
-			return false;
-		if (feat_is_lava(terrain))
-		{
-			if (feat_is_lava(env.grid(mons->pos())))
-				return false;
-			if (mons->res_fire() > 2)
-				return false;
-			return (resist_adjust_damage(mons, BEAM_LAVA, 80) > mons->stat_hp() && you.can_see(*mons));
-		}
-		if (terrain == DNGN_DEEP_WATER)
-		{
-			if (mons->body_size(PSIZE_BODY) >= SIZE_GIANT)
-				return false;
-			if (mons->res_water_drowning())
-				return false;
-			if (env.grid(mons->pos()) == DNGN_DEEP_WATER)
-				return false;
-			else
-				return (60 > mons->stat_hp() && you.can_see(*mons));
-		}
-	default:                    return false;
-	}
+    habitat_type habitat = mons_primary_habitat(*mons);
+    
+    switch (habitat)
+    {
+    case HT_WATER:                return (!feat_is_watery (terrain));
+    case HT_AMPHIBIOUS_LAVA:    return (feat_is_watery (terrain));
+    case HT_AMPHIBIOUS:         return (feat_is_lava(terrain));
+    case HT_LAVA:               return (!feat_is_lava(terrain));
+    case HT_LAND: 
+        if (mons->airborne())
+            return false;
+        if (mons_intel(*mons) <= I_BRAINLESS && you.can_see(*mons))
+            return false;
+        if (feat_is_lava(terrain))
+        {
+            if (feat_is_lava(env.grid(mons->pos())))
+                return false;
+            if (mons->res_fire() > 2)
+                return false;
+            return (resist_adjust_damage(mons, BEAM_LAVA, 80) > mons->stat_hp() && you.can_see(*mons));
+        }
+        if (terrain == DNGN_DEEP_WATER)
+        {
+            if (mons->body_size(PSIZE_BODY) >= SIZE_GIANT)
+                return false;
+            if (mons->res_water_drowning())
+                return false;
+            if (env.grid(mons->pos()) == DNGN_DEEP_WATER)
+                return false;
+            else
+                return (60 > mons->stat_hp() && you.can_see(*mons));
+        }
+    default:                    return false;
+    }
 
 }
 
@@ -2880,9 +2880,9 @@ bool mon_can_move_to_pos(const monster* mons, const coord_def& delta,
     if (mons_avoids_cloud(mons, targ))
         return false;
 
-	// Creatures that primarily kill will silenceable spells won't willingly enter silence.
-	if (silenced(targ) && !silenced(mons->pos()) && ((mons->is_actual_spellcaster() || mons->is_priest()) && !mons->is_fighter()))
-		return false;
+    // Creatures that primarily kill will silenceable spells won't willingly enter silence.
+    if (silenced(targ) && !silenced(mons->pos()) && ((mons->is_actual_spellcaster() || mons->is_priest()) && !mons->is_fighter()))
+        return false;
 
     if (env.level_state & LSTATE_SLIMY_WALL && _check_slime_walls(mons, targ))
         return false;
@@ -3044,8 +3044,8 @@ bool mon_can_move_to_pos(const monster* mons, const coord_def& delta,
     if (!mons->is_trap_safe(targ, just_check))
         return false;
 
-	if (mon_avoids_terrain(mons, target_grid))
-		return false;
+    if (mon_avoids_terrain(mons, target_grid))
+        return false;
 
     // If we end up here the monster can safely move.
     return true;

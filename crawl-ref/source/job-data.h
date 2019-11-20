@@ -4,7 +4,7 @@ enum weapon_choice
     WCHOICE_PLAIN,  ///< Normal weapon choice
     WCHOICE_GOOD,   ///< Chooses from "good" weapons
     WCHOICE_RANGED, ///< Choice of ranged weapon
-	WCHOICE_STAT,   ///< Customizable Stats, using this slot.
+    WCHOICE_STAT,   ///< Customizable Stats, using this slot.
 };
 
 struct job_def
@@ -39,7 +39,7 @@ static const map<job_type, job_def> job_data =
     "AE", "Air Elementalist",
     0, 7, 5,
     { SP_DEEP_ELF, SP_TENGU, SP_BASE_DRACONIAN, SP_NAGA, SP_VINE_STALKER, 
-		SP_SILENT_SPECTRE},
+        SP_SILENT_SPECTRE},
     { "robe", "book of Air" },
     WCHOICE_NONE,
     { { SK_AIR_MAGIC, 3 }, { SK_SPELLCASTING, 2 },
@@ -88,12 +88,12 @@ static const map<job_type, job_def> job_data =
 } },
 
 { JOB_NOBLE,{
-	"No", "Noble",
-	4, 4, 4,
-	{ SP_HUMAN },
-	{ "robe" },
-	WCHOICE_STAT,
-	{ {SK_FIGHTING, 1 } , {SK_STEALTH, 1} },
+    "No", "Noble",
+    4, 4, 4,
+    { SP_HUMAN },
+    { "robe" },
+    WCHOICE_STAT,
+    { {SK_FIGHTING, 1 } , {SK_STEALTH, 1} },
 } },
 
 { JOB_CHAOS_KNIGHT, {
@@ -108,12 +108,12 @@ static const map<job_type, job_def> job_data =
 } },
 
 { JOB_XOM, { // Not a Starting Job.
-	"AX", "Xom-Abandoning Deserter",
-	4, 4, 4,
-	{},
-	{},
-	WCHOICE_NONE,
-	{},
+    "AX", "Xom-Abandoning Deserter",
+    4, 4, 4,
+    {},
+    {},
+    WCHOICE_NONE,
+    {},
 }},
 #if TAG_MAJOR_VERSION == 34
 { JOB_CONJURER, {

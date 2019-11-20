@@ -17,7 +17,7 @@ static const vector<spell_type> spellbook_templates[] =
     SPELL_BLINDING_SPRAY,
     SPELL_FULMINANT_PRISM,
     SPELL_FORCE_LANCE,
-	SPELL_THROW_ICICLE,
+    SPELL_THROW_ICICLE,
 },
 #endif
 {   // Book of Flames
@@ -84,7 +84,7 @@ static const vector<spell_type> spellbook_templates[] =
     SPELL_STING,
     SPELL_POISONOUS_VAPOURS,
     SPELL_MEPHITIC_CLOUD,
-	SPELL_IGNITE_POISON,
+    SPELL_IGNITE_POISON,
     SPELL_OLGREBS_TOXIC_RADIANCE,
 },
 
@@ -178,7 +178,7 @@ static const vector<spell_type> spellbook_templates[] =
     SPELL_CONFUSE,
     SPELL_TUKIMAS_DANCE,
     SPELL_BLINDING_SPRAY,
-	SPELL_FULMINANT_PRISM
+    SPELL_FULMINANT_PRISM
 },
 
 {   // Book of Air
@@ -241,7 +241,7 @@ static const vector<spell_type> spellbook_templates[] =
     SPELL_STONE_ARROW,
     SPELL_PETRIFY,
     SPELL_LRD,
-	SPELL_SMD,
+    SPELL_SMD,
 },
 
 {   // Book of Earth
@@ -315,7 +315,7 @@ static const vector<spell_type> spellbook_templates[] =
     SPELL_PASSWALL,
     SPELL_GOLUBRIAS_PASSAGE,
     SPELL_LRD,
-	SPELL_SMD,
+    SPELL_SMD,
     SPELL_DARKNESS,
     SPELL_INVISIBILITY,
 },

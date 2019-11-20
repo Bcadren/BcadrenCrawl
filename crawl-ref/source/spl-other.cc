@@ -478,44 +478,44 @@ spret cast_darkness(int pow, bool fail)
 
 spret cast_SMD(const coord_def& target, int pow, bool fail)
 {
-	fail_check();
+    fail_check();
 
-	dungeon_feature_type grid = grd(target);
-	int delay = 0;
+    dungeon_feature_type grid = grd(target);
+    int delay = 0;
 
-	switch (grid)
-	{
-		// Rock
-		case DNGN_ROCK_WALL:
-		case DNGN_CLEAR_ROCK_WALL:
-		case DNGN_SLIMY_WALL:
-			delay = 3;
-			break;
+    switch (grid)
+    {
+        // Rock
+        case DNGN_ROCK_WALL:
+        case DNGN_CLEAR_ROCK_WALL:
+        case DNGN_SLIMY_WALL:
+            delay = 3;
+            break;
 
-		// Stone
-		case DNGN_STONE_WALL:
-		case DNGN_CLEAR_STONE_WALL:
-			delay = 8;
-			break;
+        // Stone
+        case DNGN_STONE_WALL:
+        case DNGN_CLEAR_STONE_WALL:
+            delay = 8;
+            break;
 
-		// Metal 
-		case DNGN_SILVER_WALL:
-		case DNGN_METAL_WALL:
-			delay = 12;
-			break;
+        // Metal 
+        case DNGN_SILVER_WALL:
+        case DNGN_METAL_WALL:
+            delay = 12;
+            break;
 
-		// Crystal
-		case DNGN_CRYSTAL_WALL:
-			delay = 2;
-			break;
+        // Crystal
+        case DNGN_CRYSTAL_WALL:
+            delay = 2;
+            break;
 
-		default:
-			mpr("You can't deconstruct that!");
-			return spret::abort;
-	}
+        default:
+            mpr("You can't deconstruct that!");
+            return spret::abort;
+    }
 
-	delay = min(max(2,div_rand_round(delay * 100, pow)), 16);
+    delay = min(max(2,div_rand_round(delay * 100, pow)), 16);
 
-	start_delay<SMDDelay>(delay, target);
-	return spret::success;
+    start_delay<SMDDelay>(delay, target);
+    return spret::success;
 }

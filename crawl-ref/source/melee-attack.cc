@@ -194,7 +194,7 @@ bool melee_attack::handle_phase_attempted()
         // Set delay now that we know the attack won't be cancelled.
         if (!is_riposte
              && (wu_jian_attack == WU_JIAN_ATTACK_NONE)
-			&& ((effective_attack_number == 0)||(effective_attack_number==2)))
+            && ((effective_attack_number == 0)||(effective_attack_number==2)))
         {
             you.time_taken = you.attack_delay().roll();
         }
@@ -202,18 +202,18 @@ bool melee_attack::handle_phase_attempted()
         const caction_type cact_typ = is_riposte ? CACT_RIPOSTE : CACT_MELEE;
         if (weapon)
         {
-			if (weapon->base_type == OBJ_WEAPONS)
-				if (is_unrandom_artefact(*weapon)
-					&& get_unrand_entry(weapon->unrand_idx)->type_name)
-				{
-					count_action(cact_typ, weapon->unrand_idx);
-				}
-				else
-					count_action(cact_typ, weapon->sub_type);
-			else if (weapon->base_type == OBJ_STAVES)
-				count_action(cact_typ, WPN_STAFF);
-			else if (weapon->base_type == OBJ_SHIELDS)
-				count_action(cact_typ, -2, weapon->sub_type);
+            if (weapon->base_type == OBJ_WEAPONS)
+                if (is_unrandom_artefact(*weapon)
+                    && get_unrand_entry(weapon->unrand_idx)->type_name)
+                {
+                    count_action(cact_typ, weapon->unrand_idx);
+                }
+                else
+                    count_action(cact_typ, weapon->sub_type);
+            else if (weapon->base_type == OBJ_STAVES)
+                count_action(cact_typ, WPN_STAFF);
+            else if (weapon->base_type == OBJ_SHIELDS)
+                count_action(cact_typ, -2, weapon->sub_type);
         }
         else
             count_action(cact_typ, -1, -1); // unarmed subtype/auxtype
@@ -334,8 +334,8 @@ bool melee_attack::handle_phase_dodged()
                 you.species == SP_MINOTAUR :
                 mons_species(mons_base_type(*defender->as_monster()))
                     == MONS_MINOTAUR || 
-					(mons_is_hepliaklqana_ancestor(mons_base_type(*defender->as_monster())) 
-					&& you.species == SP_MINOTAUR))
+                    (mons_is_hepliaklqana_ancestor(mons_base_type(*defender->as_monster())) 
+                    && you.species == SP_MINOTAUR))
         {
             do_minotaur_retaliation();
         }
@@ -345,46 +345,46 @@ bool melee_attack::handle_phase_dodged()
             return false;
 
         const bool using_lbl0 = defender->weapon(0) && item_attack_skill(*defender->weapon(0)) == SK_LONG_BLADES;
-		const bool using_lbl1 = (defender->is_player() || mons_wields_two_weapons(*defender->as_monster()))
-			&& defender->weapon(1) && item_attack_skill(*defender->weapon(1)) == SK_LONG_BLADES;
+        const bool using_lbl1 = (defender->is_player() || mons_wields_two_weapons(*defender->as_monster()))
+            && defender->weapon(1) && item_attack_skill(*defender->weapon(1)) == SK_LONG_BLADES;
         const bool using_fencers
             = (defender->is_player()) && player_equip_unrand(UNRAND_FENCERS);
         const int chance = using_lbl0 + using_lbl1 + using_fencers;
 
-		if (x_chance_in_y(chance, 3) && !is_riposte) // no ping-pong!
-		{
-			if (using_fencers)
-			{
-				if (is_melee_weapon(*defender->weapon(0)))
-				{
-					if (is_melee_weapon(*defender->weapon(1)))
-					{
-						if (coinflip())
-							riposte(0);
-						else
-							riposte(1);
-					}
-					else
-						riposte(0);
-				}
-				else if (is_melee_weapon(*defender->weapon(1)))
-					riposte(1);
-			}
-			else if (using_lbl0)
-			{
-				if (using_lbl1)
-				{
-					if (coinflip())
-						riposte(0);
-					else
-						riposte(1);
-				}
-				else
-					riposte(0);
-			}
-			else if (using_lbl1)
-				riposte(1);
-		}
+        if (x_chance_in_y(chance, 3) && !is_riposte) // no ping-pong!
+        {
+            if (using_fencers)
+            {
+                if (is_melee_weapon(*defender->weapon(0)))
+                {
+                    if (is_melee_weapon(*defender->weapon(1)))
+                    {
+                        if (coinflip())
+                            riposte(0);
+                        else
+                            riposte(1);
+                    }
+                    else
+                        riposte(0);
+                }
+                else if (is_melee_weapon(*defender->weapon(1)))
+                    riposte(1);
+            }
+            else if (using_lbl0)
+            {
+                if (using_lbl1)
+                {
+                    if (coinflip())
+                        riposte(0);
+                    else
+                        riposte(1);
+                }
+                else
+                    riposte(0);
+            }
+            else if (using_lbl1)
+                riposte(1);
+        }
         // Retaliations can kill!
         if (!attacker->alive())
             return false;
@@ -634,7 +634,7 @@ bool melee_attack::handle_phase_aux()
         // additional attacks from cleave don't get aux
         if (!defender->as_monster()->friendly()
             && adjacent(defender->pos(), attack_position)
-			&& ((effective_attack_number == 1)||(effective_attack_number == 2)))
+            && ((effective_attack_number == 1)||(effective_attack_number == 2)))
         {
             player_aux_unarmed();
         }
@@ -1231,28 +1231,28 @@ public:
 class AuxTentacles2 : public AuxAttackType
 {
 public:
-	AuxTentacles2()
-	: AuxAttackType(3, "slap") { };
-	
-	int get_damage() const { return damage + div_rand_round(you.experience_level, 4); }
+    AuxTentacles2()
+    : AuxAttackType(3, "slap") { };
+    
+    int get_damage() const { return damage + div_rand_round(you.experience_level, 4); }
 };
 
 class AuxTentacles3 : public AuxAttackType
 {
 public:
-	AuxTentacles3()
-	 : AuxAttackType(3, "smack") { };
-	
-	int get_damage() const { return damage + div_rand_round(you.experience_level, 5); }
+    AuxTentacles3()
+     : AuxAttackType(3, "smack") { };
+    
+    int get_damage() const { return damage + div_rand_round(you.experience_level, 5); }
 };
 
 class AuxTentacles4 : public AuxAttackType
 {
 public:
-	AuxTentacles4()
-	 : AuxAttackType(5, "thwack") { };
-	
-	int get_damage() const { return damage + div_rand_round(you.experience_level, 3); }
+    AuxTentacles4()
+     : AuxAttackType(5, "thwack") { };
+    
+    int get_damage() const { return damage + div_rand_round(you.experience_level, 3); }
 };
 
 static const AuxConstrict   AUX_CONSTRICT = AuxConstrict();
@@ -1279,9 +1279,9 @@ static const AuxAttackType* const aux_attack_types[] =
     &AUX_BITE,
     &AUX_PSEUDOPODS,
     &AUX_TENTACLES,
-	&AUX_TENTACLES2,
-	&AUX_TENTACLES3,
-	&AUX_TENTACLES4
+    &AUX_TENTACLES2,
+    &AUX_TENTACLES3,
+    &AUX_TENTACLES4
 };
 
 
@@ -1322,7 +1322,7 @@ void melee_attack::player_aux_setup(unarmed_attack_type atk)
  */
 bool melee_attack::player_gets_aux_punch()
 {
-	return false;
+    return false;
 }
 
 bool melee_attack::player_aux_test_hit()
@@ -1576,8 +1576,8 @@ int melee_attack::player_apply_misc_modifiers(int damage)
     if (apply_starvation_penalties())
         damage -= random2(5);
 
-	if (damage_brand == SPWPN_MOLTEN)
-		damage = div_rand_round(damage * 3, 5);
+    if (damage_brand == SPWPN_MOLTEN)
+        damage = div_rand_round(damage * 3, 5);
 
     return damage;
 }
@@ -1608,9 +1608,9 @@ int melee_attack::player_apply_final_multipliers(int damage)
     if (you.duration[DUR_WEAK])
         damage = div_rand_round(damage * 3, 4);
 
-	// Global melee player damage nerf to offset Dual Wielding's buff.
-	if (weapon)
-		damage = div_rand_round(3 * damage, 4);
+    // Global melee player damage nerf to offset Dual Wielding's buff.
+    if (weapon)
+        damage = div_rand_round(3 * damage, 4);
 
     if (you.duration[DUR_CONFUSING_TOUCH] && wpn_skill == SK_UNARMED_COMBAT)
         return 0;
@@ -1637,11 +1637,11 @@ void melee_attack::set_attack_verb(int damage)
     {
         weap_type = weapon->sub_type;
     }
-	else if (weapon->base_type == OBJ_SHIELDS
-			&& is_hybrid(weapon->sub_type))
-	{
-		weap_type = weapon->sub_type;
-	}
+    else if (weapon->base_type == OBJ_SHIELDS
+            && is_hybrid(weapon->sub_type))
+    {
+        weap_type = weapon->sub_type;
+    }
 
     // All weak hits with weapons look the same.
     if (damage < HIT_WEAK
@@ -1744,28 +1744,28 @@ void melee_attack::set_attack_verb(int damage)
         }
         break;
 
-	case DAM_PENETRATE:
-		if (damage < HIT_MED)
-			attack_verb = "bother";
-		else if (damage < HIT_STRONG)
-			attack_verb = "impale";
-		else
-		{
-			static const char * const pene_desc[][2] =
-			{
-				{ "drill",   "" },
-				{ "pillage", "like a pirate" },
-				{ "ruin",    "like a freshman" },
-				{ "impale",  "like its your first time" },
-				{ "compromise",    "by force" },
-			    { "make an entrance in", ""},
-			    { "violate", ""}
-			};
-			const int choice = random2(ARRAYSZ(pene_desc));
-			attack_verb = pene_desc[choice][0];
-			verb_degree = pene_desc[choice][1];
-		}
-		break;
+    case DAM_PENETRATE:
+        if (damage < HIT_MED)
+            attack_verb = "bother";
+        else if (damage < HIT_STRONG)
+            attack_verb = "impale";
+        else
+        {
+            static const char * const pene_desc[][2] =
+            {
+                { "drill",   "" },
+                { "pillage", "like a pirate" },
+                { "ruin",    "like a freshman" },
+                { "impale",  "like its your first time" },
+                { "compromise",    "by force" },
+                { "make an entrance in", ""},
+                { "violate", ""}
+            };
+            const int choice = random2(ARRAYSZ(pene_desc));
+            attack_verb = pene_desc[choice][0];
+            verb_degree = pene_desc[choice][1];
+        }
+        break;
 
     case DAM_BLUDGEON:
         if (damage < HIT_MED)
@@ -1791,7 +1791,7 @@ void melee_attack::set_attack_verb(int damage)
                 {"hammer",  "like a gong"},
                 {"pound",   "like an anvil"},
                 {"flatten", "like a pancake"},
-				{ "crack",   "like an egg"}
+                { "crack",   "like an egg"}
             };
             const int choice = random2(ARRAYSZ(bludgeon_desc));
             attack_verb = bludgeon_desc[choice][0];
@@ -2119,7 +2119,7 @@ bool melee_attack::attack_chops_heads(int dam, int dam_type, int wpn_brand)
     // Only cutting implements.
     if (dam_type != DVORP_SLICING && dam_type != DVORP_CHOPPING
         && dam_type != DVORP_CLAWING && dam_type != DVORP_DP
-		&& dam_type != DVORP_TP)
+        && dam_type != DVORP_TP)
     {
         return false;
     }
@@ -2385,10 +2385,10 @@ int melee_attack::calc_to_hit(bool random, bool player_aux)
     int mhit = attack::calc_to_hit(random);
 
     if (attacker->is_player() && !weapon && !player_aux
-		&& you.duration[DUR_CONFUSING_TOUCH])
+        && you.duration[DUR_CONFUSING_TOUCH])
     {
         mhit *= 10 + you.dex();
-		mhit /= 10;
+        mhit /= 10;
     }
 
     return mhit;
@@ -3276,20 +3276,20 @@ void melee_attack::do_spines()
                                                         : "spines");
             }
 
-			beam_type damtype = BEAM_MISSILE;
+            beam_type damtype = BEAM_MISSILE;
 
-			if (defender->type == MONS_SPINY_FROG)
-			{
-				damtype = BEAM_POISON_ARROW;
+            if (defender->type == MONS_SPINY_FROG)
+            {
+                damtype = BEAM_POISON_ARROW;
 
-				int pois = random_range(defender->get_hit_dice() * 2 / 3, defender->get_hit_dice());
+                int pois = random_range(defender->get_hit_dice() * 2 / 3, defender->get_hit_dice());
 
-				const int resist = attacker->res_poison();
-				if (attacker->is_player())
-					poison_player((resist ? pois / 2 : pois), defender->name(DESC_A), "venomous spines", true);
-				else
-					poison_monster(attacker->as_monster(), defender, (resist ? pois / 2 : pois), true, true);
-			}
+                const int resist = attacker->res_poison();
+                if (attacker->is_player())
+                    poison_player((resist ? pois / 2 : pois), defender->name(DESC_A), "venomous spines", true);
+                else
+                    poison_monster(attacker->as_monster(), defender, (resist ? pois / 2 : pois), true, true);
+            }
 
             attacker->hurt(defender, hurt, damtype, KILLED_BY_SPINES);
         }
@@ -3395,13 +3395,13 @@ void melee_attack::do_minotaur_retaliation()
  */
 void melee_attack::riposte(int which_attack)
 {
-	// Sanity Check 0
-	if (!is_melee_weapon(*defender->weapon(which_attack)))
-		return;
+    // Sanity Check 0
+    if (!is_melee_weapon(*defender->weapon(which_attack)))
+        return;
 
-	// Sanity Check 1
-	if (defender->is_monster() && which_attack > 0 && !mons_wields_two_weapons(*defender->as_monster()))
-		return;
+    // Sanity Check 1
+    if (defender->is_monster() && which_attack > 0 && !mons_wields_two_weapons(*defender->as_monster()))
+        return;
 
     if (you.see_cell(defender->pos()))
     {
@@ -3578,14 +3578,14 @@ bool melee_attack::_extra_aux_attack(unarmed_attack_type atk)
     case UNAT_TENTACLES:
         return you.has_usable_tentacles();
 
-	case UNAT_TENTACLES2:
-		return you.has_usable_tentacles() && (you.strength() + you.dex() >= random2(50)) && !(one_chance_in(3));
+    case UNAT_TENTACLES2:
+        return you.has_usable_tentacles() && (you.strength() + you.dex() >= random2(50)) && !(one_chance_in(3));
 
-	case UNAT_TENTACLES3:
-		return you.has_usable_tentacles() && (you.strength() + you.dex() >= random2(65)) && !(one_chance_in(3));
-		
-	case UNAT_TENTACLES4:
-		return you.has_usable_tentacles() && (you.strength() + you.dex() >= random2(80));
+    case UNAT_TENTACLES3:
+        return you.has_usable_tentacles() && (you.strength() + you.dex() >= random2(65)) && !(one_chance_in(3));
+        
+    case UNAT_TENTACLES4:
+        return you.has_usable_tentacles() && (you.strength() + you.dex() >= random2(80));
 
     case UNAT_BITE:
         return you.get_mutation_level(MUT_ANTIMAGIC_BITE)
@@ -3641,8 +3641,8 @@ int melee_attack::apply_damage_modifiers(int damage, int damage_max)
     if (as_mon->has_ench(ENCH_WEAK))
         damage = damage * 2 / 3;
 
-	if (damage_brand == SPWPN_MOLTEN)
-		damage = div_rand_round(damage * 3, 5);
+    if (damage_brand == SPWPN_MOLTEN)
+        damage = div_rand_round(damage * 3, 5);
 
     // If the defender is asleep, the attacker gets a stab.
     if (defender && (defender->asleep()

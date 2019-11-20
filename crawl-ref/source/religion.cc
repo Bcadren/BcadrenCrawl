@@ -1759,15 +1759,15 @@ static int _hepliaklqana_ally_hd()
  *
  * @return      6/hd from 1-11 HD, 12/hd from 12-18.
  *              Additionally races with higher than standard
- *				HP (Ogres, Nagas, Trolls) get 1-3 more per HD.
- *				AND the opposite for lower than standard HP 
+ *                HP (Ogres, Nagas, Trolls) get 1-3 more per HD.
+ *                AND the opposite for lower than standard HP 
  *              (it's fair now that they have bonus MR/EV)
  */
 int hepliaklqana_ally_hp()
 {
     const int HD = _hepliaklqana_ally_hd();
-	int HP_MOD = species_hp_modifier(you.species);
-	return HP_MOD * HD + HD * 6 + max(0, (HD - 12) * 6);
+    int HP_MOD = species_hp_modifier(you.species);
+    return HP_MOD * HD + HD * 6 + max(0, (HD - 12) * 6);
 }
 
 /**
@@ -1882,12 +1882,12 @@ void upgrade_hepliaklqana_ancestor(bool quiet_force)
              ancestor->name(DESC_YOUR, true).c_str(),
              ancestor->pronoun(PRONOUN_POSSESSIVE, true).c_str());
 
-		// Hacky, but there isn't even handling for monsters getting jewellery at all, so...
+        // Hacky, but there isn't even handling for monsters getting jewellery at all, so...
 
-		if (you.species == SP_FELID && hd == 12 && ancestor->type == MONS_ANCESTOR_KNIGHT)
-			mprf("%s remembers %s Amulet of Reflection.",
-				ancestor->name(DESC_YOUR, true).c_str(),
-				ancestor->pronoun(PRONOUN_POSSESSIVE, true).c_str());
+        if (you.species == SP_FELID && hd == 12 && ancestor->type == MONS_ANCESTOR_KNIGHT)
+            mprf("%s remembers %s Amulet of Reflection.",
+                ancestor->name(DESC_YOUR, true).c_str(),
+                ancestor->pronoun(PRONOUN_POSSESSIVE, true).c_str());
     }
 
     set_ancestor_spells(*ancestor, !quiet_force);
@@ -1925,8 +1925,8 @@ void upgrade_hepliaklqana_ancestor(bool quiet_force)
     // so give them out as appropriate
     if (!ancestor_offlevel)
     {
-		if (ancestor->shield())
-			upgrade_hepliaklqana_shield(*ancestor, *ancestor->shield());
+        if (ancestor->shield())
+            upgrade_hepliaklqana_shield(*ancestor, *ancestor->shield());
         else
             give_shield(ancestor);
     }
@@ -1939,16 +1939,16 @@ void upgrade_hepliaklqana_ancestor(bool quiet_force)
                             _hepliaklqana_shield_ego(hd));
     }
 
-	// Handles gaining reflection seperately from shield type upgrade.
+    // Handles gaining reflection seperately from shield type upgrade.
 
-	else if (_hepliaklqana_shield_ego(hd)
-			!= _hepliaklqana_shield_ego(old_hd) && !quiet_force && shld != NUM_ARMOURS)
-	{
-		mprf("%s remembers %s %s reflection.",
-			ancestor->name(DESC_YOUR, true).c_str(),
-			ancestor->pronoun(PRONOUN_POSSESSIVE, true).c_str(),
-			apostrophise(item_base_name(OBJ_ARMOURS, shld)).c_str());
-	}
+    else if (_hepliaklqana_shield_ego(hd)
+            != _hepliaklqana_shield_ego(old_hd) && !quiet_force && shld != NUM_ARMOURS)
+    {
+        mprf("%s remembers %s %s reflection.",
+            ancestor->name(DESC_YOUR, true).c_str(),
+            ancestor->pronoun(PRONOUN_POSSESSIVE, true).c_str(),
+            apostrophise(item_base_name(OBJ_ARMOURS, shld)).c_str());
+    }
 
     if (quiet_force)
         return;
@@ -1963,39 +1963,39 @@ void upgrade_hepliaklqana_ancestor(bool quiet_force)
  */
 static weapon_type _hepliaklqana_weapon_type(monster_type mc, int HD)
 {
-	switch (mc)
-	{
-	case MONS_ANCESTOR_HEXER:
-		return HD < 16 ? WPN_DAGGER : WPN_QUICK_BLADE;
-	case MONS_ANCESTOR_KNIGHT:
-		if (you.species == SP_MERFOLK)
-			return HD < 10 ? WPN_SPEAR : WPN_DEMON_TRIDENT;
-		else if (you.species == SP_HILL_ORC)
-			return HD < 10 ? WPN_HAND_AXE : WPN_BROAD_AXE;
-		else if (you.species == SP_FORMICID)
-			return HD < 10 ? WPN_DIRE_FLAIL : WPN_EXECUTIONERS_AXE;
-		else if (you.species == SP_OGRE)
-			return HD < 12 ? WPN_MORNINGSTAR : WPN_EVENINGSTAR;
-		else if (you.species == SP_SPRIGGAN || you.species == SP_DEEP_ELF)
-			return HD < 9  ? WPN_SHORT_SWORD :
-				   HD < 14 ? WPN_RAPIER :
-			                 WPN_QUICK_BLADE;
-		else
-			return HD < 10 ? WPN_FLAIL : WPN_BROAD_AXE;
-	case MONS_ANCESTOR_BATTLEMAGE:
-		if (you.species == SP_MERFOLK)
-			return HD < 15 ? WPN_HALBERD : WPN_BARDICHE;
-		else if (you.species == SP_HILL_ORC)
-			return HD < 17 ? WPN_BATTLEAXE : WPN_EXECUTIONERS_AXE;
-		else if (you.species == SP_OGRE)
-			return HD < 8 ?  WPN_CLUB :
-			       HD < 14 ? WPN_GIANT_CLUB :
-			                 WPN_GIANT_SPIKED_CLUB;
-		else
-			return HD < 13 ? WPN_QUARTERSTAFF : WPN_LAJATANG;
-	default:
-		return NUM_WEAPONS; // should never happen
-	}
+    switch (mc)
+    {
+    case MONS_ANCESTOR_HEXER:
+        return HD < 16 ? WPN_DAGGER : WPN_QUICK_BLADE;
+    case MONS_ANCESTOR_KNIGHT:
+        if (you.species == SP_MERFOLK)
+            return HD < 10 ? WPN_SPEAR : WPN_DEMON_TRIDENT;
+        else if (you.species == SP_HILL_ORC)
+            return HD < 10 ? WPN_HAND_AXE : WPN_BROAD_AXE;
+        else if (you.species == SP_FORMICID)
+            return HD < 10 ? WPN_DIRE_FLAIL : WPN_EXECUTIONERS_AXE;
+        else if (you.species == SP_OGRE)
+            return HD < 12 ? WPN_MORNINGSTAR : WPN_EVENINGSTAR;
+        else if (you.species == SP_SPRIGGAN || you.species == SP_DEEP_ELF)
+            return HD < 9  ? WPN_SHORT_SWORD :
+                   HD < 14 ? WPN_RAPIER :
+                             WPN_QUICK_BLADE;
+        else
+            return HD < 10 ? WPN_FLAIL : WPN_BROAD_AXE;
+    case MONS_ANCESTOR_BATTLEMAGE:
+        if (you.species == SP_MERFOLK)
+            return HD < 15 ? WPN_HALBERD : WPN_BARDICHE;
+        else if (you.species == SP_HILL_ORC)
+            return HD < 17 ? WPN_BATTLEAXE : WPN_EXECUTIONERS_AXE;
+        else if (you.species == SP_OGRE)
+            return HD < 8 ?  WPN_CLUB :
+                   HD < 14 ? WPN_GIANT_CLUB :
+                             WPN_GIANT_SPIKED_CLUB;
+        else
+            return HD < 13 ? WPN_QUARTERSTAFF : WPN_LAJATANG;
+    default:
+        return NUM_WEAPONS; // should never happen
+    }
 }
 
 /**
@@ -2013,14 +2013,14 @@ static brand_type _hepliaklqana_weapon_brand(monster_type mc, int HD)
             return HD < 16 ?   SPWPN_DRAINING :
                                SPWPN_ANTIMAGIC;
         case MONS_ANCESTOR_KNIGHT:
-			if (you.species == SP_SPRIGGAN || you.species == SP_DEEP_ELF)
-				return HD < 10 ? SPWPN_NORMAL :
-				       HD < 16 ? SPWPN_VENOM :
-				                 SPWPN_ELECTROCUTION;
-			else
-				return HD < 10 ?   SPWPN_NORMAL :
-					   HD < 16 ?   SPWPN_MOLTEN :
-								   SPWPN_SPEED;
+            if (you.species == SP_SPRIGGAN || you.species == SP_DEEP_ELF)
+                return HD < 10 ? SPWPN_NORMAL :
+                       HD < 16 ? SPWPN_VENOM :
+                                 SPWPN_ELECTROCUTION;
+            else
+                return HD < 10 ?   SPWPN_NORMAL :
+                       HD < 16 ?   SPWPN_MOLTEN :
+                                   SPWPN_SPEED;
         case MONS_ANCESTOR_BATTLEMAGE:
             return HD < 13 ?   SPWPN_NORMAL :
                                SPWPN_FREEZING;
@@ -2045,8 +2045,8 @@ void upgrade_hepliaklqana_weapon(monster_type mtyp, item_def &item)
     if (mtyp == MONS_ANCESTOR)
         return; // bare-handed!
 
-	if (you.species == SP_FELID || you.species == SP_TROLL)
-		return; // prefer claws.
+    if (you.species == SP_FELID || you.species == SP_TROLL)
+        return; // prefer claws.
 
     item.base_type = OBJ_WEAPONS;
     item.sub_type = _hepliaklqana_weapon_type(mtyp,
@@ -2066,17 +2066,17 @@ void upgrade_hepliaklqana_weapon(monster_type mtyp, item_def &item)
  */
 static shield_type _hepliaklqana_shield_type(monster_type mc, int HD)
 {
-	if (you.species == SP_FELID)
-		return NUM_SHIELDS;
-	else if (mc != MONS_ANCESTOR_KNIGHT)
-	{
-		if (you.species == SP_FORMICID)
-			return SHD_SHIELD;
-		else
-			return NUM_SHIELDS;
-	}
-	else if (you.body_size() < SIZE_MEDIUM)
-		return SHD_BUCKLER;
+    if (you.species == SP_FELID)
+        return NUM_SHIELDS;
+    else if (mc != MONS_ANCESTOR_KNIGHT)
+    {
+        if (you.species == SP_FORMICID)
+            return SHD_SHIELD;
+        else
+            return NUM_SHIELDS;
+    }
+    else if (you.body_size() < SIZE_MEDIUM)
+        return SHD_BUCKLER;
     if (HD < 13)
         return SHD_SHIELD;
     return SHD_LARGE_SHIELD;
@@ -2984,34 +2984,34 @@ void excommunication(bool voluntary, god_type new_god)
             add_daction(DACT_ALLY_SLIME);
         }
 
-		if (you.undead_state() == US_GHOST)
-		{
-			mprf("Your slimy mutations fade away.");
-			delete_all_mutations("Jiyva's Vengence");
-		}
+        if (you.undead_state() == US_GHOST)
+        {
+            mprf("Your slimy mutations fade away.");
+            delete_all_mutations("Jiyva's Vengence");
+        }
 
         break;
 
-	case GOD_XOM:
-		if (you.undead_state() == US_GHOST && (you.how_mutated() > 0))
-		{
-			mprf("The chaos fades from your form.");
-			delete_all_mutations("Fading Chaos");
-		}
-		if (you.xom_name != you.your_name)
-		{
-			mpr("You change your name back from whatever silly name Xom gave you.");
-			you.xom_name = you.your_name;
-			you.redraw_title = true;
-		}
-		if (you.char_class == JOB_CHAOS_KNIGHT)
-		{
-			you.char_class = JOB_XOM;
-			xom_insult_name();
-			mprf(MSGCH_GOD, old_god, "Xom says: You abandoned me! You don't deserve to be called Chaos Knight; you %s.", you.xom_insult.c_str());
-			mprf(MSGCH_GOD, old_god, "Xom strips away your Chaos Knight title; from now on you are known as %s.", you.xom_insult.c_str());
-		}
-		break;
+    case GOD_XOM:
+        if (you.undead_state() == US_GHOST && (you.how_mutated() > 0))
+        {
+            mprf("The chaos fades from your form.");
+            delete_all_mutations("Fading Chaos");
+        }
+        if (you.xom_name != you.your_name)
+        {
+            mpr("You change your name back from whatever silly name Xom gave you.");
+            you.xom_name = you.your_name;
+            you.redraw_title = true;
+        }
+        if (you.char_class == JOB_CHAOS_KNIGHT)
+        {
+            you.char_class = JOB_XOM;
+            xom_insult_name();
+            mprf(MSGCH_GOD, old_god, "Xom says: You abandoned me! You don't deserve to be called Chaos Knight; you %s.", you.xom_insult.c_str());
+            mprf(MSGCH_GOD, old_god, "Xom strips away your Chaos Knight title; from now on you are known as %s.", you.xom_insult.c_str());
+        }
+        break;
 
     case GOD_FEDHAS:
         if (query_daction_counter(DACT_ALLY_PLANT))
@@ -3249,8 +3249,8 @@ bool player_can_join_god(god_type which_god)
     if (which_god == GOD_YREDELEMNUL && you.is_nonliving())
         return false;
 
-	if (which_god == GOD_ASHENZARI && you.get_mutation_level(MUT_GHOST) == 1)
-		return false;
+    if (which_god == GOD_ASHENZARI && you.get_mutation_level(MUT_GHOST) == 1)
+        return false;
 
     if (which_god == GOD_BEOGH && !species_is_orcish(you.species))
         return false;
@@ -3743,7 +3743,7 @@ void join_religion(god_type which_god)
     ASSERT(which_god != GOD_NO_GOD);
     ASSERT(which_god != GOD_ECUMENICAL);
     ASSERT(you.species != SP_DEMIGOD);
-	ASSERT(you.char_class != JOB_DEMIGOD);
+    ASSERT(you.char_class != JOB_DEMIGOD);
 
     redraw_screen();
 

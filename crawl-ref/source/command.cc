@@ -799,8 +799,8 @@ static void _add_formatted_keyhelp(column_composer &cols)
                                   "<w>%</w>ire, <w>%</w>/<w>%</w> cycle)",
                          { CMD_QUIVER_ITEM, CMD_FIRE, CMD_CYCLE_QUIVER_FORWARD,
                            CMD_CYCLE_QUIVER_BACKWARD });
-	_add_insert_commands(cols, 0, "<cyan>]</cyan> : shields (<w>%</w>ield)",
-		                 { CMD_WIELD_WEAPON });
+    _add_insert_commands(cols, 0, "<cyan>]</cyan> : shields (<w>%</w>ield)",
+                         { CMD_WIELD_WEAPON });
     _add_insert_commands(cols, 0, "<cyan>[</cyan> : armour (<w>%</w>ear and <w>%</w>ake off)",
                          { CMD_WEAR_ARMOUR, CMD_REMOVE_ARMOUR });
     _add_insert_commands(cols, 0, "<brown>percent</brown> : corpses and food "
@@ -979,7 +979,7 @@ static void _add_formatted_keyhelp(column_composer &cols)
     _add_command(cols, 1, CMD_READ, "Read a scroll (or book on floor)", 2);
     _add_command(cols, 1, CMD_WIELD_WEAPON, "Wield an item (<w>-</w> for none)", 2);
     _add_command(cols, 1, CMD_WEAPON_SWAP, "wield item a, or switch to b", 2);
-	_add_command(cols, 1, CMD_DOUBLE_SWAP, "wield items a and b, or switch to c and d", 2);
+    _add_command(cols, 1, CMD_DOUBLE_SWAP, "wield items a and b, or switch to c and d", 2);
 
     _add_insert_commands(cols, 1, "    (use <w>%</w> to assign slots)",
                          { CMD_ADJUST_INVENTORY });
@@ -1093,10 +1093,10 @@ static void _add_formatted_hints_help(column_composer &cols)
                          "missiles (<w>%</w>uiver, <w>%</w>ire, <w>%</w>/<w>%</w> cycle)",
                          { CMD_QUIVER_ITEM, CMD_FIRE, CMD_CYCLE_QUIVER_FORWARD,
                            CMD_CYCLE_QUIVER_BACKWARD });
-	_add_insert_commands(cols, 1,
-		                 "<console><cyan>]</cyan> : </console>"
-		                 "shields (<w>%</w>ield)",
-		                 { CMD_WIELD_WEAPON });
+    _add_insert_commands(cols, 1,
+                         "<console><cyan>]</cyan> : </console>"
+                         "shields (<w>%</w>ield)",
+                         { CMD_WIELD_WEAPON });
     _add_insert_commands(cols, 1,
                          "<console><cyan>[</cyan> : </console>"
                          "armour (<w>%</w>ear and <w>%</w>ake off)",

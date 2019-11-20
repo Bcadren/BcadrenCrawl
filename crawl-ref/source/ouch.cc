@@ -216,7 +216,7 @@ int check_your_resists(int hurted, beam_type flavour, string source,
         break;
 
     case BEAM_ICE:
-	case BEAM_FREEZE:
+    case BEAM_FREEZE:
         hurted = resist_adjust_damage(&you, flavour, hurted);
 
         if (hurted < original && doEffects)
@@ -557,13 +557,13 @@ static void _maybe_spawn_monsters(int dam, const bool is_torment,
             how_many = apply_pity(random2(4) + 2);
         else if (dam >= you.hp_max / 2)
             how_many = apply_pity(random2(2) + 2);
-		else if (dam >= you.hp_max / 4)
-		{
-			if (you.get_mutation_level(MUT_GODS_PITY) > 1 && coinflip())
-				how_many = 2;
-			else
-				how_many = 1;
-		}
+        else if (dam >= you.hp_max / 4)
+        {
+            if (you.get_mutation_level(MUT_GODS_PITY) > 1 && coinflip())
+                how_many = 2;
+            else
+                how_many = 1;
+        }
     }
     else if (you_worship(GOD_XOM)
              && dam >= you.hp_max / 4

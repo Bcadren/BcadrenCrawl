@@ -24,10 +24,10 @@ enum beam_type                  // bolt::flavour
     BEAM_ENERGY,
     BEAM_HOLY,
     BEAM_FRAG,
-	BEAM_SILVER_FRAG,
+    BEAM_SILVER_FRAG,
     BEAM_LAVA,
     BEAM_ICE,
-	BEAM_FREEZE,                  // Identical to ice except it causes water to freeze.
+    BEAM_FREEZE,                  // Identical to ice except it causes water to freeze.
     BEAM_DEVASTATION,
     BEAM_RANDOM,                  // currently translates into FIRE..ACID
     BEAM_CHAOS,
@@ -83,7 +83,7 @@ enum beam_type                  // bolt::flavour
     BEAM_ENSNARE,
     BEAM_CRYSTAL,
     BEAM_DEATH_RATTLE,
-	BEAM_MAGIC_CANDLE,
+    BEAM_MAGIC_CANDLE,
     BEAM_LAST_REAL = BEAM_MAGIC_CANDLE,
 
     // For getting the visual effect of a beam.

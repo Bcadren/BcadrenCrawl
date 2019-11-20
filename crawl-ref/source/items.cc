@@ -429,11 +429,11 @@ bool dec_inv_item_quantity(int obj, int amount)
                     unwield_item(true,true);
                     canned_msg(MSG_EMPTY_HANDED_NOW);
                 }
-				else if (i == EQ_WEAPON1)
-				{
-					unwield_item(false, true);
-					canned_msg(MSG_EMPTY_HANDED_NOW);
-				}
+                else if (i == EQ_WEAPON1)
+                {
+                    unwield_item(false, true);
+                    canned_msg(MSG_EMPTY_HANDED_NOW);
+                }
                 you.equip[i] = -1;
             }
         }
@@ -787,11 +787,11 @@ bool item_is_branded(const item_def& item)
     {
     case OBJ_WEAPONS:
         return get_weapon_brand(item) != SPWPN_NORMAL;
-	case OBJ_SHIELDS:
-		if (is_hybrid(item.sub_type))
-			return get_weapon_brand(item) != SPWPN_NORMAL;
-		else
-			return get_armour_ego_type(item) != SPARM_NORMAL;
+    case OBJ_SHIELDS:
+        if (is_hybrid(item.sub_type))
+            return get_weapon_brand(item) != SPWPN_NORMAL;
+        else
+            return get_armour_ego_type(item) != SPARM_NORMAL;
     case OBJ_ARMOURS:
         return get_armour_ego_type(item) != SPARM_NORMAL;
     case OBJ_MISSILES:
@@ -806,7 +806,7 @@ static int _item_name_specialness(const item_def& item)
 {
     if (item.base_type != OBJ_WEAPONS && item.base_type != OBJ_ARMOURS
         && item.base_type != OBJ_MISSILES && item.base_type != OBJ_JEWELLERY
-		&& item.base_type != OBJ_SHIELDS)
+        && item.base_type != OBJ_SHIELDS)
     {
         return 0;
     }
@@ -1727,8 +1727,8 @@ void get_gold(const item_def& item, int quant, bool quiet)
 
     if (you_worship(GOD_ZIN))
         quant -= zin_tithe(item, quant, quiet);
-	if (you.species == SP_GOBLIN)
-		quant = div_rand_round((quant * 12), 10);
+    if (you.species == SP_GOBLIN)
+        quant = div_rand_round((quant * 12), 10);
     if (quant <= 0)
         return;
     you.add_gold(quant);
@@ -2575,7 +2575,7 @@ bool drop_item(int item_dropped, int quant_drop)
     }
 
     if ((item_dropped == you.equip[EQ_WEAPON0] || item_dropped == you.equip[EQ_WEAPON1])
-		&& item.cursed() && you.get_mutation_level(MUT_GHOST) == 0)
+        && item.cursed() && you.get_mutation_level(MUT_GHOST) == 0)
     {
         mprf("%s is stuck to you!", item.name(DESC_THE).c_str());
         return false;
@@ -2609,36 +2609,36 @@ bool drop_item(int item_dropped, int quant_drop)
     // like temporary brands. -- bwr
     if ((item_dropped == you.equip[EQ_WEAPON0])  && quant_drop >= item.quantity)
     {
-		if (you.get_mutation_level(MUT_GHOST) == 0 && you.weapon(0)->cursed())
-		{
-			if (you.hands_reqd(*you.weapon(0)) == HANDS_TWO)
-				mprf("%s is stuck to your %s", you.weapon(0)->name(DESC_THE).c_str(), you.hand_name(true).c_str());
-			else
-				mprf("%s is stuck to your right %s", you.weapon(0)->name(DESC_THE).c_str(), you.hand_name(false).c_str());
-			return false;
-		}
-		if (!unwield_item(true, true))
-			return false;
+        if (you.get_mutation_level(MUT_GHOST) == 0 && you.weapon(0)->cursed())
+        {
+            if (you.hands_reqd(*you.weapon(0)) == HANDS_TWO)
+                mprf("%s is stuck to your %s", you.weapon(0)->name(DESC_THE).c_str(), you.hand_name(true).c_str());
+            else
+                mprf("%s is stuck to your right %s", you.weapon(0)->name(DESC_THE).c_str(), you.hand_name(false).c_str());
+            return false;
+        }
+        if (!unwield_item(true, true))
+            return false;
         // May have been destroyed by removal. Returning true because we took
         // time to swap away.
         else if (!item.defined())
             return true;
     }
 
-	if ((item_dropped == you.equip[EQ_WEAPON1]) && quant_drop >= item.quantity)
-	{
-		if (you.get_mutation_level(MUT_GHOST) == 0 && you.weapon(1)->cursed())
-		{
-			mprf("%s is stuck to your left %s", you.weapon(1)->name(DESC_THE).c_str(), you.hand_name(false).c_str());
-			return false;
-		}
-		if (!unwield_item(false, true))
-			return false;
-		// May have been destroyed by removal. Returning true because we took
-		// time to swap away.
-		else if (!item.defined())
-			return true;
-	}
+    if ((item_dropped == you.equip[EQ_WEAPON1]) && quant_drop >= item.quantity)
+    {
+        if (you.get_mutation_level(MUT_GHOST) == 0 && you.weapon(1)->cursed())
+        {
+            mprf("%s is stuck to your left %s", you.weapon(1)->name(DESC_THE).c_str(), you.hand_name(false).c_str());
+            return false;
+        }
+        if (!unwield_item(false, true))
+            return false;
+        // May have been destroyed by removal. Returning true because we took
+        // time to swap away.
+        else if (!item.defined())
+            return true;
+    }
 
     ASSERT(item.defined());
 
@@ -3194,7 +3194,7 @@ static bool _interesting_explore_pickup(const item_def& item)
     case OBJ_WEAPONS:
     case OBJ_MISSILES:
     case OBJ_ARMOURS:
-	case OBJ_SHIELDS:
+    case OBJ_SHIELDS:
         // Ego items.
         if (item.brand != 0)
             return true;
@@ -3401,7 +3401,7 @@ int get_max_subtype(object_class_type base_type)
         NUM_RODS,
 #endif
         NUM_RUNE_TYPES,
-		NUM_SHIELDS,
+        NUM_SHIELDS,
     };
     COMPILE_CHECK(ARRAYSZ(max_subtype) == NUM_OBJECT_CLASSES);
 
@@ -3544,7 +3544,7 @@ colour_t item_def::weapon_colour() const
         case SK_CROSSBOWS:
             return LIGHTBLUE;
         case SK_THROWING:
-		case SK_SHIELDS:
+        case SK_SHIELDS:
             return WHITE;
         case SK_SLINGS:
             return BROWN;
@@ -4077,7 +4077,7 @@ colour_t item_def::get_colour() const
 
     switch (base_type)
     {
-		case OBJ_SHIELDS: // Deliberate fallthrough.
+        case OBJ_SHIELDS: // Deliberate fallthrough.
         case OBJ_WEAPONS:
             return weapon_colour();
         case OBJ_MISSILES:
@@ -4514,7 +4514,7 @@ bool get_item_by_name(item_def *item, const char* specs,
             // Search for a matching unrandart.
             case OBJ_WEAPONS:
             case OBJ_ARMOURS:
-			case OBJ_SHIELDS:
+            case OBJ_SHIELDS:
             case OBJ_JEWELLERY:
             {
                 // XXX: if we ever allow ?/ lookup of unrands, change this,
@@ -4572,7 +4572,7 @@ bool get_item_by_name(item_def *item, const char* specs,
         item->quantity = 30;
         // intentional fall-through
     case OBJ_WEAPONS:
-	case OBJ_SHIELDS:
+    case OBJ_SHIELDS:
     case OBJ_ARMOURS:
     {
         char buf[80];
@@ -4793,13 +4793,13 @@ item_info get_item_info(const item_def& item)
         if (item_type_known(item))
             ii.brand = item.brand;
         break;
-	case OBJ_SHIELDS:
-		ii.sub_type = item.sub_type;
-		if (item_ident(ii, ISFLAG_KNOW_PLUSES))
-			ii.plus = item.plus;
-		if (item_type_known(item))
-			ii.brand = item.brand;
-		break;
+    case OBJ_SHIELDS:
+        ii.sub_type = item.sub_type;
+        if (item_ident(ii, ISFLAG_KNOW_PLUSES))
+            ii.plus = item.plus;
+        if (item_type_known(item))
+            ii.brand = item.brand;
+        break;
     case OBJ_ARMOURS:
         ii.sub_type = item.sub_type;
         if (item_ident(ii, ISFLAG_KNOW_PLUSES))
@@ -4968,8 +4968,8 @@ int runes_in_pack()
 object_class_type get_random_item_mimic_type()
 {
    return random_choose(OBJ_GOLD, OBJ_WEAPONS, OBJ_SHIELDS, OBJ_ARMOURS,
-						OBJ_SCROLLS, OBJ_POTIONS, OBJ_BOOKS, OBJ_STAVES, 
-	                    OBJ_FOOD, OBJ_MISCELLANY, OBJ_JEWELLERY);
+                        OBJ_SCROLLS, OBJ_POTIONS, OBJ_BOOKS, OBJ_STAVES, 
+                        OBJ_FOOD, OBJ_MISCELLANY, OBJ_JEWELLERY);
 }
 
 /**

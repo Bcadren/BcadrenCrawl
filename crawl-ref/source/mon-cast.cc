@@ -5664,22 +5664,22 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
     if (max_mons_charge(mons->type) > 0 && !_spell_charged(mons))
         return;
 
-	if (!mons->is_unbreathing() && (mons->res_poison() < 2) && cloud_at(mons->pos())
-		&& cloud_at(mons->pos())->type == CLOUD_MEPHITIC
-		&& !x_chance_in_y(5 + mons->get_hit_dice(), 30))
-	{
-		if (slot_flags == MON_SPELL_BREATH)
-		{
-			simple_monster_message(*mons, " inhales deeply and chokes on fumes!");
-			return;
-		}
+    if (!mons->is_unbreathing() && (mons->res_poison() < 2) && cloud_at(mons->pos())
+        && cloud_at(mons->pos())->type == CLOUD_MEPHITIC
+        && !x_chance_in_y(5 + mons->get_hit_dice(), 30))
+    {
+        if (slot_flags == MON_SPELL_BREATH)
+        {
+            simple_monster_message(*mons, " inhales deeply and chokes on fumes!");
+            return;
+        }
 
-		else if (slot_flags == MON_SPELL_PRIEST || slot_flags == MON_SPELL_WIZARD)
-		{
-			simple_monster_message(*mons, " tries to cast a spell, but chokes on the fumes!");
-			return;
-		}
-	}
+        else if (slot_flags == MON_SPELL_PRIEST || slot_flags == MON_SPELL_WIZARD)
+        {
+            simple_monster_message(*mons, " tries to cast a spell, but chokes on the fumes!");
+            return;
+        }
+    }
 
     if (spell_is_soh_breath(spell_cast))
     {
@@ -5737,7 +5737,7 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
     // Targeted spells need a valid target.
     // Wizard-mode cast monster spells may target the boundary (shift-dir).
     ASSERT(map_bounds(pbolt.target) || !(flags & spflag::targeting_mask));
-	
+    
     // Maybe cast abjuration instead of certain summoning spells.
     if (mons->can_see(you) && _mons_will_abjure(mons, spell_cast))
     {
@@ -5819,12 +5819,12 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
 
         // Previous method of damage calculation (in line with player
         // airstrike) had absurd variance.
-		int dam = random2avg(damage_taken, 3);
+        int dam = random2avg(damage_taken, 3);
         damage_taken = foe->apply_ac(dam);
         foe->hurt(mons, damage_taken, BEAM_MISSILE, KILLED_BY_BEAM,
                   "", "by the air");
-		if (foe->alive())
-			cloud_strike(mons, foe, dam);
+        if (foe->alive())
+            cloud_strike(mons, foe, dam);
         return;
     }
 
@@ -6526,20 +6526,20 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
         return;
     }
 
-	case SPELL_CONDENSATION_SHIELD:
-	{
-		if (you.can_see(*mons))
-		{
-			mprf("A floating shield of ice appears before %s.",
-				mons->name(DESC_THE).c_str());
-		}
-		const int power = (mons->spell_hd(spell_cast) * 15) / 10;
-		mons->add_ench(mon_enchant(ENCH_CONDENSATION_SHIELD,
-			20 + random2(power) + random2(power),
-			mons));
+    case SPELL_CONDENSATION_SHIELD:
+    {
+        if (you.can_see(*mons))
+        {
+            mprf("A floating shield of ice appears before %s.",
+                mons->name(DESC_THE).c_str());
+        }
+        const int power = (mons->spell_hd(spell_cast) * 15) / 10;
+        mons->add_ench(mon_enchant(ENCH_CONDENSATION_SHIELD,
+            20 + random2(power) + random2(power),
+            mons));
 
-		return;
-	}
+        return;
+    }
 
     case SPELL_WORD_OF_RECALL:
     {
@@ -8094,8 +8094,8 @@ static bool _ms_waste_of_time(monster* mon, mon_spell_slot slot)
     case SPELL_DEFLECT_MISSILES:
         return mon->has_ench(ENCH_DEFLECT_MISSILES);
 
-	case SPELL_CONDENSATION_SHIELD:
-		return mon->has_ench(ENCH_CONDENSATION_SHIELD);
+    case SPELL_CONDENSATION_SHIELD:
+        return mon->has_ench(ENCH_CONDENSATION_SHIELD);
 
     case SPELL_CONFUSION_GAZE:
         return !foe || !mon->can_see(*foe);

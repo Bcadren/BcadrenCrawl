@@ -1560,14 +1560,14 @@ static const struct spell_desc spelldata[] =
 },
 
 {
-	SPELL_SMD, "Methodical Deconstruction",
-	spschool::earth,
-	spflag::target,
-	5,
-	200,
-	1, 1,
-	4, 0,
-	TILEG_METHODICAL_DECONSTRUCTION,
+    SPELL_SMD, "Methodical Deconstruction",
+    spschool::earth,
+    spflag::target,
+    5,
+    200,
+    1, 1,
+    4, 0,
+    TILEG_METHODICAL_DECONSTRUCTION,
 },
 
 {
@@ -4007,7 +4007,7 @@ static const struct spell_desc spelldata[] =
     200,
     LOS_RADIUS, LOS_RADIUS,
     5, 0,
-	TILEG_GENERIC_MONSTER_SPELL,
+    TILEG_GENERIC_MONSTER_SPELL,
 },
 
 {

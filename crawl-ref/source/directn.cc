@@ -2794,8 +2794,8 @@ void describe_floor()
     switch (grid)
     {
     case DNGN_FLOOR:
-	case DNGN_ICE:
-	case DNGN_OBSIDIAN:
+    case DNGN_ICE:
+    case DNGN_OBSIDIAN:
         return;
 
     case DNGN_ENTER_SHOP:
@@ -3387,19 +3387,19 @@ string get_monster_equipment_desc(const monster_info& mi,
     const bool mon_has_wand = mi.props.exists("wand_known") && mon_wnd;
     const bool mon_carry = mon_alt || mon_has_wand;
 
-	// Print the rest of the equipment only for full descriptions.
-	if (level == DESC_WEAPON || level == DESC_WEAPON_WARNING)
-	{
-		if (mon_has_wand)
-		{
-			if (weap.empty())
-				return desc + " wielding " + mon_wnd->name(DESC_A);
-			else
-				return desc + weap + " and " + mon_wnd->name(DESC_A);
-		}
-		else
-			return desc + weap;
-	}
+    // Print the rest of the equipment only for full descriptions.
+    if (level == DESC_WEAPON || level == DESC_WEAPON_WARNING)
+    {
+        if (mon_has_wand)
+        {
+            if (weap.empty())
+                return desc + " wielding " + mon_wnd->name(DESC_A);
+            else
+                return desc + weap + " and " + mon_wnd->name(DESC_A);
+        }
+        else
+            return desc + weap;
+    }
 
     vector<string> item_descriptions;
 

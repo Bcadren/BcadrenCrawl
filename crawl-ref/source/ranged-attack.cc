@@ -70,21 +70,21 @@ int ranged_attack::calc_to_hit(bool random, bool player_aux)
 
     if (orig_to_hit == AUTOMATIC_HIT)
         return AUTOMATIC_HIT;
-	float hit = orig_to_hit;
+    float hit = orig_to_hit;
 
     if (teleport)
     {
-		if (attacker->is_player())
-		{
-			hit *= 10 + (you.attribute[ATTR_PORTAL_PROJECTILE] / 4);
-			hit /= 10;
-		}
+        if (attacker->is_player())
+        {
+            hit *= 10 + (you.attribute[ATTR_PORTAL_PROJECTILE] / 4);
+            hit /= 10;
+        }
 
-		else
-		{
-			hit *= 10 + (attacker->as_monster()->get_hit_dice());
-			hit /= 10;
-		}
+        else
+        {
+            hit *= 10 + (attacker->as_monster()->get_hit_dice());
+            hit /= 10;
+        }
     }
 
     const int defl = defender->missile_deflection();
@@ -396,13 +396,13 @@ int ranged_attack::apply_damage_modifiers(int damage, int damage_max)
 
 int ranged_attack::player_apply_misc_modifiers(int damage)
 {
-	if (apply_starvation_penalties())
-		damage -= random2(5);
+    if (apply_starvation_penalties())
+        damage -= random2(5);
 
-	if (damage_brand == SPWPN_MOLTEN)
-		damage = div_rand_round(damage * 3, 4);
+    if (damage_brand == SPWPN_MOLTEN)
+        damage = div_rand_round(damage * 3, 4);
 
-	return damage;
+    return damage;
 }
 
 bool ranged_attack::ignores_shield(bool verbose)
@@ -419,18 +419,18 @@ bool ranged_attack::ignores_shield(bool verbose)
         }
         return true;
     }
-	if (damage_brand == SPWPN_MOLTEN && coinflip())
-	{
-		if (verbose)
-		{
-			mprf("The molten %s melts a hole through %s %s!",
-				projectile->name(DESC_BASENAME).c_str(),
-				apostrophise(defender_name(false)).c_str(),
-				defender_shield ? defender_shield->name(DESC_PLAIN).c_str()
-				: "shielding");
-		}
-		return true;
-	}
+    if (damage_brand == SPWPN_MOLTEN && coinflip())
+    {
+        if (verbose)
+        {
+            mprf("The molten %s melts a hole through %s %s!",
+                projectile->name(DESC_BASENAME).c_str(),
+                apostrophise(defender_name(false)).c_str(),
+                defender_shield ? defender_shield->name(DESC_PLAIN).c_str()
+                : "shielding");
+        }
+        return true;
+    }
     return false;
 }
 
