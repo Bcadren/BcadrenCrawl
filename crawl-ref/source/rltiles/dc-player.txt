@@ -607,29 +607,29 @@ lshield_louise LSHIELD_LOUISE
 
 # blades
 dagger DAGGER
-dagger2 DAGGER2
+dagger2 
 dagger_slant DAGGER_SLANT
-dagger_slant2 DAGGER_SLANT2
+dagger_slant2 
 short_sword SHORT_SWORD
 short_sword_slant SHORT_SWORD_SLANT
-short_sword_slant2 SHORT_SWORD_SLANT2
+short_sword_slant2 
 short_sword_two SHORT_SWORD2
 sword_thief SWORD_THIEF
 double_sword DOUBLE_SWORD
-double_sword2 DOUBLE_SWORD2
-double_sword3 DOUBLE_SWORD3
+double_sword2 
+double_sword3 
 long_sword_slant LONG_SWORD_SLANT
-long_sword_slant2 LONG_SWORD_SLANT2
+long_sword_slant2 
 blessed_blade BLESSED_BLADE
 great_sword_slant GREAT_SWORD_SLANT
-great_sword_slant2 GREAT_SWORD_SLANT2
+great_sword_slant2 
 triple_sword TRIPLE_SWORD
-triple_sword2 TRIPLE_SWORD2
+triple_sword2 
 katana_slant KATANA_SLANT
 scimitar SCIMITAR
-scimitar2 SCIMITAR2
+scimitar2 
 falchion FALCHION
-falchion2 FALCHION2
+falchion2 
 sword_two SWORD2
 broadsword BROADSWORD
 black_sword BLACK_SWORD
@@ -638,7 +638,7 @@ sword_twist SWORD_TWIST
 knife KNIFE
 heavy_sword HEAVY_SWORD
 rapier RAPIER
-rapier2 RAPIER2
+rapier2 
 sword_three SWORD3
 sword_breaker SWORD_BREAKER
 sword_jag SWORD_JAG
@@ -657,28 +657,28 @@ giant_club_spike GIANT_CLUB_SPIKE
 giant_club_spike_slant GIANT_CLUB_SPIKE_SLANT
 giant_club_plain GIANT_CLUB_PLAIN
 whip WHIP
-whip2 WHIP2
+whip2 
 sceptre SCEPTRE
 mace_two MACE2
 mace MACE
-mace2 MACE3
+mace2 
 great_mace GREAT_MACE
-great_mace2 GREAT_MACE2
+great_mace2 
 mace_ruby MACE_RUBY
 morningstar_two MORNINGSTAR2
 morningstar MORNINGSTAR
-morningstar2 MORNINGSTAR3
+morningstar2 
 eveningstar EVENINGSTAR
-eveningstar2 EVENINGSTAR2
+eveningstar2 
 large_mace LARGE_MACE
 black_whip BLACK_WHIP
 sacred_scourge SACRED_SCOURGE
 sacred_scourge_two SACRED_SCOURGE2
 flail_stick FLAIL_STICK
 flail_ball FLAIL
-flail_ball2 FLAIL2
+flail_ball2 
 flail_great GREAT_FLAIL
-flail_great2 GREAT_FLAIL2
+flail_great2 
 flail_stick_slant FLAIL_STICK_SLANT
 flail_ball_two FLAIL_BALL2
 flail_balls FLAIL_BALLS
@@ -688,37 +688,37 @@ nunchaku NUNCHAKU
 
 ## polearms
 spear SPEAR
-spear2 SPEAR6
+spear2 
 spear_two SPEAR2
 spear_three SPEAR3
 spear_four SPEAR4
 spear_five SPEAR5
 hook HOOK
 halberd HALBERD
-halberd2 HALBERD2
+halberd2 
 pick_axe PICK_AXE
 trident TRIDENT
 trident_demon DEMON_TRIDENT
 trident_elec TRIDENT_ELEC
 trident_two TRIDENT2
-trident_two2 TRIDENT4
+trident_two2 
 trident_three TRIDENT3
 lance LANCE
 lance_two LANCE2
 scythe SCYTHE
-scythe2 SCYTHE2
+scythe2 
 scythe_slant SCYTHE_SLANT
 pike PIKE
 staff STAFF
 quarterstaff QUARTERSTAFF1
-quarterstaff2 QUARTERSTAFF5
+quarterstaff2 
 quarterstaff_two QUARTERSTAFF2
 quarterstaff_three QUARTERSTAFF3
 quarterstaff_four QUARTERSTAFF4
 quarterstaff_jester QUARTERSTAFF_JESTER
 sickle SICKLE
 glaive GLAIVE
-glaive2 GLAIVE4
+glaive2
 glaive_two GLAIVE2
 glaive_three GLAIVE3
 glaive_three2 GLAIVE5
@@ -727,8 +727,8 @@ pole_forked POLE_FORKED
 fork FORK2
 trishula TRISHULA
 lajatang1 LAJATANG
-lajatang2 LAJATANG2
-lajatang3 LAJATANG3
+lajatang2
+lajatang3
 
 ## staves
 
@@ -753,28 +753,28 @@ staff_fork STAFF_FORK
 # Remove when TAG_MAJOR_VERSION > 34
 # These 10 rods correspond to the same order as item/rod/
 rod_ruby ROD_FIRST
-rod_brown ROD0
-rod_emerald ROD1
-rod_hammer ROD2
-rod_blue ROD3
-rod_thick ROD4
-rod_moon ROD5
-rod_magenta ROD6
-rod_forked ROD7
-rod_aries ROD_LAST
+rod_brown 
+rod_emerald 
+rod_hammer 
+rod_blue 
+rod_thick 
+rod_moon 
+rod_magenta 
+rod_forked 
+rod_aries
 
 ## axes
 axe_small AXE_SMALL
 hand_axe HAND_AXE
-hand_axe2 HAND_AXE2
+hand_axe2 
 war_axe WAR_AXE
-war_axe2 WAR_AXE2
+war_axe2 
 broad_axe BROAD_AXE
-broad_axe2 BROAD_AXE2
+broad_axe2 
 battleaxe BATTLEAXE
-battleaxe2 BATTLEAXE2
+battleaxe2 
 axe_executioner EXECUTIONERS_AXE
-axe_executioner2 EXECUTIONERS_AXE2
+axe_executioner2 
 axe_double AXE_DOUBLE
 axe_blood AXE_BLOOD
 axe_short AXE_SHORT
@@ -962,29 +962,29 @@ sceptre_of_torment SCEPTRE_OF_TORMENT
 
 # blades
 dagger DAGGER
-dagger2 DAGGER2
+dagger2 
 dagger_slant DAGGER_SLANT
-dagger_slant2 DAGGER_SLANT2
+dagger_slant2 
 short_sword SHORT_SWORD
 short_sword_slant SHORT_SWORD_SLANT
-short_sword_slant2 SHORT_SWORD_SLANT2
+short_sword_slant2 
 short_sword_two SHORT_SWORD2
 sword_thief SWORD_THIEF
 double_sword DOUBLE_SWORD
-double_sword2 DOUBLE_SWORD2
-double_sword3 DOUBLE_SWORD3
+double_sword2 
+double_sword3 
 long_sword_slant LONG_SWORD_SLANT
-long_sword_slant2 LONG_SWORD_SLANT2
+long_sword_slant2 
 blessed_blade BLESSED_BLADE
 great_sword_slant GREAT_SWORD_SLANT
-great_sword_slant2 GREAT_SWORD_SLANT2
+great_sword_slant2 
 triple_sword TRIPLE_SWORD
-triple_sword2 TRIPLE_SWORD2
+triple_sword2 
 katana_slant KATANA_SLANT
 scimitar SCIMITAR
-scimitar2 SCIMITAR2
+scimitar2 
 falchion FALCHION
-falchion2 FALCHION2
+falchion2 
 sword_two SWORD2
 broadsword BROADSWORD
 black_sword BLACK_SWORD
@@ -993,7 +993,7 @@ sword_twist SWORD_TWIST
 knife KNIFE
 heavy_sword HEAVY_SWORD
 rapier RAPIER
-rapier2 RAPIER2
+rapier2 
 sword_three SWORD3
 sword_breaker SWORD_BREAKER
 sword_jag SWORD_JAG
@@ -1012,28 +1012,28 @@ giant_club_spike GIANT_CLUB_SPIKE
 giant_club_spike_slant GIANT_CLUB_SPIKE_SLANT
 giant_club_plain GIANT_CLUB_PLAIN
 whip WHIP
-whip2 WHIP2
+whip2 
 sceptre SCEPTRE
 mace_two MACE2
 mace MACE
-mace2 MACE3
+mace2 
 great_mace GREAT_MACE
-great_mace2 GREAT_MACE2
+great_mace2 
 mace_ruby MACE_RUBY
 morningstar_two MORNINGSTAR2
 morningstar MORNINGSTAR
-morningstar2 MORNINGSTAR3
+morningstar2 
 eveningstar EVENINGSTAR
-eveningstar2 EVENINGSTAR2
+eveningstar2 
 large_mace LARGE_MACE
 black_whip BLACK_WHIP
 sacred_scourge SACRED_SCOURGE
 sacred_scourge_two SACRED_SCOURGE2
 flail_stick FLAIL_STICK
 flail_ball FLAIL
-flail_ball2 FLAIL2
+flail_ball2 
 flail_great GREAT_FLAIL
-flail_great2 GREAT_FLAIL2
+flail_great2 
 flail_stick_slant FLAIL_STICK_SLANT
 flail_ball_two FLAIL_BALL2
 flail_balls FLAIL_BALLS
@@ -1043,37 +1043,37 @@ nunchaku NUNCHAKU
 
 ## polearms
 spear SPEAR
-spear2 SPEAR6
+spear2 
 spear_two SPEAR2
 spear_three SPEAR3
 spear_four SPEAR4
 spear_five SPEAR5
 hook HOOK
 halberd HALBERD
-halberd2 HALBERD2
+halberd2 
 pick_axe PICK_AXE
 trident TRIDENT
 trident_demon DEMON_TRIDENT
 trident_elec TRIDENT_ELEC
 trident_two TRIDENT2
-trident_two2 TRIDENT4
+trident_two2 
 trident_three TRIDENT3
 lance LANCE
 lance_two LANCE2
 scythe SCYTHE
-scythe2 SCYTHE2
+scythe2 
 scythe_slant SCYTHE_SLANT
 pike PIKE
 staff STAFF
 quarterstaff QUARTERSTAFF1
-quarterstaff2 QUARTERSTAFF5
+quarterstaff2 
 quarterstaff_two QUARTERSTAFF2
 quarterstaff_three QUARTERSTAFF3
 quarterstaff_four QUARTERSTAFF4
 quarterstaff_jester QUARTERSTAFF_JESTER
 sickle SICKLE
 glaive GLAIVE
-glaive2 GLAIVE4
+glaive2
 glaive_two GLAIVE2
 glaive_three GLAIVE3
 glaive_three2 GLAIVE5
@@ -1082,8 +1082,8 @@ pole_forked POLE_FORKED
 fork FORK2
 trishula TRISHULA
 lajatang1 LAJATANG
-lajatang2 LAJATANG2
-lajatang3 LAJATANG3
+lajatang2
+lajatang3
 
 ## staves
 
@@ -1108,28 +1108,28 @@ staff_fork STAFF_FORK
 # Remove when TAG_MAJOR_VERSION > 34
 # These 10 rods correspond to the same order as item/rod/
 rod_ruby ROD_FIRST
-rod_brown ROD0
-rod_emerald ROD1
-rod_hammer ROD2
-rod_blue ROD3
-rod_thick ROD4
-rod_moon ROD5
-rod_magenta ROD6
-rod_forked ROD7
-rod_aries ROD_LAST
+rod_brown 
+rod_emerald 
+rod_hammer 
+rod_blue 
+rod_thick 
+rod_moon 
+rod_magenta 
+rod_forked 
+rod_aries
 
 ## axes
 axe_small AXE_SMALL
 hand_axe HAND_AXE
-hand_axe2 HAND_AXE2
+hand_axe2 
 war_axe WAR_AXE
-war_axe2 WAR_AXE2
+war_axe2 
 broad_axe BROAD_AXE
-broad_axe2 BROAD_AXE2
+broad_axe2 
 battleaxe BATTLEAXE
-battleaxe2 BATTLEAXE2
+battleaxe2 
 axe_executioner EXECUTIONERS_AXE
-axe_executioner2 EXECUTIONERS_AXE2
+axe_executioner2 
 axe_double AXE_DOUBLE
 axe_blood AXE_BLOOD
 axe_short AXE_SHORT
