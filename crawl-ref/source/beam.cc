@@ -2754,7 +2754,8 @@ void bolt::affect_place_clouds()
                     (5 + random2(damage.size/3))));
             }
         }
-        else 
+        else
+        {
             for (stack_iterator si(p); si; ++si)
             {
                 if (!is_artefact(*si))
@@ -2768,6 +2769,7 @@ void bolt::affect_place_clouds()
                     see_preservation = true;
             }
             temp_change_terrain(p, DNGN_ICE, damage.roll() * 5, TERRAIN_CHANGE_FROZEN);
+        }
     }
 
     if (see_destruction)

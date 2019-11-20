@@ -1387,23 +1387,6 @@ bool is_valid_shaft_level()
     return (brdepth[place.branch] - place.depth) >= 1;
 }
 
-/***
- * Can we force shaft the player from this level?
- *
- * @returns true if we can.
- */
-bool is_valid_shaft_effect_level()
-{
-    const level_id place = level_id::current();
-    const Branch &branch = branches[place.branch];
-
-    // Don't shaft the player when we can't, and also when it would be into a
-    // dangerous end.
-    return is_valid_shaft_level()
-           && !(branch.branch_flags & brflag::dangerous_end
-                && brdepth[place.branch] - place.depth == 1);
-}
-
 static level_id _generic_shaft_dest(level_pos lpos, bool known = false)
 {
     level_id lid = lpos.id;

@@ -507,7 +507,7 @@ hands_reqd_type monster::hands_reqd(const item_def &item, bool base) const
 {
     if (mons_genus(type) == MONS_FORMICID)
         return HANDS_ONE;
-    else if (mons_is_hepliaklqana_ancestor && you.species == SP_FORMICID)
+    else if (mons_is_hepliaklqana_ancestor(type) && you.species == SP_FORMICID)
         return HANDS_ONE;
     return actor::hands_reqd(item, base);
 }

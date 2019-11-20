@@ -1942,7 +1942,7 @@ void upgrade_hepliaklqana_ancestor(bool quiet_force)
     // Handles gaining reflection seperately from shield type upgrade.
 
     else if (_hepliaklqana_shield_ego(hd)
-            != _hepliaklqana_shield_ego(old_hd) && !quiet_force && shld != NUM_ARMOURS)
+            != _hepliaklqana_shield_ego(old_hd) && !quiet_force && shld != NUM_SHIELDS)
     {
         mprf("%s remembers %s %s reflection.",
             ancestor->name(DESC_YOUR, true).c_str(),

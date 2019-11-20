@@ -788,6 +788,7 @@ string ash_describe_bondage(int flags, bool level)
     return trim_string(desc);
 }
 
+/* Unused function preserved for possible help during Ash/Curse Rework.
 static bool _is_slot_cursed(equipment_type eq)
 {
     const item_def *worn = you.slot_item(eq, true);
@@ -796,6 +797,7 @@ static bool _is_slot_cursed(equipment_type eq)
 
     return true;
 }
+*/
 
 bool passive_id_item(item_def& item, bool silent)
 {
@@ -1073,7 +1075,7 @@ int ash_skill_boost(skill_type sk, int scale)
         + get_crosstrain_points(sk)
         + ash_skill_point_boost(sk, you.skill(sk, 10, true));
 
-    const int past_27_cost = 2500 * species_apt_factor(sk);
+    const unsigned int past_27_cost = 2500 * species_apt_factor(sk);
     int level = you.skills[sk];
     while (level < MAX_SKILL_LEVEL && skill_points >= skill_exp_needed(level + 1, sk))
         ++level;
