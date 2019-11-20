@@ -11,6 +11,7 @@
 #include "branch.h"
 #include "chardump.h"
 #include "cloud.h"
+#include "colour.h"
 #include "coordit.h"
 #include "directn.h"
 #include "env.h"

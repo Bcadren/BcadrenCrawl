@@ -1722,7 +1722,7 @@ void abyss_teleport()
     stop_delay(true);
     forget_map(false);
     clear_excludes();
-    gozag_detect_level_gold(false);
+    ash_gozag_level_scan(false);
     more();
 }
 
