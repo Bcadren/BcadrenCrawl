@@ -989,8 +989,14 @@ bool tile_list_processor::write_data(bool image, bool code)
                 }
                 else
                 {
-                    fprintf(fp, "    %s_%s_%d%s,\n", m_prefix.c_str(),
+                    if (parts_ctg.empty()) {
+                        fprintf(fp, "    %s_%s_%d%s,\n", m_prefix.c_str(),
                             old_enum_name.c_str(), ++count, start_val.c_str());
+                    } else {
+                        fprintf(fp, "    %s_%s_%s_%d%s,\n", m_prefix.c_str(),
+                            parts_ctg.c_str(), old_enum_name.c_str(),
+                            ++count, start_val.c_str());
+                    }
                 }
             }
             else if (parts_ctg.empty())

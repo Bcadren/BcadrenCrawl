@@ -242,33 +242,32 @@ mcache_monster::mcache_monster(const monster_info& mon)
                 case TILEP_HAND1_DAGGER:
                     m_shd_tile = TILEP_HAND2_DAGGER;
                     break;
-                case TILEP_HAND1_DAGGER2:
-                    m_shd_tile = TILEP_HAND2_DAGGER2;
+                case TILEP_HAND1_DAGGER_1:
+                    m_shd_tile = TILEP_HAND2_DAGGER_1;
                     break;
                 case TILEP_HAND1_RAPIER:
                     m_shd_tile = TILEP_HAND2_RAPIER;
                     break;
-                case TILEP_HAND1_RAPIER2:
-                    m_shd_tile = TILEP_HAND2_RAPIER2;
+                case TILEP_HAND1_RAPIER_1:
+                    m_shd_tile = TILEP_HAND2_RAPIER_1;
                     break;
-                default:
                 case TILEP_HAND1_SHORT_SWORD_SLANT:
                     m_shd_tile = TILEP_HAND2_SHORT_SWORD_SLANT;
                     break;
-                case TILEP_HAND1_SHORT_SWORD_SLANT2:
-                    m_shd_tile = TILEP_HAND2_SHORT_SWORD_SLANT2;
+                case TILEP_HAND1_SHORT_SWORD_SLANT_1:
+                    m_shd_tile = TILEP_HAND2_SHORT_SWORD_SLANT_1;
                     break;
                 case TILEP_HAND1_GREAT_FLAIL:
                     m_shd_tile = TILEP_HAND2_GREAT_FLAIL;
                     break;
-                case TILEP_HAND1_GREAT_FLAIL2:
-                    m_shd_tile = TILEP_HAND2_GREAT_FLAIL2;
+                case TILEP_HAND1_GREAT_FLAIL_1:
+                    m_shd_tile = TILEP_HAND2_GREAT_FLAIL_1;
                     break;
                 case TILEP_HAND1_GREAT_MACE:
                     m_shd_tile = TILEP_HAND2_GREAT_MACE;
                     break;
-                case TILEP_HAND1_GREAT_MACE2:
-                    m_shd_tile = TILEP_HAND2_GREAT_MACE2;
+                case TILEP_HAND1_GREAT_MACE_1:
+                    m_shd_tile = TILEP_HAND2_GREAT_MACE_1;
                     break;
                 case TILEP_HAND1_GIANT_CLUB:
                     m_shd_tile = TILEP_HAND2_GIANT_CLUB;
@@ -285,6 +284,8 @@ mcache_monster::mcache_monster(const monster_info& mon)
                 case TILEP_HAND1_GIANT_CLUB_PLAIN:
                     m_shd_tile = TILEP_HAND2_GIANT_CLUB_PLAIN;
                     break;
+                default:
+                    m_shd_tile = 0;
             };
         }
         else
