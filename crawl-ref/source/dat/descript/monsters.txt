@@ -94,9 +94,9 @@ Dissolution
 
 The Pits of Slime used to be a thriving civilization, and Dissolution was the
 prophet of their god. When the city was overtaken by its current residents,
-only Dissolution survived, for they alone turned faithfully to the Slime God.
-Dissolution became a tremendous mass of acidic ooze, yet retained their
-intelligence. They are filled with hatred for anything that can hold a form.
+only Dissolution survived, for she alone turned faithfully to the Slime God.
+Dissolution became a tremendous mass of acidic ooze, yet retained her
+intelligence. She is filled with hatred for anything that can hold a form.
 %%%%
 Donald
 
@@ -359,8 +359,8 @@ fear her; the dead obey her every command. She has a soft spot for the latter.
 %%%%
 Nessos
 
-A centaur warrior, skilled at warfare and deceit. They slew a mighty hydra, and
-now its deadly blood drips, still-fuming, from their arrows.
+A centaur warrior, skilled at warfare and deceit. He slew a mighty hydra, and
+now its deadly blood drips, still-fuming, from his arrows.
 %%%%
 Nikola
 
@@ -412,7 +412,7 @@ A human whose savage roars bring terror to all those who hear them.
 %%%%
 Saint Roka
 
-A mighty warlord. Some orcs even say they are the Chosen One of Beogh.
+A mighty warlord. Some orcs even say he is the Chosen One of Beogh.
 %%%%
 Sigmund
 
