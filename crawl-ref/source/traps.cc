@@ -653,33 +653,28 @@ void trap_def::trigger(actor& triggerer)
 		case TRAP_NET:
 			if (you_trigger)
 			{
-				if (one_chance_in(3))
-					mpr("A net swings high above you.");
+				item_def item = generate_trap_item();
+				copy_item_to_grid(item, triggerer.pos());
+
+				if (random2avg(2 * you.evasion(), 2) > 18 + env.absdepth0 / 2)
+				{
+					mpr("A net drops to the ground!");
+				}
 				else
 				{
-					item_def item = generate_trap_item();
-					copy_item_to_grid(item, triggerer.pos());
-
-					if (random2avg(2 * you.evasion(), 2) > 18 + env.absdepth0 / 2)
+					mpr("A large net falls onto you!");
+					if (player_caught_in_net())
 					{
-						mpr("A net drops to the ground!");
-					}
-					else
-					{
-						mpr("A large net falls onto you!");
-						if (player_caught_in_net())
-						{
-							if (player_in_a_dangerous_place())
-								xom_is_stimulated(50);
+						if (player_in_a_dangerous_place())
+							xom_is_stimulated(50);
 
-							// Mark the item as trapping; after this it's
-							// safe to update the view.
-							_mark_net_trapping(you.pos());
-						}
+						// Mark the item as trapping; after this it's
+						// safe to update the view.
+						_mark_net_trapping(you.pos());
 					}
-
-					trap_destroyed = true;
 				}
+
+				trap_destroyed = true;
 			}
 			else if (m)
 			{
