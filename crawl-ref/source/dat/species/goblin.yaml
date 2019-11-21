@@ -1,7 +1,6 @@
 enum: SP_GOBLIN
 monster: MONS_GOBLIN
 name: "Goblin"
-short_name: Gb
 difficulty: Advanced
 difficulty_priority: 30
 aptitudes:
