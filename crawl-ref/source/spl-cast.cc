@@ -1652,9 +1652,6 @@ static spret _do_cast(spell_type spell, int powc, const dist& spd,
     case SPELL_FREEZE:
         return cast_freeze(powc, monster_at(target), fail);
 
-    case SPELL_SANDBLAST:
-        return cast_sandblast(powc, beam, fail);
-
     case SPELL_VAMPIRIC_DRAINING:
         return vampiric_drain(powc, monster_at(target), fail);
 

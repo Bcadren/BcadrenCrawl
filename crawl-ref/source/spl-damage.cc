@@ -2490,40 +2490,6 @@ spret cast_fragmentation(int pow, const actor *caster,
     return spret::success;
 }
 
-spret cast_sandblast(int pow, bolt &beam, bool fail)
-{
-    item_def *stone = nullptr;
-    int num_stones = 0;
-    for (item_def& i : you.inv)
-    {
-        if (i.is_type(OBJ_MISSILES, MI_STONE)
-            && check_warning_inscriptions(i, OPER_DESTROY))
-        {
-            num_stones += i.quantity;
-            stone = &i;
-        }
-    }
-
-    if (num_stones == 0)
-    {
-        mpr("You don't have any stones to cast with.");
-        return spret::abort;
-    }
-
-    zap_type zap = ZAP_SANDBLAST;
-    const spret ret = zapping(zap, pow, beam, true, nullptr, fail);
-
-    if (ret == spret::success)
-    {
-        if (dec_inv_item_quantity(letter_to_index(stone->slot), 1))
-            mpr("You now have no stones remaining.");
-        else
-            mprf_nocap("%s", stone->name(DESC_INVENTORY).c_str());
-    }
-
-    return ret;
-}
-
 static bool _elec_not_immune(const actor *act)
 {
     return act->res_elec() < 3 && !(you_worship(GOD_FEDHAS)
