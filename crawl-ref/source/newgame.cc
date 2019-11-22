@@ -1866,7 +1866,7 @@ static bool _prompt_weapon(const newgame_def& ng, newgame_def& ng_choice,
     vbox->align_items = Widget::Align::STRETCH;
     vbox->add_child(title_hbox);
 
-    if (job_custom_stats(ng.job))
+    if (!job_custom_stats(ng.job))
     {
         auto prompt = make_shared<Text>(formatted_string("You have a choice of weapons.", CYAN));
         vbox->add_child(prompt);

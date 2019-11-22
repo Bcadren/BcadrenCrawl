@@ -715,7 +715,6 @@ private:
                 desc << string(60 - so_far, ' ');
             desc << "</" << colour_to_str(colour) << ">";
 
-            colour = spell.fail_rate_colour;
             desc << "<" << colour_to_str(spell.fail_rate_colour) << ">";
             desc << chop_string(failure_rate_to_string(spell.raw_fail), 12);
             desc << "</" << colour_to_str(spell.fail_rate_colour) << ">";
