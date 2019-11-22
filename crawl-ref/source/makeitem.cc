@@ -1686,10 +1686,13 @@ static book_type _choose_book_type(int item_level)
 static skill_type _choose_manual_skill()
 {
     // spell skill (or invo/evo)
-    if (one_chance_in(4))
+    if (one_chance_in(3))
     {
-        return static_cast<skill_type>(
-            SK_SPELLCASTING + random2(NUM_SKILLS - SK_SPELLCASTING));
+        skill_type skill = SK_CONJURATIONS
+        while (skill == SK_CONJURATIONS)
+            skill = static_cast<skill_type>(
+                SK_SPELLCASTING + random2(NUM_SKILLS - SK_SPELLCASTING));
+        return skill;
     }
 
     // mundane skill
