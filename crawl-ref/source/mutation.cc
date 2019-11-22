@@ -2286,7 +2286,22 @@ string mutation_desc(mutation_type mut, int level, bool colour,
 
         if (permanent)
         {
-            const bool demonspawn = (you.species == SP_DEMONSPAWN || you.char_class == JOB_DEMONSPAWN);
+            const bool ds = (you.species == SP_DEMONSPAWN || you.char_class == JOB_DEMONSPAWN);
+            bool demonspawn = false;
+
+            if (ds)
+            {
+                for (int i = 0; i < you.demonic_traits.size(); i++)
+                {
+                    if (you.demonic_traits[i].mutation == mut &&
+                        you.demonic_traits[i].level_gained <= you.experience_level)
+                    {
+                        demonspawn = true;
+                        i += 1000;
+                    }
+                }
+            }
+
             const bool extra = you.get_base_mutation_level(mut, false, true, true) > 0;
 
             if (fully_inactive || (mut == MUT_COLD_BLOODED && player_res_cold(false) > 0))

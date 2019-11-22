@@ -1688,7 +1688,7 @@ static skill_type _choose_manual_skill()
     // spell skill (or invo/evo)
     if (one_chance_in(3))
     {
-        skill_type skill = SK_CONJURATIONS
+        skill_type skill = SK_CONJURATIONS;
         while (skill == SK_CONJURATIONS)
             skill = static_cast<skill_type>(
                 SK_SPELLCASTING + random2(NUM_SKILLS - SK_SPELLCASTING));
