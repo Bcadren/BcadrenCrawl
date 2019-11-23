@@ -996,6 +996,9 @@ void melee_attack::check_autoberserk()
             if (!is_artefact(*item))
                 continue;
 
+            if (you.wearing_ego(EQ_GLOVES, SPARM_WIELDING) && i == EQ_WEAPON0 || i == EQ_WEAPON1)
+                continue;
+
             if (x_chance_in_y(artefact_property(*item, ARTP_ANGRY), 100))
             {
                 attacker->go_berserk(false);
