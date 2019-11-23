@@ -1034,7 +1034,10 @@ static special_armour_type _generate_armour_type_ego(armour_type type,
         return random_choose(SPARM_IMPROVED_VISION, SPARM_INTELLIGENCE);
 
     case ARM_GLOVES:
-        return random_choose(SPARM_DEXTERITY, SPARM_STRENGTH, SPARM_ARCHERY);
+        return random_choose_weighted(3, SPARM_DEXTERITY, 
+                                      3, SPARM_STRENGTH,
+                                      1, SPARM_ARCHERY,
+                                      1, SPARM_WIELDING);
 
     case ARM_BOOTS:
         return random_choose(SPARM_RUNNING, SPARM_STRENGTH, SPARM_STEALTH);
@@ -1162,6 +1165,7 @@ bool is_armour_brand_ok(int type, int brand, bool strict)
             return true;
         // deliberate fall-through
     case SPARM_ARCHERY:
+    case SPARM_WIELDING:
         return slot == EQ_GLOVES;
 
     case SPARM_IMPROVED_VISION:

@@ -77,7 +77,8 @@ spret cast_excruciating_wounds(int power, bool fail)
     }
 
     const bool dangerous_disto = orig_brand == SPWPN_DISTORTION
-                                 && !have_passive(passive_t::safe_distortion);
+                                 && !have_passive(passive_t::safe_distortion)
+                                 && !you.wearing_ego(EQ_GLOVES, SPARM_WIELDING);
     if (dangerous_disto)
     {
         const string prompt =

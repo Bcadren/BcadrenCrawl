@@ -199,7 +199,8 @@ int attack::calc_to_hit(bool random, bool player_aux)
         // slaying bonus
         mhit *= (20 + slaying_bonus(wpn_skill == SK_THROWING
                               || (weapon && is_range_weapon(*weapon)
-                                         && using_weapon())));
+                                         && using_weapon(),
+                                  using_weapon())));
         mhit /= 20;
 
         // hunger penalty
@@ -1211,7 +1212,8 @@ int attack::player_apply_slaying_bonuses(int damage, bool aux)
         damage_plus -= 4 * you.props["corrosion_amount"].get_int();
     damage_plus += slaying_bonus(!weapon && wpn_skill == SK_THROWING
                                  || (weapon && is_range_weapon(*weapon)
-                                            && using_weapon()));
+                                            && using_weapon()),
+                                   using_weapon());
 
     damage += (damage_plus > -1) ? (random2(1 + damage_plus))
                                  : (-random2(1 - damage_plus));

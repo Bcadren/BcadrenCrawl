@@ -1657,7 +1657,7 @@ bool needs_notele_warning(const item_def &item, operation_types oper)
 }
 
 bool needs_handle_warning(const item_def &item, operation_types oper,
-                          bool &penance)
+                          bool &penance, bool wielding_pass)
 {
     if (!item.defined())
         return false;
@@ -1715,7 +1715,8 @@ bool needs_handle_warning(const item_def &item, operation_types oper,
         && is_weapon(item))
     {
         if (get_weapon_brand(item) == SPWPN_DISTORTION
-            && !have_passive(passive_t::safe_distortion))
+            && !have_passive(passive_t::safe_distortion)
+            && (!you.wearing_ego(EQ_GLOVES, SPARM_WIELDING) || wielding_pass))
         {
             return true;
         }
@@ -1724,23 +1725,32 @@ bool needs_handle_warning(const item_def &item, operation_types oper,
             && you.undead_state() == US_ALIVE
             && !you_foodless()
             // Don't prompt if you aren't wielding it and you can't.
-            && (you.hunger_state >= HS_FULL || _is_wielded(item)))
+            && (you.hunger_state >= HS_FULL || _is_wielded(item))
+            && (!you.wearing_ego(EQ_GLOVES, SPARM_WIELDING) || wielding_pass))
         {
             return true;
         }
 
-        if (is_artefact(item) && artefact_property(item, ARTP_CONTAM))
+        if (is_artefact(item) && artefact_property(item, ARTP_CONTAM) && (!you.wearing_ego(EQ_GLOVES, SPARM_WIELDING) || wielding_pass))
         {
             if (_is_wielded(item) && you_worship(GOD_ZIN))
                 penance = true;
             return true;
         }
 
-        if (is_artefact(item) && (artefact_property(item, ARTP_DRAIN)
-                                  || artefact_property(item, ARTP_FRAGILE)))
+        if (is_artefact(item) && ((artefact_property(item, ARTP_DRAIN) && (!you.wearing_ego(EQ_GLOVES, SPARM_WIELDING) || wielding_pass))
+                                  || (artefact_property(item, ARTP_FRAGILE) && !wielding_pass)))
         {
             return true;
         }
+    }
+
+    if ((oper == OPER_TAKEOFF || oper == OPER_WEAR) && item.base_type == OBJ_ARMOURS && item.brand == SPARM_WIELDING)
+    {
+        if (you.weapon(0) && needs_handle_warning(*you.weapon(0), OPER_WIELD, penance, true))
+            return true;
+        if (you.weapon(1) && needs_handle_warning(*you.weapon(1), OPER_WIELD, penance, true))
+            return true;
     }
 
     if (oper == OPER_PUTON || oper == OPER_WEAR || oper == OPER_TAKEOFF

@@ -268,5 +268,5 @@ bool item_is_evokable(const item_def &item, bool reach = true,
                       bool known = false, bool msg = false, bool equip = true);
 bool needs_notele_warning(const item_def &item, operation_types oper);
 bool needs_handle_warning(const item_def &item, operation_types oper,
-                          bool &penance);
+                          bool &penance, bool wielding_pass = false);
 item_def *digit_inscription_to_item(char digit, operation_types oper);

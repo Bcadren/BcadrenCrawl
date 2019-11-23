@@ -40,6 +40,7 @@
 #include "ghost.h"
 #include "god-abil.h"
 #include "god-item.h"
+#include "god-passive.h"
 #include "hints.h"
 #include "invent.h"
 #include "item-prop.h"
@@ -1406,10 +1407,19 @@ static string _armour_brand_desc(const item_def item)
 
         break;
 
-        // This is only for gloves.
+        // These are only for gloves.
     case SPARM_ARCHERY:
         description += "It improves your effectiveness with ranged "
             "weaponry, such as bows and javelins (Slay+4).";
+        break;
+
+    case SPARM_WIELDING:
+        description += "A magical aura from these gloves protects you"
+            " against any negative effects coming from your weapon,"
+            " granting you the ability to swap and attack with various"
+            " weapons without fear of many negative artifact properties or"
+            " brand effects. Additionally it improves your grip on melee"
+            " weapons, making you more effective with them (Slay+2).";
         break;
 
         // These are only for scarves.
@@ -1556,8 +1566,9 @@ static string _weapon_brand_desc(const item_def &item)
             "magic, it inflicts extra damage on living creatures.";
         break;
     case SPWPN_DISTORTION:
-        description += "It warps and distorts space around it. "
-            "Unwielding it can cause banishment or high damage.";
+        description += "It warps and distorts space around it.";
+        if (!you.wearing_ego(EQ_GLOVES, SPARM_WIELDING) && !have_passive(passive_t::safe_distortion))
+            description += " Unwielding it can cause banishment or high damage.";
         break;
     case SPWPN_PENETRATION:
         description += "Ammo fired by it will pass through the "

@@ -671,12 +671,36 @@ static void _deteriorate(int dam)
     }
 }
 
+static int _wielding_reduction(artefact_prop_type type)
+{
+    int reduce = 0;
+    if (you.wearing_ego(EQ_GLOVES, SPARM_WIELDING))
+    {
+        if (you.weapon(0) && is_artefact(*you.weapon(0)))
+        {
+            artefact_properties_t prop;
+            artefact_properties(*you.weapon(0), prop);
+            if (prop[type])
+                reduce--;
+        }
+        if (you.weapon(1) && is_artefact(*you.weapon(1)))
+        {
+            artefact_properties_t prop;
+            artefact_properties(*you.weapon(1), prop);
+            if (prop[type])
+                reduce--;
+        }
+    }
+    return reduce;
+}
+
 /**
  * Maybe corrode the player after taking damage if they're wearing *Corrode.
  **/
 static void _maybe_corrode()
 {
     int corrosion_sources = you.scan_artefacts(ARTP_CORRODE);
+    corrosion_sources += _wielding_reduction(ARTP_CORRODE);
     int degree = binomial(corrosion_sources, 3);
     if (degree > 0)
         you.corrode_equipment("Your corrosive artefact", degree);
@@ -688,6 +712,7 @@ static void _maybe_corrode()
 static void _maybe_slow()
 {
     int slow_sources = you.scan_artefacts(ARTP_SLOW);
+    slow_sources += _wielding_reduction(ARTP_SLOW);
     if (x_chance_in_y(slow_sources, 100))
         slow_player(10 + random2(5));
 }

@@ -57,9 +57,10 @@ void equip_item(equipment_type slot, int item_slot, bool msg)
     ASSERT(you.equip[slot] == -1);
     ASSERT(!you.melded[slot]);
 
+    equip_effect(slot, item_slot, false, msg);
+
     you.equip[slot] = item_slot;
 
-    equip_effect(slot, item_slot, false, msg);
     ash_check_bondage();
     if (you.equip[slot] != -1 && you.inv[you.equip[slot]].cursed())
         auto_id_inventory();
@@ -161,7 +162,7 @@ void equip_effect(equipment_type slot, int item_slot, bool unmeld, bool msg)
         _equip_use_warning(item);
 
     if (slot >= EQ_CLOAK && slot <= EQ_BODY_ARMOUR 
-        || (item.base_type == OBJ_SHIELDS && is_hybrid(item.sub_type)))
+        || (item.base_type == OBJ_SHIELDS && !is_hybrid(item.sub_type)))
         _equip_armour_effect(item, unmeld, slot);
     else if (slot == EQ_WEAPON0 || slot == EQ_WEAPON1)
         _equip_weapon_effect(item, msg, unmeld, slot);
@@ -311,7 +312,8 @@ static void _unequip_fragile_artefact(item_def& item, bool meld)
 static void _unequip_artefact_effect(item_def &item,
                                      bool *show_msgs, bool meld,
                                      equipment_type slot,
-                                     bool weapon)
+                                     bool weapon,
+                                     bool wielding_wield = false)
 {
     ASSERT(is_artefact(item));
 
@@ -329,15 +331,18 @@ static void _unequip_artefact_effect(item_def &item,
     if (proprt[ARTP_HP])
         _calc_hp_artefact();
 
-    if (proprt[ARTP_MAGICAL_POWER] && !known[ARTP_MAGICAL_POWER] && msg)
+    if (proprt[ARTP_MAGICAL_POWER] && !known[ARTP_MAGICAL_POWER] && msg && !wielding_wield)
     {
         canned_msg(proprt[ARTP_MAGICAL_POWER] > 0 ? MSG_MANA_DECREASE
                                                   : MSG_MANA_INCREASE);
     }
 
-    notify_stat_change(STAT_STR, -proprt[ARTP_STRENGTH],     true);
-    notify_stat_change(STAT_INT, -proprt[ARTP_INTELLIGENCE], true);
-    notify_stat_change(STAT_DEX, -proprt[ARTP_DEXTERITY],    true);
+    if (!wielding_wield)
+    {
+        notify_stat_change(STAT_STR, -proprt[ARTP_STRENGTH], true);
+        notify_stat_change(STAT_INT, -proprt[ARTP_INTELLIGENCE], true);
+        notify_stat_change(STAT_DEX, -proprt[ARTP_DEXTERITY], true);
+    }
 
     if (proprt[ARTP_FLY] != 0 && you.cancellable_flight()
         && !you.evokable_flight())
@@ -352,19 +357,19 @@ static void _unequip_artefact_effect(item_def &item,
     if (proprt[ARTP_MAGICAL_POWER])
         calc_mp();
 
-    if (proprt[ARTP_CONTAM] && !meld)
+    if (proprt[ARTP_CONTAM] && !meld && !(weapon && you.wearing_ego(EQ_GLOVES, SPARM_WIELDING)))
     {
         mpr("Mutagenic energies flood into your body!");
         contaminate_player(7000, true);
     }
 
-    if (proprt[ARTP_DRAIN] && !meld)
+    if (proprt[ARTP_DRAIN] && !meld && !(weapon && you.wearing_ego(EQ_GLOVES, SPARM_WIELDING)))
         drain_player(150, true, true);
 
-    if (proprt[ARTP_IMPROVED_VISION])
+    if (proprt[ARTP_IMPROVED_VISION] && !wielding_wield)
         _mark_unseen_monsters();
 
-    if (is_unrandom_artefact(item))
+    if (is_unrandom_artefact(item) && !wielding_wield)
     {
         const unrandart_entry *entry = get_unrand_entry(item.unrand_idx);
 
@@ -541,7 +546,8 @@ static void _equip_weapon_effect(item_def& item, bool showMsgs, bool unmeld, equ
                 case SPWPN_VAMPIRISM:
                     if (you.species == SP_VAMPIRE)
                         mpr("You feel a bloodthirsty glee!");
-                    else if (you.undead_state() == US_ALIVE && !you_foodless())
+                    else if (you.undead_state() == US_ALIVE && !you_foodless() 
+                        && !you.wearing_ego(EQ_GLOVES, SPARM_WIELDING))
                         mpr("You feel a dreadful hunger.");
                     else
                         mpr("You feel an empty sense of dread.");
@@ -590,7 +596,10 @@ static void _equip_weapon_effect(item_def& item, bool showMsgs, bool unmeld, equ
 
                 case SPWPN_ANTIMAGIC:
                     // Even if your maxmp is 0.
-                    mpr("You feel magic leave you.");
+                    if (!you.wearing_ego(EQ_GLOVES, SPARM_WIELDING))
+                        mpr("You feel magic leave you.");
+                    else
+                        mpr("Your gloves protect you from the negative effects of your weapon.");
                     break;
 
                 case SPWPN_DISTORTION:
@@ -613,21 +622,10 @@ static void _equip_weapon_effect(item_def& item, bool showMsgs, bool unmeld, equ
                 if (you.species != SP_VAMPIRE
                     && you.undead_state() == US_ALIVE
                     && !you_foodless()
-                    && !unmeld)
+                    && !unmeld
+                    && !you.wearing_ego(EQ_GLOVES, SPARM_WIELDING))
                 {
                     make_hungry(4500, false, false);
-                }
-                break;
-
-            case SPWPN_DISTORTION:
-                if (!was_known)
-                {
-                    // Xom loves it when you ID a distortion weapon this way,
-                    // and even more so if he gifted the weapon himself.
-                    if (origin_as_god_gift(item) == GOD_XOM)
-                        xom_is_stimulated(200);
-                    else
-                        xom_is_stimulated(100);
                 }
                 break;
 
@@ -698,7 +696,7 @@ static void _unequip_weapon_effect(item_def& real_item, bool showMsgs,
 
             case SPWPN_PROTECTION:
                 if (showMsgs)
-                    mprf("You feel less protected.", msg.c_str());
+                    mpr("You feel less protected.");
                 break;
 
             case SPWPN_VAMPIRISM:
@@ -733,6 +731,12 @@ static void _unequip_weapon_effect(item_def& real_item, bool showMsgs,
                                            "weapon.");
                         break;
                     }
+                    if (you.wearing_ego(EQ_GLOVES, SPARM_WIELDING))
+                    {
+                        mpr("Your gloves protect you from the residual spatial "
+                            "distortion as you unwield your weapon.");
+                        break;
+                    }
                     // Makes no sense to discourage unwielding a temporarily
                     // branded weapon since you can wait it out. This also
                     // fixes problems with unwield prompts (mantis #793).
@@ -744,7 +748,10 @@ static void _unequip_weapon_effect(item_def& real_item, bool showMsgs,
 
             case SPWPN_ANTIMAGIC:
                 calc_mp();
-                mpr("You feel magic returning to you.");
+                if (!you.wearing_ego(EQ_GLOVES, SPARM_WIELDING))
+                    mpr("You feel magic returning to you.");
+                else
+                    mpr("Your antimagic aura subsides.");
                 break;
 
                 // NOTE: When more are added here, *must* duplicate unwielding
@@ -778,6 +785,109 @@ static void _unequip_weapon_effect(item_def& real_item, bool showMsgs,
         mprf("Your spectral weapon disappears as %s.",
              meld ? "your weapon melds" : "you unwield");
         end_spectral_weapon(spectral_weapon, false, true);
+    }
+}
+
+static void _wielding_wear_effects(bool unwield, bool unmeld)
+{
+    string wpn0 = "";
+    if (you.weapon(0))
+        wpn0 = you.weapon(0)->name(DESC_BASENAME, true);
+
+    string wpn1 = "";
+    if (you.weapon(1))
+        wpn1 = you.weapon(1)->name(DESC_BASENAME, true);
+    const bool vampiric_vuln = you.undead_state() == US_ALIVE && !you_foodless();
+
+    if (unmeld)
+    {
+        // No bad effects from form changes; just a printed message.
+        if (unwield && (you.weapon(0) || you.weapon(1)))
+            mprf("You lose your grip on your weapon%s as your gloves meld.",
+                you.weapon(0) && you.weapon(1) ? "s" : "");
+        else if (unwield)
+            mpr("You feel less capable with melee weapons.");
+        else
+            mpr("You regain your grip.");
+    }
+
+    // Trigger bad effects from brands when the gloves are first put on to prevent them being an 
+    // easy swap out instead of a committed brand.
+    else
+    {
+        if (you.wearing_ego(EQ_WEAPON0, SPWPN_ANTIMAGIC) || you.wearing_ego(EQ_WEAPON1, SPWPN_ANTIMAGIC))
+        {
+            if (unwield)
+                mpr("You feel magic leave you.");
+            else
+                mpr("You feel magic returning to you.");
+            calc_mp();
+        }
+
+        if (you.wearing_ego(EQ_WEAPON0, SPWPN_DISTORTION))
+        {
+            if (unwield)
+            {
+                mprf("The distortion field from your %s is now closer to your body. %s",
+                    wpn0.c_str(), have_passive(passive_t::safe_distortion) ? "" : "It is no longer safe to unwield.");
+            }
+
+            else
+            {
+                mprf("As you don your protective gloves, your %s of distortion lashes out!", wpn0.c_str());
+                MiscastEffect(&you, nullptr, { miscast_source::wield },
+                    spschool::translocation, 9, 90,
+                    "a distortion unwield");
+            }
+        }
+
+        if (you.wearing_ego(EQ_WEAPON1, SPWPN_DISTORTION))
+        {
+            if (unwield)
+            {
+                mprf("The distortion field from your %s is now closer to your body. %s",
+                    wpn1.c_str(), have_passive(passive_t::safe_distortion) ? "" : "It is no longer safe to unwield.");
+            }
+
+            else
+            {
+                mprf("As you don your protective gloves, your %s of distortion lashes out!", wpn1.c_str());
+                MiscastEffect(&you, nullptr, { miscast_source::wield },
+                    spschool::translocation, 9, 90,
+                    "a distortion unwield");
+            }
+        }
+
+        if (vampiric_vuln)
+        {
+            if (you.wearing_ego(EQ_WEAPON0, SPWPN_VAMPIRISM))
+            {
+                if (unwield)
+                    mprf("You're filled with a deep hunger from your vampiric %s as it comes closer to your body!", wpn0.c_str());
+                else
+                    mprf("You're filled with a deep hunger from your vampiric %s as you don your gloves!", wpn0.c_str());
+                make_hungry(4500, false, false);
+            }
+
+            if (you.wearing_ego(EQ_WEAPON1, SPWPN_VAMPIRISM))
+            {
+                if (unwield)
+                    mprf("You're filled with a deep hunger from your vampiric %s as it comes closer to your body!", wpn1.c_str());
+                else
+                    mprf("You're filled with a deep hunger from your vampiric %s as you don your gloves!", wpn1.c_str());
+                if (you.hunger >= 5000)
+                    make_hungry(4500, false, false);
+                else
+                    make_hungry(you.hunger - 500, false, false);
+                    // Two of these in a row can outright kill a player. This is a failsafe.
+            }
+        }
+        
+        bool * dummy;
+        if (you.weapon(0) && is_artefact(*you.weapon(0)))
+            _unequip_artefact_effect(*you.weapon(0), dummy, false, EQ_WEAPON0, true, true);
+        if (you.weapon(1) && is_artefact(*you.weapon(1)))
+            _unequip_artefact_effect(*you.weapon(1), dummy, false, EQ_WEAPON1, true, true);
     }
 }
 
@@ -899,6 +1009,10 @@ static void _equip_armour_effect(item_def& arm, bool unmeld,
 
         case SPARM_ARCHERY:
             mpr("You feel that your aim is more steady.");
+            break;
+
+        case SPARM_WIELDING:
+            _wielding_wear_effects(false, unmeld);
             break;
 
         case SPARM_REPULSION:
@@ -1077,6 +1191,10 @@ static void _unequip_armour_effect(item_def& item, bool meld,
 
     case SPARM_ARCHERY:
         mpr("Your aim is not that steady anymore.");
+        break;
+
+    case SPARM_WIELDING:
+        _wielding_wear_effects(true, meld);
         break;
 
     case SPARM_REPULSION:

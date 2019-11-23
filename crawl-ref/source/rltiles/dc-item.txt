@@ -498,7 +498,8 @@ i-archery BRAND_ARM_ARCHERY
 i-jumping BRAND_ARM_JUMPING
 i-repulsion BRAND_ARM_REPULSION
 i-cloud-immune BRAND_ARM_CLOUD_IMMUNE
-i-high-priest BRAND_ARM_HIGH_PRIEST BRAND_ARM_LAST
+i-high-priest BRAND_ARM_HIGH_PRIEST 
+i-wielding BRAND_ARM_WIELDING BRAND_ARM_LAST
 
 ###########OBJ_SHIELDS
 %sdir item/shields

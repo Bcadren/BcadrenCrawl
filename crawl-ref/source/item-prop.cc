@@ -321,19 +321,19 @@ struct weapon_def
 
 /// brand weights for non-dagger shortblades (short sword & rapier)
 static const vector<brand_weight_tuple> SBL_BRANDS = {
-    { SPWPN_NORMAL, 33 },
-    { SPWPN_VENOM, 17 },
-    { SPWPN_SPEED, 10 },
-    { SPWPN_ACID, 9 },
-    { SPWPN_PROTECTION, 5 },
-    { SPWPN_ELECTROCUTION, 6 },
-    { SPWPN_HOLY_WRATH, 4 },
-    { SPWPN_VAMPIRISM, 4 },
-    { SPWPN_MOLTEN, 4 },
-    { SPWPN_FREEZING, 4 },
-    { SPWPN_DISTORTION, 2 },
-    { SPWPN_ANTIMAGIC, 1 },
-    { SPWPN_CHAOS, 1 },
+    { SPWPN_NORMAL,         33 },
+    { SPWPN_VENOM,          17 },
+    { SPWPN_SPEED,          10 },
+    { SPWPN_ACID,            9 },
+    { SPWPN_PROTECTION,      5 },
+    { SPWPN_ELECTROCUTION,   6 },
+    { SPWPN_HOLY_WRATH,      4 },
+    { SPWPN_VAMPIRISM,       4 },
+    { SPWPN_MOLTEN,          4 },
+    { SPWPN_FREEZING,        4 },
+    { SPWPN_DISTORTION,      2 },
+    { SPWPN_ANTIMAGIC,       1 },
+    { SPWPN_CHAOS,           1 },
 };
 
 /// brand weights for most m&f weapons

@@ -3804,7 +3804,7 @@ unsigned int exp_needed(int lev, int exp_apt)
 }
 
 // returns bonuses from rings of slaying, etc.
-int slaying_bonus(bool ranged)
+int slaying_bonus(bool ranged, bool weapon)
 {
     int ret = 0;
 
@@ -3812,6 +3812,9 @@ int slaying_bonus(bool ranged)
     ret += you.scan_artefacts(ARTP_SLAYING);
     if (you.wearing_ego(EQ_GLOVES, SPARM_ARCHERY) && ranged)
         ret += 4;
+    if (you.wearing_ego(EQ_GLOVES, SPARM_WIELDING)
+        && !ranged && weapon)
+        ret += 2;
 
     ret += 3 * augmentation_amount();
 
@@ -4222,10 +4225,10 @@ int get_real_mp(bool include_items)
             enp += 15;
     }
 
-    if (include_items && you.wearing_ego(EQ_WEAPON0, SPWPN_ANTIMAGIC))
+    if (include_items && you.wearing_ego(EQ_WEAPON0, SPWPN_ANTIMAGIC) && !you.wearing_ego(EQ_GLOVES, SPARM_WIELDING))
         enp /= 3;
 
-    if (include_items && you.wearing_ego(EQ_WEAPON1, SPWPN_ANTIMAGIC))
+    if (include_items && you.wearing_ego(EQ_WEAPON1, SPWPN_ANTIMAGIC) && !you.wearing_ego(EQ_GLOVES, SPARM_WIELDING))
         enp /= 3;
 
     enp = max(enp, 0);

@@ -418,7 +418,8 @@ bool can_wield(const item_def *weapon, bool say_reason,
              && get_weapon_brand(*weapon) == SPWPN_VAMPIRISM
              && you.undead_state() == US_ALIVE
              && !you_foodless()
-             && (item_type_known(*weapon) || !only_known))
+             && (item_type_known(*weapon) || !only_known)
+             && !you.wearing_ego(EQ_GLOVES, SPARM_WIELDING))
     {
         if (say_reason)
         {
@@ -872,7 +873,6 @@ bool wield_weapon(bool auto_wield, int slot, bool show_weff_messages,
     else if (new_wpn.base_type == OBJ_STAVES && you.weapon(0) && you.weapon(0)->base_type == OBJ_STAVES)
     {
         if (you.weapon(0)->cursed() && you.get_mutation_level(MUT_GHOST) == 0)
-
         {
             mpr("You can't unwield your magical staff to draw a new one.");
             return false;
@@ -1874,7 +1874,29 @@ static bool _safe_to_remove_or_wear(const item_def &item, bool remove, bool quie
     else if (prop_dex >= you.dex() && you.dex() > 0)
         red_stat = STAT_DEX;
 
-    if (red_stat == NUM_STATS)
+    bool disto = false;
+    bool vampiric = false;
+
+    if (item.base_type == OBJ_ARMOURS && item.brand == SPARM_WIELDING)
+    {
+        if (you.wearing_ego(EQ_WEAPON0, SPWPN_DISTORTION) || you.wearing_ego(EQ_WEAPON1, SPWPN_DISTORTION)
+            && !have_passive(passive_t::safe_distortion))
+            disto = true;
+        if (you.wearing_ego(EQ_WEAPON0, SPWPN_VAMPIRISM) || you.wearing_ego(EQ_WEAPON1, SPWPN_VAMPIRISM)
+            && you.undead_state() == US_ALIVE
+            && !you_foodless())
+        {
+            if (you.hunger_state < HS_FULL)
+            {
+                if (!quiet)
+                    mpr("You must be Full or above to do this, lest ye starve!");
+                return false;
+            }
+            vampiric = true;
+        }
+    }
+
+    if (red_stat == NUM_STATS && !disto && !vampiric)
         return true;
 
     if (quiet)
@@ -1896,13 +1918,51 @@ static bool _safe_to_remove_or_wear(const item_def &item, bool remove, bool quie
             verb = "Wear";
     }
 
-    string prompt = make_stringf("%sing this item will reduce your %s to zero "
-                                 "or below. Continue?", verb.c_str(),
-                                 stat_desc(red_stat, SD_NAME));
-    if (!yesno(prompt.c_str(), true, 'n', true, false))
+    if (red_stat != NUM_STATS)
     {
-        canned_msg(MSG_OK);
-        return false;
+        string prompt = make_stringf("%sing this item will reduce your %s to zero "
+            "or below. Continue?", verb.c_str(),
+            stat_desc(red_stat, SD_NAME));
+        if (!yesno(prompt.c_str(), true, 'n', true, false))
+        {
+            canned_msg(MSG_OK);
+            return false;
+        }
+    }
+
+    if (disto && !remove)
+    {
+        if (remove)
+        {
+            string prompt = make_stringf("%sing this item will also remove the protection from distortion."
+                " Continue?", verb.c_str());
+            if (!yesno(prompt.c_str(), true, 'n', true, false))
+            {
+                canned_msg(MSG_OK);
+                return false;
+            }
+        }
+        else
+        {
+            string prompt = make_stringf("%sing this item will subject you to wild distortion effects."
+                " Continue?", verb.c_str());
+            if (!yesno(prompt.c_str(), true, 'n', true, false))
+            {
+                canned_msg(MSG_OK);
+                return false;
+            }
+        }
+    }
+
+    if (vampiric)
+    {
+        string prompt = make_stringf("%sing this item will hunger you significantly."
+            " Continue?", verb.c_str());
+        if (!yesno(prompt.c_str(), true, 'n', true, false))
+        {
+            canned_msg(MSG_OK);
+            return false;
+        }
     }
     return true;
 }
