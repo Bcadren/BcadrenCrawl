@@ -437,15 +437,7 @@ static bool _mons_can_cast_dig(const monster* mons, bool random)
 
 static bool _mons_can_zap_dig(const monster* mons)
 {
-    return mons->foe != MHITNOT
-           && !mons->asleep()
-           && !mons->confused() // they don't get here anyway
-           && !mons->berserk_or_insane()
-           && !mons->submerged()
-           && mons_itemuse(*mons) >= MONUSE_STARTING_EQUIPMENT
-           && mons->inv[MSLOT_WAND] != NON_ITEM
-           && mitm[mons->inv[MSLOT_WAND]].is_type(OBJ_WANDS, WAND_DIGGING)
-           && mitm[mons->inv[MSLOT_WAND]].charges > 0;
+    return false;
 }
 
 static void _set_mons_move_dir(const monster* mons,
@@ -1110,8 +1102,7 @@ static bool _handle_wand(monster& mons)
     // XXX: Teach monsters to use random effects
     // Digging is handled elsewhere so that sensible (wall) targets are
     // chosen.
-    if (wand->sub_type == WAND_RANDOM_EFFECTS
-        || wand->sub_type == WAND_DIGGING)
+    if (wand->sub_type == WAND_RANDOM_EFFECTS)
     {
         return false;
     }

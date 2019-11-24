@@ -1697,7 +1697,6 @@ int wand_charge_value(int type)
     {
     case WAND_CLOUDS:
     case WAND_SCATTERSHOT:
-    case WAND_DIGGING:
         return 9;
 
     case WAND_ICEBLAST:
@@ -1752,7 +1751,6 @@ bool is_offensive_wand(const item_def& item)
     case WAND_RANDOM_EFFECTS:
     case WAND_SCATTERSHOT:
     // Monsters use it, but it's not an offensive wand
-    case WAND_DIGGING:
         return false;
 
     case WAND_ENSLAVEMENT:

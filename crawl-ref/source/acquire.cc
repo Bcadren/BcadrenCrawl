@@ -699,7 +699,6 @@ static int _acquirement_wand_subtype(bool /*divine*/, int & /*quantity*/)
         { WAND_ENSLAVEMENT,     you.get_mutation_level(MUT_NO_LOVE) ? 0 : 8 },
         { WAND_DISINTEGRATION,  5 },
         { WAND_POLYMORPH,       5 },
-        { WAND_DIGGING,         5 },
         { WAND_RANDOM_EFFECTS,  2 },
         { WAND_FLAME,           1 },
     };

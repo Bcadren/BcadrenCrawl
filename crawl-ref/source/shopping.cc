@@ -455,7 +455,6 @@ unsigned int item_value(item_def item, bool ident)
                 break;
 
             case WAND_ACID:
-            case WAND_DIGGING:
                 valued += 80;
                 good = true;
                 break;

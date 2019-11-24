@@ -1491,14 +1491,13 @@ static monster_type _choose_random_monster_corpse()
  */
 static int _random_wand_subtype()
 {
-    // total weight 67 [arbitrary]
+    // total weight 61 [arbitrary]
     return random_choose_weighted(10, WAND_FLAME,
                                   10, WAND_ICEBLAST,
                                   8, WAND_RANDOM_EFFECTS,
                                   8, WAND_POLYMORPH,
                                   8, WAND_ACID,
                                   6, WAND_DISINTEGRATION,
-                                  6, WAND_DIGGING,
                                   5, WAND_ENSLAVEMENT,
                                   3, WAND_CLOUDS,
                                   3, WAND_SCATTERSHOT);
