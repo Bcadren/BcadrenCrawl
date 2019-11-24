@@ -1750,7 +1750,6 @@ bool is_offensive_wand(const item_def& item)
     case WAND_ICEBLAST:
     case WAND_RANDOM_EFFECTS:
     case WAND_SCATTERSHOT:
-    // Monsters use it, but it's not an offensive wand
         return false;
 
     case WAND_ENSLAVEMENT:

@@ -472,7 +472,7 @@ void zap_wand(int slot)
         return;
     }
 
-    int power = (15 + you.skill(SK_EVOCATIONS, 7) / 2) * (mp_cost + 9) / 9;
+    int power = (3 + you.skill(SK_EVOCATIONS)) * (mp_cost + 9) / 9;
 
     const spell_type spell =
         spell_in_wand(static_cast<wand_type>(wand.sub_type));
@@ -496,12 +496,7 @@ void zap_wand(int slot)
     wand.charges--;
 
     if (wand.charges == 0)
-    {
-        ASSERT(in_inventory(wand));
-
-        mpr("The now-empty wand crumbles to dust.");
-        dec_inv_item_quantity(wand.link, 1);
-    }
+        mpr("Wand is now empty.");
 
     practise_evoking(1);
     count_action(CACT_EVOKE, EVOC_WAND);
