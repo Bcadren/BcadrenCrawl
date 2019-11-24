@@ -158,13 +158,8 @@ static bool _valid_morph(monster* mons, monster_type new_mclass)
         return false;
     }
 
-<<<<<<< HEAD
     // Let monsters die if polied into something that can't survive where they are.
     return true;
-=======
-    // Determine if the monster is happy on current tile.
-    return monster_habitable_grid(new_mclass, grd(mons->pos()));
->>>>>>> 2b6660483a... Fix use of Slimify on derived undead (CanOfWorms)
 }
 
 static bool _is_poly_power_unsuitable(poly_power_type power,
