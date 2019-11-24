@@ -5,7 +5,7 @@
 spret cast_disjunction(int pow, bool fail);
 void disjunction_spell();
 
-spret cast_blink(bool fail = false);
+spret cast_blink(bool fail = false, bool force = false);
 spret cast_controlled_blink(bool fail = false, bool safe = true);
 void uncontrolled_blink(bool override_stasis = false);
 spret controlled_blink(bool fail, bool safe_cancel = true);

@@ -434,13 +434,13 @@ bool dangerous_terrain_seen()
  * @return                  Whether the spell was successfully cast, aborted,
  *                          or miscast.
  */
-spret cast_blink(bool fail)
+spret cast_blink(bool fail, bool force)
 {
     // effects that cast the spell through the player, I guess (e.g. xom)
     if (you.no_tele(false, false, true))
         return fail ? spret::fail : spret::success; // probably always SUCCESS
 
-    if (!you.airborne() && dangerous_terrain_seen() && !yesno("Really blink while near dangerous terrain?", false, 'n'))
+    if (!you.airborne() && dangerous_terrain_seen() && !force && !yesno("Really blink while near dangerous terrain?", false, 'n'))
     {
         canned_msg(MSG_OK);
         return spret::abort;
