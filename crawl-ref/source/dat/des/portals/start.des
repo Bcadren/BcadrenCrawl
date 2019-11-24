@@ -85,7 +85,7 @@ KFEAT:  Y = armour shop count:3 greed:31 type:the suffix:Resistance use_all ; \
 KFEAT:  2 = weapon shop type:Archery suffix:Annex count:6 use_all greed:40 ; \
             mundane not_cursed shortbow | mundane not_cursed longbow |\
             mundane not_cursed hand crossbow | mundane not_cursed arbalest |\
-	    mundane not_cursed triple crossbow | mundane not_cursed blowgun
+			mundane not_cursed triple crossbow | mundane not_cursed blowgun
 KFEAT:  4 = weapon shop type:Sling suffix:Spring count:2 use_all greed:20 ; \
             mundane not_cursed hunting sling | mundane not_cursed fustibalus
 KFEAT:  5 = general shop type:Pet suffix:Rocks count:5 use_all greed:10 ; \
@@ -95,34 +95,35 @@ KFEAT:  6 = weapon shop type:Ammo suffix:outlet count:7 use_all greed:5 ; \
             sling bullet q:50 | sling bullet q:50 | needle q:30
 KFEAT:  7 = weapon shop type:Blowgun suffix:Blowout count:7 use_all greed:100 ; \
             needle ego:curare q:5 |\
-	    needle ego:confusion q:5 | needle ego:frenzy q:5 |\
+			needle ego:confusion q:5 | needle ego:frenzy q:5 |\
             needle ego:sleep q:5 | needle ego:petrification q:5 |\
             large rock q:5 | large rock q:5
-KFEAT:  8 = armour shop type:Auxillary suffix:Armour count:11 use_all greed:20 ; \
+KFEAT:  8 = armour shop type:Auxillary suffix:Armour count:12 use_all greed:20 ; \
             mundane not_cursed hat | not_cursed hat ego:magic_resistance plus:0|\
             not_cursed hat ego:intelligence plus:0 |\
             not_cursed hat ego:see_invisible plus:0 |\
             mundane not_cursed helmet |\
             not_cursed helmet ego:intelligence plus:0 |\
             not_cursed helmet ego:see_invisible plus:0 |\
-	    mundane not_cursed pair of gloves |\
+			mundane not_cursed pair of gloves |\
             not_cursed pair of gloves ego:dexterity plus:0|\
             not_cursed pair of gloves ego:strength plus:0|\
-            not_cursed pair of gloves ego:archery plus:0
+            not_cursed pair of gloves ego:archery plus:0|\
+            not_cursed pair of gloves ego:wielding plus:0
 KFEAT:  L = armour shop type:Shoe suffix:Department count:14 use_all greed:30 ; \
-	    mundane not_cursed naga barding |\
-            not_cursed naga barding ego:flying plus:0|\
+			mundane not_cursed naga barding |\
+            mundane not_cursed naga barding |\
             not_cursed naga barding ego:stealth plus:0|\
             not_cursed naga barding ego:cold_resistance plus:0|\
             not_cursed naga barding ego:fire_resistance plus:0|\
             mundane not_cursed centaur barding |\
-            not_cursed centaur barding ego:flying plus:0|\
+            mundane not_cursed centaur barding |\
             not_cursed centaur barding ego:stealth plus:0|\
             not_cursed centaur barding ego:cold_resistance plus:0|\
             not_cursed centaur barding ego:fire_resistance plus:0|\
             mundane not_cursed pair of boots |\
             not_cursed pair of boots ego:running plus:0|\
-            not_cursed pair of boots ego:flying plus:0|\
+            mundane not_cursed pair of boots |\
             not_cursed pair of boots ego:stealth plus:0
 KFEAT:  K = armour shop type:Bundle_Up suffix:Cloaks_and_Scarves use_all count:8 greed:30 ; \
             mundane not_cursed cloak |\
