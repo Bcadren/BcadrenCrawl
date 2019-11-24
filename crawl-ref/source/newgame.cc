@@ -1788,7 +1788,7 @@ static void _construct_weapon_menu(const newgame_def& ng,
 
         label->set_text(formatted_string(text, fg));
 
-    hbox->align_main = Widget::Align::STRETCH;
+        hbox->align_main = Widget::Align::STRETCH;
         string apt_text = "";
         if (choice.skill != SK_FIGHTING)
             apt_text = make_stringf("(%+d apt)",
