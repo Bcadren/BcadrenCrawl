@@ -247,6 +247,17 @@ static const struct spell_desc spelldata[] =
 },
 
 {
+    SPELL_WAND_FLAME, "Flame Wand",
+    spschool::fire,
+    spflag::dir_or_target | spflag::needs_tracer,
+    3,
+    50,
+    LOS_RADIUS, LOS_RADIUS,
+    2, 0,
+    TILEG_THROW_FLAME,
+},
+
+{
     SPELL_THROW_FROST, "Throw Frost",
     spschool::ice,
     spflag::dir_or_target | spflag::needs_tracer,
@@ -3366,6 +3377,17 @@ static const struct spell_desc spelldata[] =
 
 {
     SPELL_CORROSIVE_BOLT, "Corrosive Bolt",
+    spschool::poison,
+    spflag::dir_or_target | spflag::needs_tracer,
+    6,
+    200,
+    5, 5,
+    6, 0,
+    TILEG_CORROSIVE_BOLT,
+},
+
+{
+    SPELL_WAND_ACID, "Acid Wand",
     spschool::poison,
     spflag::dir_or_target | spflag::needs_tracer,
     6,
