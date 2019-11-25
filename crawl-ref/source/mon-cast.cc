@@ -1375,10 +1375,14 @@ bolt mons_spell_beam(const monster* mons, spell_type spell_cast, int power,
         beam.flavour  = BEAM_POISON;
         break;
 
+
+    // BCADNOTE: Are Spit Acid and Acid Splash the same effect exactly?
+        // Can I delete one and refer to just the remaining? they look identical.
+
     case SPELL_SPIT_ACID:
         beam.colour   = YELLOW;
         beam.name     = "splash of acid";
-        beam.damage   = dice_def(3, 7);
+        beam.damage   = dice_def(5, 7);
 
         // Natural ability, so don't use spell_hd here
         beam.hit      = 20 + (3 * mons->get_hit_dice());
@@ -1388,7 +1392,7 @@ bolt mons_spell_beam(const monster* mons, spell_type spell_cast, int power,
     case SPELL_ACID_SPLASH:      // yellow draconian
         beam.colour   = YELLOW;
         beam.name     = "glob of acid";
-        beam.damage   = dice_def(3, 7);
+        beam.damage   = dice_def(5, 7);
 
         // Natural ability, so don't use spell_hd here
         beam.hit      = 20 + (3 * mons->get_hit_dice());
