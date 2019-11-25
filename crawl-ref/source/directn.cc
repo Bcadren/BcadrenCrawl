@@ -3416,8 +3416,7 @@ string get_monster_equipment_desc(const monster_info& mi,
         if (mon_rng && no_warn(mon_rng))
             mon_rng = 0;
         if (mon_alt && (!item_type_known(*mon_alt)
-                        || mon_alt->base_type == OBJ_WANDS
-                        && !is_offensive_wand(*mon_alt)))
+                        || mon_alt->base_type == OBJ_WANDS))
         {
             mon_alt = 0;
         }

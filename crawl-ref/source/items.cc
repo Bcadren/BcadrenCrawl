@@ -3113,12 +3113,9 @@ static bool _similar_wands(const item_def& pickup_item,
 
     if (pickup_item.sub_type != inv_item.sub_type)
         return false;
-#if TAG_MAJOR_VERSION == 34
+
     // Not similar if wand in inventory is empty.
     return !is_known_empty_wand(inv_item);
-#else
-    return true;
-#endif
 }
 
 static bool _similar_jewellery(const item_def& pickup_item,

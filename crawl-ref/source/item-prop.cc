@@ -1714,8 +1714,6 @@ int wand_charge_value(int type)
     }
 }
 
-
-#if TAG_MAJOR_VERSION == 34
 /**
  * Is the given item a wand which is empty? Wands are normally destroyed when
  * their charges are exhausted, but empty wands can still happen through
@@ -1731,7 +1729,6 @@ bool is_known_empty_wand(const item_def &item)
 
     return item_ident(item, ISFLAG_KNOW_TYPE) && item.charges <= 0;
 }
-#endif
 
 // Returns whether an item can be enchanted further.
 

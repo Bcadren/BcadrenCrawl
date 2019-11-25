@@ -3653,11 +3653,8 @@ bool is_useless_item(const item_def &item, bool temp)
     case OBJ_WANDS:
         if (you.get_mutation_level(MUT_NO_ARTIFICE))
             return true;
-
-#if TAG_MAJOR_VERSION == 34
         if (is_known_empty_wand(item))
             return true;
-#endif
         if (!item_type_known(item))
             return false;
 
