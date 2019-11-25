@@ -1767,6 +1767,8 @@ bool is_enchantable_item(const item_def &item)
             return false;
         return true;
     }
+    if (item.base_type == OBJ_WANDS)
+        return true;
     
     return false;
 }

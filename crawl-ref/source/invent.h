@@ -24,7 +24,7 @@ enum object_selector
 #if TAG_MAJOR_VERSION == 34
     OSEL_RECHARGE                =  -4,
 #endif
-    OSEL_ENCHANTABLE_ITEM         =  -5,
+    OSEL_ENCHANTABLE_ITEM        =  -5,
     OSEL_BEOGH_GIFT              =  -6,
     OSEL_DRAW_DECK               =  -7,
     OSEL_THROWABLE               =  -8,

@@ -760,7 +760,7 @@ static const char* scroll_type_name(int scrolltype)
 #if TAG_MAJOR_VERSION == 34
     case SCR_ENCHANT_WEAPON:     return "old enchant weapon";
 #endif
-    case SCR_ENCHANT:             return "enchantment";
+    case SCR_ENCHANT:            return "enchantment";
     case SCR_TORMENT:            return "torment";
 #if TAG_MAJOR_VERSION == 34
     case SCR_RANDOM_USELESSNESS: return "random uselessness";

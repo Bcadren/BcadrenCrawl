@@ -485,7 +485,7 @@ string no_selectables_message(int item_selector)
     case OSEL_UNIDENT:
         return "You don't have any unidentified items.";
     case OSEL_ENCHANTABLE_ITEM:
-        return "You aren't carrying any items which can be enchanted further.";
+        return "You aren't carrying any items which can be enchanted or recharged.";
     case OBJ_CORPSES:
         return "You don't have any corpses.";
     case OSEL_DRAW_DECK:
