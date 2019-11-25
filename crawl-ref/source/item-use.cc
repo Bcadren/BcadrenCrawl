@@ -2946,10 +2946,7 @@ bool enchant_item(item_def &item, bool quiet)
     }
 
     if (item.base_type == OBJ_WEAPONS || (item.base_type == OBJ_SHIELDS && is_hybrid(item.sub_type)) && !quiet)
-    {
         mprf("%s glows red for a moment.", iname.c_str());
-        you.wield_change = true;
-    }
 
     if (item.base_type == OBJ_WANDS)
     {
@@ -2959,6 +2956,8 @@ bool enchant_item(item_def &item, bool quiet)
         item.charges += 1 + random2avg(wand_charge_value(item.sub_type), 3);
         return true;
     }
+
+    you.wield_change = true;
 
     item.plus++;
 
