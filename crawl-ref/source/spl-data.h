@@ -520,7 +520,7 @@ static const struct spell_desc spelldata[] =
 },
 
 {
-    SPELL_CALL_DOWN_DAMNATION, "Call Down Damnation",
+    SPELL_CALL_DOWN_DAMNATION, "Hellfire Smite",
     spschool::fire,
     spflag::target | spflag::area | spflag::unholy | spflag::needs_tracer,
     9,
@@ -1754,7 +1754,7 @@ static const struct spell_desc spelldata[] =
 },
 
 {
-    SPELL_HURL_DAMNATION, "Hurl Damnation",
+    SPELL_HURL_DAMNATION, "Hellfire Blast",
     spschool::fire,
     spflag::dir_or_target | spflag::unholy | spflag::monster
         | spflag::needs_tracer,

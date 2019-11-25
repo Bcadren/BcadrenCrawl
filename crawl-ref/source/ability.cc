@@ -321,7 +321,7 @@ static const ability_def Ability_List[] =
     { ABIL_STOP_FLYING, "Stop Flying", 0, 0, 0, 0, {}, abflag::starve_ok },
     { ABIL_PLANT_ROOTS, "Plant Roots", 3, 0, 100, 0,{ fail_basis::xl, 42, 3 }, abflag::none },
     { ABIL_DEROOT, "Unearth Roots", 0, 0, 0, 0,{}, abflag::starve_ok },
-    { ABIL_DAMNATION, "Hurl Damnation",
+    { ABIL_DAMNATION, "Hellfire Blast",
         0, 150, 200, 0, {fail_basis::xl, 50, 1}, abflag::none },
 
     { ABIL_CANCEL_PPROJ, "Cancel Portal Projectile",

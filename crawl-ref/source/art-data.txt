@@ -464,8 +464,9 @@ EV:       3
 ANGRY:    5
 LIFE:     1
 
-NAME:    arbalest "Damnation"
-INSCRIP: damnation,
+ENUM:    DAMNATION
+NAME:    arbalest "Hellfire"
+INSCRIP: hellfire,
 OBJ:     OBJ_WEAPONS/WPN_ARBALEST
 FB_BRAND: SPWPN_MOLTEN
 PLUS:    +6

@@ -107,8 +107,8 @@ spret cast_fire_storm(int pow, bolt &beam, bool fail)
 // XXX make this not true
 bool cast_smitey_damnation(int pow, bolt &beam)
 {
-    beam.name              = "damnation";
-    beam.aux_source        = "damnation";
+    beam.name              = "pillar of hellfire";
+    beam.aux_source        = "hellfire";
     beam.ex_size           = 1;
     beam.flavour           = BEAM_DAMNATION;
     beam.real_flavour      = beam.flavour;
@@ -134,7 +134,7 @@ bool cast_smitey_damnation(int pow, bolt &beam)
         return false;
     }
 
-    mpr("You call forth a pillar of damnation!");
+    mpr("You call forth a mighty pillar of hellfire!");
 
     beam.is_tracer = false;
     beam.in_explosion_phase = false;

@@ -2990,8 +2990,8 @@ DEPTH:   Depths, !Depths:$
 MONS:    large slime creature, great orb of eyes, eye of draining
 KMASK:   %$de = opaque
 KITEM:   R = ration
-ITEM:    scroll of teleportation q:2 / wand of digging
-ITEM:    scroll of teleportation q:2 w:20 / wand of digging w:20 / \
+ITEM:    scroll of teleportation q:2 / any wand
+ITEM:    scroll of teleportation q:2 w:20 / any wand / \
          dagger ego:distortion ident:type
 SUBST:   J = 1111111123
 SUBST:   m : xxxm
@@ -3555,7 +3555,7 @@ SUBST:   ? = %:10 *:50 |:60
 SUBST:   ! = %:90 *:30 |:10
 KMASK:   x = no_wall_fixup
 KMASK:   189%*|de<> = opaque
-ITEM:    wand of digging ident:type
+ITEM:    any wand ident:type
 ITEM:    scroll of teleportation q:2
 MAP
 ...........

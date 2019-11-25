@@ -177,7 +177,7 @@ KFEAT:  P = armour shop type:Heavily suffix:Armoured use_all count:16 greed:12 ;
             mundane not_cursed crystal plate armour
 KFEAT:  Q = jewellery shop name:Pakellas type:Wand suffix:Workshop use_all count:10 greed:15 ; \
 	        wand of flame charges:20 |\
-            wand of digging charges:10 | wand of iceblast charges:10 |\
+            wand of flame charges:10 | wand of iceblast charges:10 |\
             wand of polymorph charges:20 | wand of enslavement charges:10 |\
             wand of acid charges:10 | wand of disintegration charges:20 |\
             wand of clouds charges:10 | wand of scattershot charges:10 |\

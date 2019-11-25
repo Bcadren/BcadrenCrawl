@@ -5946,7 +5946,7 @@ int bolt::range_used_on_hit() const
         used = BEAM_STOP;
     else if (is_enchantment() && name != "line pass")
         used = (flavour == BEAM_DIGGING ? 0 : BEAM_STOP);
-    // Damnation stops for nobody!
+    // Hellfire stops for nobody!
     else if (flavour == BEAM_DAMNATION)
         used = 0;
     // Generic explosion.
@@ -5983,12 +5983,12 @@ struct explosion_sfx
 // A map from origin_spells to special explosion info for each.
 const map<spell_type, explosion_sfx> spell_explosions = {
     { SPELL_HURL_DAMNATION, {
-        "The sphere of damnation explodes!",
-        "the wailing of the damned",
+        "The hellfire blast explodes!",
+        "an accursed explosion",
     } },
     { SPELL_CALL_DOWN_DAMNATION, {
-        "The sphere of damnation explodes!",
-        "the wailing of the damned",
+        "The pillar hellfire denotates!",
+        "an accursed explosion",
     } },
     { SPELL_FIREBALL, {
         "The fireball explodes!",
@@ -6651,7 +6651,7 @@ static string _beam_type_name(beam_type type)
     case BEAM_MIASMA:                return "miasma";
     case BEAM_SPORE:                 return "spores";
     case BEAM_POISON_ARROW:          return "strong poison";
-    case BEAM_DAMNATION:             return "damnation";
+    case BEAM_DAMNATION:             return "hellfire";
     case BEAM_STICKY_FLAME:          return "sticky fire";
     case BEAM_STEAM:                 return "steam";
     case BEAM_ENERGY:                return "energy";

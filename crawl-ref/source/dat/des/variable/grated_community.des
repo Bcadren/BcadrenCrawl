@@ -47,7 +47,7 @@ SUBST:  E = e
 SUBST:  e = e.
 : kitem("$ = q:" .. crawl.random_range(50, 500) .. " gold")
 KITEM:  * = animal skin, ration, any good_item
-KITEM:  ' = ident:type wand of digging, ident:type scroll of teleportation
+KITEM:  ' = any wand, ident:type scroll of teleportation
 MARKER: + = lua:restrict_door()
 MARKER: # = lua:fog_machine { cloud_type = "flame", \
                 pow_min = 10, pow_max = 10, delay = 10, \
