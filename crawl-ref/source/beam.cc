@@ -4130,7 +4130,7 @@ void bolt::affect_player()
 
     // Acid. (Apply this afterward, to avoid bad message ordering.)
     if (flavour == BEAM_ACID)
-        you.splash_with_acid(agent(), 5, true);
+        you.splash_with_acid(agent(), div_round_up(final_dam, 10), true);
 
     extra_range_used += range_used_on_hit();
 
