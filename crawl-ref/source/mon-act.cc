@@ -1040,8 +1040,6 @@ static void _mons_fire_wand(monster& mons, item_def &wand, bolt &beem,
             mprf(MSGCH_SOUND, "You hear a zap.");
     }
 
-    // charge expenditure {dlb}
-    wand.charges--;
     const spell_type mzap =
         spell_in_wand(static_cast<wand_type>(wand.sub_type));
 
@@ -1055,20 +1053,9 @@ static void _mons_fire_wand(monster& mons, item_def &wand, bolt &beem,
         if (!mons.props["wand_known"].get_bool())
             mprf("It is %s.", wand.name(DESC_A).c_str());
 
-        if (wand.charges <= 0)
-        {
-            mons.props["wand_known"] = false;
-            mprf("The now-empty wand crumbles to dust.");
-        }
-        else
-        {
-            mons.props["wand_known"] = true;
-            mons.flags |= MF_SEEN_RANGED;
-        }
+        mons.props["wand_known"] = true;
+        mons.flags |= MF_SEEN_RANGED;
     }
-
-    if (wand.charges <= 0)
-        dec_mitm_item_quantity(wand.index(), 1);
 
     mons.lose_energy(EUT_ITEM);
 }
