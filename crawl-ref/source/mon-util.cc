@@ -3898,7 +3898,7 @@ static bool _mons_has_attack_wand(const monster& mon)
 {
     const item_def *wand = mon.mslot_item(MSLOT_WAND);
 
-    return wand && is_offensive_wand(*wand);
+    return wand;
 }
 
 bool mons_has_ranged_attack(const monster& mon)
