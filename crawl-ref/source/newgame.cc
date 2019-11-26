@@ -1865,16 +1865,10 @@ static bool _prompt_weapon(const newgame_def& ng, newgame_def& ng_choice,
     vbox->align_cross = Widget::Align::STRETCH;
     vbox->add_child(title_hbox);
 
-    if (!job_custom_stats(ng.job))
-    {
-        auto prompt = make_shared<Text>(formatted_string("You have a choice of weapons.", CYAN));
-        vbox->add_child(prompt);
-    }
-    else
-    {
-        auto prompt = make_shared<Text>(formatted_string("You have a choice of base stats.", CYAN));
-        vbox->add_child(prompt);
-    }
+    auto prompt = make_shared<Text>(formatted_string(job_custom_stats(ng.job) ? "You have a choice of base stats."
+                                                                              : "You have a choice of weapons.", CYAN));
+
+    vbox->add_child(prompt);
 
     auto main_items = make_shared<OuterMenu>(true, 1, weapons.size());
     main_items->menu_id = "weapon-main";
