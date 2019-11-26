@@ -3187,7 +3187,7 @@ spret cast_random_bolt(int pow, bolt& beam, bool fail)
 
 size_t shotgun_beam_count(int pow)
 {
-    return 1 + stepdown((pow - 5) / 3, 5, ROUND_CLOSE);
+    return 2 + div_round_up(pow, 7);
 }
 
 spret cast_scattershot(const actor *caster, int pow, const coord_def &pos,
@@ -3219,19 +3219,9 @@ spret cast_scattershot(const actor *caster, int pow, const coord_def &pos,
     zappy(ZAP_SCATTERSHOT, pow, false, beam);
     beam.aux_source  = beam.name;
 
-    if (!caster->is_player())
-        beam.damage   = dice_def(3, 4 + (pow / 18));
-
-    // Choose a random number of 'pellets' to fire for each beam in the spread.
-    // total pellets has O(beam_count^2)
-    vector<size_t> pellets;
-    pellets.resize(beam_count);
-    for (size_t i = 0; i < beam_count; i++)
-        pellets[random2avg(beam_count, 3)]++;
-
     map<mid_t, int> hit_count;
 
-    // for each beam of pellets...
+    // for each beam...
     for (size_t i = 0; i < beam_count; i++)
     {
         // find the beam's path.
@@ -3239,17 +3229,14 @@ spret cast_scattershot(const actor *caster, int pow, const coord_def &pos,
         for (size_t j = 0; j < range; j++)
             ray.advance();
 
-        // fire the beam once per pellet.
-        for (size_t j = 0; j < pellets[i]; j++)
-        {
-            bolt tempbeam = beam;
-            tempbeam.draw_delay = 0;
-            tempbeam.target = ray.pos();
-            tempbeam.fire();
-            scaled_delay(5);
-            for (auto it : tempbeam.hit_count)
-               hit_count[it.first] += it.second;
-        }
+        // fire the beam...
+        bolt tempbeam = beam;
+        tempbeam.draw_delay = 0;
+        tempbeam.target = ray.pos();
+        tempbeam.fire();
+        scaled_delay(5);
+        for (auto it : tempbeam.hit_count)
+            hit_count[it.first] += it.second;
     }
 
     for (auto it : hit_count)
