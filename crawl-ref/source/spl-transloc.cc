@@ -418,11 +418,14 @@ bool dangerous_terrain_seen()
 {
     for (rectangle_iterator ri(you.pos(), 7, true); ri; ++ri)
     {
-        const dungeon_feature_type feat = grd(*ri);
-        if (feat == DNGN_LAVA)
-            return true;
-        if (!you.can_swim() && feat == DNGN_DEEP_WATER)
-            return true;
+        if (you.see_cell_no_trans(*ri))
+        {
+            const dungeon_feature_type feat = grd(*ri);
+            if (feat == DNGN_LAVA)
+                return true;
+            if (!you.can_swim() && feat == DNGN_DEEP_WATER)
+                return true;
+        }
     }
     return false;
 }
