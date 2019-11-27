@@ -3621,7 +3621,7 @@ static const char* _attack_delay_desc(int attack_delay)
  */
 static void _display_attack_delay()
 {
-    const item_def* weapon = you.weapon();
+    const item_def* weapon = you.weapon(0);
     int delay;
     if (weapon && is_range_weapon(*weapon))
     {
@@ -3633,20 +3633,43 @@ static void _display_attack_delay()
     else
         delay = you.attack_delay(nullptr, false).expected();
 
-    const bool at_min_delay = weapon
-                              && you.skill(item_attack_skill(*weapon))
-                                 >= weapon_min_delay_skill(*weapon);
+    bool at_min_delay = false;
+
+    if (weapon && is_melee_weapon(*weapon))
+    {
+        if (you.weapon(1) && is_melee_weapon(*you.weapon(1)))
+        {
+            if (item_attack_skill(*weapon) == item_attack_skill(*you.weapon(1)))
+                at_min_delay = you.skill(item_attack_skill(*weapon))
+                >= dual_wield_mindelay_skill(*weapon, *you.weapon(1));
+            else
+                at_min_delay = (you.skill(item_attack_skill(*weapon)) >= (weapon_min_delay_skill(*weapon) * 1.5) &&
+                you.skill(item_attack_skill(*you.weapon(1))) >= (weapon_min_delay_skill(*weapon) * 1.5));
+        }
+        else
+            at_min_delay = you.skill(item_attack_skill(*weapon)) >= weapon_min_delay_skill(*weapon);
+    }
+    else if (weapon && is_range_weapon(*weapon)) // Ranged check is probably redundant.
+        at_min_delay = you.skill(item_attack_skill(*weapon)) >= weapon_min_delay_skill(*weapon);
+    else if (you.weapon(1) && is_melee_weapon(*you.weapon(1)))
+        at_min_delay = you.skill(item_attack_skill(*you.weapon(1))) >= weapon_min_delay_skill(*you.weapon(1));
+    else
+        at_min_delay = true; // If we got here we're using UC, which is fixed at 0.5
 
     // Scale to fit the displayed weapon base delay, i.e.,
     // normal speed is 100 (as in 100%).
     int avg = 10 * delay;
 
-    _display_char_status(avg, "Your attack speed is %s%s%s",
-                         _attack_delay_desc(avg),
-                         at_min_delay ?
-                            " (and cannot be improved with additional weapon skill)" : "",
-                         you.adjusted_shield_penalty() ?
-                            " (and is slowed by your insufficient shield skill)" : "");
+    if (weapon && weapon->base_type == OBJ_SHIELDS && !is_hybrid(weapon->sub_type) &&
+        you.weapon(1) && you.weapon(1)->base_type == OBJ_SHIELDS && !is_hybrid(you.weapon(1)->sub_type))
+        _display_char_status(0, "You can't attack while wielding two shields.");
+    else 
+        _display_char_status(avg, "Your attack speed is %s%s%s",
+                             _attack_delay_desc(avg),
+                             at_min_delay ?
+                                " (and cannot be improved with additional weapon skill)" : "",
+                             you.adjusted_shield_penalty() ?
+                                " (and is slowed by insufficient skill with your defensive weapon or shield)" : "");
 }
 
 // forward declaration
