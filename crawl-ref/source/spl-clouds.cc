@@ -365,16 +365,82 @@ void holy_flames(monster* caster, actor* defender)
     }
 }
 
+static cloud_type _god_blesses_cloud(cloud_type cloud)
+{
+    switch (you.religion)
+    {
+    case GOD_ZIN:
+        if (cloud == CLOUD_CHAOS || cloud == CLOUD_MUTAGENIC)
+        {
+            simple_god_message(" cleanses the chaos from your conjured clouds!");
+            return CLOUD_HOLY;
+        }
+    // Fallthrough
+    case GOD_ELYVILON:
+    case GOD_SHINING_ONE:
+        if (cloud == CLOUD_NEGATIVE_ENERGY)
+        {
+            simple_god_message(" cleanes the evil from your conjured clouds!");
+            return CLOUD_HOLY;
+        }
+        break;
+    case GOD_KIKUBAAQUDGHA:
+        if (cloud == CLOUD_POISON || (one_chance_in(4) && cloud != CLOUD_NEGATIVE_ENERGY))
+        {
+            simple_god_message(" blesses your cloud with foul necrotic miasma!");
+            return CLOUD_MIASMA;
+        }
+        break;
+    case GOD_XOM:
+        if (cloud != CLOUD_CHAOS && one_chance_in(10))
+        {
+            simple_god_message(" doesn't think your cloud is chaotic enough!");
+            return CLOUD_CHAOS;
+        }
+        break;
+    case GOD_YREDELEMNUL:
+        if (cloud == CLOUD_NEGATIVE_ENERGY || cloud == CLOUD_MIASMA || (cloud == CLOUD_POISON && one_chance_in(3)))
+        {
+            if (you.undead_state() == US_ALIVE)
+                simple_god_message(" enhances your necrotic cloud to heal your undead servants!");
+            else
+                simple_god_message(" enhances your necrotic cloud to heal you and your undead slaves!");
+            return CLOUD_SPECTRAL;
+        }
+        break;
+    default:
+        break;
+    }
+    return cloud;
+}
+
 random_pick_entry<cloud_type> cloud_cone_clouds[] =
 {
-  { 0,   50, 200, FALL, CLOUD_MEPHITIC },
-  { 0,  100, 125, PEAK, CLOUD_FIRE },
-  { 0,  100, 125, PEAK, CLOUD_COLD },
-  { 0,  100, 125, PEAK, CLOUD_POISON },
-  { 30, 100, 125, RISE, CLOUD_NEGATIVE_ENERGY },
-  { 40, 100, 135, RISE, CLOUD_STORM },
-  { 50, 100, 175, RISE, CLOUD_ACID },
-  { 0,0,0,FLAT,CLOUD_NONE }
+  // Poison Group: Total 225
+  {  0, 12, 200, FALL, CLOUD_MEPHITIC },
+  { 10, 30, 125, PEAK, CLOUD_POISON },
+  { 22, 35, 100, RISE, CLOUD_MIASMA },
+
+  // Useless Group: Total: 350
+  {  0, 36, 125, FALL, CLOUD_RAIN },
+  {  0, 12,  75, FALL, CLOUD_MIST },
+  {  0,  8,  75, FALL, CLOUD_MAGIC_TRAIL },
+  {  0, 14,  75, FALL, CLOUD_DUST },
+
+  // Core Group: Total 760
+  {  0, 30, 125, PEAK, CLOUD_FIRE },
+  {  0, 40,  75, RISE, CLOUD_STEAM },
+  {  0, 30, 125, PEAK, CLOUD_COLD },
+  { 10, 30, 125, RISE, CLOUD_NEGATIVE_ENERGY },
+  { 12, 30, 135, RISE, CLOUD_STORM },
+  { 15, 30, 175, RISE, CLOUD_ACID },
+
+  // Chaos Group: Total 50.
+  {  0, 30,  25,  FLAT, CLOUD_CHAOS },
+  {  0, 30,  25,  FLAT, CLOUD_MUTAGENIC },
+
+  // Null
+  {  0,  0,   0, FLAT, CLOUD_NONE }
 };
 
 spret cast_cloud_cone(const actor *caster, int pow, const coord_def &pos,
@@ -386,9 +452,6 @@ spret cast_cloud_cone(const actor *caster, int pow, const coord_def &pos,
             mpr("The air is too still to form clouds.");
         return spret::abort;
     }
-
-    // For monsters:
-    pow = min(100, pow);
 
     const int range = spell_range(SPELL_CLOUD_CONE, pow);
 
@@ -405,20 +468,24 @@ spret cast_cloud_cone(const actor *caster, int pow, const coord_def &pos,
     fail_check();
 
     random_picker<cloud_type, NUM_CLOUD_TYPES> cloud_picker;
-    cloud_type cloud = cloud_picker.pick(cloud_cone_clouds, pow, CLOUD_NONE);
+    cloud_type cloud = cloud_picker.pick(cloud_cone_clouds, min(pow, 30), CLOUD_NONE);
+
+    mprf("%s %s a blast of %s!",
+        caster->name(DESC_THE).c_str(),
+        caster->conj_verb("create").c_str(),
+        cloud_type_name(cloud).c_str());
+
+    if (caster->is_player())
+        cloud = _god_blesses_cloud(cloud);
 
     for (const auto &entry : hitfunc.zapped)
     {
         if (entry.second <= 0)
             continue;
         place_cloud(cloud, entry.first,
-                    5 + random2avg(12 + div_rand_round(pow * 3, 4), 3),
-                    caster);
+            max(5, random2avg(pow * 2, 3)),
+            caster, div_round_up(pow, 10) - 1);
     }
-    mprf("%s %s a blast of %s!",
-         caster->name(DESC_THE).c_str(),
-         caster->conj_verb("create").c_str(),
-         cloud_type_name(cloud).c_str());
 
     return spret::success;
 }
