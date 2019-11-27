@@ -1206,7 +1206,7 @@ int player_regen()
 
     // Trog's Hand. This circumvents sickness or inhibited regeneration.
     if (you.duration[DUR_TROGS_HAND])
-        rr += 100;
+        rr += apply_invo_enhancer(you.piety * 3, false);
 
     return rr;
 }
@@ -4963,7 +4963,7 @@ void dec_disease_player(int delay)
 
         // Trog's Hand.
         if (you.duration[DUR_TROGS_HAND])
-            rr += 100;
+            rr += apply_invo_enhancer(you.piety * 3, false);
 
         rr = div_rand_round(rr * delay, 50);
 
@@ -6642,7 +6642,7 @@ int player_res_magic(bool calc_unid, bool temp)
 
     // Trog's Hand
     if (you.duration[DUR_TROGS_HAND] && temp)
-        rm += MR_PIP * 2;
+        rm += MR_PIP * div_round_up(you.piety, 45);
 
     // Enchantment effect
     if (you.duration[DUR_LOWERED_MR] && temp)
@@ -8524,6 +8524,12 @@ void player_end_berserk()
 
     if (!you.duration[DUR_SLEEP] && !you.petrified())
         mprf(MSGCH_WARN, "You are exhausted.");
+
+    if (you.duration[DUR_TROGS_HAND])
+    {
+        mpr("The effects of Trog's Hand begin to leave you as you come down from your rage.");
+        you.duration[DUR_TROGS_HAND] = 30;
+    }
 
     you.berserk_penalty = 0;
 

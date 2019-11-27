@@ -49,6 +49,9 @@ static bool _banned_combination(job_type job, species_type species)
     case SP_SILENT_SPECTRE:
         if (job == JOB_MUMMY || job == JOB_DEMONSPAWN)
             return true;
+    case SP_FORMICID:
+        if (job == JOB_BERSERKER)
+            return true;
     default:
         break;
     }
@@ -59,6 +62,9 @@ static bool _banned_combination(job_type job, species_type species)
     {
         return true;
     }
+
+    if (job == JOB_BERSERKER && species_undead_type(species) != US_ALIVE)
+        return true;
 
     return false;
 }

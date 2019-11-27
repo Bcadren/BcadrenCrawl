@@ -3254,8 +3254,12 @@ bool player_can_join_god(god_type which_god)
     if (which_god == GOD_BEOGH && !species_is_orcish(you.species))
         return false;
 
-    // Fedhas hates undead, but will accept demonspawn.
-    if (which_god == GOD_FEDHAS && you.holiness() & MH_UNDEAD)
+    // Fedhas hates undead, but will accept demonspawn. Trog won't accept those that can't rage.
+    if ((which_god == GOD_FEDHAS || which_god == GOD_TROG) && you.holiness() & MH_UNDEAD)
+        return false;
+
+    // Stasis prevents berserk.
+    if (which_god == GOD_TROG && you.species == SP_FORMICID)
         return false;
 
     if (which_god == GOD_GOZAG && you.gold < gozag_service_fee())
@@ -3882,6 +3886,11 @@ void god_pitch(god_type which_god)
             simple_god_message(" says: How dare you approach in such a "
                                "loathsome form!",
                                which_god);
+        }
+        else if (which_god == GOD_TROG)
+        {
+            simple_god_message(" does not accept worship from those who cannot"
+                               " power a blood rage within.", GOD_TROG);
         }
         else
         {

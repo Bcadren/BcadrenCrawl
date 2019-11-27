@@ -1502,13 +1502,16 @@ bool vehumet_supports_spell(spell_type spell)
 
 void trog_do_trogs_hand(int pow)
 {
-    if (you.undead_state() == US_GHOST)
-        you.increase_duration(DUR_TROGS_HAND,
-                        apply_invo_enhancer(5 + roll_dice(2, pow / 3 + 1), true), 100,
-                        "Your aura crackles.");
-    else 
-        you.increase_duration(DUR_TROGS_HAND,
-                          apply_invo_enhancer(5 + roll_dice(2, pow / 3 + 1), true), 100,
+    if (you.duration[DUR_TROGS_HAND])
+    {
+        simple_god_message(" has already extended his hand to help you!");
+        return;
+    }
+    you.berserk_penalty = 0;
+    you.increase_duration(DUR_BERSERK, 3);
+    you.increase_duration(DUR_TROGS_HAND,
+                          INFINITE_DURATION + apply_invo_enhancer(0, true), INFINITE_DURATION,
+        // Infinite duration; invo enhancer only here for messaging purposes.
                           "Your skin crawls.");
     mprf(MSGCH_DURATION, "You feel resistant to hostile enchantments.");
 }
@@ -1516,12 +1519,7 @@ void trog_do_trogs_hand(int pow)
 void trog_remove_trogs_hand()
 {
     if (you.duration[DUR_REGENERATION] == 0)
-    {
-        if (you.undead_state() == US_GHOST)
-            mprf(MSGCH_DURATION, "Your aura calms down.");
-        else
-            mprf(MSGCH_DURATION, "Your skin stops crawling.");
-    }
+        mprf(MSGCH_DURATION, "Your skin stops crawling.");
     mprf(MSGCH_DURATION, "You feel less resistant to hostile enchantments.");
     you.duration[DUR_TROGS_HAND] = 0;
 }

@@ -2466,14 +2466,14 @@ static vector<formatted_string> _get_overview_resistances(
     const int stasis = you.stasis();
     // TODO: what about different levels of anger/berserkitis?
     const bool show_angry = (you.angry(calc_unid)
-                             || you.get_mutation_level(MUT_BERSERK))
+                             || you.get_mutation_level(MUT_BERSERK)
+                             || have_passive(passive_t::berserkitis))
                             && !rclar && !stasis
                             && !you.is_lifeless_undead();
     if (show_angry || rclar)
     {
-        out += show_angry ? _resist_composer("Rnd*Rage", cwidth, 1, 1, false)
-                            + "\n"
-                          : _resist_composer("Clarity", cwidth, rclar) + "\n";
+        out += (rclar && !have_passive(passive_t::berserkitis)) ? _resist_composer("Clarity", cwidth, rclar) + "\n"
+                                                                : _resist_composer("Rnd*Rage", cwidth, 1, 1, false) + "\n";
     }
 
     // Fo don't need a reminder that they can't teleport

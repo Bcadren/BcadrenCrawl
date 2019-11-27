@@ -156,6 +156,9 @@ enum class passive_t
     /// Chance to extend berserk duration and avoid paralysis, piety dependent.
     extend_berserk,
 
+    /// Chance to randomly berserk; extend berserk duration, piety dependent.
+    berserkitis,
+
     /// Gold aura that distracts enemies.
     gold_aura,
 

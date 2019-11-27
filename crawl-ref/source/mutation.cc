@@ -631,19 +631,19 @@ string describe_mutations(bool drop_title)
     if (you.racial_ac(false) > 0)
     {
         const string scale_clause = string(scale_type(you.species))
-              + " scales are "
-              + (you.species == SP_GREY_DRACONIAN ? "very " : "") + "hard";
+            + " scales are "
+            + (you.species == SP_GREY_DRACONIAN ? "very " : "") + "hard";
 
         result += _annotate_form_based(
-                    make_stringf("Your %s. (AC +%d)",
-                       you.species == SP_NAGA ? "serpentine skin is tough" :
-                       you.species == SP_GARGOYLE ? "stone body is resilient" :
-                       you.species == SP_LIGNIFITE ? "bark is resilient" :
-                                                    scale_clause.c_str(),
-                       you.racial_ac(false) / 100),
-                    player_is_shapechanged()
-                    && !(species_is_draconian(you.species)
-                         && you.form == transformation::dragon));
+            make_stringf("Your %s. (AC +%d)",
+                you.species == SP_NAGA ? "serpentine skin is tough" :
+                you.species == SP_GARGOYLE ? "stone body is resilient" :
+                you.species == SP_LIGNIFITE ? "bark is resilient" :
+                scale_clause.c_str(),
+                you.racial_ac(false) / 100),
+            player_is_shapechanged()
+            && !(species_is_draconian(you.species)
+                && you.form == transformation::dragon));
     }
 
     if (you.species == SP_VAMPIRE)
@@ -670,17 +670,17 @@ string describe_mutations(bool drop_title)
     if (you.species == SP_OCTOPODE)
     {
         result += _annotate_form_based("You are amphibious.",
-                                       !form_likes_water());
+            !form_likes_water());
 
         const string num_tentacles =
-               number_in_words(you.has_usable_tentacles(false));
+            number_in_words(you.has_usable_tentacles(false));
         result += _annotate_form_based(
             make_stringf("You can wear up to %s rings at the same time.",
-                         num_tentacles.c_str()),
+                num_tentacles.c_str()),
             !get_form()->slot_available(EQ_RING_EIGHT));
         result += _annotate_form_based(
             make_stringf("You can use your tentacles to constrict %s enemies at once.",
-                         num_tentacles.c_str()),
+                num_tentacles.c_str()),
             !form_keeps_mutations());
     }
 
@@ -690,7 +690,7 @@ string describe_mutations(bool drop_title)
         {
         case SIZE_LITTLE:
             result += "You are very small and have problems with some larger weapons.\n"
-                      "You are too small for most types of armour.\n";
+                "You are too small for most types of armour.\n";
             break;
         case SIZE_SMALL:
             result += "You are small and have problems with some larger weapons.\n";
@@ -700,8 +700,8 @@ string describe_mutations(bool drop_title)
             break;
         case SIZE_GIANT:
             result += "Your enormous size allows you to wade in deep water.\n"
-                      "You are too large for most types of armour.\n"
-                      "Webs and nets cannot contain a creature of your size.\n";
+                "You are too large for most types of armour.\n"
+                "Webs and nets cannot contain a creature of your size.\n";
             break;
         default:
             break;
@@ -735,14 +735,20 @@ string describe_mutations(bool drop_title)
     else if (you.can_water_walk())
     {
         result += "<lightgreen>You can walk on water until reaching land."
-                  "</lightgreen>";
+            "</lightgreen>";
     }
 
     if (have_passive(passive_t::frail)
         || player_under_penance(GOD_HEPLIAKLQANA))
     {
         result += "<lightred>Your life essence is reduced to manifest your ancestor. (-10% HP)"
-                  "</lightred>\n";
+            "</lightred>\n";
+    }
+
+    if (have_passive(passive_t::berserkitis)
+        || player_under_penance(GOD_TROG))
+    {
+        result += "<lightred>You frequently lose your temper in combat. This godly rage surpasses even clarity. (*Rage)</lightred>\n";
     }
 
     // Now add removable mutations.

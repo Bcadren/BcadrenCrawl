@@ -97,7 +97,7 @@ enum class abflag
     piety               = 0x00000008, // ability has its own piety cost
     exhaustion          = 0x00000010, // fails if you.exhausted
     instant             = 0x00000020, // doesn't take time to use
-                        //0x00000040,
+    berserk_only        = 0x00000040, // can only be used while berserk
                         //0x00000080,
     conf_ok             = 0x00000100, // can use even if confused
     rations             = 0x00000200, // ability requires 2 rations per target
@@ -198,7 +198,7 @@ skill_type invo_skill(god_type god)
         case GOD_RU:
         case GOD_TROG:
         case GOD_WU_JIAN:
-            return SK_NONE; // ugh
+            return SK_NONE;
         default:
             return SK_INVOCATIONS;
     }
@@ -445,10 +445,10 @@ static const ability_def Ability_List[] =
     { ABIL_TROG_BERSERK, "Berserk",
       0, 0, 600, 0, {fail_basis::invo}, abflag::none },
     { ABIL_TROG_REGEN_MR, "Trog's Hand",
-      0, 0, 200, 2, {fail_basis::invo, piety_breakpoint(2), 0, 1}, abflag::none },
+      0, 0, 200, 2, {fail_basis::invo, piety_breakpoint(2), 0, 1}, abflag::berserk_only },
     { ABIL_TROG_BROTHERS_IN_ARMS, "Brothers in Arms",
       0, 0, 250, generic_cost::range(5, 6),
-      {fail_basis::invo, piety_breakpoint(5), 0, 1}, abflag::none },
+      {fail_basis::invo, piety_breakpoint(5), 0, 1}, abflag::berserk_only },
 
     // Elyvilon
     { ABIL_ELYVILON_LIFESAVING, "Divine Protection",
@@ -1262,10 +1262,18 @@ static bool _can_hop(bool quiet)
 // TODO: Many more cases need to be added!
 static bool _check_ability_possible(const ability_def& abil, bool quiet = false)
 {
-    if (you.berserk() && !testbits(abil.flags, abflag::berserk_ok))
+    if (you.berserk() && 
+        !(testbits(abil.flags, abflag::berserk_ok) || testbits(abil.flags, abflag::berserk_only)))
     {
         if (!quiet)
             canned_msg(MSG_TOO_BERSERK);
+        return false;
+    }
+
+    if (!you.berserk() && testbits(abil.flags, abflag::berserk_only))
+    {
+        if (!quiet)
+            simple_god_message(" only hears the pleas of the enraged!");
         return false;
     }
 
@@ -2525,6 +2533,8 @@ static spret _do_ability(const ability_def& abil, bool fail)
     case ABIL_TROG_BROTHERS_IN_ARMS:
         fail_check();
         // Trog abilities don't use or train invocations.
+        you.berserk_penalty = 0;
+        you.increase_duration(DUR_BERSERK, 3);
         summon_berserker(you.piety +
                          random2(you.piety/4) - random2(you.piety/4),
                          &you);

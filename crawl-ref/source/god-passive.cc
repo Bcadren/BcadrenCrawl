@@ -235,6 +235,9 @@ static const vector<god_passive> god_passives[] =
               "can NOW maintain berserk longer, and are less likely to pass out",
               "can NOW maintain berserk as long, and are more likely to pass out"
         },
+        {  0, passive_t::berserkitis,
+              "you NOW frequently lose your temper in combat, but berserk longer when angered"
+        },
     },
 
     // Nemelex

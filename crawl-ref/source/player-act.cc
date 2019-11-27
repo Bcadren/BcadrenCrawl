@@ -770,6 +770,8 @@ void player::attacking(actor *other, bool ranged)
     const int chance = pow(3, get_mutation_level(MUT_BERSERK) - 1);
     if (has_mutation(MUT_BERSERK) && x_chance_in_y(chance, 100))
         go_berserk(false);
+    if ((have_passive(passive_t::berserkitis) || player_under_penance(GOD_TROG)) && x_chance_in_y(you.piety, 2500))
+        go_berserk(false);
 }
 
 /**
@@ -837,7 +839,14 @@ bool player::go_berserk(bool intentional, bool potion)
 
     mpr("You feel mighty!");
 
-    int berserk_duration = (20 + random2avg(19,2)) / 2;
+    int berserk_duration = (20 + random2avg(19, 2)) / 2;
+
+    if (have_passive(passive_t::berserkitis))
+    {
+        berserk_duration += random2avg(you.piety / 8, 3);
+        if (!intentional)
+            berserk_duration += random2avg(you.piety / 4, 3);
+    }
 
     you.increase_duration(DUR_BERSERK, berserk_duration);
 
@@ -871,17 +880,19 @@ bool player::can_go_berserk(bool intentional, bool potion, bool quiet,
     string msg;
     bool success = false;
 
+    bool trog_bypass = have_passive(passive_t::berserkitis) || player_under_penance(GOD_TROG);
+
     if (berserk() && temp)
         msg = "You're already berserk!";
     else if (duration[DUR_BERSERK_COOLDOWN] && temp)
         msg = "You're still recovering from your berserk rage.";
     else if (duration[DUR_DEATHS_DOOR] && temp)
         msg = "You can't enter a blood rage from death's door.";
-    else if (beheld() && !player_equip_unrand(UNRAND_DEMON_AXE) && temp)
+    else if (beheld() && !player_equip_unrand(UNRAND_DEMON_AXE) && !trog_bypass && temp)
         msg = "You are too mesmerised to rage.";
-    else if (afraid() && temp)
+    else if (afraid() && !trog_bypass && temp)
         msg = "You are too terrified to rage.";
-    else if (!intentional && !potion && clarity() && temp)
+    else if (!intentional && !potion && clarity() && !trog_bypass && temp)
         msg = "You're too calm and focused to rage.";
     else if (is_lifeless_undead(temp)) 
     {
