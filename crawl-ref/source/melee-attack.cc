@@ -2909,8 +2909,13 @@ void melee_attack::mons_apply_attack_flavour()
 
         // Try to apply petrification, with the normal 2/3
         // chance to resist with rPois.
-        if (defender->res_poison() <= 0 || one_chance_in(3))
+        // Don't petrify things that are already petrified or petrifying. Since this is an on-melee effect it's too strong to allow it to extend durations.
+        if ((defender->res_poison() <= 0 || one_chance_in(3)) && !((defender->is_player() && (you.duration[DUR_PETRIFYING] || 
+            you.duration[DUR_PETRIFIED])) || (defender->is_monster() && (defender->as_monster()->has_ench(ENCH_PETRIFYING) ||
+            defender->as_monster()->has_ench(ENCH_PETRIFIED)))))
+        {
             defender->petrify(attacker);
+        }
 
         break;
     }
