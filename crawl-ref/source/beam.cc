@@ -1804,6 +1804,9 @@ void bolt::apply_bolt_petrify(monster* mons)
     if (mons->petrified())
         return;
 
+    if (mons->res_petrify() && !one_chance_in(3))
+        return;
+
     if (mons->petrifying())
     {
         // If the petrifying is not yet finished, we can force it to happen
@@ -3064,7 +3067,7 @@ bool bolt::is_harmless(const monster* mon) const
         return mon->res_acid() >= 3;
 
     case BEAM_PETRIFY:
-        return mon->res_petrify() || mon->petrified();
+        return mon->stasis() || mon->petrified();
 
     case BEAM_MEPHITIC:
         return mon->res_poison() > 0 || mon->is_unbreathing();
@@ -3123,7 +3126,7 @@ bool bolt::harmless_to_player() const
         return player_res_electricity(false);
 
     case BEAM_PETRIFY:
-        return you.res_petrify() || you.petrified();
+        return you.stasis() || you.petrified();
 
     case BEAM_COLD:
         return is_big_cloud() && you.has_mutation(MUT_FREEZING_CLOUD_IMMUNITY);
@@ -5648,7 +5651,7 @@ mon_resist_type bolt::apply_enchantment_to_monster(monster* mon)
         return MON_AFFECTED;
 
     case BEAM_PETRIFY:
-        if (mon->res_petrify())
+        if (mon->stasis()) 
             return MON_UNAFFECTED;
 
         apply_bolt_petrify(mon);

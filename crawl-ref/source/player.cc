@@ -7072,6 +7072,12 @@ void player::petrify(actor *who, bool force)
         return;
     }
 
+    if (you.stasis() || you.is_insubstantial())
+    {
+        canned_msg(MSG_YOU_UNAFFECTED);
+        return;
+    }
+
     if (duration[DUR_DIVINE_STAMINA] > 0)
     {
         mpr("Your divine stamina protects you from petrification!");

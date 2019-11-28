@@ -851,7 +851,7 @@ void ouch(int dam, kill_method_type death_type, mid_t source, const char *aux,
                         || death_type == KILLED_BY_WINNING
                         || death_type == KILLED_BY_LEAVING;
 
-    // death's door protects against everything leaving the dungeon, or quitting.
+    // death's door protects against everything except leaving the dungeon, or quitting.
     if (you.duration[DUR_DEATHS_DOOR] && !non_death
         && you.hp_max > 0)
     {

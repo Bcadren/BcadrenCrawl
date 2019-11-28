@@ -871,7 +871,7 @@ bool actor_cloud_immune(const actor &act, cloud_type type)
         case CLOUD_MIASMA:
             return act.res_rotting() > 0;
         case CLOUD_PETRIFY:
-            return act.res_petrify();
+            return act.res_petrify() || act.stasis();
         case CLOUD_SPECTRAL:
             return bool(act.holiness() & MH_UNDEAD);
         case CLOUD_ACID:
@@ -942,7 +942,7 @@ static int _actor_cloud_resist(const actor *act, const cloud_struct &cloud)
     case CLOUD_COLD:
         return act->res_cold();
     case CLOUD_PETRIFY:
-        return act->res_petrify();
+        return act->res_petrify() || act->stasis();
     case CLOUD_ACID:
         return act->res_acid();
     case CLOUD_STORM:
