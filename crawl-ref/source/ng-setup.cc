@@ -371,7 +371,11 @@ static void _give_starting_food()
 
     // Give another one for hungry species.
     if (you.get_mutation_level(MUT_FAST_METABOLISM))
-        quantity = 2;
+        quantity++;
+
+    // Two more for berserkers so *Rage doesn't kill them early.
+    if (you.char_class == JOB_BERSERKER)
+        quantity += 2;
 
     newgame_make_item(base_type, sub_type, quantity);
 }
