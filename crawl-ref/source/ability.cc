@@ -2061,6 +2061,10 @@ static spret _do_ability(const ability_def& abil, bool fail)
     case ABIL_PLANT_ROOTS:
         fail_check();
         mpr("Your roots penetrate the ground.");
+        mpr("You feel a comforting sense of stasis.");
+
+        if (you.petrifying() || you.petrified())
+            mpr("Your stasis cancels the petrification.");
 
         // BCADNOTE: If more sources of gaining stasis are added, add this to them too.
         you.duration[DUR_PETRIFYING] = 0;
