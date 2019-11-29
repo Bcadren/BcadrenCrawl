@@ -3634,12 +3634,8 @@ bool is_useless_item(const item_def &item, bool temp)
             return you.species == SP_FORMICID;
         case SCR_AMNESIA:
             return you_worship(GOD_TROG);
-#if TAG_MAJOR_VERSION == 34
-        case SCR_CURSE_WEAPON: // for non-Ashenzari, already handled
-        case SCR_CURSE_ARMOUR:
-        case SCR_ENCHANT_WEAPON:
-#endif
         case SCR_ENCHANT:
+            return (you.species == SP_FELID && you.get_mutation_level(MUT_NO_ARTIFICE));
         case SCR_BRAND_WEAPON:
             return you.species == SP_FELID;
         case SCR_SUMMONING:
