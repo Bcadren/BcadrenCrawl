@@ -633,7 +633,7 @@ static const struct spell_desc spelldata[] =
 },
 
 {
-    SPELL_ENSLAVEMENT, "Enslavement",
+    SPELL_ENSLAVEMENT, "Enslavement Wand",
     spschool::hexes,
     spflag::dir_or_target | spflag::not_self | spflag::needs_tracer
         | spflag::monster | spflag::MR_check,
@@ -3684,7 +3684,7 @@ static const struct spell_desc spelldata[] =
 },
 
 {
-    SPELL_SCATTERSHOT, "Scattershot",
+    SPELL_SCATTERSHOT, "Scattershot Wand", // If a Mon gets it as a non-wand spell; duplicate.
     spschool::earth,
     spflag::dir_or_target | spflag::not_self,
     6,
@@ -3835,7 +3835,7 @@ static const struct spell_desc spelldata[] =
 },
 
 {
-    SPELL_ICEBLAST, "Iceblast",
+    SPELL_ICEBLAST, "Iceblast Wand", // If a Mon gets it as a non-wand spell; duplicate.
     spschool::ice,
     spflag::dir_or_target | spflag::needs_tracer,
     5,

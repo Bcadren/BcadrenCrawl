@@ -425,7 +425,7 @@ _wand_hex_zap(ZAP_WAND_POLYMORPH, BEAM_POLYMORPH),
     8
 },
 
-_mon_hex_zap(ZAP_ENSLAVEMENT, BEAM_ENSLAVE),
+_wand_hex_zap(ZAP_ENSLAVEMENT, BEAM_ENSLAVE),
 
 {
     ZAP_PAIN,

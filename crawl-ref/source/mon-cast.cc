@@ -1290,7 +1290,6 @@ bolt mons_spell_beam(const monster* mons, spell_type spell_cast, int power,
     case SPELL_HIBERNATION:
     case SPELL_SLEEP:
     case SPELL_DIG:
-    case SPELL_ENSLAVEMENT:
     case SPELL_QUICKSILVER_BOLT:
     case SPELL_PRIMAL_WAVE:
     case SPELL_BLINKBOLT:
@@ -1304,6 +1303,8 @@ bolt mons_spell_beam(const monster* mons, spell_type spell_cast, int power,
     case SPELL_WAND_FLAME:
     case SPELL_WAND_ACID:
     case SPELL_ICEBLAST:
+    case SPELL_ENSLAVEMENT:
+    case SPELL_WAND_POLYMORPH:
         zappy(spell_to_zap(real_spell), power, true, beam);
         break;
 
