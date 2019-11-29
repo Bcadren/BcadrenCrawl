@@ -3711,7 +3711,7 @@ static bool _beneficial_beam_flavour(beam_type flavour)
 
 bool mons_should_fire(bolt &beam, bool ignore_good_idea)
 {
-    mprf("tracer: foes %d (pow: %d), friends %d (pow: %d), "
+    dprf("tracer: foes %d (pow: %d), friends %d (pow: %d), "
          "foe_ratio: %d",
          beam.foe_info.count, beam.foe_info.power,
          beam.friend_info.count, beam.friend_info.power,
