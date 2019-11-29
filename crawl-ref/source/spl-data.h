@@ -1188,7 +1188,7 @@ static const struct spell_desc spelldata[] =
 },
 
 {
-    SPELL_DISINTEGRATE, "Disintegrate",
+    SPELL_DISINTEGRATE, "Disintegrate Wand",
     spschool::hexes,
     spflag::dir_or_target | spflag::not_self | spflag::needs_tracer
         | spflag::MR_check,
@@ -3968,7 +3968,7 @@ static const struct spell_desc spelldata[] =
 },
 
 {
-    SPELL_RANDOM_EFFECTS, "Random Effects",
+    SPELL_RANDOM_EFFECTS, "Random Effects Wand",
     spschool::random,
     spflag::dir_or_target | spflag::needs_tracer,
     4,

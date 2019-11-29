@@ -966,7 +966,7 @@ static const mon_spellbook mspell_list[] =
     {  MST_GREAT_ORB_OF_EYES,
       {
        { SPELL_PETRIFY, 12, MON_SPELL_MAGICAL },
-       { SPELL_DISINTEGRATE, 12, MON_SPELL_MAGICAL },
+       { SPELL_ENERGY_BOLT, 12, MON_SPELL_MAGICAL },
        { SPELL_DRAIN_MAGIC, 12, MON_SPELL_MAGICAL },
        { SPELL_CONFUSE, 12, MON_SPELL_MAGICAL },
       }

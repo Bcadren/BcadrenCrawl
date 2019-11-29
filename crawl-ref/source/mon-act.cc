@@ -1087,8 +1087,6 @@ static bool _handle_wand(monster& mons)
         return false;
 
     // XXX: Teach monsters to use random effects
-    // Digging is handled elsewhere so that sensible (wall) targets are
-    // chosen.
     if (wand->sub_type == WAND_RANDOM_EFFECTS)
     {
         return false;
@@ -1105,19 +1103,6 @@ static bool _handle_wand(monster& mons)
     beem.source     = mons.pos();
     beem.aux_source =
         wand->name(DESC_QUALNAME, false, true, false, false);
-
-    const wand_type kind = (wand_type)wand->sub_type;
-    switch (kind)
-    {
-    case WAND_DISINTEGRATION:
-        // Dial down damage from wands of disintegration, since
-        // disintegration beams can do large amounts of damage.
-        beem.damage.size = beem.damage.size * 2 / 3;
-        break;
-
-    default:
-        break;
-    }
 
     // Fire tracer, if necessary.
     fire_tracer(&mons, beem);
