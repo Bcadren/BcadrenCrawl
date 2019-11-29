@@ -380,6 +380,11 @@ static const map<spell_type, mons_spell_logic> spell_to_logic = {
         _fire_simple_beam,
         _setup_heal_other,
     } },
+    { SPELL_WAND_HEALING, {
+        _always_worthwhile,
+        _fire_simple_beam,
+        _buff_beam_setup(BEAM_WAND_HEALING),
+    } },
     { SPELL_LRD, {
         _always_worthwhile,
         [](monster &caster, mon_spell_slot slot, bolt& pbolt) {
@@ -650,11 +655,16 @@ static void _setup_minor_healing(bolt &beam, const monster &caster, int)
         beam.target = caster.pos();
 }
 
+static void _valid_heal_target(bolt &beam, const monster &caster)
+{
+    const monster* target = _get_allied_target(caster, beam);
+    beam.target = target ? target->pos() : coord_def(GXM + 1, GYM + 1);
+}
+
 static void _setup_heal_other(bolt &beam, const monster &caster, int)
 {
     _setup_healing_beam(beam, caster);
-    const monster* target = _get_allied_target(caster, beam);
-    beam.target = target ? target->pos() : coord_def(GXM+1, GYM+1);
+    _valid_heal_target(beam, caster);
 }
 
 /**
@@ -883,6 +893,7 @@ static bool _flavour_benefits_monster(beam_type flavour, monster& monster)
     case BEAM_INVISIBILITY:
         return !monster.has_ench(ENCH_INVIS);
 
+    case BEAM_WAND_HEALING: // Fallthrough.
     case BEAM_HEALING:
         return monster.hit_points != monster.max_hit_points;
 
@@ -917,15 +928,7 @@ static bool _monster_will_buff(const monster &caster, const monster &targ)
     if (!mons_atts_aligned(caster.temp_attitude(), targ.real_attitude()))
         return false;
 
-    if (caster.type == MONS_IRONBRAND_CONVOKER || mons_enslaved_soul(caster))
-        return true; // will buff any ally
-
-    if (targ.is_holy() && caster.is_holy())
-        return true;
-
-    const monster_type caster_genus = mons_genus(caster.type);
-    return mons_genus(targ.type) == caster_genus
-           || mons_genus(targ.base_monster) == caster_genus;
+    return true;
 }
 
 /// Find an allied monster to cast a beneficial beam spell at.
@@ -947,14 +950,10 @@ static monster* _get_allied_target(const monster &caster, bolt &tracer)
         const int targ_distance = grid_distance(targ->pos(), caster.pos());
         if (targ_distance < min_distance)
         {
-            // Make sure we won't hit someone other than we're aiming at.
             tracer.target = targ->pos();
             fire_tracer(&caster, tracer);
-            if (!mons_should_fire(tracer)
-                || tracer.path_taken.back() != tracer.target)
-            {
+            if (!mons_should_fire(tracer))
                 continue;
-            }
 
             min_distance = targ_distance;
             selected_target = *targ;
@@ -1305,6 +1304,7 @@ bolt mons_spell_beam(const monster* mons, spell_type spell_cast, int power,
     case SPELL_ICEBLAST:
     case SPELL_ENSLAVEMENT:
     case SPELL_WAND_POLYMORPH:
+    case SPELL_WAND_HEALING:
         zappy(spell_to_zap(real_spell), power, true, beam);
         break;
 

@@ -84,7 +84,8 @@ enum beam_type                  // bolt::flavour
     BEAM_CRYSTAL,
     BEAM_DEATH_RATTLE,
     BEAM_MAGIC_CANDLE,
-    BEAM_LAST_REAL = BEAM_MAGIC_CANDLE,
+    BEAM_WAND_HEALING,
+    BEAM_LAST_REAL = BEAM_WAND_HEALING,
 
     // For getting the visual effect of a beam.
     BEAM_VISUAL,

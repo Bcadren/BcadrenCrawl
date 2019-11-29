@@ -469,5 +469,6 @@ enum spell_type : int
     SPELL_WAND_FLAME,
     SPELL_WAND_ACID,
     SPELL_WAND_POLYMORPH,
+    SPELL_WAND_HEALING,
     NUM_SPELLS
 };

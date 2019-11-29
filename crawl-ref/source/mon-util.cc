@@ -3675,11 +3675,10 @@ static bool _mons_should_fire_beneficial(bolt &beam)
     if (beam.target == you.pos())
         return false;
 
-    // Assuming all beneficial beams are enchantments if a foe is in
+    // All other beneficial beams are enchantments if a foe is in
     // the path the beam will definitely hit them so we shouldn't fire
     // in that case.
-    if (beam.friend_info.count == 0
-        || beam.foe_info.count != 0)
+    if (beam.friend_info.count == 0 && beam.foe_info.count != 0)
     {
         return false;
     }
@@ -3698,6 +3697,7 @@ static bool _beneficial_beam_flavour(beam_type flavour)
     {
     case BEAM_HASTE:
     case BEAM_HEALING:
+    case BEAM_WAND_HEALING:
     case BEAM_INVISIBILITY:
     case BEAM_MIGHT:
     case BEAM_AGILITY:
@@ -3711,7 +3711,7 @@ static bool _beneficial_beam_flavour(beam_type flavour)
 
 bool mons_should_fire(bolt &beam, bool ignore_good_idea)
 {
-    dprf("tracer: foes %d (pow: %d), friends %d (pow: %d), "
+    mprf("tracer: foes %d (pow: %d), friends %d (pow: %d), "
          "foe_ratio: %d",
          beam.foe_info.count, beam.foe_info.power,
          beam.friend_info.count, beam.friend_info.power,

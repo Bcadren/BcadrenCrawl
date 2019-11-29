@@ -1625,6 +1625,26 @@ int mons_adjust_flavoured(monster* mons, bolt &pbolt, int hurted,
         hurted = 0;
         break;
 
+    case BEAM_WAND_HEALING:
+        if (doFlavouredEffects)
+        {
+            if (pbolt.agent()->is_player())
+            {
+                if (!mons->wont_attack() && !mons->neutral() && you.religion == GOD_ELYVILON)
+                    try_to_pacify(*mons, hurted, hurted);
+                else
+                    heal_monster(*mons, hurted);
+            }
+            else
+            {
+                if (you.can_see(*mons) && mons->hit_points < mons->max_hit_points)
+                    simple_monster_message(*mons, " wounds heal themselves!");
+                mons->heal(hurted);
+            }
+        }
+        hurted = 0;
+        break;
+
     case BEAM_SPORE:
         if (mons->type == MONS_BALLISTOMYCETE)
             hurted = 0;
@@ -3037,6 +3057,7 @@ bool bolt::is_harmless(const monster* mon) const
     {
     case BEAM_VISUAL:
     case BEAM_DIGGING:
+    case BEAM_WAND_HEALING:
         return true;
 
     case BEAM_HOLY:
@@ -3091,6 +3112,7 @@ bool bolt::harmless_to_player() const
     {
     case BEAM_VISUAL:
     case BEAM_DIGGING:
+    case BEAM_WAND_HEALING:
         return true;
 
     // Positive enchantments.
@@ -4583,6 +4605,10 @@ void bolt::monster_post_hit(monster* mon, int dmg)
     {
         print_wounds(*mon);
     }
+
+    // Don't annoy anyone with a harmless mist.
+    if (flavour == BEAM_WAND_HEALING)
+        return;
 
     // Don't annoy friendlies or good neutrals if the player's beam
     // did no damage. Hostiles will still take umbrage.
@@ -6671,6 +6697,7 @@ static string _beam_type_name(beam_type type)
     case BEAM_HASTE:                 return "haste";
     case BEAM_MIGHT:                 return "might";
     case BEAM_HEALING:               return "healing";
+    case BEAM_WAND_HEALING:          return "healing mist";
     case BEAM_CONFUSION:             return "confusion";
     case BEAM_INVISIBILITY:          return "invisibility";
     case BEAM_DIGGING:               return "digging";

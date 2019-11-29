@@ -92,7 +92,8 @@ bool is_holy_item(const item_def& item, bool calc_unid)
 
 bool is_potentially_evil_item(const item_def& item, bool calc_unid)
 {
-    if (item.base_type == OBJ_WEAPONS
+    if ((item.base_type == OBJ_WEAPONS
+        || item.base_type == OBJ_SHIELDS && is_hybrid(item.sub_type))
         && item_brand_known(item)
         && get_weapon_brand(item) == SPWPN_CHAOS)
     {
@@ -102,24 +103,8 @@ bool is_potentially_evil_item(const item_def& item, bool calc_unid)
     if (!calc_unid && !item_type_known(item))
         return false;
 
-    switch (item.base_type)
-    {
-    case OBJ_MISSILES:
-        {
-        const int item_brand = get_ammo_brand(item);
-        if (item_brand == SPMSL_CHAOS)
-            return true;
-        }
-        break;
-    case OBJ_WANDS:
-        if (item.sub_type == WAND_RANDOM_EFFECTS)
-        {
-            return true;
-        }
-        break;
-    default:
-        break;
-    }
+    if (item.base_type == OBJ_MISSILES && get_ammo_brand(item) == SPMSL_CHAOS)
+        return true;
 
     return false;
 }
@@ -238,7 +223,8 @@ bool is_chaotic_item(const item_def& item, bool calc_unid)
             return true;
     }
 
-    if (item.base_type == OBJ_WEAPONS
+    if ((item.base_type == OBJ_WEAPONS
+        || item.base_type == OBJ_SHIELDS && is_hybrid(item.sub_type))
         && (calc_unid || item_brand_known(item)))
     {
         return get_weapon_brand(item) == SPWPN_CHAOS;
@@ -256,7 +242,7 @@ bool is_chaotic_item(const item_def& item, bool calc_unid)
         }
         break;
     case OBJ_WANDS:
-        retval = (item.sub_type == WAND_POLYMORPH);
+        retval = (item.sub_type == WAND_POLYMORPH || item.sub_type == WAND_RANDOM_EFFECTS);
         break;
     case OBJ_POTIONS:
         retval = (item.sub_type == POT_MUTATION

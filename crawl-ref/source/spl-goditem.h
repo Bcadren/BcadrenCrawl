@@ -8,6 +8,7 @@
 #include "torment-source-type.h"
 
 spret cast_healing(int pow, bool fail);
+spret try_to_pacify(monster &mon, int healed, int pow, bool fail = false);
 bool heal_monster(monster& patient, int amount);
 
 /// List of monster enchantments which can be dispelled.

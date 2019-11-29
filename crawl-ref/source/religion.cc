@@ -1285,6 +1285,7 @@ static int _pakellas_high_wand()
     vector<int> high_wands = {
         WAND_ICEBLAST,
         WAND_ACID,
+        WAND_HEAL_WOUNDS,
     };
     if (!you.get_mutation_level(MUT_NO_LOVE))
         high_wands.emplace_back(WAND_ENSLAVEMENT);

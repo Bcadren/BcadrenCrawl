@@ -92,5 +92,6 @@ enum zap_type
     ZAP_WAND_FLAME,
     ZAP_WAND_ACID,
     ZAP_WAND_POLYMORPH,
+    ZAP_WAND_HEALING,
     NUM_ZAPS
 };

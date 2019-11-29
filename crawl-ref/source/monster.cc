@@ -2836,9 +2836,6 @@ void monster::expose_to_element(beam_type flavour, int strength,
         del_ench(ENCH_STICKY_FLAME);
         del_ench(ENCH_MAGIC_CANDLE);
         break;
-    case BEAM_MAGIC_CANDLE:
-        backlight_monster(this);
-        break;
     case BEAM_FIRE:
     case BEAM_LAVA:
     case BEAM_STICKY_FLAME:

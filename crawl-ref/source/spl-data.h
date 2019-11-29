@@ -2436,6 +2436,18 @@ static const struct spell_desc spelldata[] =
 },
 
 {
+    SPELL_WAND_HEALING, "Wand Healing",
+    spschool::necromancy,
+    spflag::dir_or_target | spflag::selfench | spflag::helpful
+        | spflag::needs_tracer | spflag::utility | spflag::not_evil,
+    6,
+    200,
+    LOS_RADIUS, LOS_RADIUS,
+    5, 0,
+    TILEG_MAJOR_HEALING,
+},
+
+{
     SPELL_HOLY_FLAMES, "Holy Flames",
     spschool::fire,
     spflag::target | spflag::not_self | spflag::holy,

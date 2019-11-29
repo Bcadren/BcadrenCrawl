@@ -450,6 +450,7 @@ unsigned int item_value(item_def item, bool ident)
             {
             case WAND_CLOUDS:
             case WAND_SCATTERSHOT:
+            case WAND_HEAL_WOUNDS:
                 valued += 120;
                 good = true;
                 break;

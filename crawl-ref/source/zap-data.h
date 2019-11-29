@@ -464,6 +464,24 @@ _wand_hex_zap(ZAP_ENSLAVEMENT, BEAM_ENSLAVE),
 },
 
 {
+    ZAP_WAND_HEALING,
+    "healing mist",
+    200,
+    new dicedef_calculator<3, 2, 1, 2>,
+    new tohit_calculator<AUTOMATIC_HIT>,
+    new dicedef_calculator<3, 2, 1, 2>,
+    new tohit_calculator<AUTOMATIC_HIT>,
+    ETC_HOLY,
+    false,
+    BEAM_WAND_HEALING,
+    DCHAR_FIRED_ZAP,
+    true,
+    true,
+    false,
+    6
+},
+
+{
     ZAP_STICKY_FLAME_RANGE,
     "sticky flame",
     100,
