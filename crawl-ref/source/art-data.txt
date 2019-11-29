@@ -452,7 +452,7 @@ AC:       5
 BOOL:     seeinv, berserk
 
 ENUM:     ZEALOT_SWORD
-NAME:     zealot's sword
+NAME:     sword of jihad
 OBJ:      OBJ_WEAPONS/WPN_EUDEMON_BLADE
 PLUS:     +10
 COLOUR:   ETC_HOLY
