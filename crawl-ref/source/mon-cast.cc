@@ -365,6 +365,11 @@ static const map<spell_type, mons_spell_logic> spell_to_logic = {
         _fire_simple_beam,
         _buff_beam_setup(BEAM_HASTE)
     } },
+    { SPELL_WAND_HASTING,{
+        _always_worthwhile,
+        _fire_simple_beam,
+        _buff_beam_setup(BEAM_HASTE)
+    } },
     { SPELL_MIGHT_OTHER, {
         _always_worthwhile,
         _fire_simple_beam,
@@ -936,6 +941,8 @@ static monster* _get_allied_target(const monster &caster, bolt &tracer)
 {
     monster* selected_target = nullptr;
     int min_distance = tracer.range;
+    if (!tracer.is_enchantment())
+        tracer.auto_hit = true;
 
     for (monster_near_iterator targ(&caster, LOS_NO_TRANS); targ; ++targ)
     {
@@ -1306,6 +1313,7 @@ bolt mons_spell_beam(const monster* mons, spell_type spell_cast, int power,
     case SPELL_WAND_POLYMORPH:
     case SPELL_WAND_HEALING:
     case SPELL_WAND_ENSNARE:
+    case SPELL_WAND_HASTING:
         zappy(spell_to_zap(real_spell), power, true, beam);
         break;
 

@@ -697,6 +697,7 @@ static int _acquirement_wand_subtype(bool /*divine*/, int & /*quantity*/)
         { WAND_ACID,            18 },
         { WAND_ICEBLAST,        18 },
         { WAND_HEAL_WOUNDS,     18 },
+        { WAND_HASTING,         18 },
         { WAND_ENSNARE,         12 },
         { WAND_ENSLAVEMENT,     you.get_mutation_level(MUT_NO_LOVE) ? 0 : 8 },
         { WAND_DISINTEGRATION,  5 },

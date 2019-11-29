@@ -214,6 +214,18 @@ static const struct spell_desc spelldata[] =
 },
 
 {
+    SPELL_WAND_HASTING, "Haste Other Wand",
+    spschool::charms,
+    spflag::dir_or_target | spflag::not_self | spflag::helpful
+        | spflag::hasty | spflag::needs_tracer | spflag::utility,
+    6,
+    200,
+    5, 5,
+    5, 0,
+    TILEG_HASTE,
+},
+
+{
     SPELL_PETRIFY, "Petrify",
     spschool::transmutation | spschool::earth,
     spflag::dir_or_target | spflag::needs_tracer | spflag::MR_check,
@@ -2442,7 +2454,7 @@ static const struct spell_desc spelldata[] =
         | spflag::needs_tracer | spflag::utility | spflag::not_evil,
     6,
     200,
-    LOS_RADIUS, LOS_RADIUS,
+    5, 5,
     5, 0,
     TILEG_MAJOR_HEALING,
 },

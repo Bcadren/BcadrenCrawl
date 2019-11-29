@@ -3678,10 +3678,8 @@ static bool _mons_should_fire_beneficial(bolt &beam)
     // All other beneficial beams are enchantments if a foe is in
     // the path the beam will definitely hit them so we shouldn't fire
     // in that case.
-    if (beam.friend_info.count == 0 && beam.foe_info.count != 0)
-    {
+    if (beam.friend_info.count == 0)
         return false;
-    }
 
     // Should beneficial monster enchantment beams be allowed in a
     // sanctuary? -cao

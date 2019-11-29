@@ -891,7 +891,6 @@ const set<pair<object_class_type, int> > removed_items =
     { OBJ_WANDS,     WAND_FIRE_REMOVED },
     { OBJ_WANDS,     WAND_COLD_REMOVED },
     { OBJ_WANDS,     WAND_INVISIBILITY_REMOVED },
-    { OBJ_WANDS,     WAND_HASTING_REMOVED },
     { OBJ_WANDS,     WAND_TELEPORTATION_REMOVED },
     { OBJ_WANDS,     WAND_SLOWING_REMOVED },
     { OBJ_WANDS,     WAND_CONFUSION_REMOVED },
@@ -1698,6 +1697,7 @@ int wand_charge_value(int type)
 
     case WAND_CLOUDS:
     case WAND_SCATTERSHOT:
+    case WAND_HASTING:
         return 9;
 
     case WAND_ICEBLAST:

@@ -3471,7 +3471,7 @@ void bolt::affect_player_enchantment(bool resistible)
         break;
 
     case BEAM_HASTE:
-        haste_player(40 + random2(ench_power));
+        haste_player(3 + ench_power + random2(ench_power));
         did_god_conduct(DID_HASTY, 10, blame_player);
         obvious_effect = true;
         nasty = false;
@@ -5629,23 +5629,24 @@ mon_resist_type bolt::apply_enchantment_to_monster(monster* mon)
         return MON_AFFECTED;
 
     case BEAM_HASTE:
+    {
         if (YOU_KILL(thrower))
             did_god_conduct(DID_HASTY, 6, god_cares());
 
         if (mon->stasis())
             return MON_AFFECTED;
 
+        const int dur = (3 + ench_power + random2(ench_power)) * BASELINE_DELAY;
+
         if (!mon->has_ench(ENCH_HASTE)
-            && !mon->is_stationary()
-            && mon->add_ench(ENCH_HASTE))
+            && !mon->is_stationary())
         {
-            if (!mons_is_immotile(*mon)
-                && simple_monster_message(*mon, " seems to speed up."))
-            {
+            mon->add_ench(mon_enchant(ENCH_HASTE, 0, agent(), dur));
+            if (!mons_is_immotile(*mon) && simple_monster_message(*mon, " seems to speed up.")) // Who put this in an if block? It's weird.
                 obvious_effect = true;
-            }
         }
         return MON_AFFECTED;
+    }
 
     case BEAM_MIGHT:
         if (!mon->has_ench(ENCH_MIGHT)

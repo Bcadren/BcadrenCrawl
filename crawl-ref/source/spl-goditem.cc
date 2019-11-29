@@ -1346,7 +1346,7 @@ spret cast_random_effects(int pow, bolt& beam, bool fail)
                                  ZAP_WAND_POLYMORPH,
                                  ZAP_WAND_ACID,
                                  ZAP_ENSLAVEMENT,
-                                 ZAP_HASTE,
+                                 ZAP_WAND_HASTING,
                                  ZAP_INVISIBILITY,
                                  ZAP_ICEBLAST,
                                  ZAP_SCATTERSHOT,

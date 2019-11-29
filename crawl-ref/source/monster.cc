@@ -5970,7 +5970,7 @@ bool monster::drink_potion_effect(potion_type pot_eff, bool card)
         break;
 
     case POT_HASTE:
-        enchant_actor_with_flavour(this, this, BEAM_HASTE);
+        enchant_actor_with_flavour(this, this, BEAM_HASTE, 40);
         break;
 
     case POT_MIGHT:
