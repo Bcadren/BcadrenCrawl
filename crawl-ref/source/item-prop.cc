@@ -896,7 +896,6 @@ const set<pair<object_class_type, int> > removed_items =
     { OBJ_WANDS,     WAND_SLOWING_REMOVED },
     { OBJ_WANDS,     WAND_CONFUSION_REMOVED },
     { OBJ_WANDS,     WAND_LIGHTNING_REMOVED },
-    { OBJ_WANDS,     WAND_PARALYSIS_REMOVED },
     { OBJ_SCROLLS,   SCR_IDENTIFY},
     { OBJ_SCROLLS,   SCR_RANDOM_USELESSNESS},
     { OBJ_SCROLLS,   SCR_CURSE_WEAPON },
@@ -1705,6 +1704,7 @@ int wand_charge_value(int type)
     case WAND_ACID:
     case WAND_ENSLAVEMENT:
     case WAND_POLYMORPH:
+    case WAND_ENSNARE:
         return 15;
 
     default:

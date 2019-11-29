@@ -172,9 +172,9 @@ static const map<job_type, job_def> job_data =
     "Gl", "Gladiator",
     6, 0, 6,
     { SP_HILL_ORC, SP_MERFOLK, SP_MINOTAUR, SP_GARGOYLE, SP_CENTAUR, },
-    { "leather armour", "helmet", "throwing net q:3" },
+    { "leather armour", "helmet", "wand of ensnaring charges:9" },
     WCHOICE_GOOD,
-    { { SK_FIGHTING, 2 }, { SK_THROWING, 2 }, { SK_DODGING, 3 },
+    { { SK_FIGHTING, 2 }, { SK_EVOCATIONS, 2 }, { SK_DODGING, 3 },
       { SK_WEAPON, 3}, },
 } },
 

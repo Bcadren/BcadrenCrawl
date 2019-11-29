@@ -1662,7 +1662,8 @@ int mons_adjust_flavoured(monster* mons, bolt &pbolt, int hurted,
 
     case BEAM_ENSNARE:
         if (doFlavouredEffects)
-            ensnare(mons);
+            ensnare(mons, hurted);
+        hurted = 0;
         break;
 
     default:
@@ -2538,6 +2539,7 @@ void bolt::affect_endpoint()
     case SPELL_SEARING_BREATH:
         if (!path_taken.empty())
             place_cloud(CLOUD_FIRE, pos(), 5 + random2(5), agent());
+        break;
 
     case SPELL_MAGIC_CANDLE:
     {
@@ -2562,6 +2564,19 @@ void bolt::affect_endpoint()
                 env.sunlight.emplace_back(pos(), expiry);
             }
         }
+        break;
+    }
+
+    case SPELL_ENSNARE:
+    case SPELL_WAND_ENSNARE:
+    {
+        if (!actor_at(pos()) && grd(pos()) == DNGN_FLOOR)
+        {
+            const int pow = damage.roll();
+            place_specific_trap(pos(), TRAP_WEB, pow + random2(pow));
+            grd(pos()) = DNGN_TRAP_WEB;
+        }
+        break;
     }
 
     default:
@@ -4115,9 +4130,6 @@ void bolt::affect_player()
         }
     }
 
-    if (flavour == BEAM_ENSNARE)
-        was_affected = ensnare(&you) || was_affected;
-
     if (origin_spell == SPELL_QUICKSILVER_BOLT)
         debuff_player();
 
@@ -4190,6 +4202,7 @@ int bolt::apply_AC(const actor *victim, int hurted)
     switch (flavour)
     {
     case BEAM_DAMNATION:
+    case BEAM_ENSNARE:
         ac_rule = ac_type::none; break;
     case BEAM_ELECTRICITY:
         ac_rule = ac_type::half; break;

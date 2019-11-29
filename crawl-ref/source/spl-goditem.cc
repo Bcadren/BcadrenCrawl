@@ -1351,7 +1351,8 @@ spret cast_random_effects(int pow, bolt& beam, bool fail)
                                  ZAP_ICEBLAST,
                                  ZAP_SCATTERSHOT,
                                  ZAP_MALMUTATE,
-                                 ZAP_DISINTEGRATE);
+                                 ZAP_DISINTEGRATE,
+                                 ZAP_WAND_ENSNARE);
     // BCADNOTE: Old effects removed (some could be worth rescaling?):
     // ZAP_THROW_FROST, ZAP_SLOW, ZAP_CONFUSE, ZAP_TELEPORT_OTHER, ZAP_FIREBALL,
     // ZAP_BOLT_OF_DRAINING, ZAP_VENOM_BOLT,

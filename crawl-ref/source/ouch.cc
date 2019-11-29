@@ -71,6 +71,7 @@
 #include "stringutil.h"
 #include "teleport.h"
 #include "transform.h"
+#include "traps.h"
 #include "tutorial.h"
 #include "view.h"
 #include "xom.h"
@@ -248,6 +249,11 @@ int check_your_resists(int hurted, beam_type flavour, string source,
             mpr("The lava burns you terribly!");
             xom_is_stimulated(200);
         }
+        break;
+
+    case BEAM_ENSNARE:
+        ensnare(&you, hurted);
+        hurted = 0;
         break;
 
     case BEAM_ACID:

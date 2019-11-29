@@ -67,6 +67,7 @@ static pair<spell_type, zap_type> _spl_zaps[] =
     { SPELL_WAND_ACID,              ZAP_WAND_ACID },
     { SPELL_WAND_POLYMORPH,         ZAP_WAND_POLYMORPH },
     { SPELL_WAND_HEALING,           ZAP_WAND_HEALING },
+    { SPELL_WAND_ENSNARE,           ZAP_WAND_ENSNARE },
 
     // monster-specific
     { SPELL_SLUG_DART,              ZAP_SLUG_DART },

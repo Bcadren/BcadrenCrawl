@@ -669,6 +669,7 @@ static const char* _wand_type_name(int wandtype)
     case WAND_CLOUDS:          return "clouds";
     case WAND_SCATTERSHOT:     return "scattershot";
     case WAND_HEAL_WOUNDS:     return "healing";
+    case WAND_ENSNARE:         return "ensnaring";
     default:                   return item_type_removed(OBJ_WANDS, wandtype)
                                     ? "removedness"
                                     : "bugginess";

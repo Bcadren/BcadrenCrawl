@@ -1579,7 +1579,7 @@ void place_webs(int num)
     }
 }
 
-bool ensnare(actor *fly)
+bool ensnare(actor *fly, int pow)
 {
     ASSERT(fly); // XXX: change to actor &fly
     if (fly->is_web_immune())
@@ -1604,9 +1604,8 @@ bool ensnare(actor *fly)
     // fail to attach and you'll be released after a single turn.
     if (grd(fly->pos()) == DNGN_FLOOR)
     {
-        place_specific_trap(fly->pos(), TRAP_WEB, 1); // 1 ammo = destroyed on exit (hackish)
-        if (you.see_cell(fly->pos()))
-            grd(fly->pos()) = DNGN_TRAP_WEB;
+        place_specific_trap(fly->pos(), TRAP_WEB, pow + random2(pow));
+        grd(fly->pos()) = DNGN_TRAP_WEB;
     }
 
     if (fly->is_player())

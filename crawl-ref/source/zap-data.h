@@ -96,7 +96,7 @@ static const zap_info zap_data[] =
 {
     ZAP_WAND_FLAME,
     "puff of flame",
-    50,
+    200,
     new dicedef_calculator<2, 2, 1, 3>,
     new tohit_calculator<10, 1, 2>,
     new dicedef_calculator<2, 2, 1, 3>,
@@ -109,6 +109,24 @@ static const zap_info zap_data[] =
     false,
     false,
     3
+},
+
+{
+    ZAP_WAND_ENSNARE,
+    "stream of webbing",
+    200,
+    new dicedef_calculator<1, 1, 1, 10>,
+    new tohit_calculator<5, 1, 1>,
+    new dicedef_calculator<1, 1, 1, 10>,
+    new tohit_calculator<5, 1, 1>,
+    WHITE,
+    false,
+    BEAM_ENSNARE,
+    DCHAR_FIRED_MISSILE,
+    true,
+    false,
+    false,
+    0
 },
 
 {

@@ -1305,6 +1305,7 @@ bolt mons_spell_beam(const monster* mons, spell_type spell_cast, int power,
     case SPELL_ENSLAVEMENT:
     case SPELL_WAND_POLYMORPH:
     case SPELL_WAND_HEALING:
+    case SPELL_WAND_ENSNARE:
         zappy(spell_to_zap(real_spell), power, true, beam);
         break;
 
@@ -1548,6 +1549,7 @@ bolt mons_spell_beam(const monster* mons, spell_type spell_cast, int power,
         beam.colour   = WHITE;
         beam.glyph    = dchar_glyph(DCHAR_FIRED_MISSILE);
         beam.flavour  = BEAM_ENSNARE;
+        beam.damage   = dice_def(1, div_round_up(power,30));
         beam.hit      = 22 + power / 20;
         break;
 

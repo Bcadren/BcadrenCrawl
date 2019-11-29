@@ -2633,6 +2633,17 @@ static const struct spell_desc spelldata[] =
 },
 
 {
+    SPELL_WAND_ENSNARE, "Web Wand",
+    spschool::earth | spschool::hexes,
+    spflag::dir_or_target | spflag::needs_tracer,
+    6,
+    200,
+    5, 5,
+    6, 0,
+    TILEG_GENERIC_MONSTER_SPELL,
+},
+
+{
     SPELL_THUNDERBOLT, "Thunderbolt",
     spschool::air,
     spflag::dir_or_target | spflag::not_self,
