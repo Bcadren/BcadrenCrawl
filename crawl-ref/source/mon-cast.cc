@@ -436,7 +436,10 @@ static const map<spell_type, mons_spell_logic> spell_to_logic = {
             return !caster.get_foe()->backlit();
     }) },
     { SPELL_POLYMORPH, _hex_logic(SPELL_POLYMORPH, [](const monster& caster) {
-        return !caster.friendly(); // too dangerous to let allies use
+        return !caster.friendly(); // too dangerous to let allies use;
+    }) },
+    { SPELL_WAND_POLYMORPH, _hex_logic(SPELL_POLYMORPH, [](const monster& caster) {
+        return !caster.friendly(); // too dangerous to let allies use;
     }) },
     { SPELL_SLEEP, _hex_logic(SPELL_SLEEP, _foe_can_sleep, 6) },
     { SPELL_HIBERNATION, _hex_logic(SPELL_HIBERNATION, _foe_can_sleep) },

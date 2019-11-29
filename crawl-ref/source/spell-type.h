@@ -468,5 +468,6 @@ enum spell_type : int
     SPELL_THROW_PIE,
     SPELL_WAND_FLAME,
     SPELL_WAND_ACID,
+    SPELL_WAND_POLYMORPH,
     NUM_SPELLS
 };

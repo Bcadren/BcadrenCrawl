@@ -48,6 +48,30 @@ static zap_info _mon_hex_zap(zap_type ztype, beam_type beam,
     };
 }
 
+/// Wand Hex Zap
+static zap_info _wand_hex_zap(zap_type ztype, beam_type beam,
+                              int player_pow_cap = 100,
+                              colour_t colour = BLACK)
+{
+    return {
+        ztype,
+        "",
+        player_pow_cap,
+        nullptr,
+        new tohit_calculator<0, 4, 1>,
+        nullptr,
+        new tohit_calculator<0, 4, 1>, // ENCH_POW_FACTOR
+        colour,
+        true,
+        beam,
+        NUM_DCHAR_TYPES,
+        false,
+        false,
+        false,
+        0
+    };
+}
+
 static const zap_info zap_data[] =
 {
 
@@ -345,6 +369,7 @@ _mon_hex_zap(ZAP_CONFUSE, BEAM_CONFUSION),
 },
 
 _mon_hex_zap(ZAP_POLYMORPH, BEAM_POLYMORPH),
+_wand_hex_zap(ZAP_WAND_POLYMORPH, BEAM_POLYMORPH),
 
 {
     ZAP_VENOM_BOLT,

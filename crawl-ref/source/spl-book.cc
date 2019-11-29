@@ -95,7 +95,7 @@ static const map<wand_type, spell_type> _wand_spells =
 {
     { WAND_FLAME,           SPELL_WAND_FLAME },
     { WAND_ICEBLAST,        SPELL_ICEBLAST },
-    { WAND_POLYMORPH,       SPELL_POLYMORPH },
+    { WAND_POLYMORPH,       SPELL_WAND_POLYMORPH },
     { WAND_ENSLAVEMENT,     SPELL_ENSLAVEMENT },
     { WAND_ACID,            SPELL_WAND_ACID },
     { WAND_DISINTEGRATION,  SPELL_DISINTEGRATE },

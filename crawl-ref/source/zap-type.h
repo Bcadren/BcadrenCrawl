@@ -91,5 +91,6 @@ enum zap_type
     ZAP_THROW_PIE,
     ZAP_WAND_FLAME,
     ZAP_WAND_ACID,
+    ZAP_WAND_POLYMORPH,
     NUM_ZAPS
 };
