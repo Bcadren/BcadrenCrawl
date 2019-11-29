@@ -940,11 +940,12 @@ scroll of enchantment
 
 A scroll that places an enchantment on an item chosen by the reader. 
 The magic grants additional charges to wands. On all other items it grants 
-a permanet buff to their base properties. Body armour and bardings can be 
-enchanted up to the same value as their base AC. Bucklers, heater shields 
-and scuta can be enchanted up to +3, +5 or +8 respectively, and other armour 
-can be enchanted up to +2. Weapons can be enchanted up to +9, increasing both 
-accuracy and damage. Magical artefacts cannot be enchanted at all.
+a permanent buff to their base properties. Body armour and bardings can be 
+enchanted up to the same value as their base AC. Shields can be enchanted up
+to their base SH value and other armour can be enchanted up to +2. Weapons
+can be enchanted up to +9, increasing both accuracy and damage. Defensive
+weapons (shields with an offensive property) are treated as weapons for this
+purpose. Magical artefacts cannot be enchanted at all.
 %%%%
 scroll of fear
 
