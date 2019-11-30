@@ -118,6 +118,7 @@ static function<void(bolt&, const monster&, int)>
 static void _setup_minor_healing(bolt &beam, const monster &caster,
                                  int = -1);
 static void _setup_heal_other(bolt &beam, const monster &caster, int = -1);
+static void _chaotic_setup(bolt&, const monster&, int);
 static bool _foe_should_res_negative_energy(const actor* foe);
 static bool _caster_sees_foe(const monster &caster);
 static bool _foe_can_sleep(const monster &caster);
@@ -369,6 +370,11 @@ static const map<spell_type, mons_spell_logic> spell_to_logic = {
         _always_worthwhile,
         _fire_simple_beam,
         _buff_beam_setup(BEAM_HASTE)
+    } },
+    { SPELL_RANDOM_EFFECTS, {
+        _always_worthwhile,
+        _fire_simple_beam,
+        _chaotic_setup,
     } },
     { SPELL_MIGHT_OTHER, {
         _always_worthwhile,
@@ -631,6 +637,18 @@ static function<void(bolt&, const monster&, int)>
         const monster* target = _get_allied_target(caster, beam);
         beam.target = target ? target->pos() : coord_def(GXM+1, GYM+1);
     };
+}
+
+static void _chaotic_setup(bolt &beam, const monster &caster, int)
+{
+    if (one_chance_in(4))
+    {
+        beam.flavour = BEAM_WAND_RANDOM;
+        const monster* target = _get_allied_target(caster, beam);
+        beam.target = target ? target->pos() : caster.pos(); // Didn't find an ally to buff, try to buff self.
+    }
+    else
+        zappy(spell_to_zap(coinflip() ? SPELL_ICEBLAST : SPELL_CORROSIVE_BOLT), 100, true, beam);
 }
 
 /**
@@ -907,6 +925,9 @@ static bool _flavour_benefits_monster(beam_type flavour, monster& monster)
 
     case BEAM_RESISTANCE:
         return !monster.has_ench(ENCH_RESISTANCE);
+
+    case BEAM_WAND_RANDOM: // Random Effects
+        return true;
 
     default:
         return false;
@@ -1316,6 +1337,14 @@ bolt mons_spell_beam(const monster* mons, spell_type spell_cast, int power,
     case SPELL_WAND_HASTING:
         zappy(spell_to_zap(real_spell), power, true, beam);
         break;
+
+    case SPELL_RANDOM_EFFECTS:
+    {
+        const zap_type zap = (zap_type)random_effects_zap();
+        beam.origin_spell = SPELL_NO_SPELL; // let zappy reset this
+        zappy(zap, power, true, beam);
+        break;
+    }
 
     case SPELL_BLINDING_SPRAY: // special-cased because of a spl-zap hack...
         zappy(ZAP_BLINDING_SPRAY, power, true, beam);
@@ -5789,7 +5818,6 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
     {
     default:
         break;
-
     case SPELL_WATERSTRIKE:
     {
         pbolt.flavour    = BEAM_WATER;

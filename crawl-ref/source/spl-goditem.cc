@@ -1333,6 +1333,26 @@ void cleansing_flame(int pow, cleansing_flame_source caster, coord_def where,
     beam.explode();
 }
 
+int random_effects_zap()
+{
+    // 5 Damage, 4 Hex, 3 Charm.
+    return random_choose(ZAP_WAND_FLAME,
+                         ZAP_WAND_ACID,
+                         ZAP_ICEBLAST,
+                         ZAP_SCATTERSHOT,
+                         ZAP_DISINTEGRATE,
+                         ZAP_WAND_POLYMORPH,
+                         ZAP_ENSLAVEMENT,
+                         ZAP_MALMUTATE,
+                         ZAP_WAND_ENSNARE,
+                         ZAP_WAND_HASTING,
+                         ZAP_INVISIBILITY,
+                         ZAP_WAND_HEALING);
+    // BCADNOTE: Old effects removed (some could be worth rescaling?):
+    // ZAP_THROW_FROST, ZAP_SLOW, ZAP_CONFUSE, ZAP_TELEPORT_OTHER, ZAP_FIREBALL,
+    // ZAP_BOLT_OF_DRAINING, ZAP_VENOM_BOLT,
+}
+
 spret cast_random_effects(int pow, bolt& beam, bool fail)
 {
     bolt tracer = beam;
@@ -1341,21 +1361,7 @@ spret cast_random_effects(int pow, bolt& beam, bool fail)
 
     fail_check();
 
-    // 5 Damage, 3 Hex, 2 Charm.
-    zap_type zap = random_choose(ZAP_WAND_FLAME,
-                                 ZAP_WAND_POLYMORPH,
-                                 ZAP_WAND_ACID,
-                                 ZAP_ENSLAVEMENT,
-                                 ZAP_WAND_HASTING,
-                                 ZAP_INVISIBILITY,
-                                 ZAP_ICEBLAST,
-                                 ZAP_SCATTERSHOT,
-                                 ZAP_MALMUTATE,
-                                 ZAP_DISINTEGRATE,
-                                 ZAP_WAND_ENSNARE);
-    // BCADNOTE: Old effects removed (some could be worth rescaling?):
-    // ZAP_THROW_FROST, ZAP_SLOW, ZAP_CONFUSE, ZAP_TELEPORT_OTHER, ZAP_FIREBALL,
-    // ZAP_BOLT_OF_DRAINING, ZAP_VENOM_BOLT,
+    zap_type zap = (zap_type)random_effects_zap();
     beam.origin_spell = SPELL_NO_SPELL; // let zapping reset this
 
     zapping(zap, pow, beam, false);
