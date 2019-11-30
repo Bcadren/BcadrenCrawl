@@ -1340,7 +1340,9 @@ bolt mons_spell_beam(const monster* mons, spell_type spell_cast, int power,
 
     case SPELL_RANDOM_EFFECTS:
     {
-        const zap_type zap = (zap_type)random_effects_zap();
+        zap_type zap = (zap_type)random_effects_zap();
+        if (zap == ZAP_WAND_HASTING)
+            zap = ZAP_HASTE; // Allow monsters to selftarget the haste effect.
         beam.origin_spell = SPELL_NO_SPELL; // let zappy reset this
         zappy(zap, power, true, beam);
         break;
