@@ -1853,8 +1853,6 @@ int single_damage_type(const item_def &item)
 // Not adjusted by species or anything, which is why it's "basic".
 hands_reqd_type basic_hands_reqd(const item_def &item, size_type size)
 {
-    if (is_unrandom_artefact(item, UNRAND_GYRE))
-        return HANDS_TWO;
     if (item.base_type == OBJ_SHIELDS)
         return size >= Shield_prop[Shield_index[item.sub_type]].min_1h_size ? HANDS_ONE
                                                                             : HANDS_TWO;

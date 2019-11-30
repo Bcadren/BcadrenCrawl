@@ -835,26 +835,6 @@ bool melee_attack::attack()
         return did_hit = perceived_attack = true;
     }
 
-    string saved_gyre_name;
-    if (weapon && is_unrandom_artefact(*weapon, UNRAND_GYRE))
-    {
-        saved_gyre_name = get_artefact_name(*weapon);
-        set_artefact_name(*weapon, cleaving ? "quick blade \"Gimble\""
-                                            : "quick blade \"Gyre\"");
-    }
-
-    // Restore gyre's name before we return. We cannot use an unwind_var here
-    // because the precise address of the ARTEFACT_NAME_KEY property might
-    // change, for example if a summoned item is reset.
-    ON_UNWIND
-    {
-        if (!saved_gyre_name.empty() && weapon
-                && is_unrandom_artefact(*weapon, UNRAND_GYRE))
-        {
-            set_artefact_name(*weapon, saved_gyre_name);
-        }
-    };
-
     // Attacker might have died from effects of cleaving handled prior to this
     if (!attacker->alive())
         return false;
