@@ -472,7 +472,7 @@ void zap_wand(int slot)
         return;
     }
 
-    int power = (3 + you.skill(SK_EVOCATIONS)) * (mp_cost + 9) / 9;
+    int power = (you.skill(SK_EVOCATIONS)) * (mp_cost + 9) / 9;
 
     const spell_type spell =
         spell_in_wand(static_cast<wand_type>(wand.sub_type));
