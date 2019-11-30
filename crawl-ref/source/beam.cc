@@ -879,7 +879,7 @@ void bolt::digging_wall_effect()
 void bolt::burn_wall_effect()
 {
     dungeon_feature_type feat = grd(pos());
-    // Fire affects trees and (closed wooden) doors.
+    // Fire affects trees and (wooden) doors.
     if ((!feat_is_tree(feat) && !feat_is_door(feat))
         || env.markers.property_at(pos(), MAT_ANY, "veto_fire") == "veto"
         || !can_burn_trees()) // sanity
@@ -969,6 +969,17 @@ void bolt::affect_wall()
             digging_wall_effect();
         else if (can_burn_trees())
             burn_wall_effect();
+        else if (grd(pos()) == DNGN_GRATE)
+        {
+            destroy_wall(pos());
+
+            if (you.see_cell(pos()))
+                emit_message("The acid corrodes the grate, causing it to collapse in on itself!");
+            else if (!silenced(you.pos()))
+                emit_message("You hear metal creaking and collapsing.");
+
+            finish_beam();
+        }
     }
     if (cell_is_solid(pos()))
         finish_beam();
@@ -2728,6 +2739,9 @@ bool bolt::can_affect_wall(const coord_def& p, bool map_knowledge) const
 
     // digging
     if (flavour == BEAM_DIGGING && feat_is_diggable(wall))
+        return true;
+
+    if (flavour == BEAM_ACID && wall == DNGN_GRATE)
         return true;
 
     if (can_burn_trees())
