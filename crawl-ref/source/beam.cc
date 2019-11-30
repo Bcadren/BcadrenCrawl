@@ -4023,10 +4023,12 @@ void bolt::affect_player()
     if (hit_verb.empty())
         hit_verb = engulfs ? "engulfs" : "hits";
 
+    bool is_harmless = (flavour == BEAM_MAGIC_CANDLE || flavour == BEAM_WAND_HEALING);
+
     if (flavour != BEAM_VISUAL && !is_enchantment())
     {
         mprf("The %s %s you%s%s", name.c_str(), hit_verb.c_str(),
-             final_dam ? "" : " but does no damage",
+             (final_dam || is_harmless) ? "" : " but does no damage",
              attack_strength_punctuation(final_dam).c_str());
     }
 
@@ -4614,7 +4616,8 @@ void bolt::monster_post_hit(monster* mon, int dmg)
 {
     // Suppress the message for scattershot.
     if (YOU_KILL(thrower) && you.see_cell(mon->pos())
-        && name != "burst of metal fragments")
+        && name != "burst of metal fragments"
+        && flavour != BEAM_WAND_HEALING)
     {
         print_wounds(*mon);
     }
@@ -5164,6 +5167,8 @@ void bolt::affect_monster(monster* mon)
         if (hit_verb.empty())
             hit_verb = engulfs ? "engulfs" : "hits";
 
+        bool harmless = (flavour == BEAM_MAGIC_CANDLE || flavour == BEAM_WAND_HEALING);
+
         // If the beam did no damage because of resistances,
         // mons_adjust_flavoured below will print "%s completely resists", so
         // no need to also say "does no damage" here.
@@ -5171,7 +5176,7 @@ void bolt::affect_monster(monster* mon)
              name.c_str(),
              hit_verb.c_str(),
              mon->name(DESC_THE).c_str(),
-             postac ? "" : " but does no damage",
+             (postac || harmless) ? "" : " but does no damage",
              attack_strength_punctuation(final).c_str());
 
     }

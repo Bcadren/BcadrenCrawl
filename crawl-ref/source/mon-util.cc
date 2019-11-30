@@ -3675,6 +3675,13 @@ static bool _mons_should_fire_beneficial(bolt &beam)
     if (beam.target == you.pos())
         return false;
 
+    // I'm tired of fighting it; here's a hack. It sets up normal heal
+    // other as the AI check, if there's a valid target for Heal Other
+    // it's also one for Wand Healing. It could be used in more advanced
+    // ways but even the basic is being impossible for some reason.
+    if (beam.flavour == BEAM_WAND_HEALING && beam.target != coord_def(GXM + 1, GYM + 1))
+        return true;
+
     // All other beneficial beams are enchantments if a foe is in
     // the path the beam will definitely hit them so we shouldn't fire
     // in that case.

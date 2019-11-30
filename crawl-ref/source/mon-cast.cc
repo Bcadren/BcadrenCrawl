@@ -388,7 +388,7 @@ static const map<spell_type, mons_spell_logic> spell_to_logic = {
     { SPELL_WAND_HEALING, {
         _always_worthwhile,
         _fire_simple_beam,
-        _buff_beam_setup(BEAM_WAND_HEALING),
+        _buff_beam_setup(BEAM_HEALING),
     } },
     { SPELL_LRD, {
         _always_worthwhile,

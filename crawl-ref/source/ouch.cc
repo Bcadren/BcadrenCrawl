@@ -156,6 +156,8 @@ int check_your_resists(int hurted, beam_type flavour, string source,
         break;
 
     case BEAM_WAND_HEALING:
+        if (hurted && you.hp < you.hp_max)
+            mpr("Your wounds heal themselves!");
         you.heal(hurted);
         hurted = 0;
         break;
