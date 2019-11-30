@@ -22,7 +22,6 @@ static bool _banned_combination(job_type job, species_type species)
     {
     case SP_FELID:
         if (job == JOB_GLADIATOR
-            || job == JOB_ASSASSIN
             || job == JOB_HUNTER
             || job == JOB_ARCANE_MARKSMAN)
         {

@@ -3874,8 +3874,10 @@ static tileidx_t _tileidx_player_job_base(const job_type job)
             return TILEG_JOB_GLADIATOR;
         case JOB_NECROMANCER:
             return TILEG_JOB_NECROMANCER;
+#if TAG_MAJOR_VERSION == 34
         case JOB_ASSASSIN:
             return TILEG_JOB_ASSASSIN;
+#endif
         case JOB_BERSERKER:
             return TILEG_JOB_BERSERKER;
         case JOB_HUNTER:

@@ -59,7 +59,6 @@ fake_mutations:
 recommended_jobs:
   - JOB_TRANSMUTER
   - JOB_WIZARD
-  - JOB_ASSASSIN
   - JOB_FIRE_ELEMENTALIST
   - JOB_EARTH_ELEMENTALIST
   - JOB_VENOM_MAGE

@@ -47,7 +47,6 @@ mutations:
     MUT_REGENERATION: 1
 recommended_jobs:
   - JOB_FIGHTER
-  - JOB_ASSASSIN
   - JOB_BERSERKER
   - JOB_ENCHANTER
   - JOB_NECROMANCER

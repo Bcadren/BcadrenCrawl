@@ -66,7 +66,7 @@ static const map<job_type, job_def> job_data =
     { { SK_EVOCATIONS, 3 }, { SK_DODGING, 2 }, { SK_FIGHTING, 1 },
       { SK_WEAPON, 1 }, { SK_STEALTH, 1 }, },
 } },
-
+#if TAG_MAJOR_VERSION == 34
 { JOB_ASSASSIN, {
     "As", "Assassin",
     3, 3, 6,
@@ -77,7 +77,7 @@ static const map<job_type, job_def> job_data =
     { { SK_FIGHTING, 2 }, { SK_DODGING, 1 }, { SK_STEALTH, 4 },
       { SK_THROWING, 2 }, { SK_WEAPON, 2 }, },
 } },
-
+#endif
 { JOB_BERSERKER, {
     "Be", "Berserker",
     9, -1, 4,
