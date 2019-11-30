@@ -4050,7 +4050,7 @@ static const struct spell_desc spelldata[] =
     SPELL_BORGNJORS_VILE_CLUTCH, "Borgnjor's Vile Clutch",
     spschool::necromancy | spschool::earth,
     spflag::target,
-    5,
+    6,
     200,
     5, 5,
     5, 4,
