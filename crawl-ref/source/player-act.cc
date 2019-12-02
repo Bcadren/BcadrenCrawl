@@ -340,7 +340,7 @@ random_var player::attack_delay(const item_def *projectile, bool rescale) const
         const int wpn_sklev = min(you.skill(wpn_skill, 10),
                                   10 * weapon_min_delay_skill(*weap));
 
-        if (weap->base_type == OBJ_SHIELDS)
+        if (weap && weap->base_type == OBJ_SHIELDS)
         {
             attk_delay = random_var(property(*weap, PSHD_SPEED));
             attk_delay -= div_rand_round(random_var(wpn_sklev), DELAY_SCALE);
@@ -349,7 +349,7 @@ random_var player::attack_delay(const item_def *projectile, bool rescale) const
                 attk_delay = div_rand_round(attk_delay * 2, 3);
         }
 
-        else
+        else if (weap)
         {
             attk_delay = random_var(property(*weap, PWPN_SPEED));
             attk_delay -= div_rand_round(random_var(wpn_sklev), DELAY_SCALE);
