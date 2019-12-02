@@ -1352,7 +1352,7 @@ static bool _is_signature_weapon(const monster* mons, const item_def &weapon)
             return wtype == WPN_EXECUTIONERS_AXE;
 
         if (mons->type == MONS_MENNAS)
-            return get_weapon_brand(weapon) == SPWPN_HOLY_WRATH;
+            return get_weapon_brand(weapon) == SPWPN_SILVER;
 
         if (mons->type == MONS_ARACHNE)
         {

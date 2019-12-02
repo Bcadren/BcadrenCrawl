@@ -566,7 +566,7 @@ static int _mons_class_halo_radius(monster_type type)
     case MONS_HOLY_SWINE:
         return 1;  // only notionally holy
     case MONS_MENNAS:
-        return 2;  // ???  Low on grace or what?
+        return 5;  // ???  Low on grace or what?
     default:
         return -1;
     }

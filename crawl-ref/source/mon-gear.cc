@@ -734,7 +734,7 @@ int make_mons_weapon(monster_type type, int level, bool melee_only)
               { WPN_SACRED_SCOURGE, 1},
               { WPN_EUDEMON_BLADE,  1}, },
             { 1, 0, 5},
-            { { SPWPN_SILVER, 1}}
+            { { SPWPN_SILVER, 1} }
         } },
         { MONS_DONALD,
             { { { WPN_SCIMITAR,         12 },
