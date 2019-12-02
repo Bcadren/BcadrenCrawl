@@ -1790,9 +1790,11 @@ static void _construct_weapon_menu(const newgame_def& ng,
 
         hbox->align_main = Widget::Align::STRETCH;
         string apt_text = "";
+        int job_mod =                          ng.job == JOB_MUMMY      ? -2 :
+                      ng.job == JOB_DEMIGOD || ng.job == JOB_DEMONSPAWN ? -1 : 0; 
         if (choice.skill != SK_FIGHTING)
             apt_text = make_stringf("(%+d apt)",
-                    species_apt(choice.skill, ng.species));
+                    species_apt(choice.skill, ng.species) + job_mod);
         auto suffix = make_shared<Text>(formatted_string(apt_text, fg));
         hbox->add_child(suffix);
 
