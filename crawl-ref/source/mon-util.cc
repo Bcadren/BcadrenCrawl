@@ -573,7 +573,7 @@ int monster::scan_artefacts(artefact_prop_type ra_prop, bool calc_unid,
     int ret = 0;
 
     // TODO: do we really want to prevent randarts from working for zombies?
-    if (!mons_itemuse(*this) & MU_NOTHING)
+    if (mons_itemuse(*this) >= MU_WEAPON_MELEE)
     {
         const int weap      = inv[MSLOT_WEAPON];
         const int second    = inv[MSLOT_ALT_WEAPON]; // Two-headed ogres, etc.
@@ -2492,7 +2492,7 @@ int exper_value(const monster& mon, bool real)
     // Monsters who can use equipment (even if only the equipment
     // they are given) can be considerably enhanced because of
     // the way weapons work for monsters. - bwr
-    if (!item_usage & MU_NOTHING)
+    if (item_usage >= MU_WEAPON_MELEE)
         diff += 30;
 
     // Set a reasonable range on the difficulty modifier...
@@ -2516,7 +2516,7 @@ int exper_value(const monster& mon, bool real)
     // Slow monsters without spells and items often have big HD which
     // cause the experience value to be overly large... this tries
     // to reduce the inappropriate amount of XP that results. - bwr
-    if (speed < 10 && !spellcaster && item_usage & MU_NOTHING)
+    if (speed < 10 && !spellcaster && item_usage < MU_WEAPON_MELEE)
         x_val /= 2;
 
     // Apply the modifier in the monster's definition.

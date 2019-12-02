@@ -31,3 +31,6 @@ enum monuse_flags
 };
 
 #define muf(int) (monuse_flags)(int)
+
+// BCADNOTE: Use >= MU_WEAPON_MELEE as standard check to see
+// if monster can use items at all.
