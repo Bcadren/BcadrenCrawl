@@ -57,9 +57,9 @@ void equip_item(equipment_type slot, int item_slot, bool msg)
     ASSERT(you.equip[slot] == -1);
     ASSERT(!you.melded[slot]);
 
-    equip_effect(slot, item_slot, false, msg);
-
     you.equip[slot] = item_slot;
+
+    equip_effect(slot, item_slot, false, msg);
 
     ash_check_bondage();
     if (you.equip[slot] != -1 && you.inv[you.equip[slot]].cursed())
