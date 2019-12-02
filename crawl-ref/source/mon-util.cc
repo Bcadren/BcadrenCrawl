@@ -2400,7 +2400,7 @@ int exper_value(const monster& mon, bool real)
     // These are some values we care about.
     const int speed       = mons_base_speed(mon);
     const int modifier    = _mons_exp_mod(mc);
-    const int item_usage  = mons_itemuse(mon);
+    const monuse_flags item_usage  = mons_itemuse(mon);
 
     // XXX: Shapeshifters can qualify here, even though they can't cast.
     const bool spellcaster = mon.has_spells();
@@ -4151,7 +4151,7 @@ bool mons_class_can_pass(monster_type mc, const dungeon_feature_type grid)
 
 static bool _mons_can_open_doors(const monster* mon)
 {
-    return mons_itemuse(*mon) & MU_DOOR;
+    return (mons_itemuse(*mon) & MU_DOOR);
 }
 
 // Some functions that check whether a monster can open/eat/pass a

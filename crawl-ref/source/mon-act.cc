@@ -1110,6 +1110,7 @@ static bool _handle_wand(monster& mons)
     return false;
 }
 
+// This function is poorly named; it's throwing AND ranged weapon attacks.
 bool handle_throw(monster* mons, bolt & beem, bool teleport, bool check_only)
 {
     // Yes, there is a logic to this ordering {dlb}:
@@ -1121,7 +1122,7 @@ bool handle_throw(monster* mons, bolt & beem, bool teleport, bool check_only)
         return false;
     }
 
-    if (!mons_itemuse(*mons) & MU_THROW && !mons_itemuse(*mons) & MU_THROW_ALWAYS
+    if (!mons_itemuse(*mons) & MU_THROW_MASK && !mons_itemuse(*mons) & MU_WEAPON_RANGED
         && mons->type != MONS_SPECTRAL_THING)
     {
         return false;

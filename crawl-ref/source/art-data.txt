@@ -422,7 +422,7 @@ FB_BRAND: SPWPN_NORMAL
 BOOL:    rCorr
 
 ENUM:     ZEPHYR
-NAME:     longbow of Krishna "Sharna"
+NAME:     longbow of Krishna "Shargna"
 OBJ:      OBJ_WEAPONS/WPN_LONGBOW
 INSCRIP:  speed, 
 PLUS:     +7
