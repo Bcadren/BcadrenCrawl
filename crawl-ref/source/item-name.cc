@@ -3327,6 +3327,8 @@ bool is_emergency_item(const item_def &item)
         default:
             return false;
         }
+    case OBJ_WANDS:
+        return (item.sub_type == WAND_HEAL_WOUNDS);
     default:
         return false;
     }
