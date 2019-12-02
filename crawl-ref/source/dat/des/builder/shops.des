@@ -504,7 +504,7 @@ MARKER: a = lua:fog_machine { cloud_type = "thin mist", \
   local randbooks = {"randbook disc:fire","randbook disc:ice",
                      "randbook disc:air","randbook disc:earth"}
   local wands     = {"wand of flame","wand of iceblast",
-                     "lightning rod"}
+                     "lightning rod","wand of ensnaring"}
   local choices   = {1, 2, 3, 4}
   local i, j, temp
   for i = 4, 2, -1 do
