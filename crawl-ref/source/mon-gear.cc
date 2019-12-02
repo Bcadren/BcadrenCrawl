@@ -135,7 +135,7 @@ static void _give_wand(monster* mon, int level)
     {
         if (mons_is_unique(mon->type) && one_chance_in(4))
             give_wand = true;
-        if (one_chance_in(25))
+        if (one_chance_in(18))
             give_wand = true;
     }
 
@@ -160,7 +160,7 @@ static void _give_wand(monster* mon, int level)
     item_def& wand = mitm[idx];
     
     while (idx == NON_ITEM || no_high_tier && is_high_tier_wand(wand.sub_type) || !mon->likes_wand(wand)
-        || (wand.sub_type == WAND_HEAL_WOUNDS && !one_chance_in(20))) // Keep Heal Wounds rare.
+        || (wand.sub_type == WAND_HEAL_WOUNDS && !one_chance_in(10))) // Keep Heal Wounds rare.
     {
         destroy_item(idx, true);
         idx = items(false, OBJ_WANDS, OBJ_RANDOM, level);
