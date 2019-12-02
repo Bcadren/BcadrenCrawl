@@ -1721,7 +1721,6 @@ static string _describe_weapon(const item_def &item, bool verbose)
 
     const int spec_ench = (is_artefact(item) || verbose)
                           ? get_weapon_brand(item) : SPWPN_NORMAL;
-    const int damtype = get_vorpal_type(item);
 
     if (verbose)
     {

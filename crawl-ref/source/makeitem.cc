@@ -324,7 +324,7 @@ brand_type determine_weapon_brand(const item_def& item, int item_level)
     if (item.brand != 0)
         return static_cast<brand_type>(item.brand);
 
-    weapon_type wpn_type;
+    weapon_type wpn_type = WPN_CLUB;
     if (item.base_type == OBJ_SHIELDS)
     {
         switch (item.sub_type)
