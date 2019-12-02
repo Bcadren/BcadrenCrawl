@@ -365,14 +365,14 @@ void holy_flames(monster* caster, actor* defender)
     }
 }
 
-static cloud_type _god_blesses_cloud(cloud_type cloud)
+static cloud_type _god_blesses_cloud(cloud_type cloud, god_type god)
 {
-    switch (you.religion)
+    switch (god)
     {
     case GOD_ZIN:
         if (cloud == CLOUD_CHAOS || cloud == CLOUD_MUTAGENIC)
         {
-            simple_god_message(" cleanses the chaos from your conjured clouds!");
+            simple_god_message(" cleanses the chaos from the conjured clouds!", god);
             return CLOUD_HOLY;
         }
     // Fallthrough
@@ -380,31 +380,33 @@ static cloud_type _god_blesses_cloud(cloud_type cloud)
     case GOD_SHINING_ONE:
         if (cloud == CLOUD_NEGATIVE_ENERGY)
         {
-            simple_god_message(" cleanes the evil from your conjured clouds!");
+            simple_god_message(" cleanses the evil from the conjured clouds!", god);
             return CLOUD_HOLY;
         }
         break;
     case GOD_KIKUBAAQUDGHA:
         if (cloud == CLOUD_POISON || (one_chance_in(4) && cloud != CLOUD_NEGATIVE_ENERGY))
         {
-            simple_god_message(" blesses your cloud with foul necrotic miasma!");
+            simple_god_message(" blesses the clouds with foul necrotic miasma!", god);
             return CLOUD_MIASMA;
         }
         break;
     case GOD_XOM:
         if (cloud != CLOUD_CHAOS && one_chance_in(10))
         {
-            simple_god_message(" doesn't think your cloud is chaotic enough!");
+            simple_god_message(" doesn't think the clouds are chaotic enough!", god);
             return CLOUD_CHAOS;
         }
         break;
     case GOD_YREDELEMNUL:
         if (cloud == CLOUD_NEGATIVE_ENERGY || cloud == CLOUD_MIASMA || (cloud == CLOUD_POISON && one_chance_in(3)))
         {
-            if (you.undead_state() == US_ALIVE)
-                simple_god_message(" enhances your necrotic cloud to heal your undead servants!");
+            if (!(you.religion == GOD_YREDELEMNUL))
+                simple_god_message(" enhances the clouds to heal the undead!", god);
+            else if (you.undead_state() == US_ALIVE)
+                simple_god_message(" enhances your necrotic clouds to heal your undead servants!", god);
             else
-                simple_god_message(" enhances your necrotic cloud to heal you and your undead slaves!");
+                simple_god_message(" enhances your necrotic clouds to heal you and your undead slaves!", god);
             return CLOUD_SPECTRAL;
         }
         break;
@@ -476,7 +478,9 @@ spret cast_cloud_cone(const actor *caster, int pow, const coord_def &pos,
         cloud_type_name(cloud).c_str());
 
     if (caster->is_player())
-        cloud = _god_blesses_cloud(cloud);
+        cloud = _god_blesses_cloud(cloud, you.religion);
+    else
+        cloud = _god_blesses_cloud(cloud, caster->as_monster()->god);
 
     for (const auto &entry : hitfunc.zapped)
     {
