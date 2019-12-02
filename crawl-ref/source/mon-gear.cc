@@ -143,6 +143,13 @@ static void _give_wand(monster* mon, int level)
                 || mons_class_flag(mon->type, M_NO_HT_WAND))
             && (mon->type != MONS_IJYB || crawl_state.game_is_sprint());
 
+    if (mon->type == MONS_CRAZY_YIUF)
+    { 
+        const int idx = items(false, OBJ_WANDS, WAND_RANDOM_EFFECTS, level);
+        give_specific_item(mon, idx);
+        return;
+    }
+
     const int idx = items(false, OBJ_WANDS, OBJ_RANDOM, level);
 
     if (idx == NON_ITEM)
