@@ -2297,7 +2297,7 @@ string mutation_desc(mutation_type mut, int level, bool colour,
 
             if (ds)
             {
-                for (int i = 0; i < you.demonic_traits.size(); i++)
+                for (unsigned int i = 0; i < you.demonic_traits.size(); i++)
                 {
                     if (you.demonic_traits[i].mutation == mut &&
                         you.demonic_traits[i].level_gained <= you.experience_level)
