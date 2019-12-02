@@ -124,56 +124,51 @@ static void _give_book(monster* mon, int level)
 
 static void _give_wand(monster* mon, int level)
 {
-    bool wand_allowed = mons_is_unique(mon->type)
-                        && !mons_class_flag(mon->type, M_NO_WAND)
-                        && _should_give_unique_item(mon);
+    bool wand_allowed = mons_itemuse(*mon) & MU_WAND;
 
     if (!wand_allowed)
         return;
 
-    bool give_wand = mons_class_flag(mon->type, M_ALWAYS_WAND)
-                     || one_chance_in(5);
+    bool give_wand = mons_class_flag(mon->type, M_ALWAYS_WAND);
+
+    if (!give_wand)
+    {
+        if (mons_is_unique(mon->type) && one_chance_in(4))
+            give_wand = true;
+        if (one_chance_in(25))
+            give_wand = true;
+    }
 
     if (!give_wand)
         return;
 
-    // Don't give top-tier wands before 5 HD, except to Ijyb and not in sprint.
-    const bool no_high_tier =
-            (mon->get_experience_level() < 5
-                || mons_class_flag(mon->type, M_NO_HT_WAND))
+    // Don't give top-tier wands before depth of 5, except to Ijyb and not in sprint.
+    const bool no_high_tier = (level < 5)
             && (mon->type != MONS_IJYB || crawl_state.game_is_sprint());
 
     if (mon->type == MONS_CRAZY_YIUF)
     { 
         const int idx = items(false, OBJ_WANDS, WAND_RANDOM_EFFECTS, level);
+        item_def& wand = mitm[idx];
+        wand.flags = 0;
+        wand.charges = 1 + random2(2);
         give_specific_item(mon, idx);
         return;
     }
 
-    const int idx = items(false, OBJ_WANDS, OBJ_RANDOM, level);
-
-    if (idx == NON_ITEM)
-        return;
-
+    int idx = items(false, OBJ_WANDS, OBJ_RANDOM, level);
     item_def& wand = mitm[idx];
-
-    const char* rejection_reason =
-        (no_high_tier && is_high_tier_wand(wand.sub_type)) ? "high tier" :
-                                    !mon->likes_wand(wand) ?      "weak" :
-                                                                  nullptr;
-
-    if (rejection_reason)
+    
+    while (idx == NON_ITEM || no_high_tier && is_high_tier_wand(wand.sub_type) || !mon->likes_wand(wand)
+        || (wand.sub_type == WAND_HEAL_WOUNDS && !one_chance_in(20))) // Keep Heal Wounds rare.
     {
-        dprf(DIAG_MONPLACE,
-             "Destroying %s because %s doesn't want a %s wand.",
-             wand.name(DESC_A).c_str(),
-             mon->name(DESC_THE).c_str(),
-             rejection_reason);
         destroy_item(idx, true);
-        return;
+        idx = items(false, OBJ_WANDS, OBJ_RANDOM, level);
+        wand = mitm[idx];
     }
 
     wand.flags = 0;
+    wand.charges = 1 + random2(2);
     give_specific_item(mon, idx);
 }
 

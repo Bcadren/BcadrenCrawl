@@ -1524,6 +1524,8 @@ bool is_high_tier_wand(int type)
     case WAND_DISINTEGRATION:
     case WAND_CLOUDS:
     case WAND_SCATTERSHOT:
+    case WAND_HASTING:
+    case WAND_HEAL_WOUNDS:
         return true;
     default:
         return false;
