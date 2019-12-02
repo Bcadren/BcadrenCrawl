@@ -796,7 +796,7 @@ static bool _choose_chaos_upgrade(const monster& mon)
         return false;
     }
 
-    if (mons_itemuse(mon) < MONUSE_STARTING_EQUIPMENT)
+    if (mons_itemuse(mon) & MU_NOTHING)
         return false;
 
     // Holy beings are presumably protected by another god, unless
@@ -1353,7 +1353,7 @@ static monster* _find_monster_with_animateable_weapon()
     for (monster_near_iterator mi(&you, LOS_NO_TRANS); mi; ++mi)
     {
         if (mi->wont_attack() || mi->is_summoned()
-            || mons_itemuse(**mi) < MONUSE_STARTING_EQUIPMENT
+            || mons_itemuse(**mi) & MU_NOTHING
             || (mi->flags & MF_HARD_RESET))
         {
             continue;

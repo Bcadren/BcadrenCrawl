@@ -1128,24 +1128,7 @@ int main(int argc, char* argv[])
         mons_check_flag(mons_is_plant(mon), monsterflags,
                         colour(GREEN, "plant"));
 
-        switch (me->gmon_use)
-        {
-        case MONUSE_WEAPONS_ARMOUR:
-            mons_flag(monsterflags, colour(CYAN, "weapons"));
-        // intentional fall-through
-        case MONUSE_STARTING_EQUIPMENT:
-            mons_flag(monsterflags, colour(CYAN, "items"));
-        // intentional fall-through
-        case MONUSE_OPEN_DOORS:
-            mons_flag(monsterflags, colour(CYAN, "doors"));
-        // intentional fall-through
-        case MONUSE_NOTHING:
-            break;
-
-        case NUM_MONUSE: // Can't happen
-            mons_flag(monsterflags, colour(CYAN, "uses bugs"));
-            break;
-        }
+        // BCADDO: Describe MONUSE here.
 
         mons_check_flag(bool(me->bitfields & M_EAT_DOORS), monsterflags,
                         colour(LIGHTRED, "eats doors"));

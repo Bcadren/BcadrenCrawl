@@ -204,24 +204,6 @@ MDEF(wont_attack)
     return 1;
 }
 
-static const char *_monuse_names[] =
-{
-    "nothing", "open_doors", "starting_equipment", "weapons_armour"
-};
-
-static const char *_monuse_to_str(mon_itemuse_type utyp)
-{
-    COMPILE_CHECK(ARRAYSZ(_monuse_names) == NUM_MONUSE);
-    return _monuse_names[utyp];
-}
-
-MDEF(muse)
-{
-    if (const monsterentry *me = mons->find_monsterentry())
-        PLUARET(string, _monuse_to_str(me->gmon_use));
-    return 0;
-}
-
 static int l_mons_get_inventory(lua_State *ls)
 {
     monster* mons = clua_get_lightuserdata<monster>(ls, lua_upvalueindex(1));
@@ -541,7 +523,6 @@ static MonsAccessor mons_attrs[] =
     { "y"   , l_mons_y    },
     { "hd"  , l_mons_hd   },
     { "beh" , l_mons_beh  },
-    { "muse", l_mons_muse },
     { "hp"  , l_mons_hp   },
 
     { "targetx", l_mons_targetx },

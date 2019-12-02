@@ -749,7 +749,7 @@ static bool _handle_potion(monster& mons)
     if (mons.asleep()
         || !potion
         || !one_chance_in(3)
-        || mons_itemuse(mons) < MONUSE_STARTING_EQUIPMENT
+        || !mons_itemuse(mons) & MU_CONSUMABLES
         || potion->base_type != OBJ_POTIONS)
     {
         return false;
@@ -795,7 +795,7 @@ static bool _handle_evoke_equipment(monster& mons)
         || mons_is_confused(mons)
         || !jewel
         || !one_chance_in(3)
-        || mons_itemuse(mons) < MONUSE_STARTING_EQUIPMENT
+        || !mons_itemuse(mons) & MU_JEWELS
         || jewel->base_type != OBJ_JEWELLERY)
     {
         return false;
@@ -960,7 +960,7 @@ static bool _handle_scroll(monster& mons)
         || !scroll
         || mons.has_ench(ENCH_BLIND)
         || !one_chance_in(3)
-        || mons_itemuse(mons) < MONUSE_STARTING_EQUIPMENT
+        || !mons_itemuse(mons) & MU_CONSUMABLES
         || silenced(mons.pos())
         || scroll->base_type != OBJ_SCROLLS)
     {
@@ -1071,7 +1071,7 @@ static bool _handle_wand(monster& mons)
         || mons_is_fleeing(mons)
         || mons.pacified()
         || mons.confused()
-        || mons_itemuse(mons) < MONUSE_STARTING_EQUIPMENT
+        || !mons_itemuse(mons) & MU_WAND
         || mons.has_ench(ENCH_SUBMERGED)
         || x_chance_in_y(3, 4)
         || !wand
@@ -1121,7 +1121,7 @@ bool handle_throw(monster* mons, bolt & beem, bool teleport, bool check_only)
         return false;
     }
 
-    if (mons_itemuse(*mons) < MONUSE_STARTING_EQUIPMENT
+    if (!mons_itemuse(*mons) & MU_THROW && !mons_itemuse(*mons) & MU_THROW_ALWAYS
         && mons->type != MONS_SPECTRAL_THING)
     {
         return false;
@@ -2538,7 +2538,7 @@ static bool _handle_pickup(monster* mons)
     if (mons_eats_items(*mons) && _monster_eat_item(mons))
         return false;
 
-    if (mons_itemuse(*mons) < MONUSE_WEAPONS_ARMOUR)
+    if (mons_itemuse(*mons) & MU_NOTHING)
         return false;
 
     // Keep neutral, charmed, and friendly monsters from

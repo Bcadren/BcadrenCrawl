@@ -56,6 +56,7 @@
 #include "mon-cast.h" // mons_spell_range
 #include "mon-death.h"
 #include "mon-tentacle.h"
+#include "monuse-flags.h"
 #include "options.h"
 #include "output.h"
 #include "prompt.h"
@@ -4475,7 +4476,7 @@ static string _monster_stat_description(const monster_info& mi)
         }
         _add_energy_to_string(speed, me.attack,
                               conjugate_verb("attack", plural), fast, slow);
-        if (mons_class_itemuse(mi.type) >= MONUSE_STARTING_EQUIPMENT)
+        if (mons_class_itemuse(mi.type) & MU_WEAPON_RANGED)
         {
             _add_energy_to_string(speed, me.missile,
                                   conjugate_verb("shoot", plural), fast, slow);
@@ -4492,7 +4493,7 @@ static string _monster_stat_description(const monster_info& mi)
                               conjugate_verb("use", plural)
                               + " special abilities",
                               fast, slow);
-        if (mons_class_itemuse(mi.type) >= MONUSE_STARTING_EQUIPMENT)
+        if (!mons_class_itemuse(mi.type) & MU_NOTHING)
         {
             _add_energy_to_string(speed, me.item,
                                   conjugate_verb("use", plural) + " items",

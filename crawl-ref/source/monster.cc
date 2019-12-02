@@ -1302,7 +1302,7 @@ static bool _is_signature_weapon(const monster* mons, const item_def &weapon)
         if (mons->type == MONS_SIGMUND)
             return wtype == WPN_SCYTHE;
 
-        // Crazy Yiuf's got MONUSE_STARTING_EQUIPMENT right now, but
+        // Crazy Yiuf's got MU_START_ONLY right now, but
         // in case that ever changes we don't want him to switch away
         // from his quarterstaff of chaos.
         if (mons->type == MONS_CRAZY_YIUF)
@@ -1333,7 +1333,7 @@ static bool _is_signature_weapon(const monster* mons, const item_def &weapon)
         if (mons->type == MONS_EDMUND)
             return wtype == WPN_FLAIL || wtype == WPN_DIRE_FLAIL;
 
-        // Pikel's got MONUSE_STARTING_EQUIPMENT right now, but,
+        // Pikel's got MU_START_ONLY right now, but,
         // in case that ever changes, we don't want him to switch away
         // from a whip.
         if (mons->type == MONS_PIKEL)
@@ -3755,7 +3755,7 @@ int monster::res_fire() const
 {
     int u = get_mons_resist(*this, MR_RES_FIRE);
 
-    if (mons_itemuse(*this) >= MONUSE_STARTING_EQUIPMENT)
+    if (!mons_itemuse(*this) & MU_NOTHING)
     {
         u += scan_artefacts(ARTP_FIRE);
 
@@ -3809,7 +3809,7 @@ int monster::res_cold() const
 {
     int u = get_mons_resist(*this, MR_RES_COLD);
 
-    if (mons_itemuse(*this) >= MONUSE_STARTING_EQUIPMENT)
+    if (!mons_itemuse(*this) & MU_NOTHING)
     {
         u += scan_artefacts(ARTP_COLD);
 
@@ -3850,7 +3850,7 @@ int monster::res_elec() const
     u += get_mons_resist(*this, MR_RES_ELEC);
 
     // Don't bother checking equipment if the monster can't use it.
-    if (mons_itemuse(*this) >= MONUSE_STARTING_EQUIPMENT)
+    if (!mons_itemuse(*this) & MU_NOTHING)
     {
         u += scan_artefacts(ARTP_ELECTRICITY);
 
@@ -3906,7 +3906,7 @@ int monster::res_poison(bool temp) const
     if (u > 0)
         return u;
 
-    if (mons_itemuse(*this) >= MONUSE_STARTING_EQUIPMENT)
+    if (!mons_itemuse(*this) & MU_NOTHING)
     {
         u += scan_artefacts(ARTP_POISON);
 
@@ -3997,7 +3997,7 @@ int monster::res_negative_energy(bool intrinsic_only) const
 
     int u = get_mons_resist(*this, MR_RES_NEG);
 
-    if (mons_itemuse(*this) >= MONUSE_STARTING_EQUIPMENT && !intrinsic_only)
+    if (!mons_itemuse(*this) & MU_NOTHING && !intrinsic_only)
     {
         u += scan_artefacts(ARTP_NEGATIVE_ENERGY);
 
@@ -5840,7 +5840,7 @@ bool monster::can_drink() const
     if (mons_class_is_stationary(type))
         return false;
 
-    if (mons_itemuse(*this) < MONUSE_STARTING_EQUIPMENT)
+    if (!mons_itemuse(*this) & MU_CONSUMABLES)
         return false;
 
     // These monsters cannot drink.
@@ -6001,7 +6001,7 @@ bool monster::can_evoke_jewellery(jewellery_type jtype) const
     if (mons_class_is_stationary(type))
         return false;
 
-    if (mons_itemuse(*this) < MONUSE_STARTING_EQUIPMENT)
+    if (!mons_itemuse(*this) & MU_JEWELS)
         return false;
 
     switch (jtype)

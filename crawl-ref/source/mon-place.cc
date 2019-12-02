@@ -1306,7 +1306,7 @@ static monster* _place_monster_aux(const mgen_data &mg, const monster *leader,
         else
             mon->colour = wpn->get_colour();
     }
-    else if (mons_class_itemuse(mg.cls) >= MONUSE_STARTING_EQUIPMENT)
+    else if (!mons_class_itemuse(mg.cls) & MU_NOTHING)
     {
         give_item(mon, place.absdepth(), summoned);
         // Give these monsters a second weapon. - bwr

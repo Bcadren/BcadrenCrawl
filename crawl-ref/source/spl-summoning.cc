@@ -1710,7 +1710,7 @@ static bool _raise_remains(const coord_def &pos, int corps, beh_type beha,
     }
 
     // Re-equip the zombie.
-    if (mons_class_itemuse(monnum) >= MONUSE_STARTING_EQUIPMENT)
+    if (!mons_class_itemuse(monnum) & MU_NOTHING)
         _equip_undead(pos, item, mons);
 
     // Destroy the monster's corpse, as it's no longer needed.

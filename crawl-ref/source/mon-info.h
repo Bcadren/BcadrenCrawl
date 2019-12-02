@@ -211,7 +211,7 @@ struct monster_info_base
     int mr;
     resists_t mresists;
     bool can_see_invis;
-    mon_itemuse_type mitemuse;
+    monuse_flags mitemuse;
     int mbase_speed;
     mon_energy_usage menergy;
     CrawlHashTable props;
@@ -325,7 +325,7 @@ struct monster_info : public monster_info_base
         return mresists;
     }
 
-    mon_itemuse_type itemuse() const
+    monuse_flags itemuse() const
     {
         return mitemuse;
     }

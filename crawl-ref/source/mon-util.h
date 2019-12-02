@@ -12,6 +12,7 @@
 #include "los-type.h"
 #include "mon-enum.h"
 #include "mon-inv-type.h"
+#include "monuse-flags.h"
 #include "player.h"
 
 struct bolt;
@@ -159,7 +160,7 @@ struct monsterentry
     habitat_type     habitat;
     int8_t           speed;        // How quickly speed_increment increases
     mon_energy_usage energy_usage; // And how quickly it decreases
-    mon_itemuse_type gmon_use;
+    monuse_flags gmon_use;
     size_type size;
     mon_body_shape shape;
     mon_type_tile_info tile;
@@ -215,8 +216,8 @@ bool mons_flattens_trees(const monster& mon);
 size_type mons_class_body_size(monster_type mc);
 bool mons_class_res_tornado(monster_type mc);
 
-mon_itemuse_type mons_class_itemuse(monster_type mc);
-mon_itemuse_type mons_itemuse(const monster& mon);
+monuse_flags mons_class_itemuse(monster_type mc);
+monuse_flags mons_itemuse(const monster& mon);
 
 bool mons_can_be_blinded(monster_type mc);
 bool mons_can_be_dazzled(monster_type mc);

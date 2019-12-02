@@ -1202,6 +1202,12 @@ wand of enslavement
 
 A magical device which causes slavish obedience in a creature.
 %%%%
+wand of ensnaring
+
+A magical device that magically spins and throws spider webs to temporarily
+trap opponents, preventing them from moving. The webs hang around until enough
+creatures disturb them and they break.
+%%%%
 wand of flame
 
 A magical device which throws little puffs of flame.

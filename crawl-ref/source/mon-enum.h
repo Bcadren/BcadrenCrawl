@@ -179,17 +179,6 @@ enum habitat_type
     NUM_HABITATS
 };
 
-// order of these is important:
-enum mon_itemuse_type
-{
-    MONUSE_NOTHING,
-    MONUSE_OPEN_DOORS,
-    MONUSE_STARTING_EQUIPMENT,
-    MONUSE_WEAPONS_ARMOUR,
-
-    NUM_MONUSE
-};
-
 typedef uint32_t resists_t;
 #define mrd(res, lev) (resists_t)((res) * ((lev) & 7))
 
