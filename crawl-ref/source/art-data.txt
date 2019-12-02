@@ -421,14 +421,16 @@ BRAND:   SPWPN_ACID
 FB_BRAND: SPWPN_NORMAL
 BOOL:    rCorr
 
-NAME:     longbow "Zephyr"
+ENUM:     ZEPHYR
+NAME:     longbow of Krishna "Sharna"
 OBJ:      OBJ_WEAPONS/WPN_LONGBOW
-PLUS:     +8
+INSCRIP:  speed, 
+PLUS:     +7
 COLOUR:   ETC_GOLD
 TILE:     urand_zephyr
 TILE_EQ:  zephyr
-BRAND:    SPWPN_SPEED
-DEX:      3
+BRAND:    SPWPN_HOLY_WRATH
+BASE_DELAY: -5
 BOOL:     seeinv
 
 NAME:    giant club "Skullcrusher"
