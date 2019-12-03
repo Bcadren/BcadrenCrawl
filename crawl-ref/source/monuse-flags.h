@@ -23,6 +23,9 @@ enum monuse_flags
     MU_THROW_BLOWGUN = 0x8000,
 
     MU_THROW_MASK    = 0xf000,
+    MU_WIELD_MASK    = MU_WEAPON_MELEE | MU_WEAPON_RANGED | MU_ARMOUR | MU_SHIELD 
+        | MU_WAND | MU_JEWELS | MU_CONSUMABLES | MU_MISC,
+        // Mask to check if it has any equipment slots at all.
 
     MU_WEAPONS = MU_WEAPON_MELEE | MU_WEAPON_RANGED,
     MU_MELEE   = MU_DOOR | MU_WEAPON_MELEE | MU_ARMOUR | MU_SHIELD | MU_JEWELS,
@@ -31,6 +34,3 @@ enum monuse_flags
 };
 
 #define muf(int) (monuse_flags)(int)
-
-// BCADNOTE: Use >= MU_WEAPON_MELEE as standard check to see
-// if monster can use items at all.

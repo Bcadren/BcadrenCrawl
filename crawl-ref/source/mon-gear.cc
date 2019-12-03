@@ -104,26 +104,24 @@ static bool _should_give_unique_item(monster* mon)
 
 static void _give_book(monster* mon, int level)
 {
-    if (mon->type == MONS_ROXANNE)
-    {
-        const int which_book = (one_chance_in(3) ? BOOK_TRANSFIGURATIONS
-                                                 : BOOK_EARTH);
+    const int which_book = (one_chance_in(3) ? BOOK_TRANSFIGURATIONS
+                                                : BOOK_EARTH);
 
-        const int thing_created = items(false, OBJ_BOOKS, which_book, level);
+    const int thing_created = items(false, OBJ_BOOKS, which_book, level);
 
-        if (thing_created == NON_ITEM)
-            return;
+    if (thing_created == NON_ITEM)
+        return;
 
-        // Maybe give Roxanne a random book containing Statue Form instead.
-        if (coinflip())
-            make_book_roxanne_special(&mitm[thing_created]);
+    // Maybe give Roxanne a random book containing Statue Form instead.
+    if (coinflip())
+        make_book_roxanne_special(&mitm[thing_created]);
 
-        give_specific_item(mon, thing_created);
-    }
+    give_specific_item(mon, thing_created);
 }
 
 static void _give_wand(monster* mon, int level)
 {
+    // Should be redundant, but keeping just in case.
     bool wand_allowed = mons_itemuse(*mon) & MU_WAND;
 
     if (!wand_allowed)
@@ -2212,11 +2210,21 @@ void give_item(monster *mons, int level_number, bool mons_summoned)
     if (mons->type == MONS_MAURICE)
         _give_gold(mons, level_number);
 
-    _give_book(mons, level_number);
-    _give_wand(mons, level_number);
-    _give_potion(mons, level_number);
-    _give_weapon(mons, level_number);
-    _give_ammo(mons, level_number, mons_summoned);
-    _give_armour(mons, 1 + level_number / 2);
-    _give_shield(mons, 1 + level_number / 2);
+    monuse_flags itemuse = mons_itemuse(*mons);
+    
+
+    if (mons->type == MONS_ROXANNE)
+        _give_book(mons, level_number);
+    if (itemuse & MU_WAND)
+        _give_wand(mons, level_number);
+    if (itemuse & MU_CONSUMABLES)
+        _give_potion(mons, level_number);
+    if (itemuse & MU_WEAPONS)
+        _give_weapon(mons, level_number);
+    if (itemuse & MU_THROW_MASK || itemuse & MU_WEAPON_RANGED)
+        _give_ammo(mons, level_number, mons_summoned);
+    if (itemuse & MU_ARMOUR)
+        _give_armour(mons, 1 + level_number / 2);
+    if (itemuse & MU_SHIELD)
+        _give_shield(mons, 1 + level_number / 2);
 }

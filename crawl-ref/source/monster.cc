@@ -792,9 +792,13 @@ bool monster::likes_wand(const item_def &item) const
 {
     ASSERT(item.base_type == OBJ_WANDS);
 
-    if (get_hit_dice() > 9 || type == MONS_IJYB)
-        return wand_charge_value(item.sub_type) <= 15;
-    return true;
+    if (mons_itemuse(*this) & MU_WAND)
+    {
+        if (get_hit_dice() > 9 || type == MONS_IJYB)
+            return wand_charge_value(item.sub_type) <= 15;
+        return true;
+    }
+    return false; // Don't let anything that doesn't have the flag pick up a wand.
 }
 
 void monster::equip_weapon_message(item_def &item)
@@ -3751,7 +3755,7 @@ int monster::res_fire() const
 {
     int u = get_mons_resist(*this, MR_RES_FIRE);
 
-    if (mons_itemuse(*this) >= MU_WEAPON_MELEE)
+    if (mons_itemuse(*this) & MU_WIELD_MASK)
     {
         u += scan_artefacts(ARTP_FIRE);
 
@@ -3805,7 +3809,7 @@ int monster::res_cold() const
 {
     int u = get_mons_resist(*this, MR_RES_COLD);
 
-    if (mons_itemuse(*this) >= MU_WEAPON_MELEE)
+    if (mons_itemuse(*this) & MU_WIELD_MASK)
     {
         u += scan_artefacts(ARTP_COLD);
 
@@ -3846,7 +3850,7 @@ int monster::res_elec() const
     u += get_mons_resist(*this, MR_RES_ELEC);
 
     // Don't bother checking equipment if the monster can't use it.
-    if (mons_itemuse(*this) >= MU_WEAPON_MELEE)
+    if (mons_itemuse(*this) & MU_WIELD_MASK)
     {
         u += scan_artefacts(ARTP_ELECTRICITY);
 
@@ -3902,7 +3906,7 @@ int monster::res_poison(bool temp) const
     if (u > 0)
         return u;
 
-    if (mons_itemuse(*this) >= MU_WEAPON_MELEE)
+    if (mons_itemuse(*this) & MU_WIELD_MASK)
     {
         u += scan_artefacts(ARTP_POISON);
 
@@ -3993,7 +3997,7 @@ int monster::res_negative_energy(bool intrinsic_only) const
 
     int u = get_mons_resist(*this, MR_RES_NEG);
 
-    if (mons_itemuse(*this) >= MU_WEAPON_MELEE && !intrinsic_only)
+    if ((mons_itemuse(*this) & MU_WIELD_MASK) && !intrinsic_only)
     {
         u += scan_artefacts(ARTP_NEGATIVE_ENERGY);
 

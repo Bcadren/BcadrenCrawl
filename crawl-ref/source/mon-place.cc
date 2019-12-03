@@ -1306,7 +1306,7 @@ static monster* _place_monster_aux(const mgen_data &mg, const monster *leader,
         else
             mon->colour = wpn->get_colour();
     }
-    else if (mons_class_itemuse(mg.cls) >= MU_WEAPON_MELEE)
+    else
     {
         if (place.branch == BRANCH_DUNGEON)
             give_item(mon, place.depth, summoned);

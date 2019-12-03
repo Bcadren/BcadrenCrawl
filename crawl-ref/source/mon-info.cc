@@ -1610,7 +1610,7 @@ int monster_info::randarts(artefact_prop_type ra_prop) const
 {
     int ret = 0;
 
-    if (itemuse() >= MU_WEAPON_MELEE)
+    if (itemuse() & MU_WIELD_MASK)
     {
         item_def* weapon = inv[MSLOT_WEAPON].get();
         item_def* second = inv[MSLOT_ALT_WEAPON].get(); // Two-headed ogres, etc.

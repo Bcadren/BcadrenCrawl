@@ -702,7 +702,7 @@ void wizard_apply_monster_blessing(monster* mon)
 void wizard_give_monster_item(monster* mon)
 {
     monuse_flags item_use = mons_itemuse(*mon);
-    if (item_use < MU_WEAPON_MELEE)
+    if (!(item_use & MU_WIELD_MASK))
     {
         mpr("That type of monster can't use any items.");
         return;
