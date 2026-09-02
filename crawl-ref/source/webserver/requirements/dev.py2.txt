@@ -52,6 +52,6 @@ toml==0.10.0              # via isort, tox
 tornado==5.1.1            # via -r requirements.in/base.txt
 tox==3.14.5               # via -r requirements.in/dev.txt
 typing==3.7.4.1           # via flake8, importlib-resources
-virtualenv==20.0.13       # via tox
+virtualenv==20.36.1       # via tox
 wcwidth==0.1.9            # via pytest
 zipp==1.2.0               # via importlib-metadata, importlib-resources
