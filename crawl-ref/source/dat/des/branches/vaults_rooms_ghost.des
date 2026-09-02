@@ -14,6 +14,7 @@
 ################################################################################
 
 : crawl_require("dlua/ghost.lua")
+: crawl_require("dlua/vault.lua")
 
 NAME:   advil_vaults_ghost_guards
 KITEM:  12 = superb_item / star_item
@@ -26,10 +27,10 @@ SHUFFLE: 13
 MAP
 ........
 ........
-..nnnn..
-..n31n..
-..n12n..
-..n==n..
+..qqqq..
+..q31q..
+..q12q..
+..q==q..
 ........
 ........
 ENDMAP
@@ -46,10 +47,10 @@ SUBST: 9 = 98
 : vaults_ghost_setup(_G)
 MAP
 ........
-nnn==nnn
+qqq==qqq
 ..=92=..
 ..=31=..
-nnn==nnn
+qqq==qqq
 ........
 ENDMAP
 
@@ -65,33 +66,35 @@ TILE:  t = dngn_tree_dead
 : set_feature_name("granite_statue", "a gravestone")
 : vaults_ghost_setup(_G)
 MAP
-..x.....
-..x.....
-..n.dt..
-..=.OGt.
-..n.et..
-..x.....
-..x.....
+ qqqqqqqqq.
+ q.......q.
+ q.......q.
+ q.dt.te.q.
+.=...G...=.
+.q.etOtd.q
+.q.......q
+.q.......q
+.qqqqqqqqq
 ENDMAP
 
 NAME:   gammafunk_vaults_ghost_split
 KMONS:  O = player ghost
 : ghost_good_loot(_G)
-SUBST:  fg = |*, p : b., q : b., b : xbcv
+SUBST:  fg = |*, p : b., r : b., b : xbcv
 NSUBST: D = 0 / 2=0. / 2=9 / 2=9. / 8 / 2=8. / .
 : vaults_ghost_setup(_G)
 MAP
 .............
 .............
-..xxxnnnxxx..
-..nD..D..Dx..
-..n..qpq..x..
-..=.Dpqpe.n..
-..=...OgdDn..
-..=.Dpqpf.n..
-..n..qpq..x..
-..nD..D..Dx..
-..xxxnnnxxx..
+..yyyqqqyyy..
+..qD..D..Dy..
+..q..rpr..y..
+..=.Dprpe.q..
+..=...OgdDq..
+..=.Dprpf.q..
+..q..rpr..y..
+..qD..D..Dy..
+..yyyqqqyyy..
 .............
 .............
 ENDMAP
@@ -107,21 +110,22 @@ SHUFFLE: FfrHhs / ZyzHhs / ZyzHhs / FfrZyz / FfrZyz / FfrZyz / ZyzZyz / \
 # 1.5 items per ghost. One 'd' glyph and one 'e' glyph are used by the good
 # loot items, so we don't replace those.
 NSUBST:  d = d / |*.., e = e / |*.., f = |* / |*.., h = 2=|* / |*..
-SUBST:   qrs = G, Z = ., y = p, z = V, t : tp
+SUBST:   urs = G, Z = ., y = p, z = V, t : tp
 TILE:    G = dngn_gravestone
 TILE:    t = dngn_tree_dead
 : set_feature_name("granite_statue", "a gravestone")
 : vaults_ghost_setup(_G)
 MAP
-qd-frf-eq
-dD--F--De
----------
-h-------h
-sH-----Hs
-h-------h
-xnn===nnx
-.........
-.........
+qqqqqqqqqqq
+qud-frf-euq
+qdD--F--Deq
+q---------q
+qh-------hq
+qsH-----Hsq
+qh-------hq
+qqqq===qqqq
+...........
+...........
 ENDMAP
 
 NAME:   gammafunk_vaults_ghost_necromancy
@@ -133,15 +137,15 @@ SUBST:  fg = |*, h = *, i = %$, j = -
 NSUBST: 1 = 12 / 1, - = 3=1 / 6=1. / .
 : vaults_ghost_setup(_G)
 MAP
-..xxxxxxx
-..n1x1x1x
-..n---igx
-..=---exx
-..=---dOx
-..=---fxx
-..n---jhx
-..n1x1x1x
-..xxxxxxx
+..qqqqqqq
+..q1q1q1q
+..q---igq
+..=---eqq
+..=---dOq
+..=---fqq
+..q---jhq
+..q1q1q1q
+..qqqqqqq
 ENDMAP
 
 NAME:   gammafunk_vaults_ghost_spectres
@@ -155,15 +159,15 @@ SUBST:  fg = |*, h = *, i = %$--
 NSUBST: D = 2 / 3 / 2=3- / 4-, - = 2=1 / 2=1. / 2 / 3=2. / .
 : vaults_ghost_setup(_G)
 MAP
-..xxxxxxx
-..nDxDxDx
-..n----gx
-..=---exx
-..=--idOx
-..=---fxx
-..n----hx
-..nDxDxDx
-..xxxxxxx
+..qqqqqqq
+..qDqDqDq
+..q----gq
+..=---eqq
+..=--idOq
+..=---fqq
+..q----hq
+..qDqDqDq
+..qqqqqqq
 ENDMAP
 
 NAME:   gammafunk_vaults_ghost_fury_of_okawaru
@@ -175,12 +179,12 @@ KITEM:  O = hat cursed ident:all / cloak cursed ident:all / \
         animal skin cursed ident:all / robe cursed ident:all / \
         leather armour cursed ident:all / whip cursed ident:all / \
         spear cursed ident:all / short sword cursed ident:all / \
-        dagger cursed ident:all / hand axe cursed ident:all / \
+        dagger cursed ident:all / hatchet cursed ident:all / \
         scythe cursed ident:all / club cursed ident:all / \
         hunting sling cursed ident:all
 KITEM:  P = robe cursed plus:-8 randart ident:all
 # An "Oka weapon gift" using the more useful types on 'd'
-ITEM:   quick blade good_item w:5 / rapier good_item / scimitar good_item / \
+ITEM:   tanto good_item w:5 / rapier good_item / scimitar good_item / \
         double sword good_item w:5 / demon blade good_item w:5 / \
         triple sword good_item w:5 /  morningstar good_item / \
         eveningstar good_item w:5 / demon whip good_item w:5 / \
@@ -201,16 +205,17 @@ SUBST:  O = O:49 P:1, fgh = |*, i = *%, j = %$..
 NSUBST: - = 3=1 / 4=1. / 2=2 / 2=2. / 2=3. / 3... / .
 : vaults_ghost_setup(_G)
 MAP
-GvvvvvvvG
--igvOvhj-
----edf---
--vG---Gv-
----------
--vG---Gv-
----------
-nnn===nnn
-.........
-.........
+qqqqqqqqqqq
+qGvvvvvvvGq
+q-igvOvhj-q
+q---edf---q
+q-vG---Gv-q
+q---------q
+q-vG---Gv-q
+q---------q
+qqqq===qqqq
+...........
+...........
 ENDMAP
 
 NAME:   ebering_vaults_ghost_inner_flame
@@ -225,13 +230,15 @@ MARKER: F = lua:fog_machine { cloud_type = "black smoke", \
 : dgn.delayed_decay(_G, "d", "chunk")
 : vaults_ghost_setup(_G)
 MAP
-..x....
-..x''..
-..n'''.
-..='O'.
-..n'''.
-..x''..
-..x....
+..qqqqqqqqq..
+..q.......q..
+..q..''...q..
+..=..'''..=..
+..=.''O''.=..
+..=..'''..=..
+..q...''..q..
+..q.......q..
+..qqqqqqqqq..
 ENDMAP
 
 NAME:   ebering_vaults_ghost_reflecting_pool
@@ -242,15 +249,15 @@ KMONS:  O = player_ghost
 KFEAT:  O = shallow_water
 : vaults_ghost_setup(_G)
 MAP
-.....
-.dOe.
-..w..
-..w..
-..w..
-..W..
-xn=nx
-.....
-.....
+qqqqqqq
+q.dOe.q
+q..w..q
+q..w..q
+q..w..q
+q..W..q
+qqq=qqq
+.......
+.......
 ENDMAP
 
 NAME:   ebering_vaults_ghost_disaster_area
@@ -262,14 +269,15 @@ NSUBST: ' = d / e / 8=wWl / .
 SUBST:  P = GTV
 : vaults_ghost_setup(_G)
 MAP
-'xx'x'x'
-x''O''x'
-'x'''''x
-''P'x''x
-x'''''''
-xnn==nnx
-........
-........
+qqqqqqqqqq
+q'xx'x'x'q
+qx''O''x'q
+q'x'''''xq
+q''P'x''xq
+qx'''''''q
+qqqq==qqqq
+..........
+..........
 ENDMAP
 
 NAME:   ebering_vaults_ghost_gozag
@@ -296,13 +304,13 @@ COLOUR: G = yellow
 MAP
 .............
 .............
-...ccccccc...
-..ccMGOGMcc..
-..cM'''''Mc..
-..cG''1''Gc..
-..cM''_''Mc..
-..cc'''''cc..
-...nn===nn...
+...yyyyyyy...
+..yyMGOGMyy..
+..yM'''''My..
+..yG''1''Gy..
+..yM''_''My..
+..yy'''''yy..
+...qq===qq...
 .............
 .............
 ENDMAP
@@ -316,18 +324,19 @@ KMONS:  O = player_ghost
 KFEAT:  _ = altar_xom
 : vaults_ghost_setup(_G)
 MAP
-...1...
-..d_e..
-...O...
-xxn=nxx
-.......
-.......
+qqqqqqqqq
+q...1...q
+q..d_e..q
+q...O...q
+qqqq=qqqq
+.........
+.........
 ENDMAP
 
 NAME:   biasface_vaults_ghost_orc_armoury
 TAGS:   vaults_orient_s
-ITEM:   boots good_item / helmet good_item / hat good_item / \
-        gloves good_item / cloak good_item
+ITEM:   pair of boots good_item / helmet good_item / hat good_item / \
+        pair of gloves good_item / cloak good_item
 ITEM:   any armour good_item, any weapon good_item, any jewellery good_item
 : item(ghost_loot_potions .. " / " .. ghost_loot_scrolls)
 KMONS:  O = player ghost
@@ -338,15 +347,16 @@ NSUBST: - = 2=1 / 2=1. / 2=2 / 2=2. / 3=3 / 3=3. / 4 / 2=4. / F / 5 / 2=5. \
 KFEAT:  _ = altar_beogh
 : vaults_ghost_setup(_G)
 MAP
-I---fd_eg---I
-------h------
--xIx--I--xIx-
--xnx--O--xnx-
-----xxnxx----
-.............
-nnnnn===nnnnn
-I...........I
-.............
+qqqqqqqqqqqqqqq
+qI---fd_eg---Iq
+q------h------q
+q-xIx--I--xIx-q
+q-xnx--O--xnx-q
+q----xxnxx----q
+q.............q
+qqqqqq===qqqqqq
+..I.........I..
+...............
 ENDMAP
 
 NAME:   ploomutoo_gammafunk_vaults_ghost_potion_laboratory
@@ -354,12 +364,12 @@ TAGS:   vaults_orient_s
 WEIGHT: 5
 ITEM:   potion of mutation ident:type q:1
 : item(ghost_loot_potions)
-ITEM:   hat randart / robe randart / gloves randart / boots randart / \
-        cloak randart
+ITEM:   hat randart / robe randart / pair of gloves randart / \
+        pair of boots randart / cloak randart
 KITEM:  O = potion of cancellation q:2 ident:type
 KMONS:  O = player ghost
 MONS:   shapeshifter, glowing orange brain, very ugly thing
-MONS:   glowing shapeshifter, cacodemon, tentacled monstrosity
+MONS:   glowing shapeshifter, titivilus, tentacled monstrosity
 NSUBST: - = 2=P / 2=P; / ;, ' = 2=P` / `
 NSUBST: ; = d / d. / 4=e / 4=3 / 4=3. / 2 / 2. / 2=6 / 2=6. / .
 NSUBST: " = 3=d / d. / e / f / ", ` = 4=1 / 4=1. / 4 / 3=4. / 5 / 2=5. / .
@@ -371,28 +381,29 @@ MARKER: U = lua:fog_machine { cloud_type = "mutagenic fog", pow_min = 3, \
                 spread_rate = 0, excl_rad = 0 }
 : vaults_ghost_setup(_G)
 MAP
-bU"P"Ub
-"""O"""
-'''''''
-'b'''b'
-```````
-nn===nn
--------
--x---x-
-x-x-x-x
--x---x-
-;;;x;;;
-;x;;;x;
-;;;;;;;
-nn===nn
-.......
-.......
+qqqqqqqqq
+qbU"P"Ubq
+q"""O"""q
+q'''''''q
+q'b'''b'q
+q```````q
+qqq===qqq
+q-------q
+q-x---x-q
+qx-x-x-xq
+q-x---x-q
+q;;;x;;;q
+q;x;;;x;q
+q;;;;;;;q
+qqq===qqq
+q.......q
+q.......q
 ENDMAP
 
 NAME:   gammafunk_vaults_ghost_tricky_traps
 TAGS:   vaults_orient_s
-KFEAT:  ^ = zot trap / dispersal trap w:5 / alarm trap w:1 / floor w:16
-KFEAT:  ' = zot trap / dispersal trap w:5 / alarm trap w:1 / floor w:8
+KFEAT:  ^ = zot trap / congregation trap w:5 / alarm trap w:1 / floor w:16
+KFEAT:  ' = zot trap / congregation trap w:5 / alarm trap w:1 / floor w:8
 : kitem("O = " .. dgn.randart_aux_armour)
 : ghost_good_loot(_G)
 KMONS:  O = player ghost
@@ -402,16 +413,17 @@ NSUBST: - = 1 / 2=1. / 5=0 / 6=0. / 2 / .
 SUBST:  G : GGtU
 : vaults_ghost_setup(_G)
 MAP
-G-'fdOeg'-G
--n-n-h-n-n-
-'-'-'-'-'-'
--'-n-n-n-'-
-G-'-'-'-'-G
-xxnn===nnxx
-^.^.....^.^
-.^.^.^.^.^.
-^.^.^.^.^.^
-.^.^.^.^.^.
+qqqqqqqqqqqqq
+qG-'fdOeg'-Gq
+q-n-n-h-n-n-q
+q'-'-'-'-'-'q
+q-'-n-n-n-'-q
+qG-'-'-'-'-Gq
+qqqqq===qqqqq
+.^.^.....^.^.
+.^.^.^.^.^.^.
+.^.^.^.^.^.^.
+.^.^.^.^.^.^.
 ENDMAP
 
 NAME:    gammafunk_vaults_ghost_crypt
@@ -422,7 +434,7 @@ TAGS:    vaults_orient_s
 : kitem("D = " .. dgn.randart_aux_armour)
 KITEM:   EHK = any jewellery randart
 KITEM:   FJL = randbook owner:Kikubaaqudgha disc:necromancy numspells:6 \
-               / necronomicon / manual of necromancy
+               / manual of necromancy / book of unlife
 KITEM:   12 = superb_item / star_item
 KMONS:   DEF = player ghost
 KMONS:   HJ1 =  lich
@@ -440,11 +452,39 @@ KFEAT:   _ = altar_kikubaaqudgha
 FTILE:   -d|*%$ODEFHJKL12VY_ = floor_pebble_brown / floor_pebble_darkgray
 : vaults_ghost_setup(_G)
 MAP
- xxxDxxx
-xxExdxFxx
-1ddV_Vdd1
-x-------x
-xnn===nnx
-.........
-.........
+    qqq
+ qqqqDqqqq
+qqqEqdqFqqq
+q1ddV_Vdd1q
+qq-------qq
+ qqq===qqq
+   .....
+   .....
+ENDMAP
+
+NAME:   gammafunk_vaults_ghost_door_vault
+WEIGHT: 2
+: ghost_good_loot(_G, "45")
+KMONS:  1 = 9
+KMONS:  2 = 8
+KMONS:  345 = player_ghost
+# Ghosts on 4 and 5 will get upgraded loot.
+NSUBST: 3 = 4 / 5 / 3, 1 = 5=23 / 3 / 1
+: door_vault_setup(_G)
+: vaults_ghost_setup(_G)
+MAP
+..............
+..............
+..aaaaaaaaaa..
+..a++++++++a..
+..a++++++++a..
+..a++1111++a..
+..a++1331++a..
+..a++1331++a..
+..a++1111++a..
+..a++++++++a..
+..a++++++++a..
+..aaaaaaaaaa..
+..............
+..............
 ENDMAP

@@ -8,7 +8,7 @@
 #include "player.h"
 #include "state.h"
 #include "stringutil.h"
-#include "tiledef-player.h"
+#include "rltiles/tiledef-player.h"
 #include "tilefont.h"
 #include "tilepick-p.h"
 #include "ui.h"
@@ -52,7 +52,7 @@ static int _get_next_part(int cat, int part, int inc)
 
     if (cat == TILEP_PART_BASE)
     {
-        offset   = tilep_species_to_base_tile(you.species, you.experience_level);
+        offset   = tilep_species_to_base_tile(you.species, you.drac_colour);
         max_part = tile_player_count(offset);
     }
 
@@ -131,7 +131,7 @@ void DollEditRegion::render()
     int max_part = tile_player_part_count[m_cat_idx];
     if (m_cat_idx == TILEP_PART_BASE)
     {
-        tileidx_t idx = tilep_species_to_base_tile(you.species, you.experience_level);
+        tileidx_t idx = tilep_species_to_base_tile(you.species, you.drac_colour);
         max_part = tile_player_count(idx) - 1;
     }
 
@@ -247,6 +247,7 @@ void DollEditRegion::render()
     const char *cat_name[TILEP_PART_MAX] =
     {
         "Base",
+        "Bottom",
         "Shadow",
         "Halo",
         "Ench",
@@ -260,8 +261,10 @@ void DollEditRegion::render()
         "Hair",
         "Beard",
         "Helm",
+        "MountF",
+        "MountB",
         "DrcWing",
-        "DrcHead"
+        "DrcHead",
     };
 
     // Add current doll information:
@@ -319,7 +322,7 @@ void DollEditRegion::render()
     glmanager->reset_transform();
 }
 
-int DollEditRegion::handle_mouse(MouseEvent &event)
+int DollEditRegion::handle_mouse(wm_mouse_event &/*event*/)
 {
     return 0;
 }
@@ -337,7 +340,7 @@ private:
     DollEditRegion *reg;
 };
 
-SizeReq UIDollEditor::_get_preferred_size(Direction dim, int prosp_width)
+SizeReq UIDollEditor::_get_preferred_size(Direction dim, int /*prosp_width*/)
 {
     if (!dim)
         return { 552, 552 };
@@ -365,7 +368,7 @@ void DollEditRegion::run()
 
     // Initialise job default.
     m_job_default = equip_doll;
-    tilep_race_default(you.species, you.experience_level, &m_job_default);
+    tilep_race_default(you.species, you.drac_colour, &m_job_default);
     tilep_job_default(you.char_class, &m_job_default);
 
     // Read predefined dolls from file.
@@ -387,17 +390,15 @@ void DollEditRegion::run()
     auto doll_ui = make_shared<UIDollEditor>(this);
 
     auto vbox = make_shared<Box>(Widget::VERT);
-    vbox->align_cross = Widget::CENTER;
+    vbox->set_cross_alignment(Widget::CENTER);
     auto title = make_shared<Text>(formatted_string("Doll Editor", YELLOW));
     title->set_margin_for_sdl(0, 0, 20, 0);
     vbox->add_child(move(title));
     vbox->add_child(doll_ui);
     auto popup = make_shared<ui::Popup>(move(vbox));
 
-    popup->on(Widget::slots.event, [this, &done, &doll_ui, &update_part_idx](wm_event ev) {
-        if (ev.type != WME_KEYDOWN)
-            return false;
-        int key = ev.key.keysym.sym;
+    popup->on_keydown_event([this, &done, &doll_ui, &update_part_idx](const KeyEvent& ev) {
+        const auto key = ev.key();
         command_type cmd = key_to_command(key, KMC_DOLL);
 
         switch (cmd)
@@ -466,11 +467,14 @@ void DollEditRegion::run()
                 switch (i)
                 {
                 case TILEP_PART_BASE:
+                case TILEP_PART_BOTTOM:
                 case TILEP_PART_SHADOW:
                 case TILEP_PART_HALO:
                 case TILEP_PART_ENCH:
                 case TILEP_PART_DRCWING:
                 case TILEP_PART_DRCHEAD:
+                case TILEP_PART_MOUNT_FRONT:
+                case TILEP_PART_MOUNT_BACK:
                     break;
                 default:
                     m_dolls[m_doll_idx].parts[i] = 0;

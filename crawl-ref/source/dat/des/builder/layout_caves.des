@@ -18,7 +18,7 @@
 # functions from weighted selections and draw them overwritten.
 #
 NAME:   layout_layer_cave
-DEPTH:  D:4-, Lair, Snake
+DEPTH:  D:3-, Lair, Snake
 WEIGHT: 5, 15 (Snake)
 ORIENT: encompass
 TAGS:   overwritable layout allow_dup unrand layout_type_narrow_caves
@@ -231,7 +231,7 @@ TAGS:   overwritable layout allow_dup unrand layout_type_open_caves
 # Then add pools like layout_cave_pools (but also including "pools"
 # of trees and stone).
 #
-# TODO: Somebody with greater noise manipulation prowress than I
+# TODO: Somebody with greater noise manipulation prowess than I
 # should widen the occasional thin corridor at the end of each drip.
 #
 NAME:   layout_falls_marsh
@@ -239,11 +239,12 @@ DEPTH:  Swamp, !Swamp:$
 WEIGHT: 10
 ORIENT: encompass
 TAGS:   overwritable layout allow_dup unrand no_pool_fixup layout_type_swamp
+KFEAT: t = mangrove
 {{
   if is_validating() then return end
 
   local gxm,gym = dgn.max_bounds()
-  local limit,border,margin = 0.35,8,8
+  local limit,border,margin = 0.35,16,16
   local reps = crawl.random_range(70,85)
 
   local fcaves = procedural.worley_diff { scale = 7.5/reps }
@@ -264,12 +265,11 @@ TAGS:   overwritable layout allow_dup unrand no_pool_fixup layout_type_swamp
               frequency = pool_frequency }
 
   subst('W = W:75 t')
-  subst('w = w:75 t')
-  subst('c = .:570 w W t')
+  subst('w = W:75 t')
+  subst('c = .:570 w t')
   subst('. = .:' .. 71 - you.depth() * 4 .. ' W:' .. 29 + you.depth() * 4)
   subst('x = t')
 
-  remove_isolated_glyphs { find = "w", percent = 80 }
   remove_isolated_glyphs { find = "W", percent = 80 }
   zonify.grid_fill_water_zones(1,"t")
 }}
@@ -290,7 +290,7 @@ validate {{
 # TODO: Wider the paths, then add to Spider at weight 10.
 #
 NAME:   layout_cave_pods
-DEPTH:  D:4-, Lair, Snake
+DEPTH:  D:3-, Lair, Snake
 WEIGHT: 5, 15 (Lair)
 ORIENT: encompass
 TAGS:   overwritable layout allow_dup unrand layout_type_open_caves
@@ -303,6 +303,12 @@ TAGS:   overwritable layout allow_dup unrand layout_type_open_caves
   -- corridor width up and down with noise scale too otherwise they end up hugely wrong size)
   local frooms = procedural.worley_diff{ scale = 0.15 }
   local fcorridors = procedural.worley_diff{ scale = 0.1 }
+
+  if you.in_branch("Snake") then
+    frooms = procedural.transform.damped_distortion(frooms)
+    fcorridors = procedural.transform.damped_distortion(fcorridors)
+  end
+
   local fhalls = procedural.sub(fcorridors,procedural.mul(frooms,0.5))
   local fbord = procedural.border{ padding = 4,additive = true }
   frooms = procedural.sub(frooms,fbord)

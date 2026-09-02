@@ -1,8 +1,9 @@
 # Give deep levels of D an 80% chance for decorative vaults.
+# BCADDO: This is one of the things that makes depths different than Vaults; when merging them the "depths" floors should use this.
 
 NAME:    dungeon_decor
 TAGS:    no_dump extra allow_dup nolayout_encompass luniq
-DEPTH:   D:14-, Depths
+DEPTH:   D:7-, Depths
 CHANCE:  80%
 {{
   local c = 1

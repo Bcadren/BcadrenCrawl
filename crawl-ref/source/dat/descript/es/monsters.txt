@@ -396,7 +396,7 @@ balrug
 
 Un demonio enorme y muy poderoso, envuelto en llamas y sombras.
 %%%%
-Brimstone Fiend
+rhuddgoch
 
 Un enorme y poderoso demonio bañado en fuego infernal, con amplias alas
 escamosas. Uno de los más temibles habitantes de cualquiera de los Infiernos.
@@ -411,17 +411,17 @@ centaur warrior
 Un centauro musculoso y curtido en numerosas batallas, equipado con buenas
 armas y capaz de usarlas hábilmente.
 %%%%
-Executioner
+oxarmordth
 
 Un horrible, poderoso y ágil demonio cuya forma está oculta en un remolino de
 hojas de guadaña
 %%%%
-Hell Sentinel
+gwarchodwr
 
 Un imponente monolito construido y poseído por fuerzas demoníacas. Unos mil
 ojos miran lascivamente por las rendijas de su armadura dentada y espinosa.
 %%%%
-Ice Fiend
+Vetrifl
 
 Un enorme y frío demonio cubierto en escarcha y revestido en aire helado. Es
 uno de los habitantes más terribles de los muchos y variados Infiernos.

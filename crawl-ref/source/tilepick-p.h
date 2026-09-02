@@ -7,7 +7,7 @@
 
 #ifdef USE_TILE
 
-#include "tiledef_defines.h"
+#include "rltiles/tiledef_defines.h"
 
 struct dolls_data;
 struct item_def;
@@ -24,16 +24,20 @@ tileidx_t tilep_equ_boots(const item_def &item);
 
 tileidx_t tileidx_player();
 bool is_player_tile(tileidx_t tile, tileidx_t base_tile);
+bool is_cent(tileidx_t tile);
+bool is_naga(tileidx_t tile);
+bool is_merfolk_tail(tileidx_t tile);
 
-tileidx_t tilep_species_to_base_tile(int sp, int level);
+tileidx_t tilep_top_to_bottom_tile(tileidx_t top);
+tileidx_t tilep_species_to_base_tile(int sp, int colour);
 
-void tilep_draconian_init(int sp, int level, tileidx_t *base,
+void tilep_draconian_init(int colour, tileidx_t *base,
                           tileidx_t *head, tileidx_t *wing);
-void tilep_race_default(int sp, int level, dolls_data *doll);
+void tilep_race_default(int sp, int colour, dolls_data *doll);
 void tilep_job_default(int job, dolls_data *doll);
 void tilep_calc_flags(const dolls_data &data, int flag[]);
 
-void tilep_scan_parts(char *fbuf, dolls_data &doll, int species, int level);
+void tilep_scan_parts(char *fbuf, dolls_data &doll, int species, int colour);
 void tilep_print_parts(char *fbuf, const dolls_data &doll);
 
 #endif

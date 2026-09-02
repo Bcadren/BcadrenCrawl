@@ -1,8 +1,12 @@
 #pragma once
 
+#include <vector>
+
 #include "beam.h"
 #include "los-type.h"
 #include "reach-type.h"
+
+using std::vector;
 
 struct passwall_path;
 
@@ -37,7 +41,6 @@ public:
 
     virtual aff_type is_affected(coord_def loc) = 0;
     virtual bool can_affect_unseen();
-    virtual bool has_additional_sites(coord_def a);
     virtual bool affects_monster(const monster_info& mon);
 protected:
     bool anyone_there(coord_def loc);
@@ -151,7 +154,8 @@ class targeter_cleave : public targeter
 public:
     targeter_cleave(const actor* act, coord_def target);
     aff_type is_affected(coord_def loc) override;
-    bool valid_aim(coord_def a) override { return false; }
+    bool valid_aim(coord_def) override;
+    bool set_aim(coord_def a) override;
 private:
     set<coord_def> targets;
 };
@@ -183,16 +187,34 @@ private:
     int range;
 };
 
-class targeter_los : public targeter
+class targeter_radius : public targeter
 {
 public:
-    targeter_los(const actor *act, los_type los = LOS_DEFAULT,
-                  int ran = LOS_RADIUS, int ran_max = 0);
+    targeter_radius(const actor *act, los_type _los = LOS_DEFAULT,
+                  int ran = LOS_RADIUS, int ran_max = 0, int ran_min = 0);
     bool valid_aim(coord_def a) override;
-    aff_type is_affected(coord_def loc) override;
+    virtual aff_type is_affected(coord_def loc) override;
 private:
     los_type los;
-    int range, range_max;
+    int range, range_max, range_min;
+};
+
+// like targeter_radius, but converts all AFF_YESes to AFF_MAYBE
+class targeter_maybe_radius : public targeter_radius
+{
+public:
+    targeter_maybe_radius(const actor *act, los_type _los = LOS_DEFAULT,
+                  int ran = LOS_RADIUS, int ran_max = 0, int ran_min = 0)
+        : targeter_radius(act, _los, ran, ran_max, ran_min)
+    { }
+
+    virtual aff_type is_affected(coord_def loc) override
+    {
+        if (targeter_radius::is_affected(loc))
+            return AFF_MAYBE;
+        else
+            return AFF_NO;
+    }
 };
 
 class targeter_thunderbolt : public targeter
@@ -243,7 +265,7 @@ public:
     bool set_aim(coord_def a) override;
     bool step_is_blocked;
     aff_type is_affected(coord_def loc) override;
-    bool has_additional_sites(coord_def a) override;
+    bool has_additional_sites(coord_def a);
     set<coord_def> additional_sites;
     coord_def landing_site;
 private:
@@ -275,7 +297,8 @@ private:
 class targeter_shotgun : public targeter
 {
 public:
-    targeter_shotgun(const actor* act, size_t beam_count, int r);
+    targeter_shotgun(const actor* act, size_t beam_count, int r,
+                     bool cloud = false);
     bool valid_aim(coord_def a) override;
     bool set_aim(coord_def a) override;
     aff_type is_affected(coord_def loc) override;
@@ -284,6 +307,7 @@ public:
 private:
     size_t num_beams;
     int range;
+    bool uses_clouds;
 };
 
 class targeter_monster_sequence : public targeter_beam
@@ -323,4 +347,115 @@ public:
     bool affects_monster(const monster_info& mon) override;
 private:
     map<coord_def, int> aim_test_cache;
+};
+
+class targeter_charge : public targeter
+{
+public:
+    targeter_charge(const actor *act, int range);
+    bool valid_aim(coord_def a) override;
+    bool set_aim(coord_def a) override;
+    aff_type is_affected(coord_def loc) override;
+private:
+    int range;
+    vector<coord_def> path_taken; // Path the charge took.
+};
+
+string bad_charge_target(coord_def a);
+bool can_charge_through_mons(coord_def a);
+
+// a fixed los targeter matching how it is called for shatter, with a custom
+// tweak to affect walls.
+class targeter_shatter : public targeter_radius
+{
+public:
+    targeter_shatter(const actor *act) : targeter_radius(act, LOS_ARENA) { }
+    bool can_affect_walls() override { return true; };
+};
+
+// A fixed targeter for multi-position attacks, i.e. los stuff that
+// affects various squares, or monsters non-locally. For los stuff that
+// affects only monsters on a per-monster case basis see targeter_multimonster
+class targeter_multiposition : public targeter
+{
+public:
+    targeter_multiposition(const actor *a, vector<coord_def> seeds,
+                        aff_type _positive=AFF_MAYBE);
+    targeter_multiposition(const actor *a, vector<monster *> seeds,
+                        aff_type _positive=AFF_MAYBE);
+    targeter_multiposition(const actor *a, initializer_list<coord_def> seeds,
+                        aff_type _positive=AFF_MAYBE);
+
+    void add_position(const coord_def &c, bool force=false);
+    bool valid_aim(coord_def) override { return true; }
+    aff_type is_affected(coord_def loc) override;
+
+protected:
+    set<coord_def> affected_positions;
+    aff_type positive;
+};
+
+class targeter_multifireball : public targeter_multiposition
+{
+public:
+    targeter_multifireball(const actor *a, vector<coord_def> seeds);
+};
+
+// a class for fixed beams at some offset from the player
+class targeter_starburst_beam : public targeter_beam
+{
+public:
+    targeter_starburst_beam(const actor *a, int _range, int pow, const coord_def &offset);
+    // this is a bit of ui hack: lets us set starburst beams even when the
+    // endpoint would be out of los
+    bool can_affect_unseen() override { return true; }
+    bool valid_aim(coord_def) override { return true; }
+};
+
+class targeter_starburst : public targeter
+{
+public:
+    targeter_starburst(const actor *a, int range, int pow);
+    bool valid_aim(coord_def) override { return true; }
+    aff_type is_affected(coord_def loc) override;
+private:
+    vector<targeter_starburst_beam> beams;
+};
+
+class targeter_ignite_poison : public targeter_multiposition
+{
+public:
+    targeter_ignite_poison(actor *a);
+};
+
+class targeter_multimonster : public targeter
+{
+public:
+    targeter_multimonster(const actor *a);
+
+    bool valid_aim(coord_def) override { return true; }
+    aff_type is_affected(coord_def loc) override;
+protected:
+    bool check_monster;
+};
+
+class targeter_drain_life : public targeter_multimonster
+{
+public:
+    targeter_drain_life();
+    bool affects_monster(const monster_info& mon) override;
+};
+
+class targeter_discord : public targeter_multimonster
+{
+public:
+    targeter_discord();
+    bool affects_monster(const monster_info& mon) override;
+};
+
+class targeter_fear : public targeter_multimonster
+{
+public:
+    targeter_fear();
+    bool affects_monster(const monster_info& mon) override;
 };

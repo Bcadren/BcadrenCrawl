@@ -733,21 +733,22 @@ DEPTH: Elf:2-
 MONS:  deep elf mage
 MONS:  deep elf blademaster / deep elf master archer / deep elf sorcerer
 MONS:  plant
-SUBST: - = wwWW333ttt..%
+SUBST: - = WW333..%
+SUBST: ' = wwWW333ttt..%
 MAP
 ................
 ................
 ..mmmmT..Tmmmm..
-..m----..----m..
-..m----..----m..
-..m----..----m..
+..m'---..---'m..
+..m-'--..--'-m..
+..m--'-..-'--m..
 ..3---t..t---3..
 .......21.......
 .......11.......
 ..3---t..t---3..
-..m----..----m..
-..m----..----m..
-..m----..----m..
+..m--'-..-'--m..
+..m-'--..--'-m..
+..m'---..---'m..
 ..mmmmT..Tmmmm..
 ................
 ................
@@ -1198,9 +1199,9 @@ MAP
     .@.xxxxxx
     @x.+...xx
     ..3x.A.xxxxx
-   xx+xx...xxxxxxxx
+   xxQxx...xxxxxxxx
    xx...EFE..*xxxxx.@.
-   xx.A.FMF.A2x...+.x@
+   xx.A.FMF.A2x...Q.x@
   xxx...EFE..*x.B.x3..
   xxxxxx.4.xxxx...xx+x
   xx*2*x.A.Q...IJI...x
@@ -1211,9 +1212,9 @@ x.D.LPL4D.+1..x.B.xxxx
 x...KLK...Q.C.x*2*xx
 x+xx...xxxx.4.xxxxxx
 ..3x.D.x*..GHG...xxx
-@x.+...x2C.HOH.C.xx
+@x.Q...x2C.HOH.C.xx
 .@.xxxxx*..GHG...xx
-   xxxxxxxx...xx+xx
+   xxxxxxxx...xxQxx
       xxxxx.C.x3..
          xx...+.x@
          xxxxxx.@.
@@ -1299,8 +1300,8 @@ DEPTH: Elf
 ORIENT: float
 MONS: deep elf knight / deep elf archer w:8, deep elf blademaster
 KMONS: P = plant
-ITEM: short sword w:15 / rapier / quick blade w:1
-ITEM: short sword good_item / rapier good_item w:5 / quick blade good_item w:2
+ITEM: short sword w:15 / rapier / tanto w:1
+ITEM: short sword good_item / rapier good_item w:5 / tanto good_item w:2
 SUBST: x = xc
 SUBST: 3 = 3.
 NSUBST: - = 3:1 / 3=1., d = 1:e / 2=ddde / *:d
@@ -1345,10 +1346,6 @@ NSUBST:   . = 6:1 / 3:2 / 1:34 / 4 = 4 / 2 = 42 / 6 = 14...
 SUBVAULT: A : elf_blade_entry
 SUBST:    A : x"", ' = .
 CLEAR:    "
-veto {{
-  return crawl.game_started()
-         and (dgn.br_exists("Blade"))
-}}
 MAP
                                 "
                                 "
@@ -1413,12 +1410,8 @@ COLOUR:   - = lightgrey
 SUBST:    - = .
 NSUBST:   . = 6:1 / 3:2 / 1:34 / 4 = 4 / 2 = 42 / 6 = 14...
 SUBVAULT: A : elf_blade_entry
-SUBST:    A : x"", ' = .
+SUBST:    A : x, ' = .
 CLEAR:    "
-veto {{
-  return crawl.game_started()
-         and (dgn.br_exists("Blade"))
-}}
 MAP
                                   "
                                   "
@@ -1451,16 +1444,6 @@ xccF-.........5.........-Fcc             ccF-.........6.........-Fccx
 xcccc--EE-EE--E--EE--EE-cccc             cccc-EE--EE--E--EE-EE--ccccx
 xccccccccccccccccccccccccccc             cccccccccccccccccccccccccccx
 xxxxxxxxxxxxxxxxxxxxxxxxxxxx             xxxxxxxxxxxxxxxxxxxxxxxxxxxx
-ENDMAP
-
-NAME:     elven_hall_of_blades_dummy
-# Not tagged 'dummy' because then the veto doesn't run.
-TAGS:     no_dump
-PLACE:    Elf:2
-ORIENT:   float
-veto {{ return crawl.game_started() and not dgn.br_exists("Blade") }}
-MAP
-.
 ENDMAP
 
 NAME:   mumra_blade_entry_bloodbath
@@ -1557,7 +1540,7 @@ ENDMAP
 
 NAME: nicolae_vaults_blade_armed_guards
 KMONS: 2 = deep elf knight ; battleaxe | broad axe | flail | glaive | great mace | \
-   halberd | hand axe | long sword | morningstar | scimitar | short sword | \
+   halberd | hatchet | long sword | morningstar | scimitar | short sword | \
    trident | war axe . chain mail | plate armour . \
    heater shield | buckler w:20 | nothing w:60
 : elven_blade_entry(_G)

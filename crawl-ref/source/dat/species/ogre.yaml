@@ -1,6 +1,6 @@
 enum: SP_OGRE
 monster: MONS_OGRE
-name: Ogre
+name: "Ogre"
 adjective: Ogreish
 difficulty: Intermediate
 difficulty_priority: 30
@@ -13,7 +13,7 @@ aptitudes:
   short_blades: -1
   long_blades: -1
   maces_and_staves: 2
-  slings: -3
+  slings: 0
   bows: -3
   crossbows: -3
   armour: -2
@@ -44,7 +44,7 @@ levelup_stats:
   - str
 mutations:
   1:
-    MUT_TOUGH_SKIN: 1
+    MUT_SOFT_FLESH: 1
 recommended_jobs:
   - JOB_HUNTER
   - JOB_BERSERKER
@@ -55,5 +55,9 @@ recommended_weapons:
   - SK_WHIPS_FLAILS
   - SK_POLEARMS
   - SK_MACES_STAVES
-  - SK_AXES
-create_enum: False
+  - SK_AXES_HAMMERS
+  - SK_SLINGS
+
+# start TAG_MAJOR_VERSION == 34
+create_enum: false
+# end TAG_MAJOR_VERSION

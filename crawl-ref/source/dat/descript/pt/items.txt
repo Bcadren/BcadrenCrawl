@@ -138,7 +138,7 @@ corpse
 
 Um cadáver. Você pode talhá-lo para obter nacos de carne comestível.
 %%%%
-crystal plate armour
+crystal plate
 
 Uma armadura de cristal inacreditavelmente pesada, mas extremamente eficiente.
 %%%%

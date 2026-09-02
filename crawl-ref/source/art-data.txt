@@ -93,8 +93,6 @@
 # * notelep:  Prevents wearer from teleporting or blinking.
 # * poison:   Grants poison resistance.
 # * rcorr:    Grants corrosion resistance.
-# * randapp:  Generated with a random artefact's appearance (used by
-#             strictly-bad unrands).
 # * rmsl:     Passively repels missiles.
 # * rmut:     Grants mutation resistance.
 # * rnd_tele: Induces random teleportation.
@@ -149,7 +147,8 @@
 # MAGIC:    Magic resistance/vulnerability.
 # MP:       Mana capacity modifier.
 # NAME:     Name of artefact when identified.
-# REGEN:    Provides regeneration (1 = amulet of regen, 2.5 = the spell).
+# REGEN:    Health regeneration, in units of HP healed every 25 aut
+#           (2.5 normal turns).
 # STEALTH:  Stealth modifier.
 # STR:      Strength modifier.
 # TILE:     The file containing the artefact's tile, with file type png.
@@ -224,25 +223,30 @@ VALUE:   800
 BOOL:    special, no_upgrade
 
 NAME:    staff of Olgreb
-OBJ:     OBJ_WEAPONS/WPN_STAFF
-PLUS:    +9
+INSCRIP: transmute poison;
+OBJ:     OBJ_STAVES/STAFF_POISON
+PLUS:    +7
 COLOUR:  ETC_POISON
 TILE:    spwpn_staff_of_olgreb
 TILE_EQ: olgreb
 VALUE:   1000
-BOOL:    poison
+BOOL:    rCorr, skip_ego
 
 NAME:    staff of Wucad Mu
-INSCRIP: channel
-OBJ:     OBJ_WEAPONS/WPN_STAFF
+INSCRIP: energy, drain magic;
+OBJ:     OBJ_STAVES/STAFF_NOTHING
+FALLBACK: OBJ_STAVES/STAFF_EARTH
+FB_BRAND: SPSTF_SHIELD
 PLUS:    +9
 COLOUR:  ETC_MAGIC
 TILE:    spwpn_wucad_mu
 TILE_EQ: wucad_mu
 VALUE:   1000
+MAGIC:   2
+BOOL:    skip_ego
 
 NAME:    Vampire's Tooth
-OBJ:     OBJ_WEAPONS/WPN_QUICK_BLADE
+OBJ:     OBJ_WEAPONS/WPN_TANTO
 # it's a quick blade made from a tooth -> no TYPE
 FB_BRAND: SPWPN_VAMPIRISM
 PLUS:    +12
@@ -271,7 +275,7 @@ TILE:    spwpn_sceptre_of_torment
 TILE_EQ: sceptre_of_torment
 BRAND:   SPWPN_PAIN
 VALUE:   1200
-BOOL:    special, evil
+BOOL:    evil
 
 NAME:    sword of Zonguldrok
 OBJ:     OBJ_WEAPONS/WPN_DOUBLE_SWORD
@@ -338,7 +342,7 @@ ANGRY:   5
 BOOL:    berserk
 STEALTH: -1
 
-# TAG_MAJOR_VERSION == 34
+# start TAG_MAJOR_VERSION == 34
 NAME:    scimitar of Flaming Death
 OBJ:     OBJ_WEAPONS/WPN_SCIMITAR
 INSCRIP: sticky flame,
@@ -351,8 +355,9 @@ FIRE:    2
 COLD:    -1
 BOOL:    poison, skip_ego, nogen
 MAGIC:   1
+# end TAG_MAJOR_VERSION
 
-# TAG_MAJOR_VERSION == 34
+# start TAG_MAJOR_VERSION == 34
 NAME:    eveningstar "Brilliance"
 OBJ:     OBJ_WEAPONS/WPN_EVENINGSTAR
 PLUS:    +1
@@ -364,6 +369,7 @@ AC:      5
 INT:     5
 LIFE:    1
 BOOL:    nogen
+# end TAG_MAJOR_VERSION
 
 NAME:    demon blade "Leech"
 OBJ:     OBJ_WEAPONS/WPN_DEMON_BLADE
@@ -376,7 +382,7 @@ AC:      -3
 EV:      -3
 LIFE:     1
 
-# TAG_MAJOR_VERSION == 34
+# start TAG_MAJOR_VERSION == 34
 NAME:    dagger of Chilly Death
 OBJ:     OBJ_WEAPONS/WPN_DAGGER
 INSCRIP: flash freeze,
@@ -389,6 +395,7 @@ FIRE:    -1
 COLD:    2
 MAGIC:   1
 BOOL:    poison, skip_ego, nogen
+# end TAG_MAJOR_VERSION
 
 NAME:     dagger "Morg"
 OBJ:      OBJ_WEAPONS/WPN_DAGGER
@@ -451,7 +458,7 @@ TILE:     urand_guard
 TILE_EQ:  glaive_of_the_guard
 BRAND:    SPWPN_ELECTROCUTION
 AC:       5
-BOOL:     seeinv, berserk
+INSCRIP:  spectral,
 
 ENUM:     ZEALOT_SWORD
 NAME:     sword of jihad
@@ -535,9 +542,11 @@ BRAND:   SPWPN_SPEED
 MAGIC:   1
 
 NAME:     Elemental Staff
-OBJ:      OBJ_WEAPONS/WPN_STAFF
-FALLBACK: OBJ_WEAPONS/WPN_LAJATANG
-FB_BRAND: SPWPN_FREEZING
+OBJ:      OBJ_STAVES/STAFF_NOTHING
+INSCRIP:  four elements;
+FALLBACK: OBJ_STAVES/STAFF_COLD
+FB_BRAND: SPSTF_SHIELD
+BRAND:    SPSTF_MENACE
 PLUS:     +3
 COLOUR:   DARKGREY
 TILE:     urand_elemental
@@ -546,21 +555,22 @@ FIRE:     2
 COLD:     2
 MAGIC:    2
 AC:       5
-BOOL:     elec
+BOOL:     elec, skip_ego
 
-NAME:     heavy crossbow "Sniper"
-OBJ:      OBJ_WEAPONS/WPN_TRIPLE_CROSSBOW
-TYPE:     heavy crossbow
+NAME:     ballista "Sniper"
+OBJ:      OBJ_WEAPONS/WPN_ARBALEST
+TYPE:     ballista
 PLUS:     +9
 COLOUR:   ETC_DARK
 TILE:     urand_sniper
 TILE_EQ:  sniper
-BASE_DELAY: +4
+BASE_DAM: +6
+BASE_DELAY: +6
 BRAND:    SPWPN_VORPAL
 BOOL:     seeinv
 INSCRIP:  Acc+∞
 
-# TAG_MAJOR_VERSION == 34
+# start TAG_MAJOR_VERSION == 34
 NAME:    longbow "Piercer"
 OBJ:     OBJ_WEAPONS/WPN_LONGBOW
 PLUS:    +7
@@ -570,32 +580,32 @@ TILE_EQ: great_bow
 BRAND:   SPWPN_PENETRATION
 EV:      -2
 BOOL:    nogen
+# end TAG_MAJOR_VERSION
 
-# TAG_MAJOR_VERSION == 34
+# start TAG_MAJOR_VERSION == 34
 ENUM:    BLOWGUN_ASSASSIN
 NAME:    blowgun of the Assassin
 INSCRIP: stab,
-OBJ:     OBJ_WEAPONS/WPN_BLOWGUN
-# fallback is just to prevent errors
-FALLBACK: OBJ_WEAPONS/WPN_LONGBOW
+# incase it spawns give it a valid type
+OBJ:     OBJ_WEAPONS/WPN_LONGBOW
 PLUS:    +6
 COLOUR:  ETC_DEATH
 TILE:    urand_blowgun
 TILE_EQ: blowgun
 STEALTH: 2
 BOOL:    inv, tilerim, nogen
+# end TAG_MAJOR_VERSION
 
 NAME:    lance "Wyrmbane"
 OBJ:     OBJ_WEAPONS/WPN_SPEAR
 FALLBACK: OBJ_WEAPONS/WPN_DEMON_TRIDENT
-FB_BRAND: SPWPN_VORPAL
-INSCRIP: slay drac,
 TYPE:    lance
 BASE_DAM: +2
 PLUS:    +8
 COLOUR:  LIGHTGREEN
 TILE:    urand_wyrmbane
 TILE_EQ: wyrmbane
+BRAND:   SPWPN_DRAGON_SLAYING
 AC:      3
 FIRE:    1
 COLD:    1
@@ -644,7 +654,7 @@ TILE_EQ: snakebite
 BRAND:   SPWPN_VENOM
 BOOL:    poison, skip_ego
 
-# TAG_MAJOR_VERSION == 34
+# start TAG_MAJOR_VERSION == 34
 NAME:     knife of Accuracy
 OBJ:      OBJ_WEAPONS/WPN_DAGGER
 TYPE:     knife
@@ -653,8 +663,9 @@ COLOUR:   LIGHTCYAN
 TILE:     urand_knife_of_accuracy
 TILE_EQ:  knife_of_accuracy
 BOOL:     tilerim, nogen
+# end TAG_MAJOR_VERSION
 
-# TAG_MAJOR_VERSION == 34
+# start TAG_MAJOR_VERSION == 34
 # A play on the spell of the same name. Colour taken from crystal walls.
 ENUM:     CRYSTAL_SPEAR
 NAME:     Lehudib's crystal spear
@@ -665,6 +676,7 @@ TILE:     urand_crystal_spear
 TILE_EQ:  crystal_spear
 INT:      3
 BOOL:     nogen
+# end TAG_MAJOR_VERSION
 
 ENUM:     CAPTAIN
 NAME:     captain's cutlass
@@ -717,7 +729,7 @@ SLAY:     -2
 STEALTH:  1
 BOOL:     seeinv, fog
 
-# TAG_MAJOR_VERSION == 34
+# start TAG_MAJOR_VERSION == 34
 NAME:    large shield "Bullseye"
 OBJ:     OBJ_SHIELDS/SHD_LARGE_SHIELD
 PLUS:    +15
@@ -726,6 +738,7 @@ TILE:    urand_bullseye
 TILE_EQ: shield_bullseye
 EV:      -5
 BOOL:    nogen
+# end TAG_MAJOR_VERSION
 
 NAME:    crown of Dyrovepreva
 OBJ:     OBJ_ARMOURS/ARM_HAT
@@ -760,7 +773,7 @@ TILE_EQ:  robe_misfortune
 EV:       5
 BOOL:     harm, mutate, drain, slow, corrode
 
-# TAG_MAJOR_VERSION == 34
+# start TAG_MAJOR_VERSION == 34
 NAME:     cloak of Flash
 OBJ:      OBJ_ARMOURS/ARM_CLOAK
 PLUS:     +3
@@ -769,6 +782,7 @@ TILE:     urand_flash
 TILE_EQ:  red
 EV:       4
 BOOL:     fly, nogen
+# end TAG_MAJOR_VERSION
 
 ENUM:     BOOTS_ASSASSIN
 NAME:     boots of the Assassin
@@ -779,6 +793,18 @@ PLUS:     +2
 COLOUR:   BROWN
 TILE:     urand_assassin
 TILE_EQ:  middle_gray
+STEALTH:  2
+VALUE:    600
+
+ENUM:     HOOD_ASSASSIN
+NAME:     hood of the Assassin
+OBJ:      OBJ_ARMOURS/ARM_HAT
+FB_BRAND: SPARM_IMPROVED_VISION
+INSCRIP:  Detection Stab+
+PLUS:     +2
+COLOUR:   BROWN
+TILE:     urand_hood_assassin
+TILE_EQ:  hood_purple
 STEALTH:  2
 VALUE:    600
 
@@ -803,18 +829,19 @@ TILE:    urand_zhor
 TILE_EQ: zhor
 COLD:    3
 BOOL:    seeinv
-INSCRIP: Hibernate
+INSCRIP: Englaciate
 
+# TAG_MAJOR_VERSION == 34
 ENUM:    SALAMANDER
 NAME:    salamander hide armour
 OBJ:     OBJ_ARMOURS/ARM_LEATHER_ARMOUR
 FB_BRAND: SPARM_FIRE_RESISTANCE
 PLUS:    +3
 COLOUR:  ETC_FIRE
-TILE:    urand_salamander
+TILE:    urand_zhor
 TILE_EQ: leather_red
 FIRE:    2
-BOOL:    berserk
+BOOL:    berserk, nogen
 
 NAME:    gauntlets of War
 OBJ:     OBJ_ARMOURS/ARM_GLOVES
@@ -830,9 +857,9 @@ PLUS:    +2
 COLOUR:  LIGHTRED
 TILE:    urand_resistance
 TILE_EQ: shield_of_resistance
-FIRE:    1
-COLD:    1
-MAGIC:   1
+FIRE:    2
+COLD:    2
+MAGIC:   2
 
 NAME:    robe of Folly
 OBJ:     OBJ_ARMOURS/ARM_ROBE
@@ -924,12 +951,12 @@ PLUS:     +2
 COLOUR:   ETC_BEOGH
 TILE:     urand_ratskin_cloak
 TILE_EQ:  ratskin
-INSCRIP:  +Rats
+INSCRIP:  *Rats
 STR:      -1
 INT:      -1
 DEX:      1
 LIFE:     1
-BOOL:     poison
+BOOL:     poison, evil
 
 NAME:     shield of the Gong
 OBJ:      OBJ_SHIELDS/SHD_SHIELD
@@ -958,7 +985,7 @@ TILE:    urand_shadows
 BOOL:    inv
 VALUE:   400
 
-# TAG_MAJOR_VERSION == 34
+# start TAG_MAJOR_VERSION == 34
 NAME:    amulet of Cekugob
 OBJ:     OBJ_JEWELLERY/AMU_ACROBAT
 COLOUR:  ETC_SILVER
@@ -967,6 +994,7 @@ AC:      1
 EV:      1
 LIFE:    2
 BOOL:    elec, poison, notelep, nogen
+# end TAG_MAJOR_VERSION
 
 NAME:    amulet of the Four Winds
 OBJ:     OBJ_JEWELLERY/AMU_NOTHING
@@ -1133,7 +1161,7 @@ TILE:     urand_axe_of_woe
 TILE_EQ:  axe_of_woe
 BOOL:     nogen, no_upgrade
 
-NAME:     moon troll leather armour
+NAME:     moon troll leather
 OBJ:      OBJ_ARMOURS/ARM_TROLL_LEATHER_ARMOUR
 PLUS:     +4
 COLOUR:   ETC_SHIMMER_BLUE
@@ -1151,17 +1179,18 @@ COLOUR:   ETC_BONE
 LIFE:     1
 VALUE:    400
 
-# TAG_MAJOR_VERSION == 34
+# start TAG_MAJOR_VERSION == 34
 ENUM:     SPIDER
 NAME:     boots of the spider
 OBJ:      OBJ_ARMOURS/ARM_BOOTS
 TILE:     urand_spider
 TILE_EQ:  spider
 PLUS:     +3
-BRAND:    SPARM_JUMPING
+BRAND:    SPARM_STURDY
 COLOUR:   LIGHTMAGENTA
 STEALTH:  1
 BOOL:     nogen
+# end TAG_MAJOR_VERSION
 
 NAME:     dark maul
 OBJ:      OBJ_WEAPONS/WPN_GREAT_MACE
@@ -1189,7 +1218,7 @@ STEALTH: -1
 NAME:     arc blade
 INSCRIP:  discharge,
 OBJ:      OBJ_WEAPONS/WPN_RAPIER
-FALLBACK: OBJ_WEAPONS/WPN_QUICK_BLADE
+FALLBACK: OBJ_WEAPONS/WPN_TANTO
 FB_BRAND: SPWPN_ELECTROCUTION
 PLUS:     +8
 COLOUR:   ETC_ELECTRICITY
@@ -1209,7 +1238,6 @@ TILE_EQ:  spellbinder
 MAGIC:    1
 
 NAME:    lajatang of Order
-INSCRIP: silver,
 OBJ:     OBJ_WEAPONS/WPN_LAJATANG
 BRAND:   SPWPN_SILVER
 # not really comparable...
@@ -1232,7 +1260,7 @@ BRAND:    SPWPN_MOLTEN
 FIRE:     2
 BOOL:     skip_ego
 
-NAME:     orange crystal plate armour
+NAME:     orange crystal plate
 OBJ:      OBJ_ARMOURS/ARM_CRYSTAL_PLATE_ARMOUR
 COLOUR:   LIGHTRED
 TILE:     urand_orange_crystal
@@ -1245,21 +1273,22 @@ BOOL:     clarity
 
 ENUM:    MAJIN
 NAME:    Majin-Bo
-INSCRIP: Archmagi
-OBJ:     OBJ_WEAPONS/WPN_QUARTERSTAFF
-FALLBACK: OBJ_WEAPONS/WPN_LAJATANG
+INSCRIP: vampiric, corrupt archmagi;
+OBJ:     OBJ_STAVES/STAFF_NOTHING
+FALLBACK: OBJ_STAVES/STAFF_DEATH
+BRAND:   SPSTF_MENACE
 PLUS:    +6
 COLOUR:  ETC_UNHOLY
 TILE:    spwpn_majin
 TILE_EQ: majin
 MP:      6
 INT:     6
-BRAND:   SPWPN_VAMPIRISM
+BOOL:    skip_ego
 
 # TAG_MAJOR_VERSION == 34
 ENUM:    GYRE
 NAME:    pair of quick blades "Gyre" and "Gimble"
-OBJ:     OBJ_WEAPONS/WPN_QUICK_BLADE
+OBJ:     OBJ_WEAPONS/WPN_TANTO
 TYPE:    pair of quick blades
 COLOUR:  ETC_ENCHANT
 TILE:    urand_gyre
@@ -1268,6 +1297,26 @@ PLUS:    5
 BRAND:   SPWPN_VORPAL
 DEX:     -3
 BOOL:    nogen
+
+ENUM:    JESTER_CAP
+NAME:	 Jester's Cap
+OBJ:     OBJ_ARMOURS/ARM_HAT
+COLOUR:  ETC_CHAOS
+TILE:    urand_jester
+TILE_EQ: clown2
+PLUS:    5
+INSCRIP: Xom, Noisy
+
+ENUM:    KLOWN
+NAME:    Klown Katapult
+TYPE:    Katapult     
+OBJ:     OBJ_WEAPONS/WPN_HUNTING_SLING
+COLOUR:  ETC_CHAOS
+TILE:    urand_klown
+TILE_EQ: klown
+PLUS:    7
+BRAND:   SPWPN_MOLTEN
+INSCRIP: Pie
 
 ENUM:    ETHERIC_CAGE
 NAME:    Maxwell's etheric cage
@@ -1290,7 +1339,7 @@ TILE:    urand_eternal_torment
 TILE_EQ: eternal_torment
 INSCRIP: rTorment HP--
 LIFE:    3
-BOOL:    evil, seeinv, curse
+BOOL:    evil, seeinv, nogen, curse
 
 ENUM:    VINES
 NAME:    robe of Vines
@@ -1326,7 +1375,7 @@ BRAND:   SPWPN_FREEZING
 COLD:    1
 BOOL:    skip_ego, fly, noises
 
-# TAG_MAJOR_VERSION == 34
+# start TAG_MAJOR_VERSION == 34
 ENUM:     TALOS
 NAME:     armour of Talos
 OBJ:      OBJ_ARMOURS/ARM_PLATE_ARMOUR
@@ -1337,6 +1386,7 @@ COLOUR:   ETC_FIRE
 BRAND:    SPARM_PONDEROUSNESS
 FIRE:     1
 BOOL:     nogen
+# end TAG_MAJOR_VERSION
 
 ENUM:     WARLOCK_MIRROR
 NAME:     warlock's mirror
@@ -1374,6 +1424,28 @@ COLOUR:   ETC_WARP
 TILE:     urand_rift
 TILE_EQ:  rift
 BRAND:    SPWPN_DISTORTION
+
+ENUM:     BATTLE
+NAME:     staff of Battle
+OBJ:      OBJ_STAVES/STAFF_EARTH
+PLUS:     +3
+COLOUR:   ETC_MAGIC
+TILE:     urand_staff_of_battle
+TILE_EQ:  battle_staff
+BRAND:    SPSTF_SHIELD
+VALUE:    800
+
+ENUM:     EMBRACE
+NAME:     Cigotuvi's embrace
+OBJ:      OBJ_ARMOURS/ARM_LEATHER_ARMOUR
+PLUS:     +4 # varies with corpse count
+COLOUR:   ETC_UNHOLY
+TILE:     urand_cigotuvi
+TILE_EQ:  bplate_green
+# XXX TODO: tiles
+LIFE:     1
+INSCRIP:  rRot
+BOOL:     drain, evil, special, no_upgrade
 
 # This entry must always be last.
 ENUM:   DUMMY2

@@ -11,9 +11,11 @@
 #include "cluautil.h"
 #include "command.h"
 #include "delay.h"
+#include "directn.h"
 #include "dlua.h"
 #include "end.h"
 #include "english.h"
+#include "evoke.h"
 #include "fight.h"
 #include "hints.h"
 #include "initfile.h"
@@ -31,6 +33,7 @@
 #include "state.h"
 #include "state.h"
 #include "stringutil.h"
+#include "throw.h"
 #include "tutorial.h"
 #include "unwind.h"
 #include "version.h"
@@ -132,6 +135,8 @@ LUAFN(crawl_dpr)
     const char *text = luaL_checkstring(ls, 1);
     if (crawl_state.io_inited)
         dprf("%s", text);
+#else
+    UNUSED(ls);
 #endif
     return 0;
 }
@@ -157,7 +162,14 @@ LUAWRAP(crawl_clear_messages,
 clear_messages(lua_isboolean(ls, 1) ? lua_toboolean(ls, 1) : false))
 /*** Redraw the screen.
  * @function redraw_screen */
-LUAWRAP(crawl_redraw_screen, redraw_screen())
+LUAFN(crawl_redraw_screen)
+{
+    UNUSED(ls);
+
+    redraw_screen();
+    update_screen();
+    return 0;
+}
 
 /*** Toggle autoclearing of `--- more ---` prompts.
  * @tparam boolean flag
@@ -208,13 +220,34 @@ static int crawl_c_input_line(lua_State *ls)
     return 1;
 }
 
+/*** Prompt the user to choose a location via the targeting screen.
+ * This is useful for scripts that require a user-selected target. For example,
+ * one could imagine a "mark dangerous monster" script that would place a large
+ * exclusion around a user-chosen monster that would then be deleted if the
+ * monster moved or died. This function could be used for the user to select
+ * a target monster.
+ * @treturn int, int the relative position of the chosen location to the user
+ * @function get_target
+ */
+LUAFN(crawl_get_target) {
+    coord_def out;
+
+    if (!get_look_position(&out))
+        return 0;
+
+    lua_pushinteger(ls, out.x - you.position.x);
+    lua_pushinteger(ls, out.y - you.position.y);
+
+    return 2;
+}
+
 /*** Get input key (combo).
  * @treturn int the key (combo) input
  * @function getch */
 LUARET1(crawl_getch, number, getchm())
 /*** Check for pending input.
  * @return int 1 if there is, 0 otherwise
- * function kbhit
+ * @function kbhit
  */
 LUARET1(crawl_kbhit, number, kbhit())
 /*** Flush the input buffer (typeahead).
@@ -378,6 +411,62 @@ static bool _check_can_do_command(lua_State *ls)
     }
 
     return true;
+}
+
+/****
+ * Handle any command that takes a target and no other parameters. This includes
+ * CMD_PRIMARY_ATTACK, CMD_EVOKE_WIELDED, and CMD_FIRE. If the target
+ * coordinates are out of bounds (the default), this enters interactive
+ * targeting.
+ *
+ * @tparam string command name
+ * @tparam[opt=0] number x coordinate
+ * @tparam[opt=0] number y coordinate
+ * @tparam[opt=false] boolean if true, aim at the target; if false, shoot past it
+ * @treturn boolean whether an action took place
+ * @function do_targeted_command
+ */
+static int crawl_do_targeted_command(lua_State *ls)
+{
+    if (!_check_can_do_command(ls))
+        return 0;
+
+    const string command = luaL_checkstring(ls, 1);
+
+    command_type cmd = name_to_command(command);
+    if (cmd == CMD_NO_CMD)
+    {
+        luaL_argerror(ls, 1, ("Invalid command: " + command).c_str());
+        return 0;
+    }
+
+    PLAYERCOORDS(c, 2, 3);
+    dist target;
+    target.target = c;
+    target.isEndpoint = lua_toboolean(ls, 4); // can be nil
+
+    switch (cmd)
+    {
+    case CMD_PRIMARY_ATTACK:
+        quiver::get_primary_action()->trigger(target);
+        break;
+    case CMD_EVOKE_WIELDED:
+        // BCADNOTE: Not sure this is Bcadren relevant. 
+                  // Will need rework to also evoke WEAPON1 if it is.
+        evoke_item(you.equip[EQ_WEAPON0], &target);
+        break;
+    case CMD_FIRE:
+        quiver::get_secondary_action()->trigger(target);
+        break;
+    case CMD_THROW_ITEM_NO_QUIVER:
+        throw_item_no_quiver(&target);
+        break;
+    default:
+        luaL_argerror(ls, 1, ("Not a (supported) targeted command: " + command).c_str());
+        return 0;
+    }
+
+    PLUARET(boolean, you.turn_is_over);
 }
 
 /*** Process a string of input keys
@@ -646,8 +735,12 @@ static int crawl_take_note(lua_State *ls)
 }
 
 /*** Retrieve the message buffer.
+ *
+ * See also @{Hooks.c_message} for programmatically receiving messages
+ * as they are sent.
+ *
  * @tparam int num how many lines back to go
- * @treturn strong
+ * @treturn string
  * @function messages
  */
 static int crawl_messages(lua_State *ls)
@@ -696,8 +789,11 @@ static int crawl_regex_find(lua_State *ls)
 {
     text_pattern **pattern =
             clua_get_userdata< text_pattern* >(ls, REGEX_METATABLE);
-    if (!pattern)
+    if (!pattern || !*pattern)
+    {
+        luaL_argerror(ls, 1, "Invalid regex object");
         return 0;
+    }
 
     const char *text = luaL_checkstring(ls, -1);
     if (!text)
@@ -719,7 +815,15 @@ static int crawl_regex_equals(lua_State *ls)
             clua_get_userdata< text_pattern* >(ls, REGEX_METATABLE);
     text_pattern **arg =
             clua_get_userdata< text_pattern* >(ls, REGEX_METATABLE, 2);
-    lua_pushboolean(ls, pattern && arg && **pattern == **arg);
+
+    if (!pattern || !*pattern || !arg || !*arg)
+    {
+        // TODO: explain which one
+        luaL_error(ls, "Invalid regex object");
+        return 0;
+    }
+
+    lua_pushboolean(ls, **pattern == **arg);
     return 1;
 }
 static const luaL_reg crawl_regex_ops[] =
@@ -767,8 +871,11 @@ static int crawl_messf_matches(lua_State *ls)
 {
     message_filter **mf =
             clua_get_userdata< message_filter* >(ls, MESSF_METATABLE);
-    if (!mf)
+    if (!mf || !*mf)
+    {
+        luaL_argerror(ls, 1, "Invalid message filter object");
         return 0;
+    }
 
     const char *pattern = luaL_checkstring(ls, 2);
     int ch = luaL_safe_checkint(ls, 3);
@@ -793,7 +900,13 @@ static int crawl_messf_equals(lua_State *ls)
             clua_get_userdata< message_filter* >(ls, MESSF_METATABLE);
     message_filter **arg =
             clua_get_userdata< message_filter* >(ls, MESSF_METATABLE, 2);
-    lua_pushboolean(ls, mf && arg && **mf == **arg);
+    if (!mf || !*mf || !arg || !*arg)
+    {
+        // TODO: explain which one
+        luaL_error(ls, "Invalid message filter object");
+        return 0;
+    }
+    lua_pushboolean(ls, **mf == **arg);
     return 1;
 }
 
@@ -870,8 +983,8 @@ static int crawl_string_compare(lua_State *ls)
  *  - "plain": just give the name
  *  - "the": use the definite article
  *  - "a": use the indefinite article
- *  - "your": use the second person posessive
- *  - "its": use the third person posessive
+ *  - "your": use the second person possessive
+ *  - "its": use the third person possessive
  *  - "worn": how it is equipped
  *  - "inv": describe something carried
  *  - "none": return the empty string
@@ -892,7 +1005,7 @@ static int _crawl_grammar(lua_State *ls)
     description_level_type ndesc = DESC_PLAIN;
     if (lua_isstring(ls, 2))
         ndesc = description_type_by_name(lua_tostring(ls, 2));
-    PLUARET(string, thing_do_grammar(ndesc, false, false, luaL_checkstring(ls, 1)).c_str()); }
+    PLUARET(string, thing_do_grammar(ndesc, luaL_checkstring(ls, 1)).c_str()); }
 
 /*** Correctly attach the article 'a'.
  * @tparam string s
@@ -995,7 +1108,7 @@ LUARET1(crawl_random_real, number, random_real())
  * @treturn boolean
  * @function weapon_check
  */
-LUARET1(crawl_weapon_check, boolean, wielded_weapon_check(you.weapon()))
+LUARET1(crawl_weapon_check, boolean, wielded_weapons_check())
 
 /*** Get the full Worley noise datum for a given point
  * @tparam number px
@@ -1383,6 +1496,7 @@ static const struct luaL_reg crawl_clib[] =
 
     { "redraw_screen",      crawl_redraw_screen },
     { "c_input_line",       crawl_c_input_line},
+    { "get_target",         crawl_get_target },
     { "getch",              crawl_getch },
     { "yesno",              crawl_yesno },
     { "yesnoquit",          crawl_yesnoquit },
@@ -1393,6 +1507,7 @@ static const struct luaL_reg crawl_clib[] =
     { "process_keys",       crawl_process_keys },
     { "set_sendkeys_errors", crawl_set_sendkeys_errors },
     { "do_commands",        crawl_do_commands },
+    { "do_targeted_command", crawl_do_targeted_command },
 #ifdef USE_SOUND
     { "playsound",          crawl_playsound },
 #endif
@@ -1477,7 +1592,10 @@ LUAFN(_crawl_milestone)
  */
 LUAFN(_crawl_redraw_view)
 {
+    UNUSED(ls);
+
     viewwindow();
+    update_screen();
     return 0;
 }
 
@@ -1489,9 +1607,10 @@ LUAFN(_crawl_redraw_view)
  */
 LUAFN(_crawl_redraw_stats)
 {
+    UNUSED(ls);
+
     you.wield_change         = true;
     you.redraw_title         = true;
-    you.redraw_quiver        = true;
     you.redraw_hit_points    = true;
     you.redraw_magic_points  = true;
     you.redraw_stats.init(true);
@@ -1499,8 +1618,11 @@ LUAFN(_crawl_redraw_stats)
     you.redraw_armour_class  = true;
     you.redraw_evasion       = true;
     you.redraw_status_lights = true;
+    you.redraw_resists       = true;
+    quiver::set_needs_redraw();
 
     print_stats();
+    update_screen();
     return 0;
 }
 
@@ -1529,7 +1651,7 @@ LUAFN(_crawl_millis)
 #endif
     return 1;
 }
-static string _crawl_make_name(lua_State *ls)
+static string _crawl_make_name(lua_State */*ls*/)
 {
     // A quick wrapper around itemname:make_name.
     return make_name();
@@ -1697,6 +1819,9 @@ LUAFN(crawl_rng_wrap)
     return lua_gettop(ls);
 }
 
+LUAWRAP(crawl_clear_message_store, clear_message_store())
+
+
 static const struct luaL_reg crawl_dlib[] =
 {
 { "args", _crawl_args },
@@ -1715,6 +1840,7 @@ static const struct luaL_reg crawl_dlib[] =
 { "hints_type", crawl_hints_type },
 { "unavailable_god", _crawl_unavailable_god },
 { "rng_wrap", crawl_rng_wrap },
+{ "clear_message_store", crawl_clear_message_store },
 
 { nullptr, nullptr }
 };

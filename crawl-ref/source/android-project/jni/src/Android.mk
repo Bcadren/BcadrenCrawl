@@ -34,8 +34,10 @@ LOCAL_SRC_FILES := $(SDL_PATH)/src/main/android/SDL_android_main.c \
     $(CRAWL_PATH)/behold.cc \
     $(CRAWL_PATH)/bitary.cc \
     $(CRAWL_PATH)/branch.cc \
+    $(CRAWL_PATH)/branch-data-json.cc \
     $(CRAWL_PATH)/butcher.cc \
     $(CRAWL_PATH)/bloodspatter.cc \
+	$(CRAWL_PATH)/chaos.cc \
     $(CRAWL_PATH)/chardump.cc \
     $(CRAWL_PATH)/cio.cc \
     $(CRAWL_PATH)/cloud.cc \
@@ -168,6 +170,7 @@ LOCAL_SRC_FILES := $(SDL_PATH)/src/main/android/SDL_android_main.c \
     $(CRAWL_PATH)/mon-clone.cc \
     $(CRAWL_PATH)/mon-death.cc \
     $(CRAWL_PATH)/mon-ench.cc \
+    $(CRAWL_PATH)/mon-explode.cc \
     $(CRAWL_PATH)/mon-gear.cc \
     $(CRAWL_PATH)/mon-grow.cc \
     $(CRAWL_PATH)/mon-info.cc \
@@ -182,6 +185,7 @@ LOCAL_SRC_FILES := $(SDL_PATH)/src/main/android/SDL_android_main.c \
     $(CRAWL_PATH)/mon-transit.cc \
     $(CRAWL_PATH)/mon-util.cc \
     $(CRAWL_PATH)/monster.cc \
+	$(CRAWL_PATH)/mount.cc \
     $(CRAWL_PATH)/mutation.cc \
     $(CRAWL_PATH)/nearby-danger.cc \
     $(CRAWL_PATH)/newgame.cc \
@@ -216,6 +220,7 @@ LOCAL_SRC_FILES := $(SDL_PATH)/src/main/android/SDL_android_main.c \
     $(CRAWL_PATH)/ray.cc \
     $(CRAWL_PATH)/rot.cc \
     $(CRAWL_PATH)/religion.cc \
+	$(CRAWL_PATH)/season.cc \
     $(CRAWL_PATH)/shopping.cc \
     $(CRAWL_PATH)/shout.cc \
     $(CRAWL_PATH)/show.cc \

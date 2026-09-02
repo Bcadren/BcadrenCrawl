@@ -39,7 +39,7 @@ corpse
 
 Līķis. Varat to apstrādāt, izgriežot ēdamos gaļas gabalus.
 %%%%
-crystal plate armour
+crystal plate
 
 Šausmīgi smags, taču ārkārtīgi iedarbīgs kristāla bruņutērps.
 %%%%

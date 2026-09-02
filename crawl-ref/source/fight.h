@@ -28,16 +28,17 @@ enum stab_type
 };
 
 bool fight_melee(actor *attacker, actor *defender, bool *did_hit = nullptr,
-                 bool simu = false);
+                 bool simu = false, wu_jian_attack_type wu = WU_JIAN_ATTACK_NONE,
+                 int wu_num = 1, int roll_dist = 0);
 
 int resist_adjust_damage(const actor *defender, beam_type flavour,
-                         int rawdamage);
+                         int rawdamage, bool mount = false);
 
 int apply_chunked_AC(int dam, int ac);
 
 int melee_confuse_chance(int HD);
 
-bool wielded_weapon_check(item_def *weapon);
+bool wielded_weapons_check(string attack_verb = "attack");
 
 stab_type find_stab_type(const actor *attacker,
                          const actor &defender,
@@ -45,6 +46,8 @@ stab_type find_stab_type(const actor *attacker,
 
 int stab_bonus_denom(stab_type stab);
 
+bool force_player_cleave(coord_def target);
+bool attack_cleaves(const actor &attacker, int which_attack = 0);
 void get_cleave_targets(const actor &attacker, const coord_def& def,
                         list<actor*> &targets, int which_attack = -1);
 void attack_cleave_targets(actor &attacker, list<actor*> &targets,
@@ -62,7 +65,6 @@ int dual_wield_mindelay_skill(const item_def &weap0, const item_def &weap1);
 int mons_weapon_damage_rating(const item_def &launcher);
 int mons_missile_damage(monster* mons, const item_def *launch,
                         const item_def *missile);
-int mons_usable_missile(monster* mons, item_def **launcher);
 
 bool bad_attack(const monster *mon, string& adj, string& suffix,
                 bool& would_cause_penance,

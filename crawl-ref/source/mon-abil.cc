@@ -18,7 +18,6 @@
 #include "areas.h"
 #include "arena.h"
 #include "beam.h"
-#include "bloodspatter.h"
 #include "cloud.h"
 #include "colour.h"
 #include "coordit.h"
@@ -27,41 +26,31 @@
 #include "directn.h"
 #include "english.h"
 #include "env.h"
-#include "exclude.h"
-#include "fight.h"
 #include "fprop.h"
+#include "god-abil.h"
+#include "god-companions.h"
 #include "item-prop.h"
-#include "items.h"
 #include "libutil.h"
-#include "losglobal.h"
 #include "message.h"
 #include "mgen-data.h"
-#include "misc.h"
 #include "mon-act.h"
 #include "mon-behv.h"
-#include "mon-book.h"
 #include "mon-cast.h"
 #include "mon-death.h"
 #include "mon-pathfind.h"
 #include "mon-place.h"
 #include "mon-poly.h"
-#include "mon-project.h"
-#include "mon-speak.h"
-#include "mon-tentacle.h"
 #include "mon-util.h"
 #include "ouch.h"
 #include "random.h"
 #include "religion.h"
-#include "shout.h"
 #include "spl-damage.h"
-#include "spl-miscast.h"
 #include "spl-util.h"
 #include "state.h"
 #include "stringutil.h"
 #include "target.h"
 #include "teleport.h"
 #include "terrain.h"
-#include "viewchar.h"
 #include "view.h"
 
 static bool _slime_split_merge(monster* thing);
@@ -72,13 +61,25 @@ void draconian_change_colour(monster* drac)
     if (mons_genus(drac->type) != MONS_DRACONIAN)
         return;
 
-    drac->base_monster = random_choose(MONS_RED_DRACONIAN,
-                                       MONS_WHITE_DRACONIAN,
-                                       MONS_BLACK_DRACONIAN,
-                                       MONS_GREEN_DRACONIAN,
-                                       MONS_PURPLE_DRACONIAN,
-                                       MONS_YELLOW_DRACONIAN);
+    // No undead or demigod colours for Tiamat.
+    drac->base_monster = random_choose_weighted(14, MONS_BLACK_DRACONIAN,
+                                                 2, MONS_PINK_DRACONIAN,
+                                                14, MONS_LIME_DRACONIAN,
+                                                 6, MONS_GREEN_DRACONIAN,
+                                                12, MONS_PURPLE_DRACONIAN,
+                                                10, MONS_RED_DRACONIAN,
+                                                12, MONS_WHITE_DRACONIAN,
+                                                10, MONS_SILVER_DRACONIAN,
+                                                10, MONS_BLUE_DRACONIAN,
+                                                 8, MONS_CYAN_DRACONIAN,
+                                                 6, MONS_SCINTILLATING_DRACONIAN,
+                                                 2, MONS_MAGENTA_DRACONIAN);
     drac->colour = mons_class_colour(drac->base_monster);
+
+    if (drac->base_monster == MONS_BLACK_DRACONIAN)
+        drac->add_ench(ENCH_INVIS);
+    else
+        drac->del_ench(ENCH_INVIS, false, false);
 
     // Get rid of the old breath weapon first.
     monster_spells oldspells = drac->spells;
@@ -88,6 +89,13 @@ void draconian_change_colour(monster* drac)
             drac->spells.push_back(slot);
 
     drac->spells.push_back(drac_breath(draco_or_demonspawn_subspecies(*drac)));
+}
+
+// For Chameleons, this is only called on polymorph.
+void chameleon_polymorph(monster& chameleon)
+{
+    simple_monster_message(chameleon, " basks in the mutagenic energy and changes!");
+    chameleon.chameleon_mutate(chameleon.colour, true);
 }
 
 bool ugly_thing_mutate(monster& ugly, bool force)
@@ -163,6 +171,11 @@ void merge_ench_durations(monster& initial, monster& merge_to, bool usehd)
 
         if (!entry.second.duration)
             entry.second.duration = 1;
+
+        // BCADNOTE: A bit hacky; but we gave crawlies slowly dying to get rid of them
+        // if they don't merge for awhile, we don't want things they merge into to inherit it.
+        if (entry.second.ench == ENCH_SLOWLY_DYING)
+            continue;
 
         if (no_initial)
             merge_to.add_ench(entry.second);
@@ -277,6 +290,12 @@ static void _lose_turn(monster* mons, bool has_gone)
 // abomination.
 static bool _do_merge_crawlies(monster* crawlie, monster* merge_to)
 {
+    bool player = (crawlie->friendly() && you.religion == GOD_YREDELEMNUL);
+    bool allow_large = (!player || player_allowed_abom(true) 
+        || crawlie->type == MONS_ABOMINATION_LARGE || merge_to->type == MONS_ABOMINATION_LARGE);
+    bool allow_small = (!player || player_allowed_abom() || mons_genus(crawlie->type) == MONS_ABOMINATION_SMALL
+        || mons_genus(merge_to->type) == MONS_ABOMINATION_SMALL);
+
     const int orighd = merge_to->get_experience_level();
     int addhd = crawlie->get_experience_level();
 
@@ -323,6 +342,20 @@ static bool _do_merge_crawlies(monster* crawlie, monster* merge_to)
         // Recompute in case we limited newhd.
         addhd = newhd - orighd;
 
+        if (!allow_large && (new_type == MONS_ABOMINATION_LARGE)
+                         && (merge_to->type != MONS_ABOMINATION_LARGE))
+        {
+            new_type = MONS_ABOMINATION_SMALL;
+            newhd = min(newhd, 15);
+        }
+        
+        if (!allow_small && (new_type == MONS_ABOMINATION_SMALL)
+                         && (merge_to->type != MONS_ABOMINATION_SMALL))
+        {
+            new_type = MONS_MACABRE_MASS;
+            newhd = min(newhd, 8);
+        }
+
         if (merge_to->type == MONS_ABOMINATION_SMALL)
         {
             // Adding to an existing abomination.
@@ -359,7 +392,7 @@ static bool _do_merge_crawlies(monster* crawlie, monster* merge_to)
     merge_to->set_hit_dice(orighd);
     merge_ench_durations(*crawlie, *merge_to, true);
 
-    init_abomination(*merge_to, newhd);
+    init_abomination(*merge_to, newhd, merge_to->friendly());
     merge_to->max_hit_points = mhp;
     merge_to->hit_points = hp;
 
@@ -508,7 +541,7 @@ static bool _slime_merge(monster* thing)
         // Don't merge if there is an open square that reduces distance
         // to target, even if we found a possible slime to merge with.
         if (!actor_at(*ai)
-            && mons_class_can_pass(MONS_SLIME_CREATURE, grd(*ai)))
+            && mons_class_can_pass(MONS_SLIME_CREATURE, env.grid(*ai)))
         {
             return false;
         }
@@ -679,7 +712,7 @@ bool slime_creature_polymorph(monster& slime, poly_power_type power)
         }
     }
 
-    return monster_polymorph(&slime, RANDOM_MONSTER, power);
+    return monster_polymorph(&slime, RANDOM_POLYMORPH_MONSTER, power);
 }
 
 static bool _starcursed_split(monster* mon)
@@ -792,14 +825,6 @@ static bool _will_starcursed_scream(monster* mon)
  */
 static bool _lost_soul_affectable(const monster &mons)
 {
-    // zombies are boring
-    if (mons_is_zombified(mons))
-        return false;
-
-    // undead can be reknit, naturals ghosted, everyone else is out of luck
-    if (!(mons.holiness() & (MH_UNDEAD | MH_NATURAL)))
-        return false;
-
     // already been revived once
     if (testbits(mons.flags, MF_SPECTRALISED))
         return false;
@@ -812,10 +837,22 @@ static bool _lost_soul_affectable(const monster &mons)
     if (is_good_god(mons.god))
         return false;
 
-    if (mons.is_summoned())
+    // undead can be reknit, naturals ghosted, everyone else is out of luck
+    if (!(mons.holiness() & (MH_UNDEAD | MH_NATURAL)))
         return false;
 
     if (!mons_class_gives_xp(mons.type))
+        return false;
+
+    // Short circuit for friendly lost souls since most player allies are summoned or zombies.
+    if (mons.friendly())
+        return true;
+
+    // zombies are boring
+    if (mons_is_zombified(mons))
+        return false;
+
+    if (mons.is_summoned())
         return false;
 
     return true;
@@ -835,10 +872,11 @@ static bool _worthy_sacrifice(monster* soul, const monster* target)
         else if (mi->type == MONS_LOST_SOUL)
             --count;
     }
+    const bool allied = soul->friendly();
 
     const int target_hd = target->get_experience_level();
     return count <= -1 || target_hd > 9
-           || x_chance_in_y(target_hd * target_hd * target_hd, 1200);
+           || x_chance_in_y(target_hd * target_hd * target_hd, allied ? 800 : 1200);
 }
 
 /**
@@ -882,14 +920,23 @@ bool lost_soul_revive(monster& mons, killer_type killer)
             remove_unique_annotation(&mons);
         }
 
-        targeter_los hitfunc(*mi, LOS_SOLID);
+        targeter_radius hitfunc(*mi, LOS_SOLID);
         flash_view_delay(UA_MONSTER, GREEN, 200, &hitfunc);
 
         mons.heal(mons.max_hit_points);
         mons.del_ench(ENCH_CONFUSION, true);
+
+        const bool was_summoned = mons.is_summoned();
+        mons.del_ench(ENCH_ABJ);
+        mons.del_ench(ENCH_FAKE_ABJURATION);
+
         mons.timeout_enchantments(10);
 
+        if (was_summoned)
+            mons.add_ench(mon_enchant(ENCH_ABJ, 3));
+
         coord_def newpos = mi->pos();
+
         if (was_alive)
         {
             mons.move_to_pos(newpos);
@@ -910,7 +957,7 @@ bool lost_soul_revive(monster& mons, killer_type killer)
                 mprf("%s assumes the form of %s%s!",
                      mi->name(DESC_THE).c_str(),
                      revivee_name.c_str(),
-                     (mi->is_summoned() ? " and becomes anchored to this"
+                     (mi->is_summoned() && !was_summoned ? " and becomes anchored to this"
                       " world" : ""));
             }
         }
@@ -973,7 +1020,7 @@ void check_grasping_roots(actor& act, bool quiet)
         }
     }
 
-    if (!source || !feat_has_solid_floor(grd(act.pos())))
+    if (!source || !feat_has_solid_floor(env.grid(act.pos())))
     {
         if (act.is_player())
         {
@@ -983,20 +1030,67 @@ void check_grasping_roots(actor& act, bool quiet)
             you.redraw_evasion = true;
             if (you.attribute[ATTR_LAST_FLIGHT_STATUS]
                 && (you.racial_permanent_flight()))
-           {
+            {
                 you.attribute[ATTR_PERM_FLIGHT] = 1;
                 float_player();
-           }
+            }
         }
         else
             act.as_monster()->del_ench(ENCH_GRASPING_ROOTS);
     }
 }
 
+static coord_def _find_nearer_tree(coord_def cur_loc, coord_def target)
+{
+    coord_def p = {0, 0};
+    int seen = 0;
+    // don't bother teleporting to something that's at the same distance
+    // from the target as you already are
+    int closest = grid_distance(cur_loc, target) - 1;
+    for (distance_iterator di(target); di; ++di)
+    {
+        const int dist = grid_distance(target, *di);
+        if (dist > closest)
+            break;
+
+        const dungeon_feature_type grid = env.grid(*di);
+        if (grid != DNGN_TREE)
+            continue;
+        closest = dist;
+
+        seen++;
+        if (x_chance_in_y(1, seen))
+            p = *di;
+    }
+    return p;
+}
+
 static inline void _mons_cast_abil(monster* mons, bolt &pbolt,
                                    spell_type spell_cast)
 {
     mons_cast(mons, pbolt, spell_cast, MON_SPELL_NATURAL);
+}
+
+static int _chaos_resist()
+{
+    return random_choose_weighted( 7, -1,
+                                  15,  0,
+                                   3,  1,
+                                   4,  2,
+                                   2,  3,
+                                   1,  4);
+}
+
+static void _set_chaos_resists(monster * mons)
+{
+    resists_t resists;
+
+    resists  = mrd(MR_RES_ELEC, _chaos_resist());
+    resists |= mrd(MR_RES_ACID, _chaos_resist());
+    resists |= mrd(MR_RES_COLD, _chaos_resist());
+    resists |= mrd(MR_RES_FIRE, _chaos_resist());
+
+    mons->props[CHAOS_RESISTS_KEY] = (int)resists;
 }
 
 bool mon_special_ability(monster* mons)
@@ -1008,9 +1102,10 @@ bool mon_special_ability(monster* mons)
                                   : mons->type;
 
     // Slime creatures can split while out of sight.
-    if ((!mons->near_foe() || mons->asleep() || mons->submerged())
+    if ((!mons->near_foe() || mons->asleep())
          && mons->type != MONS_SLIME_CREATURE
          && mons->type != MONS_LOST_SOUL
+         && mons->type != MONS_CHAOS_ELEMENTAL 
          && !_crawlie_is_mergeable(mons))
     {
         return false;
@@ -1023,6 +1118,11 @@ bool mon_special_ability(monster* mons)
         // A (very) ugly thing may mutate if it's next to other ones (or
         // next to you if you're contaminated).
         used = ugly_thing_mutate(*mons, false);
+        break;
+
+    case MONS_CHAOS_ELEMENTAL:
+        _set_chaos_resists(mons);
+        return false; // This one never uses energy so it's a bit special.
         break;
 
     case MONS_SLIME_CREATURE:
@@ -1040,6 +1140,7 @@ bool mon_special_ability(monster* mons)
             return true;
         break;
 
+    case MONS_ENTROPIC_SPHERE:
     case MONS_BALL_LIGHTNING:
         if (is_sanctuary(mons->pos()))
             break;
@@ -1054,11 +1155,47 @@ bool mon_special_ability(monster* mons)
 
         for (monster_near_iterator targ(mons, LOS_NO_TRANS); targ; ++targ)
         {
-            if (mons_aligned(mons, *targ) || grid_distance(mons->pos(), targ->pos()) > 2)
+            if (mons_aligned(mons, *targ) || mons_is_firewood(**targ)
+                || grid_distance(mons->pos(), targ->pos()) > 2)
+            {
                 continue;
+            }
 
             if (!cell_is_solid(targ->pos()))
             {
+                mons->suicide();
+                used = true;
+                break;
+            }
+        }
+        break;
+
+    case MONS_EPHEMERAL_SPIRIT: // Fallthrough
+    case MONS_FOXFIRE:
+        if (is_sanctuary(mons->pos()))
+            break;
+
+        if (mons->attitude == ATT_HOSTILE
+            && grid_distance(you.pos(), mons->pos()) == 1)
+        {
+            foxfire_attack(mons, &you);
+            check_place_cloud(CLOUD_FLAME, mons->pos(), 2, mons);
+            mons->suicide();
+            used = true;
+            break;
+        }
+
+        for (monster_near_iterator targ(mons, LOS_NO_TRANS); targ; ++targ)
+        {
+            if (mons_aligned(mons, *targ) || mons_is_firewood(**targ)
+                || grid_distance(mons->pos(), targ->pos()) > 1)
+            {
+                continue;
+            }
+
+            if (!cell_is_solid(targ->pos()))
+            {
+                foxfire_attack(mons, *targ);
                 mons->suicide();
                 used = true;
                 break;
@@ -1153,7 +1290,7 @@ bool mon_special_ability(monster* mons)
         if (one_chance_in(5))
         {
             actor *foe = mons->get_foe();
-            if (foe && !feat_is_water(grd(foe->pos())))
+            if (foe && !feat_is_water(env.grid(foe->pos())))
             {
                 coord_def spot;
                 if (find_habitable_spot_near(foe->pos(), MONS_ELECTRIC_EEL, 3, false, spot)
@@ -1168,6 +1305,30 @@ bool mon_special_ability(monster* mons)
                 }
             }
         }
+    }
+    break;
+
+    case MONS_DRYAD:
+    {
+        if (!one_chance_in(3))
+            break;
+
+        actor *foe = mons->get_foe();
+        if (!foe)
+            break;
+
+        const int dist = grid_distance(foe->pos(), mons->pos());
+        if (dist < 3)
+            break;
+
+        const coord_def target = _find_nearer_tree(mons->pos(), foe->pos());
+        if (target.origin() || !mons->move_to_pos(target))
+            break;
+
+        env.grid(target) = DNGN_FLOOR;
+        set_terrain_changed(target);
+        simple_monster_message(*mons, " melds with the trees.");
+        used = true;
     }
     break;
 

@@ -161,7 +161,7 @@ skin of Zhor
 
 某种奇怪动物的毛皮，臭气熏天。
 %%%%
-salamander hide armour
+salamander hide
 
 一件用火蜥蜴的皮制成的皮甲。
 %%%%

@@ -33,7 +33,7 @@
 
 {{
 function interest_check(e)
-  if not you.in_branch("D") or you.absdepth() > 9 then
+  if not you.in_branch("D") or you.absdepth() > 6 then
     e.tags('extra')
   end
 end
@@ -44,7 +44,8 @@ function get_overflow_altar_count(e)
     local tag = unpack(params)
     if tag ~= nil then
       -- temple_overflow_generic_ is 24 characters
-      return string.sub(tag, 25)
+      local result = string.sub(tag, 25)
+      if result ~= "" then return result end
     end
   end
 
@@ -107,63 +108,80 @@ function callback.xom_greatest_gift(data, triggerable, triggerer, marker, ev)
   end
 end
 
+function callback.five_deadly_venoms(data, triggerable, triggerer, marker, ev)
+  crawl.god_speaks("Wu Jian", "For a moment, you catch a glimpse of warriors who walked this path long ago.")
+  local positions = dgn.find_marker_positions_by_prop(
+    "positions", "five_deadly_venoms")
+  for i, pos in ipairs(positions) do
+    local x, y = pos:xy()
+    dgn.create_monster(x, y, "generate_awake dur:1 " .. data.venoms[i])
+  end
+end
+
 function species_mock(e)
-  if you.race() == "Barachi" then
-    e.kmons("1 = bullfrog")
+  if you.class() == "Demonspawn" then
+    return "helvityr"
+  elseif you.class() == "Mummy" then
+    return "bog body"
+  elseif you.class() == "Demigod" then
+    return "titan simulacrum"
+  elseif you.class() == "Merfolk" then
+    return "water nymph"
+  elseif you.class() == "Centaur" then
+    return "dart slug"
+  elseif you.class() == "Vine Stalker" then
+    return "thorn hunter"
+  elseif you.race() == "Barachi" then
+    return "bullfrog"
   elseif you.race() == "Gnoll" then
-    e.kmons("1 = jackal")
-  elseif you.race() == "Centaur" then
-    e.kmons("1 = dart slug")
-  elseif you.race() == "Demigod" then
-    e.kmons("1 = titan simulacrum")
-  elseif you.race() == "Demonspawn" then
-    e.kmons("1 = hell beast")
+    return "jackal"
   elseif you.race():find("Draconian") then
-    e.kmons("1 = wyvern")
-  elseif you.race() == "Deep Dwarf" then
-    e.kmons("1 = deep dwarf zombie")
+    return "wyvern"
   elseif you.race() == "Deep Elf" then
-    e.kmons("1 = insubstantial wisp")
-  elseif you.race() == "Halfling" then
-    e.kmons("1 = hobgoblin ; mundane hunting sling")
+    return "insubstantial wisp"
   elseif you.race() == "Hill Orc" then
-    e.kmons("1 = goblin ; mundane hand axe . mundane ring mail")
+    return "goblin ; mundane hand axe . mundane ring mail"
   elseif you.race() == "Human" then
-    e.kmons("1 = killer klown")
+    return "killer klown"
   elseif you.race() == "Felid" then
-    e.kmons("1 = sphinx zombie")
+    return "sphinx zombie"
   elseif you.race() == "Formicid" then
-    e.kmons("1 = soldier ant")
+    return "soldier ant"
   elseif you.race() == "Gargoyle" then
-    e.kmons("1 = earth elemental")
+    return "earth elemental"
   elseif you.race() == "Ghoul" then
-    e.kmons("1 = death ooze")
+    return "death ooze"
   elseif you.race() == "Kobold" then
-    e.kmons("1 = boggart")
-  elseif you.race() == "Merfolk" then
-    e.kmons("1 = bullfrog")
+    return "boggart"
   elseif you.race() == "Minotaur" then
-    e.kmons("1 = yak")
-  elseif you.race() == "Mummy" then
-    e.kmons("1 = human zombie")
+    return "yak"
   elseif you.race() == "Naga" then
-    e.kmons("1 = torpor snail")
+    return "torpor snail"
   elseif you.race() == "Octopode" then
-    e.kmons("1 = tentacled monstrosity")
+    return "tentacled monstrosity"
   elseif you.race() == "Ogre" then
-    e.kmons("1 = ettin skeleton")
+    return "ettin skeleton"
+  elseif you.race() == "Rock Troll" then
+    return "boulder beetle"
   elseif you.race() == "Spriggan" then
-    e.kmons("1 = unseen horror")
+    return "unseen horror"
   elseif you.race() == "Tengu" then
-    e.kmons("1 = caustic shrike")
+    return "caustic shrike"
   elseif you.race() == "Troll" then
-    e.kmons("1 = hungry ghost")
-  elseif you.race() == "Vampire" then
-    e.kmons("1 = tyrant leech")
-  elseif you.race() == "Vine Stalker" then
-    e.kmons("1 = thorn hunter")
+    return "hungry ghost"
+  elseif you.race() == "Lignifite" then
+    return "shambling mangrove"
   else
-    e.kmons("1 = spectral ugly thing")
+    return "spectral ugly thing"
+  end
+end
+
+function callback.do_species_mock(data, triggerable, triggerer, marker, ev)
+  if data.seen then return else data.seen = true end
+  local positions = dgn.find_marker_positions_by_prop("mock_location", 1)
+  for i, pos in ipairs(positions) do
+    local x, y = pos:xy()
+    dgn.create_monster(x, y, "generate_awake " .. species_mock())
   end
 end
 }}
@@ -222,7 +240,7 @@ ENDMAP
 
 NAME:   ashenzari_conservatory_becter
 TAGS:   temple_overflow_1 temple_overflow_ashenzari transparent
-DEPTH:  D:2-9
+DEPTH:  D:2-5
 KFEAT:  _ = altar_ashenzari
 MAP
    .....
@@ -238,7 +256,7 @@ ENDMAP
 NAME:  cheibrodos_ashenzari_chains
 TAGS:  temple_overflow_1
 TAGS:  temple_overflow_ashenzari uniq_altar_ashenzari transparent
-DEPTH: D:3-9
+DEPTH: D:2-5
 KFEAT: _ = altar_ashenzari
 KFEAT: m = iron_grate
 MAP
@@ -276,6 +294,31 @@ FDD..CCDCD.CC.DDF
 EC...F..E..F....E
 ENDMAP
 
+### Beogh overflow altars #####################################################
+
+NAME: cheibrodos_pilgrimage
+TAGS: no_item_gen no_monster_gen uniq_altar_beogh temple_overflow_1 temple_overflow_beogh
+DEPTH: D:2-3
+ORIENT: float
+MONS: orc priest band, orc
+SUBST: ' : cG.w
+KFEAT: G = orcish_idol
+TILE:  c = WALL_STONE_SMOOTH
+KFEAT: T = altar_beogh
+MAP
+ ...........
+..ccccccccc.
+.ccc........
+.cc..'2..'..
+.c$........@
+@nT.1......@
+.c$........@
+.cc..'2..'..
+.ccc........
+..ccccccccc.
+ ...........
+ENDMAP
+
 ### Cheibriados overflow altars ###############################################
 
 NAME:   cheibriados_altar_1
@@ -299,6 +342,7 @@ KFEAT:   _ = altar_cheibriados
 MONS:    torpor snail
 SUBST:   1 : 1:50 2:30 3:10 4:10
 NSUBST:  4 = 1:1 / 1:2 / 1:3
+KMASK: 1234 = opaque
 : interest_check(_G)
 MAP
 .......
@@ -313,10 +357,10 @@ MAP
 ENDMAP
 
 NAME:  slow_altar_1
-DEPTH: D:5-9
+DEPTH: D:2-5
 TAGS:  patrolling no_monster_gen no_item_gen transparent
 TAGS:  uniq_slow_altar temple_overflow_1 temple_overflow_cheibriados
-KMONS: _ = worm / mummy / iron imp
+KMONS: _ = worm / mummy / haearbwca
 KFEAT: _ = altar_cheibriados
 SUBST: x : xxxcccmnvb
 MAP
@@ -334,10 +378,10 @@ xxx..@..xxx
 ENDMAP
 
 NAME:    slow_altar_2
-DEPTH:   D:5-9
+DEPTH:   D:2-5
 TAGS:    patrolling no_monster_gen no_item_gen
 TAGS:    uniq_slow_altar temple_overflow_1 temple_overflow_cheibriados
-KMONS:   _ = worm / mummy / iron imp
+KMONS:   _ = worm / mummy / haearbwca
 KFEAT:   _ = altar_cheibriados
 SUBST:   x : xxxcccvb
 MAP
@@ -356,9 +400,9 @@ ENDMAP
 NAME:   chei_slow_surprise
 TAGS:   uniq_slow_altar overflow_altar_cheibriados transparent no_monster_gen
 TAGS:   transparent
-DEPTH:  D:4-9
+DEPTH:  D:2-5
 WEIGHT: 5
-KMONS:  a = worm / mummy / iron imp
+KMONS:  a = worm / mummy / haearbwca
 NSUBST: ' = 1:a / *:.
 KFEAT:  _ = altar_cheibriados
 MAP
@@ -377,7 +421,7 @@ ENDMAP
 NAME:   cheibrodos_worm_habitat
 TAGS:   no_item_gen no_monster_gen temple_overflow_1 transparent
 TAGS:   uniq_slow_altar temple_overflow_cheibriados uniq_altar_cheibriados
-DEPTH:  D:5-9
+DEPTH:  D:2-5
 WEIGHT: 5
 KFEAT:  _ = altar_cheibriados
 MONS:   worm
@@ -400,7 +444,7 @@ ENDMAP
 NAME:   kennysheep_slug_shrine
 TAGS:   uniq_altar_cheibriados temple_overflow_1 temple_overflow_cheibriados
 TAGS:   no_pool_fixup no_monster_gen transparent
-DEPTH:  D:2-6
+DEPTH:  D:2-3
 MONS:   patrolling dart slug
 KMASK:  1 = opaque
 KFEAT:  _ = altar_cheibriados
@@ -452,19 +496,19 @@ ENDMAP
 
 NAME:  grunt_dithmenos_shadows
 TAGS:  uniq_altar_dithmenos temple_overflow_1 temple_overflow_dithmenos decor
-DEPTH: D:4-
+DEPTH: D:2-
 KFEAT: C = altar_dithmenos
 {{
-  if you.absdepth() >= 14 then
+  if you.absdepth() >= 7 then
      mons("shadow")
   else
      local imp_weight = 9 - you.absdepth()
      if imp_weight > 0 then
          local phantom_weight = 9 - imp_weight
          mons("phantom w:" .. phantom_weight ..
-              " / shadow imp w:" .. imp_weight)
+              " / cysgobwca w:" .. imp_weight)
      else
-         mons("shadow imp")
+         mons("cysgobwca")
      end
   end
 }}
@@ -480,7 +524,7 @@ ENDMAP
 NAME: nicolae_dithmenos_the_darkroom
 TAGS: temple_overflow_dithmenos temple_overflow_1 uniq_altar_dithmenos
 TAGS: decor transparent
-DEPTH: D:4-
+DEPTH: D:2-
 KFEAT: _ = altar_dithmenos
 MARKER: ' = lua:fog_machine { cloud_type = "black smoke", pow_min = 30, \
    pow_max = 50, delay_min = 50, delay_max = 90, size = 1, walk_dist = 1, \
@@ -650,7 +694,7 @@ ENDMAP
 ### Fedhas overflow altars ####################################################
 
 NAME:   fedhas_altar_1
-TAGS:   uniq_altar_fedhas temple_overflow_1 temple_overflow_fedhas
+TAGS:   uniq_altar_fedhas temple_overflow_1 temple_overflow_fedhas_madash
 TAGS:   transparent decor
 DEPTH:  D:2-
 KFEAT:  C = altar_fedhas
@@ -665,7 +709,7 @@ MAP
 ENDMAP
 
 NAME:   fedhas_altar_2
-TAGS:   uniq_altar_fedhas temple_overflow_1 temple_overflow_fedhas
+TAGS:   uniq_altar_fedhas temple_overflow_1 temple_overflow_fedhas_madash
 TAGS:   transparent decor
 DEPTH:  D:2-
 KFEAT:  C = altar_fedhas
@@ -682,7 +726,7 @@ MAP
 ENDMAP
 
 NAME:   fedhas_altar_3
-TAGS:   uniq_altar_fedhas temple_overflow_1 temple_overflow_fedhas
+TAGS:   uniq_altar_fedhas temple_overflow_1 temple_overflow_fedhas_madash
 TAGS:   transparent decor
 DEPTH:  D:2-
 KFEAT:  C = altar_fedhas
@@ -698,7 +742,7 @@ MAP
 ENDMAP
 
 NAME:   fedhas_altar_4
-TAGS:   uniq_altar_fedhas temple_overflow_1 temple_overflow_fedhas
+TAGS:   uniq_altar_fedhas temple_overflow_1 temple_overflow_fedhas_madash
 TAGS:   decor
 DEPTH:  D:2-
 KFEAT:  C = altar_fedhas
@@ -722,7 +766,7 @@ ENDMAP
 # The oklob plant may be abusable (if so, remove it).
 NAME:    tgw_fedhas
 TAGS:    no_item_gen no_monster_gen
-TAGS:    temple_overflow_1 temple_overflow_fedhas uniq_altar_fedhas
+TAGS:    temple_overflow_1 temple_overflow_fedhas_madash uniq_altar_fedhas
 DEPTH:   Lair, D:2-
 KFEAT:   _ = altar_fedhas
 KPROP:   xzd3P = no_tele_into
@@ -731,7 +775,7 @@ KITEM:   d = ration / nothing w:20
 KFEAT:   d = floor
 SUBST:   x = TTPPPPP.
 # Only make "oklob behind bushes" situation possible a bit deeper.
-: if you.absdepth() > 5 then
+: if you.absdepth() > 3 then
 SHUFFLE: PQR
 SUBST:   Q = 114, R = 11124
 : end
@@ -768,9 +812,9 @@ ccccccccccc@ccccccccccc
 ENDMAP
 
 NAME:  fedhas_ov_isle_minmay
-TAGS:  temple_overflow_1 temple_overflow_fedhas uniq_altar_fedhas no_monster_gen
+TAGS:  temple_overflow_1 temple_overflow_fedhas_madash uniq_altar_fedhas no_monster_gen
 TAGS:  transparent
-DEPTH: D:2-9
+DEPTH: D:2-5
 MONS:  plant / bush w:5
 SUBST: 1 = 111t'''
 KFEAT: _ = altar_fedhas
@@ -794,7 +838,7 @@ MAP
 ENDMAP
 
 NAME:   fedhas_altar_fruit_tree
-TAGS:   uniq_altar_fedhas temple_overflow_1 temple_overflow_fedhas
+TAGS:   uniq_altar_fedhas temple_overflow_1 temple_overflow_fedhas_madash
 TAGS:   no_item_gen no_rotate no_vmirror decor
 DEPTH:  D:2-
 NSUBST: g = 4:f/*:.
@@ -825,8 +869,8 @@ xtttttdd@ddtttttx
 ENDMAP
 
 NAME:  fedhas_bush_and_centaur_altar
-TAGS:  temple_overflow_1 temple_overflow_fedhas uniq_altar_fedhas transparent
-DEPTH: D:4-
+TAGS:  temple_overflow_1 temple_overflow_fedhas_madash uniq_altar_fedhas transparent
+DEPTH: D:2-
 KFEAT: _ = altar_fedhas
 MONS:  centaur, bush
 : interest_check(_G)
@@ -842,15 +886,15 @@ x.22_22.x
 ENDMAP
 
 NAME:   fedhas_altar_decomposition
-TAGS:   uniq_altar_fedhas temple_overflow_1 temple_overflow_fedhas
+TAGS:   uniq_altar_fedhas temple_overflow_1 temple_overflow_fedhas_madash
 TAGS:   no_item_gen no_monster_gen no_trap_gen
-DEPTH:  D:6-13
+DEPTH:  D:3-6
 MONS:   bush, plant, necrophage, zombie
 KFEAT:  _ = altar_fedhas
 FTILE:  '!12@ = floor_moss
 COLOUR: '!@ = green
+# BCADDO: check jobclass here.
 : if you.race() ~= "Mummy" and you.race() ~= "Ghoul"
-:   and you.race() ~= "Vampire"
 : then
 MARKER:  ! = lua:message_at_spot("Fedhas urges you to decompose the vile \
                                  beasts imprisoned behind the altar.", \
@@ -878,7 +922,7 @@ ENDMAP
 NAME:   grunt_gozag_statues
 DEPTH:  D:2-
 TAGS:   transparent no_item_gen no_monster_gen no_trap_gen temple_overflow_1
-TAGS:   temple_overflow_gozag uniq_altar_gozag
+TAGS:   temple_overflow_gozag_ym_sagoz uniq_altar_gozag
 KFEAT:  _ = altar_gozag
 TILE:   G = dngn_golden_statue
 FTILE:  _-G = floor_limestone
@@ -903,7 +947,7 @@ ENDMAP
 NAME:   grunt_gozag_breadcrumbs
 DEPTH:  D:2-
 TAGS:   transparent no_item_gen no_monster_gen no_trap_gen temple_overflow_1
-TAGS:   temple_overflow_gozag uniq_altar_gozag
+TAGS:   temple_overflow_gozag_ym_sagoz uniq_altar_gozag
 KFEAT:  _ = altar_gozag
 ITEM:   gold q:1
 KITEM:  e = gold q:1
@@ -922,7 +966,7 @@ MAP
 ENDMAP
 
 NAME:  nicolae_gozag_cash_rules_everything_around_me
-TAGS:  temple_overflow_gozag temple_overflow_1 uniq_altar_gozag \
+TAGS:  temple_overflow_gozag_ym_sagoz temple_overflow_1 uniq_altar_gozag \
        no_hmirror no_vmirror no_rotate no_item_gen transparent decor
 DEPTH: D:2-
 KFEAT: _ = altar_gozag
@@ -940,7 +984,7 @@ ENDMAP
 # No, you probably can't afford any of it.
 # You should have thought of that before being poor.
 NAME:  nicolae_gozag_zags_fifth_avenue
-TAGS:  temple_overflow_gozag temple_overflow_1 uniq_altar_gozag
+TAGS:  temple_overflow_gozag_ym_sagoz temple_overflow_1 uniq_altar_gozag
 TAGS:  no_pool_fixup no_item_gen no_monster_gen decor transparent
 DEPTH: D:2-
 WEIGHT: 5
@@ -960,7 +1004,7 @@ wwwwwww....
 ENDMAP
 
 NAME:  nicolae_gozag_seed_capital
-TAGS:  temple_overflow_gozag temple_overflow_1 uniq_altar_gozag decor
+TAGS:  temple_overflow_gozag_ym_sagoz temple_overflow_1 uniq_altar_gozag decor
 TAGS:  transparent no_item_gen
 DEPTH: D:2-
 ITEM:  gold q:1 / gold q:2
@@ -1011,6 +1055,25 @@ xxt.txx
    @
 ENDMAP
 
+NAME:   nzn_hepliaklqana_mist_gate
+DEPTH:  D:2-, Lair, Depths
+TAGS:   temple_overflow_1 temple_overflow_hepliaklqana no_monster_gen
+KFEAT:  _ = altar_hepliaklqana
+MARKER: A = lua:fog_machine { cloud_type = "grey smoke", pow_min = 20, \
+                              pow_max = 40, delay = 10, size = 1, \
+                              spread_rate = -1 }
+: interest_check(_G)
+MAP
+xxxxx
+x...x
+x._.x
+x...x
+xx.xx
+ xAx
+ x.x
+  @
+ENDMAP
+
 ### Kikubaaqudgha overflow altars #############################################
 
 NAME:   lemuel_zombie_altar_kikubaaqudgha
@@ -1018,7 +1081,11 @@ DEPTH:  D:2-, Crypt
 TAGS:   no_pool_fixup uniq_zombie_altar no_monster_gen temple_overflow_1
 TAGS:   temple_overflow_kikubaaqudgha
 KFEAT:  _ = altar_kikubaaqudgha
-MONS:   rat zombie / bat zombie / nothing w:90
+NSUBST: w = 2:r / *:w
+NSUBST: y = 2:r / *:w
+KFEAT:  r = w
+KMONS:  r = puffer fish skeleton att:good_neutral / slimehead skeleton att:good_neutral
+MONS:   zombie / skeleton / simulacrum w:5 / nothing w:90
 : interest_check(_G)
 MAP
 xxxxxxxxxxxxxxxx
@@ -1026,38 +1093,36 @@ xxxxwwwwwwwwxxxx
 xxxx11111111xxxx
 @............._x
 xxxx11111111xxxx
-xxxxwwwwwwwwxxxx
+xxxxyyyyyyyyxxxx
 xxxxxxxxxxxxxxxx
 ENDMAP
 
 NAME:   lemuel_mausoleum_altar_kikubaaqudgha
 TAGS:   uniq_altar_kikubaaqudgha temple_overflow_1
 TAGS:   temple_overflow_kikubaaqudgha uniq_mausoleum_altar
-DEPTH:  D:7-, Crypt
-MONS:   w:50 human zombie/orc zombie/elf zombie/w:5 ogre zombie/w:5 troll zombie
-MONS:   w:50 human skeleton/orc skeleton/elf skeleton/w:5 ogre skeleton/\
-        w:5 troll skeleton
-MONS:   mummy, wight, wraith, necrophage
+DEPTH:  D:3-, Crypt
+MONS:   zombie / skeleton
+MONS:   simulacrum
+MONS:   wraith, necrophage
+TILE:   c = wall_catacombs
 NSUBST: ? = 1:_ / *:1
-SUBST:  1 = 1:25 2 3 4:8 5:7 6:5
+SUBST:  1 = 1:25 2 3
 KFEAT:  _ = altar_kikubaaqudgha
-KMONS:  _ = human zombie
-: if not you.in_branch("D") or you.absdepth() > 14 then
-TAGS:   extra
-: end
+KMONS:  _ = simulacrum
+: interest_check(_G)
 MAP
-ccccccccccccccc
-c?c?c?c?c?c?ccG
-c+c+c+c+c+c+ccc
-c............+@
-c+c+c+c+c+c+ccc
-c?c?c?c?c?c?ccG
-ccccccccccccccc
+ccccccccccccccc.
+c?c?c?c?c?c?ccG.
+c+c+c+c+c+c+ccc.
+c............=@
+c+c+c+c+c+c+ccc.
+c?c?c?c?c?c?ccG.
+ccccccccccccccc.
 ENDMAP
 
 NAME:   kiku_gazebo_garden_becter
-TAGS:   temple_overflow_1 temple_overflow_kikubaaqudgha transparent
-DEPTH:  D:2-9
+TAGS:   temple_overflow_1 temple_overflow_kikubaaqudgha transparent no_pool_fixup
+DEPTH:  D:2-5
 KMONS:  f = withered plant
 KFEAT:  _ = altar_kikubaaqudgha
 SUBST:  ` = f....
@@ -1065,31 +1130,36 @@ COLOUR: c = magenta
 COLOUR: i' = brown
 COLOUR: " = yellow
 TILE:   c = dngn_stone_wall_magenta
+KFEAT:  w = w
+KMONS:  w = slimehead skeleton / puffer fish skeleton
 FTILE:  '"_ = floor_pebble_yellow
 MAP
 ..````
 .ccc`````
-.c'c"`````
-.c''""````
+.cwc"`````
+.cWW""````
 .c'''"c````
 .c'_''cc```
 .c'''"c````
-.c''""````
-.c'c"`````
+.cWW""````
+.cwc"`````
 .ccc`````
 ..````
 ENDMAP
 
 NAME:   kiku_gazebo_pond_becter
 TAGS:   temple_overflow_1 temple_overflow_kikubaaqudgha transparent
-DEPTH:  D:2-9
+DEPTH:  D:2-5
 KFEAT:  _ = altar_kikubaaqudgha
 KMASK:  Ww = no_monster_gen
+NSUBST: w = 2:a / *:w
+KFEAT:  a = w 
+KMONS:  a = patrolling puffer fish skeleton att:good_neutral / patrolling slimehead skeleton att:good_neutral
 SUBST:  M = W..
 COLOUR: c = magenta
 COLOUR: i' = brown
 COLOUR: " = yellow
-COLOUR: w = green
+COLOUR: aw = green
 COLOUR: W = lightgreen
 TILE:   c = dngn_stone_wall_magenta
 FTILE:  '"_ = floor_pebble_yellow
@@ -1109,7 +1179,7 @@ ENDMAP
 
 NAME:   kennysheep_vampire_church
 TAGS:   no_monster_gen temple_overflow_1 temple_overflow_kikubaaqudgha
-DEPTH:  D:2-9
+DEPTH:  D:2-5
 MONS:   vampire bat / nothing w:7, bat skeleton / bat zombie
 KFEAT:  A = altar_kikubaaqudgha
 NSUBST: . = 4:2 / 3 = 2. / *:.
@@ -1145,19 +1215,19 @@ ENDMAP
 ### Makhleb overflow altars ###################################################
 
 NAME:    demons_altar
-DEPTH:   D:3-11, Orc, !Orc:$
+DEPTH:   D:2-5, Orc, !Orc:$
 TAGS:    no_monster_gen patrolling temple_overflow_1 temple_overflow_makhleb transparent
 TAGS:    layout_rooms layout_city layout_open
 KFEAT:   _ = altar_makhleb
-# Either one type 3 or 4 demon (rust devil or smoke demon) or
-# three slow type 5 demons (iron imp).
-# The higher demons can only come up in D:9-11.
-: if you.absdepth() > 9 then
+# Either one type 3 or 4 demon (taeringu or mygdarth) or
+# three slow type 5 demons (haearbwca).
+# The higher demons can only come up in D:4-5.
+: if you.absdepth() > 4 then
 SHUFFLE: 123
 NSUBST:  1 = 1:1 / *:.
 NSUBST:  2 = 1:2 / *:.
 : end
-MONS:    rust devil, smoke demon, iron imp
+MONS:    taeringu, mygdarth, haearbwca
 MAP
 xxxxxxxxxxxxxxx
 x.............x
@@ -1177,7 +1247,7 @@ ENDMAP
 NAME:  bloody_makhleb
 TAGS:  uniq_altar_makhleb temple_overflow_1 temple_overflow_makhleb
 TAGS:  transparent decor
-DEPTH: D:2-12, Orc, Vaults
+DEPTH: D:2-6, Orc, Vaults
 KPROP: . = bloody / nothing
 KFEAT: _ = altar_makhleb
 KITEM: _ = robe, whip
@@ -1194,23 +1264,23 @@ DEPTH: D:2-
 KFEAT: _ = altar_makhleb
 KPROP: 12 = no_tele_into
 KMASK: 12 = no_trap_gen
-MONS:  executioner / balrug / green death / cacodemon / blizzard demon
-MONS:  orange demon / ynoxinul / neqoxec / hellwing / smoke demon
+MONS:  oxarmordth / balrug / gwyrdd / titivilus / cenysus
+MONS:  nychdod / ynoxinul / neqoxec / vlerk / mygdarth
 : interest_check(_G)
 MAP
-  ccc
-  c1c
-cccnccc
-c2n_n2c
-ccc.ccc
-  c.c
-  c@c
+  qqq
+  q1q
+qqqqqqq
+q2q_q2q
+qqq.qqq
+  q.q
+  q@q
 ENDMAP
 
 NAME:   makhleb_blood_cavern_becter
 TAGS:   uniq_altar_makhleb temple_overflow_1 temple_overflow_makhleb
-DEPTH:  D:2-9
-: if you.absdepth() < 6 then
+DEPTH:  D:2-5
+: if you.absdepth() < 3 then
 : dgn.delayed_decay(_G, '1', 'human corpse')
 KMONS:  2 = hound
 : else
@@ -1240,7 +1310,7 @@ ENDMAP
 NAME:   makhleb_heckhound_becter
 TAGS:   uniq_altar_makhleb temple_overflow_1 temple_overflow_makhleb
 TAGS:   no_monster_gen
-DEPTH:  D:2-9
+DEPTH:  D:2-5
 KFEAT:  _ = altar_makhleb
 KMONS:  _ = patrolling hound perm_ench:bleeding
 TILE:   c = wall_hall
@@ -1258,8 +1328,8 @@ ENDMAP
 
 NAME:   makhleb_grotto_becter
 TAGS:   no_monster_gen temple_overflow_1 temple_overflow_makhleb
-DEPTH:  D:2-9
-MONS:   iron imp w:1 / shadow imp w:1 / crimson imp
+DEPTH:  D:2-5
+MONS:   haearbwca w:1 / cysgobwca w:1 / llaibwca
 KFEAT:  _ = altar_makhleb
 TILE:   c = wall_hall
 FTILE:  A_'1 = floor_grey_dirt
@@ -1275,6 +1345,21 @@ x.w'w.x
 xx...xx
  xx+xx
    @
+ENDMAP
+
+NAME:   nzn_makhleb_speed_demon
+TAGS:   no_monster_gen temple_overflow_1 temple_overflow_makhleb
+DEPTH:  D:3-5
+WEIGHT: 2
+KFEAT:  _ = altar_makhleb
+KMONS:  _ = sixfirhy
+: interest_check(_G)
+MAP
+.....
+.ccc.
+.c_c.
+.c=c.
+..@..
 ENDMAP
 
 ### Nemelex overflow altars ###################################################
@@ -1335,8 +1420,8 @@ ENDMAP
 NAME:    nemelex_dance_club_becter
 TAGS:    overflow_altar_nemelex_xobeh transparent
 TAGS:    no_rotate no_vmirror no_monster_gen no_item_gen
-DEPTH:   D:2-9
-: if you.depth() <= 4 then
+DEPTH:   D:2-5
+: if you.depth() <= 3 then
 MONS:    orc ; club
 : else
 MONS:    ogre ; giant club
@@ -1387,7 +1472,7 @@ ENDMAP
 NAME:   nemelex_lonely_heart_becter
 TAGS:   overflow_altar_nemelex_xobeh transparent
 TAGS:   no_rotate no_vmirror no_monster_gen no_item_gen
-DEPTH:  D:2-9
+DEPTH:  D:2-5
 MONS:   nothing w:4 / jessica w:1
 KFEAT:  _ = altar_nemelex_xobeh
 COLOUR: x = lightred
@@ -1408,9 +1493,9 @@ ENDMAP
 NAME:   nemelex_spade_bored_becter
 TAGS:   overflow_altar_nemelex_xobeh transparent
 TAGS:   no_rotate no_vmirror no_monster_gen no_item_gen
-DEPTH:  D:2-9
+DEPTH:  D:2-5
 KFEAT:  _ = altar_nemelex_xobeh
-KFEAT:  o = known shaft trap
+KFEAT:  o = shaft trap
 NSUBST: ' = 6:o / *:.
 TILE:   x = wall_pebble_darkgray
 MAP
@@ -1433,7 +1518,7 @@ ENDMAP
 NAME:    okawaru_metal_pillars_1_2
 TAGS:    temple_overflow_1 temple_overflow_okawaru uniq_altar_okawaru
 TAGS:    transparent decor
-DEPTH:   D:2-10, Orc
+DEPTH:   D:2-5, Orc
 WEIGHT:  7
 KFEAT:   _ = altar_okawaru
 SHUFFLE: v'
@@ -1450,7 +1535,7 @@ ENDMAP
 NAME:   okawaru_metal_pillars_3
 TAGS:   temple_overflow_1 temple_overflow_okawaru uniq_altar_okawaru
 TAGS:   transparent decor
-DEPTH:  D:2-10, Orc
+DEPTH:  D:2-5, Orc
 WEIGHT: 3
 KFEAT:  _ = altar_okawaru
 MAP
@@ -1466,7 +1551,7 @@ ENDMAP
 NAME:   okawaru_trees_1
 TAGS:   temple_overflow_1 temple_overflow_okawaru uniq_altar_okawaru
 TAGS:   transparent decor
-DEPTH:  D:2-10
+DEPTH:  D:2-5
 WEIGHT: 5
 KFEAT:  _ = altar_okawaru
 : interest_check(_G)
@@ -1485,7 +1570,7 @@ ENDMAP
 NAME:   okawaru_trees_2
 TAGS:   temple_overflow_1 temple_overflow_okawaru uniq_altar_okawaru
 TAGS:   transparent decor
-DEPTH:  D:2-10
+DEPTH:  D:2-5
 WEIGHT: 5
 KFEAT:  _ = altar_okawaru
 : interest_check(_G)
@@ -1506,7 +1591,7 @@ ENDMAP
 NAME:  okawaru_ov_weapons_minmay
 TAGS:  temple_overflow_1 temple_overflow_okawaru uniq_altar_okawaru
 TAGS:  transparent decor
-ITEM:  hand axe, falchion, mace, spear
+ITEM:  hatchet, falchion, mace, spear
 KFEAT: _ = altar_okawaru
 : interest_check(_G)
 MAP
@@ -1525,10 +1610,10 @@ ENDMAP
 
 NAME:  okawaru_altar_gauntlet_db
 TAGS:  uniq_altar_okawaru temple_overflow_1 temple_overflow_okawaru
-DEPTH: D:2-9
+DEPTH: D:2-5
 KFEAT: _ = altar_okawaru
-MONS:  goblin; stone q:5 / hobgoblin; stone q:5 / gnoll; stone q:5 /\
-       orc; stone q:5 / kobold; stone q:5
+MONS:  goblin / hobgoblin / gnoll /\
+       orc / kobold
 MAP
   xxx
 xxx_xxx
@@ -1544,7 +1629,7 @@ ENDMAP
 NAME:   okawaru_gym_becter
 TAGS:   uniq_altar_okawaru temple_overflow_1 temple_overflow_okawaru
 TAGS:   transparent decor
-DEPTH:  D:2-9
+DEPTH:  D:2-5
 KFEAT:  _ = altar_okawaru
 MAP
    .....
@@ -1561,7 +1646,7 @@ ENDMAP
 NAME:    okawaru_humans
 TAGS:    uniq_altar_okawaru temple_overflow_1 temple_overflow_okawaru
 TAGS:    no_monster_gen no_wall_fixup transparent
-DEPTH:   D:7-12
+DEPTH:   D:3-6
 COLOUR:  1 = yellow, ' = yellow, x = white
 MONS:    human ; long sword . ring mail
 FTILE:   1'xO = floor_sandstone
@@ -1582,7 +1667,7 @@ ENDMAP
 NAME:   kennysheep_okawaru_gauntlet
 TAGS:   temple_overflow_1 temple_overflow_okawaru uniq_altar_okawaru
 TAGS:   no_pool_fixup transparent
-DEPTH:  D:2-9
+DEPTH:  D:2-3
 KFEAT:  _ = altar_okawaru
 KMONS:  1 = goblin ; spear
 KPROP:  1 = no_tele_into
@@ -1636,6 +1721,7 @@ cN-.-Oc
 ccc@ccc
 ENDMAP
 
+# BCADDO: When we let shaft traps go to lower branches; allow this on D:$ again.
 NAME:   grunt_qazlal_sundering
 DEPTH:  D:2-, !D:$
 TAGS:   no_monster_gen no_item_gen no_trap_gen temple_overflow_1
@@ -1644,8 +1730,8 @@ KFEAT:  _ = altar_qazlal
 KPROP:  c = no_tele_into
 SUBST:  c = cccl^.
 SUBST:  - = ..l^
-KFEAT:  ^ = known shaft trap
-KITEM:  . = nothing w:189 / stone / large rock q:1 w:1
+KFEAT:  ^ = shaft trap
+KITEM:  . = gold q:1
 KFEAT:  . = .
 : interest_check(_G)
 MAP
@@ -1759,18 +1845,18 @@ NAME: nicolae_ru_great_annihilating_truth
 TAGS: temple_overflow_ru temple_overflow_1 uniq_altar_ru transparent
 TAGS: no_monster_gen no_item_gen
 : interest_check(_G)
-DEPTH: D:2-9
+DEPTH: D:2-4
 SHUFFLE: MCSBP
 KFEAT: _ = altar_ru
 KMONS: P = ball python perm_ench:petrified / rat perm_ench:petrified / \
-  frilled lizard perm_ench:petrified / giant cockroach perm_ench:petrified / \
+  cinder newt perm_ench:petrified / giant cockroach perm_ench:petrified / \
   quokka perm_ench:petrified / kobold w:5 perm_ench:petrified / \
   goblin w:5 perm_ench:petrified / hobgoblin w:5 perm_ench:petrified
 KMONS: C = bat perm_ench:magic_candle / adder perm_ench:magic_candle / \
   kobold perm_ench:magic_candle / goblin perm_ench:magic_candle / hobgoblin perm_ench:magic_candle
 KMONS: S = jackal perm_ench:slow / bat perm_ench:slow / adder perm_ench:slow / \
   kobold perm_ench:slow / goblin perm_ench:slow / hobgoblin perm_ench:slow
-KMONS: B = ball python perm_ench:blind / frilled lizard perm_ench:blind / \
+KMONS: B = ball python perm_ench:blind / cinder newt perm_ench:blind / \
   giant cockroach perm_ench:blind / bat perm_ench:blind
 KMONS: M = orc wizard perm_ench:mute
 MAP
@@ -1814,7 +1900,7 @@ DEPTH: D:2-
 NSUBST: r = 3:^ / 1:^p / 7:p / 2:p. / *:., i = 1:^^p. / 2:p / *:., \
         A = . / xxp / x, B = . / xxp / x, C = xxp / .
 KFEAT: _ = altar_ru
-KFEAT: ^ = known web trap
+KFEAT: ^ = web trap
 KMONS: p = plant / fungus w:3
 MAP
 xxxxxxx
@@ -1913,7 +1999,7 @@ xxxxxxxxxxxxxx
 ENDMAP
 
 NAME:       tgw_sif
-DEPTH:      D:3-, Elf
+DEPTH:      D:2-, Elf
 TAGS:       no_item_gen no_monster_gen no_pool_fixup decor
 TAGS:       temple_overflow_1 temple_overflow_sif_muna uniq_altar_sif_muna
 KFEAT:      _ = altar_sif_muna
@@ -1946,7 +2032,7 @@ MAP
 ENDMAP
 
 NAME:   led_sif_book
-DEPTH:  D:3-12, Orc
+DEPTH:  D:2-6, Orc
 TAGS:   no_item_gen no_pool_fixup no_monster_gen
 TAGS:   temple_overflow_1 temple_overflow_sif_muna uniq_altar_sif_muna
 KPROP:  1d = no_tele_into
@@ -1968,12 +2054,12 @@ xxxxxxxxx
 ENDMAP
 
 NAME:   led_sif_pool
-DEPTH:  D:2-9
+DEPTH:  D:2-4
 TAGS:   no_item_gen no_monster_gen no_pool_fixup
 TAGS:   temple_overflow_1 temple_overflow_sif_muna uniq_altar_sif_muna
 KFEAT:  _ = altar_sif_muna
-COLOUR: . = blue
-FTILE:  ._ = floor_marble
+COLOUR: W. = blue
+FTILE:  W._ = floor_marble
 : interest_check(_G)
 MAP
  xxx@xxx
@@ -1993,7 +2079,7 @@ ENDMAP
 NAME:  bloody_trog
 TAGS:  uniq_altar_trog temple_overflow_1 temple_overflow_trog
 TAGS:  transparent decor
-DEPTH: D:2-12, Orc, Vaults
+DEPTH: D:2-6, Orc, Vaults
 KPROP: . = bloody / nothing
 KFEAT: _ = altar_trog
 KITEM: _ = animal skin, dagger
@@ -2007,8 +2093,8 @@ ENDMAP
 NAME:   trog_ov_bears_minmay
 TAGS:   temple_overflow_1 temple_overflow_trog uniq_altar_trog
 TAGS:   transparent
-DEPTH:  D:6-
-: if you.absdepth() < 10 then
+DEPTH:  D:4-
+: if you.absdepth() < 5 then
 MONS:   black bear
 : else
 MONS:   polar bear
@@ -2027,7 +2113,7 @@ ENDMAP
 NAME:   tgw_trog
 TAGS:   no_item_gen no_monster_gen patrolling
 TAGS:   temple_overflow_1 temple_overflow_trog uniq_altar_trog
-DEPTH:  D:2-9
+DEPTH:  D:2-5
 KFEAT:  _ = altar_trog
 KPROP:  1 = no_tele_into
 MONS:   moth of wrath, rat / worm w:5
@@ -2053,10 +2139,10 @@ ENDMAP
 
 NAME:   trog_eyes_of_draining
 TAGS:   uniq_altar_trog temple_overflow_1 temple_overflow_trog patrolling
-DEPTH:  D:3-9
+DEPTH:  D:2-5
 WEIGHT: 4
 MONS:   eye of draining
-: if you.absdepth() > 5 and crawl.coinflip() then
+: if you.absdepth() > 3 and crawl.coinflip() then
 KMONS:  2 = ogre god:trog ; giant club ego:antimagic ident:type | w:3 giant club / \
         ogre god:trog ; giant spiked club ego:antimagic ident:type | w:5 giant spiked club / \
         orc warrior god:trog ; halberd ego:antimagic ident:type | war axe ego:antimagic ident:type | \
@@ -2064,9 +2150,9 @@ KMONS:  2 = ogre god:trog ; giant club ego:antimagic ident:type | w:3 giant club
         big kobold god:trog ; short sword ego:antimagic ident:type | dagger ego:antimagic ident:type | \
         rapier ego:antimagic ident:type | rapier
 : else
-KMONS:  2 = orc god:trog ; spear ego:antimagic ident:type | hand axe ego:antimagic ident:type | \
+KMONS:  2 = orc god:trog ; spear ego:antimagic ident:type | hatchet ego:antimagic ident:type | \
         war axe ego:antimagic ident:type | any weapon / \
-        kobold god:trog ; short sword ego:antimagic ident:type | hand axe ego:antimagic ident:type | \
+        kobold god:trog ; short sword ego:antimagic ident:type | hatchet ego:antimagic ident:type | \
         club ego:antimagic ident:type | whip ego:antimagic ident:type | any weapon / \
         goblin god:trog ; dagger ego:antimagic ident:type | short sword ego:antimagic ident:type / \
         gnoll god:trog ; spear ego:antimagic ident:type | trident ego:antimagic ident:type | \
@@ -2087,14 +2173,14 @@ ENDMAP
 
 NAME:   trog_butcher_becter
 TAGS:   overflow_altar_trog
-DEPTH:  D:2-9, Orc, !Orc:$
-: if you.absdepth() < 6 then
-MONS:   orc ; hand axe . animal skin
-MONS:   leopard gecko / rat / frilled lizard / quokka
+DEPTH:  D:2-5, Orc, !Orc:$
+: if you.absdepth() < 3 then
+MONS:   orc ; hatchet . animal skin
+MONS:   leopard gecko / rat / cinder newt / quokka
 {{
   dgn.delayed_decay(_G, 'd',
                     'leopard gecko chunk q:1 / rat chunk q:1 / ' ..
-                    'frilled lizard chunk q:1 / quokka chunk q:1')
+                    'cinder newt chunk q:1 / quokka chunk q:1')
 }}
 : else
 MONS:   orc warrior ; war axe . animal skin
@@ -2108,7 +2194,7 @@ MONS:   iguana / worker ant
 NSUBST: ' = 3:2 / *:.
 KPROP:  1y" = bloody
 KFEAT:  _ = altar_trog
-KFEAT:  ^ = known shaft trap
+KFEAT:  ^ = shaft trap
 KFEAT:  m = iron_grate
 SUBST:  y = x
 SUBST:  " = .
@@ -2126,11 +2212,11 @@ ENDMAP
 
 NAME:   trog_hazing_becter
 TAGS:   overflow_altar_trog no_monster_gen no_item_gen no_pool_fixup
-DEPTH:  D:2-9, Orc, !Orc:$
-MONS:   goblin ; stone q:5 . animal skin / \
-        hobgoblin ; stone q:5 . animal skin / \
-        kobold ; stone q:5 | throwing net q:1 . animal skin
-ITEM:   stone
+DEPTH:  D:2-5, Orc, !Orc:$
+MONS:   goblin spells:throw_stone.100.natural ; animal skin / \
+        hobgoblin spells:throw_stone.100.natural ; animal skin / \
+        kobold spells:throw_net.80.natural;throw_stone.80.natural ; animal skin
+ITEM:   scroll of random uselessness
 NSUBST: T = 6:1 / *:.
 SUBST:  . = d....
 KFEAT:  _ = altar_trog
@@ -2150,7 +2236,7 @@ ENDMAP
 
 NAME:   trog_three_pillars_becter
 TAGS:   overflow_altar_trog transparent decor
-DEPTH:  D:2-9
+DEPTH:  D:2-5
 KFEAT:  _ = altar_trog
 SUBST:  y = x..
 SUBST:  z = xx.
@@ -2171,9 +2257,9 @@ ENDMAP
 ### Uskayaw overflow altars ###################################################
 
 NAME:   dancing_weapons_uskayaw
-DEPTH:  D:2-9
+DEPTH:  D:2-5
 TAGS:   temple_overflow_1 temple_overflow_uskayaw transparent
-MONS:   generate_awake dancing weapon ; dagger | hand axe
+MONS:   generate_awake dancing weapon ; dagger | hatchet
 KFEAT:  _ = altar_uskayaw
 NSUBST: ' = 2:1 / *:'
 KMASK:  1' = no_monster_gen
@@ -2193,7 +2279,7 @@ MAP
 ENDMAP
 
 NAME:   eat_drink_and_be_merry_uskayaw
-DEPTH:  D:2-9
+DEPTH:  D:2-5
 TAGS:   temple_overflow_1 temple_overflow_uskayaw transparent
 KFEAT:  _ = altar_uskayaw
 ITEM:   any potion q:1, any weapon
@@ -2216,7 +2302,7 @@ ENDMAP
 # on the altar properly is safe, and a cautious player can time their entrance
 # to take no damage.
 NAME:   fiery_altar_vehumet
-DEPTH:  D:2-10, Orc, !Orc:$
+DEPTH:  D:2-5, Orc, !Orc:$
 WEIGHT: 8
 TAGS:   temple_overflow_1 temple_overflow_vehumet
 MARKER: : = lua:fog_machine { cloud_type = "flame", \
@@ -2233,7 +2319,7 @@ MAP
 ENDMAP
 
 NAME:    vehumet_statue
-DEPTH:   D:4-10
+DEPTH:   D:2-5
 TAGS:    temple_overflow_1 temple_overflow_vehumet transparent
 SHUFFLE: 12
 MONS:    statue name:charred name_adjective tile:mons_statue_mage \
@@ -2252,7 +2338,7 @@ MAP
 ENDMAP
 
 NAME:    vehumet_crystals
-DEPTH:   D:2-10, Orc, !Orc:$
+DEPTH:   D:2-5, Orc, !Orc:$
 TAGS:    temple_overflow_1 temple_overflow_vehumet transparent
 KFEAT:   _ = altar_vehumet
 : interest_check(_G)
@@ -2271,7 +2357,7 @@ ENDMAP
 NAME:  vehumet_altar_wand_db
 TAGS:  uniq_altar_vehumet temple_overflow_1 temple_overflow_vehumet
 TAGS:  transparent patrolling
-DEPTH: D:4-9
+DEPTH: D:2-5
 KFEAT: _ = altar_vehumet
 MONS:  goblin; wand of flame /\
        hobgoblin; wand of flame /\
@@ -2286,8 +2372,94 @@ MAP
 .......
 ENDMAP
 
+### Wu Jian overflow altars ###################################################
+
+NAME:   nzn_wu_jian_council_hall
+TAGS:   temple_overflow_1 temple_overflow_wu_jian no_monster_gen no_item_gen
+DEPTH:  D:2-5
+KFEAT:  _ = altar_wu_jian
+MAP
+    x@x
+  xxx.xxx
+ xxG...Gxx
+xx.......xx
+xG..._...Gx
+xx.......xx
+ xxG...Gxx
+  xxxGxxx
+    xxx
+ENDMAP
+
+NAME:    nzn_wu_jian_contemplation
+TAGS:    temple_overflow_1 temple_overflow_wu_jian no_monster_gen no_item_gen
+TAGS:    no_pool_fixup
+DEPTH:   D:2-5
+ITEM:    mundane spear / w:2 mundane quarterstaff / w:2 mundane trident, scroll of random uselessness
+NSUBST:  ' = 3=e / ', " = 4=W / ', t = t / d / -
+SUBST:   ` = '
+KFEAT:   _ = altar_wu_jian
+FTILE:   e' = floor_sand
+FTILE:   td- = floor_grass
+COLOUR:  e' = yellow
+COLOUR:  d- = green
+MAP
+ x@x
+xx.xxxxxxxxxx
+x'`.```'``"Wx
+x```.`'``"WWx
+x'`.````"WWWx
+x`.t`'``"WWWx
+x`t_t`'`"WWWx
+x``t.'`'`"WWx
+x'`'`.``'`"Wx
+xxxxxx.xxxxxx
+     x@x
+ENDMAP
+
+NAME:  pdpol_wu_jian_five_deadly_venoms
+DEPTH: D:3-6
+TAGS:  no_item_gen no_monster_gen temple_overflow_1 temple_overflow_wu_jian
+KFEAT:  _ = altar_wu_jian
+KFEAT:  c = runed_stone_wall
+KPROP:  F = no_tele_into
+MARKER: F = lua:fog_machine { \
+            cloud_type="thin mist", size = 1, \
+            pow_max = 3, pow_min = 3, delay = 10, \
+            start_clouds = 0 }
+{{
+  local trig_marker = TriggerableFunction:new {
+    func="callback.five_deadly_venoms",
+    repeated=false,
+    data={
+      venoms={
+        "spectral demonic crawler name:centipede name_species name_replace name_descriptor",
+        "spectral black mamba",
+        "spectral scorpion",
+        "spectral leopard gecko",
+        "spectral spiny frog"
+      }
+    }
+  }
+  trig_marker:add_triggerer(DgnTriggerer:new { type = "player_move" })
+  lua_marker("_", trig_marker)
+  lua_marker("F", portal_desc { positions = "five_deadly_venoms" })
+}}
+MAP
+   xxxxx
+  xxcccxx
+ xxxcFcxxx
+xxxccqccxxx
+xccc...cccx
+xcFq._.qFcx
+xcccq.qcccx
+xxcFc.cFcxx
+ xccc.cccx
+    c@c
+ENDMAP
+
 ### Xom overflow altars #######################################################
 
+# BCADDO: Another place to readd shafter to branch ends after shaft behavior tweak.
 NAME:   tgw_xom
 DEPTH:  D:2-, Depths
 TAGS:   no_item_gen no_monster_gen temple_overflow_1 temple_overflow_xom
@@ -2299,9 +2471,9 @@ MONS:   gnoll ; club ego:chaos | dagger ego:chaos | spear ego:chaos
 MONS:   boggart ; flail ego:chaos | long sword ego:chaos | trident ego:chaos
 MONS:   rakshasa ; flail ego:chaos | long sword ego:chaos | trident ego:chaos
 :  if you.depth() == dgn.br_depth(you.branch()) then
-KFEAT:  ~ = teleport trap w:20 / alarm trap w:3 / dispersal trap
+KFEAT:  ~ = teleport trap w:20 / alarm trap w:3 / congregation trap
 :  else
-KFEAT:  ~ = known shaft trap / teleport trap / alarm trap w:3 / dispersal trap
+KFEAT:  ~ = shaft trap / teleport trap / alarm trap w:3 / congregation trap
 :  end
 # Previously on raw average 5.17 M glyphs.
 NSUBST: ' = 1:_ / *:.
@@ -2334,7 +2506,7 @@ TAGS:    temple_overflow_1 temple_overflow_xom uniq_altar_xom
 TAGS:    transparent
 KFEAT:   _ = altar_xom
 NSUBST:  T = . / T
-KFEAT:   T = known teleport trap
+KFEAT:   T = teleport trap
 MAP
 .....
 .TTT.
@@ -2400,16 +2572,18 @@ MAP
   wwwww
 ENDMAP
 
+# not guaranteed to be fully navigable, so not transparent. It would be better
+# for avoiding vetoes if this guaranteed a path somehow...
 NAME:    xom_redecorated
 DEPTH:   D:2-, !D:$
-TAGS:    temple_overflow_1 temple_overflow_xom uniq_altar_xom decor transparent
+TAGS:    temple_overflow_1 temple_overflow_xom uniq_altar_xom decor
 SUBST:   x = ccbbbv
 NSUBST:  . = 2:T / .
 SUBST:   . = lWwtm_~......
 KFEAT:   _ = altar_xom
 NSUBST:  T = 3:T / .
-KFEAT:   T = known teleport trap
-KFEAT:   ~ = shaft trap / alarm trap / teleport trap / dispersal trap
+KFEAT:   T = teleport trap
+KFEAT:   ~ = shaft trap / alarm trap / teleport trap / congregation trap
 : interest_check(_G)
 MAP
       @
@@ -2426,12 +2600,12 @@ MAP
 ENDMAP
 
 NAME:   led_xom_imps
-DEPTH:  D:3-5
+DEPTH:  D:4-5
 TAGS:   temple_overflow_1 temple_overflow_xom uniq_altar_xom
 KFEAT:  _ = altar_xom
-KFEAT:  T = known teleport trap / dispersal trap
+KFEAT:  T = teleport trap / congregation trap
 NSUBST: I = 1:1 / 3:2
-MONS: crimson imp ; dagger ego:chaos ident:type, crimson imp ; nothing
+MONS: llaibwca ; dagger ego:chaos ident:type, llaibwca ; nothing
 MAP
 xxxx+xxxx
 xIT...TIx
@@ -2491,6 +2665,7 @@ TAGS:   temple_overflow_1 temple_overflow_xom uniq_altar_xom
 KFEAT:  _ = altar_xom
 KFEAT:  C = C mimic
 NSUBST: C = 1:_ / *:C
+ORIENT: north
 MAP
 xxxxxxxxxxx
 x.G.G.G.G.x
@@ -2529,15 +2704,18 @@ DEPTH:  D:2-, Crypt
 TAGS:   no_pool_fixup uniq_zombie_altar no_monster_gen temple_overflow_1
 TAGS:   temple_overflow_yredelemnul
 KFEAT:  _ = altar_yredelemnul
-MONS:   patrolling gnoll zombie
-NSUBST: A = 2:1 / *:.
+NSUBST: w = 3:r / *:w
+NSUBST: y = 2:r / *:w
+KFEAT:  r = w
+KMONS:  r = puffer fish skeleton att:good_neutral / slimehead skeleton att:good_neutral
+MONS:   patrolling spectral thing / nothing w:100
 MAP
 xxxxxxxxxxxxxxxx
-xxxxAAAAAAAAxxxx
-xxxx........xxxx
+xxxxwwwwwwwwxxxx
+xxxx11111111xxxx
 @............._x
-xxxx........xxxx
-xxxxAAAAAAAAxxxx
+xxxx11111111xxxx
+xxxxyyyyyyyyxxxx
 xxxxxxxxxxxxxxxx
 ENDMAP
 
@@ -2545,33 +2723,31 @@ NAME:   lemuel_mausoleum_altar_yredelemnul
 TAGS:   uniq_altar_yredelemnul temple_overflow_1 temple_overflow_yredelemnul
 TAGS:   uniq_mausoleum_altar decor
 DEPTH:  D:7-, Crypt
-MONS:   w:50 human zombie/orc zombie/elf zombie/w:5 ogre zombie/w:5 troll zombie
-MONS:   w:50 human skeleton/orc skeleton/elf skeleton/w:5 ogre skeleton/\
-        w:5 troll skeleton
-MONS:   mummy, wight, wraith, necrophage
+MONS:   crawling corpse / macabre mass
+MONS:   small abomination w:30 / large abomination
+MONS:   spectral thing
+TILE:   c = wall_catacombs
 NSUBST: ? = 1:_ / *:1
-SUBST:  1 = 1:25 2 3 4:8 5:7 6:5
+SUBST:  1 = 1:25 2 3
 KFEAT:  _ = altar_yredelemnul
-KMONS:  _ = human zombie
-: if not you.in_branch("D") or you.absdepth() > 13 then
-TAGS:   extra
-: end
+KMONS:  _ = spectral vault warden
+: interest_check(_G)
 MAP
-ccccccccccccccc
-c?c?c?c?c?c?ccG
-c+c+c+c+c+c+ccc
-c............+@
-c+c+c+c+c+c+ccc
-c?c?c?c?c?c?ccG
-ccccccccccccccc
+ccccccccccccccc.
+c?c?c?c?c?c?ccG.
+c+c+c+c+c+c+ccc.
+c............=@
+c+c+c+c+c+c+ccc.
+c?c?c?c?c?c?ccG.
+ccccccccccccccc.
 ENDMAP
 
 NAME:   yredelemnul_forgotten_temple_becter
 TAGS:   temple_overflow_1 temple_overflow_yredelemnul no_monster_gen no_item_gen
-DEPTH:  D:2-9
+DEPTH:  D:2-7
 KFEAT:  _ = altar_yredelemnul
-KFEAT:  . = known web trap / .
-KMONS:  _ = spectral orc
+KFEAT:  . = web trap / .
+KMONS:  _ = spectral thing
 MAP
 xxxxxxxxx
 xcccccccx
@@ -2875,10 +3051,10 @@ TILE: c = wall_sandstone
 FTILE: +'_sz = floor_sandstone / none w:5
 KMONS: s = orc skeleton / kobold skeleton / goblin skeleton / hobgoblin zombie
 KMONS: z = orc zombie / kobold zombie / goblin zombie / hobgoblin zombie
-: if you.absdepth() <= 4 then
-KMONS: _ = crimson imp / white imp w:5
+: if you.absdepth() <= 2 then
+KMONS: _ = llaibwca / gwybwca w:5
 : else
-KMONS: _ = crimson imp / white imp / shadow imp / iron imp / quasit
+KMONS: _ = llaibwca / gwybwca / cysgobwca / haearbwca / quasit
 : end
 KFEAT: _ = altar_the_shining_one
 MAP
@@ -2964,9 +3140,12 @@ NAME:  grunt_temple_overflow_champion_of_chaos
 DEPTH: D:3-9
 TAGS:  temple_overflow_2 temple_overflow_makhleb temple_overflow_xom
 TAGS:  no_monster_gen
-MONS:  crimson imp ; dagger ego:chaos ident:type
+MONS:  llaibwca ; dagger ego:chaos ident:type
 KFEAT: A = altar_makhleb
 KFEAT: B = altar_xom
+: if you.depth() < 4 then
+SUBST: + : =
+: end
 MAP
 xxxxx
 xA.Bx
@@ -2977,7 +3156,7 @@ ENDMAP
 
 NAME:  grunt_temple_overflow_growth_and_decay
 DEPTH: D:2-9
-TAGS:  temple_overflow_2 temple_overflow_fedhas temple_overflow_kikubaaqudgha
+TAGS:  temple_overflow_2 temple_overflow_fedhas_madash temple_overflow_kikubaaqudgha
 TAGS:  transparent
 KFEAT: A = altar_fedhas
 KFEAT: B = altar_kikubaaqudgha
@@ -3036,7 +3215,10 @@ TAGS:  temple_overflow_2 temple_overflow_makhleb temple_overflow_vehumet
 DEPTH: D:3-9
 KFEAT: A = altar_makhleb
 KFEAT: B = altar_vehumet
-MONS:  crimson imp ; wand of flame charges:1
+MONS:  llaibwca ; wand of flame
+: if you.depth() < 4 then
+SUBST: + : =
+: end
 MAP
  xxxxx
 xxA.Bxx
@@ -3077,7 +3259,7 @@ TAGS:   temple_overflow_2 temple_overflow_makhleb temple_overflow_zin
 TAGS:   transparent
 KFEAT:  A = altar_makhleb
 KFEAT:  B = altar_zin
-MONS:   executioner / balrug / green death / cacodemon / blizzard demon
+MONS:   oxarmordth / balrug / gwyrdd / titivilus / cenysus
 MONS:   angel god:zin dbname:zin_angel
 SUBST:  ; = -_
 KPROP:  - = bloody / nothing
@@ -3096,9 +3278,9 @@ MAP
     x.@.x
   xxx...xxx
 xxxXXy+yCCxxx
-xccy--;__yCCx
-xc1nA-;_BN2Cx
-xccy--;__yCCx
+xyqy--;__yCCx
+xq1qA-;_BN2Cx
+xyqy--;__yCCx
 xxxXXy+yCCxxx
   xxx...xxx
     x.@.x
@@ -3113,12 +3295,12 @@ WEIGHT: 5
 KFEAT:  A = altar_okawaru
 KFEAT:  B = altar_trog
 KPROP:  . = bloody / nothing
-: if you.absdepth() < 8 then
+: if you.absdepth() < 4 then
 MONS:   gnoll ; club | spear | nothing . potion of berserk rage / \
-        orc ; club | hand axe | short sword . \
+        orc ; club | hatchet | short sword . \
               leather armour | nothing . potion of berserk rage
 : else
-MONS:   orc warrior ; club | hand axe | short sword . \
+MONS:   orc warrior ; club | hatchet | short sword . \
                       leather armour | ring mail . \
                       potion of berserk rage
 : end
@@ -3145,14 +3327,14 @@ KFEAT:   B = altar_sif_muna
 KFEAT:   C = altar_vehumet
 ITEM:    randbook owner:Kikubaaqudgha disc:necromancy spells:pain \
          numspells:1 / \
-         randbook owner:Kikubaaqudgha disc:necromancy spells:animate_skeleton \
+         randbook owner:Kikubaaqudgha disc:necromancy spells:pryten's_skeletal_uprising \
          numspells:1
 # You already got a direct damage spell by looting the other gods' altars.
 ITEM:    randbook owner:Sif_Muna disc:hexes numspells:1 slevels:1 / \
          randbook owner:Sif_Muna disc:charms numspells:1 slevels:1 / \
          randbook owner:Sif_Muna disc:transmutation numspells:1 slevels:1 / \
          randbook owner:Sif_Muna disc:summoning numspells:1 slevels:1 / \
-         randbook owner:Sif_Muna disc:translocation numspells:1 slevels:1
+         randbook owner:Sif_Muna disc:translocation numspells:1 slevels:2
 SHUFFLE: AdB"C` / A'BeC` / A'B"Cf
 MAP
      xxxxx
@@ -3208,7 +3390,7 @@ ENDMAP
 
 NAME:    grunt_temple_overflow_opulence
 DEPTH:   D:2-9
-TAGS:    temple_overflow_2 temple_overflow_gozag temple_overflow_nemelex_xobeh
+TAGS:    temple_overflow_2 temple_overflow_gozag_ym_sagoz temple_overflow_nemelex_xobeh
 TAGS:    transparent
 SHUFFLE: GU, _O
 KFEAT:   _ = altar_gozag
@@ -3232,7 +3414,7 @@ ENDMAP
 
 NAME:   grunt_temple_overflow_gold_and_silver
 DEPTH:  D:2-9
-TAGS:   temple_overflow_2 temple_overflow_gozag temple_overflow_zin
+TAGS:   temple_overflow_2 temple_overflow_gozag_ym_sagoz temple_overflow_zin
 TAGS:   transparent
 KITEM:  $ = gold q:1 / gold q:2
 KFEAT:  _ = altar_gozag
@@ -3252,7 +3434,7 @@ ENDMAP
 
 NAME:   grunt_temple_overflow_forces_of_nature
 DEPTH:  D:2-9
-TAGS:   temple_overflow_2 temple_overflow_fedhas temple_overflow_qazlal
+TAGS:   temple_overflow_2 temple_overflow_fedhas_madash temple_overflow_qazlal
 TAGS:   transparent
 MONS:   fungus / plant / bush
 SUBST:  2 = 1.
@@ -3261,7 +3443,7 @@ KFEAT:  O = altar_qazlal
 KPROP:  12Ll = no_tele_into
 SUBST:  L = ll^.
 SUBST:  l = cll.
-KFEAT:  ^ = known shaft trap
+KFEAT:  ^ = shaft trap
 MAP
  222.@.LLL
 21112.LlllL
@@ -3341,7 +3523,19 @@ ENDMAP
 NAME:    regret_index_temple_of_mockery
 TAGS:    temple_overflow_2 temple_overflow_xom temple_overflow_hepliaklqana
 DEPTH:   D:2-9
-: species_mock(_G)
+# we place the monster on demand via a marker rather than in the builder because
+# the dependency on the player species otherwise can affect seed stability
+{{
+    local los_marker = TriggerableFunction:new {
+      func="callback.do_species_mock",
+      repeated=true,
+      props = {mock_location=1}
+    }
+    los_marker:add_triggerer(DgnTriggerer:new {
+      type="player_los"})
+
+    lua_marker('1', los_marker)
+}}
 KMONS:   2 = spectral ugly thing
 KFEAT:   A = altar_xom
 KFEAT:   B = altar_hepliaklqana
@@ -3351,18 +3545,19 @@ KPROP:   12' = no_tele_into
 KMASK:   12' = no_item_gen
 KMASK:   12' = no_trap_gen
 KMASK:   ' = no_monster_gen
+# TODO: this fog machine doesn't do much, is it supposed to spread?
 MARKER:  2 = lua:fog_machine { cloud_type = "thin mist", \
              pow_min = 100, pow_max = 100, delay = 1, \
              size = 1, walk_dist = 0, start_clouds = 1 }
 MAP
-cccccc
-ccb'bccccc
-cb2n1bc.+.
-c'nnnnc.c.
-cb1nA...cc
-ccbn.G.bc
-cccc..Bcc
- c...bcc
+yyyyyycc
+yyb'bqqccc
+yb2q1bq.+.
+y'qqqqq.c.
+yb1qA...cc
+yqbq.G.bc
+cqqq..Bcc
+cc...bcc
  c+cccc
  c..c
 ENDMAP
@@ -3372,13 +3567,13 @@ DEPTH:  D
 WEIGHT: 2
 TAGS:   no_monster_gen no_trap_gen temple_overflow_2
 TAGS:   temple_overflow_kikubaaqudgha temple_overflow_yredelemnul
-: if you.depth() <= 4 then
+: if you.depth() <= 2 then
 MONS: zombie / skeleton
-MONS: mummy / shadow imp / wight / necrophage / phantom / hungry ghost
+MONS: mummy / cysgobwca / wight / necrophage / phantom / hungry ghost
 KMONS: 3 = menkaure, necrophage / wight
 SUBST: 2 = 2---
-: elseif you.depth() <= 7 then
-MONS: zombie / skeleton / mummy / shadow imp / wight / necrophage / phantom \
+: elseif you.depth() <= 4 then
+MONS: zombie / skeleton / mummy / cysgobwca / wight / necrophage / phantom \
       / hungry ghost
 MONS: wraith / vampire
 KMONS: 3 = menkaure, wraith / vampire
@@ -3397,12 +3592,12 @@ MARKER: P = lua:transp_loc("temple_of_torment_entry")
 MARKER: Q = lua:transp_dest_loc("temple_of_torment_entry")
 MARKER: R = lua:transp_loc("temple_of_torment_exit")
 MARKER: S = lua:transp_dest_loc("temple_of_torment_exit")
+KFEAT:  G = sarcophagus
 TILE:   G = dngn_sarcophagus_pedestal_left
 TILE:   c = wall_tomb
 FTILE:  -QRVDE|*$123Gcn = floor_tomb
 COLOUR: G = yellow
 COLOUR: -QR|*$123 = brown
-: set_feature_name("granite_statue", "sarcophagus")
 MAP
  ...............
  .nnnnnnnnnnnnn.
@@ -3421,6 +3616,109 @@ MAP
  ...............
 ENDMAP
 
+#Hep and Dith chose the same way to attract worshippers
+NAME:   riverfiend_overflow_shadow_ancestor
+TAGS:   temple_overflow_2
+TAGS:   temple_overflow_hepliaklqana temple_overflow_dithmenos
+KPROP:  12- = no_tele_into
+KMASK:  12- = no_item_gen
+KMASK:  12- = no_monster_gen
+MONS:   ancestor, shadow
+KFEAT:  A = altar_hepliaklqana
+KFEAT:  B = altar_dithmenos
+KFEAT:  DE = stone_wall
+MARKER: 1 = lua:fog_machine { cloud_type = "thin mist", pow_min = 100, pow_max = 100, \
+                            delay = 100, size = 1, start_clouds = 1 , spread_rate = 50 }
+MARKER: 2 = lua:fog_machine { cloud_type = "black smoke", pow_min = 100, pow_max = 100, \
+                            delay = 100, size = 1, start_clouds = 1 , spread_rate = 50 }
+TILE:   D = wall_stone_smooth
+TILE:   E = wall_stone_dark
+MAP
+   ccccc
+ DDD...cEE
+DD-n....nEE
+D-1n....n-EE
+D--nA..Bn2-E
+DD-n....n--E
+ DDD....n-EE
+   cc@@cEEE
+ENDMAP
+
+NAME:   pdpol_temple_overflow_zin_treasury_gozag_greed
+TAGS:   temple_overflow_2 temple_overflow_zin temple_overflow_gozag_ym_sagoz
+TAGS:   no_item_gen no_monster_gen
+DEPTH:  D:2-5
+KFEAT:  _ = altar_zin
+KFEAT:  O = altar_gozag
+KFEAT:  m = iron_grate
+KPROP:  $ = no_tele_into
+KITEM:  $ = gold q:1 / gold q:2
+RTILE:  x = wall_sandstone
+COLOUR: x = yellow
+COLOUR: c = white
+TILE:   c = wall_church
+FTILE:  AO_.m+c$ = floor_limestone
+: interest_check(_G)
+MAP
+  ccccccxxxxx
+ cc..mm$x...xx
+@+.._m$$A.O..+@
+ cc..mm$x...xx
+  ccccccxxxxx
+ENDMAP
+
+NAME:    nzn_overflow_gifts_of_might_and_magic
+TAGS:    temple_overflow_2 temple_overflow_trog temple_overflow_sif_muna
+TAGS:    no_item_gen no_monster_gen patrolling
+DEPTH:   D:2-7
+SHUFFLE: D1-/E2'
+COLOUR:  1- = red
+COLOUR:  2' = blue
+KFEAT:   D = altar_trog
+KFEAT:   E = altar_sif_muna
+: local egos = {["antimagic"] = 1, ["vorpal"] = 2, ["molten"] = 2}
+: if you.absdepth() <= 3 then
+KMONS:   1 = gnoll ; animal skin / w:2 Terence
+KMONS:   2 = gwybwca / w:2 Jessica
+: local enchant = 2 + (crawl.one_chance_in(3) and 1 or 0)
+: local weapons = {["spear"] = 1, ["hammer"] = 1, ["mace"] = 1,
+:                  ["falchion"] = 1}
+: kitem("1 = " .. random_item_def(weapons, nil, "ego:none plus:" .. enchant))
+KITEM:   2 = randbook owner:Sif_Muna numspells:1 slevels:1
+: elseif you.absdepth() <= 7 then
+:     if crawl.one_chance_in(5) then
+KMONS:   1 = duvessa
+KMONS:   2 = dowan
+:     else
+KMONS:   1 = orc warrior
+KMONS:   2 = orc wizard
+:     end
+: local weapons = {["trident"] = 1, ["war axe"] = 1, ["flail"] = 1,
+:                  ["long sword"] = 1}
+: kitem("1 = " .. random_item_def(weapons, egos, "plus:0"))
+KITEM:   2 = randbook owner:Sif_Muna numspells:2 slevels:2
+: else
+KMONS:   1 = troll
+KMONS:   2 = ynoxinul
+: local weapons = {["trident"] = 1, ["war axe"] = 1, ["morningstar"] = 1,
+:                  ["scimitar"] = 1}
+: kitem("1 = " .. random_item_def(weapons, egos, "plus:0"))
+KITEM:   2 = randbook owner:Sif_Muna numspells:3 slevels:4
+: end
+: interest_check(_G)
+MAP
+     xx@@@x
+    xx...xx
+   xx...xxxxx
+  xx...xx-D-x
+ xx...xxx-1-x
+xx...xAx...xx
+x'2'xxx...xx
+x'E'xx...xx
+xxxxx...xx
+  xx...xx
+  x@@@xx
+ENDMAP
 
 ### Variable overflow altars ##################################################
 
@@ -3440,13 +3738,13 @@ NAME:     general_overflow_altar
 DEPTH:    D:2-
 WEIGHT:   10
 TAGS:     no_monster_gen no_pool_fixup temple_overflow_generic_1
-TAGS:     transparent
 SHUFFLE:  xXY / xXY / xXY / abc
 SHUFFLE:  XY
 SUBST:    X=+, Y=x, a=w, b=w, c=w
 SHUFFLE:  ABCD
-SUBST:    A=>, C=.GTU, D=.
+SUBST:    A=>, C='GTU, D='
 SHUFFLE:  wll
+KMASK:    . = !opaque
 : interest_check(_G)
 MAP
 ........
@@ -3522,6 +3820,25 @@ MAP
 .xxxYxxx.
 .xxx.xxx.
 .xxxXxxx.
+.........
+ENDMAP
+
+NAME:    bcadren_lemuel_inverted_doored_altar
+TAGS:    transparent decor temple_overflow_generic_1
+DEPTH:   D:1-, Vaults, Lair, Elf, Crypt
+SHUFFLE: XY
+SUBST:   X = .
+KFEAT:   Y = closed_clear_door
+: altar_check(_G)
+MAP
+.........
+.mmmvmmm.
+.mmmvmmm.
+.mmmvmmm.
+.X.YCY.X.
+.mmmYmmm.
+.mmm.mmm.
+.mmmXmmm.
 .........
 ENDMAP
 
@@ -3913,11 +4230,9 @@ TAGS:  temple_overflow_generic_4 temple_overflow_generic_3
 TAGS:  temple_overflow_generic_2
 # The original vault had allow_dup; I think that's overkill.
 {{
-  local altarcount = 1
-  if is_validating() then
+  local altarcount = get_overflow_altar_count(_G)
+  if is_validating() or altarcount == nil then
     altarcount = 14
-  else
-    altarcount = get_overflow_altar_count(_G)
   end
   nsubst("B : " .. altarcount .. ":B / *:x")
 }}
@@ -3936,6 +4251,7 @@ ENDMAP
 NAME: nicolae_overflow_hidden_temple
 TAGS: temple_overflow_generic_5 temple_overflow_generic_4 temple_overflow_generic_3 \
       temple_overflow_generic_2 temple_overflow_generic_1 no_monster_gen
+DEPTH: D, !D:$, Depths, !Depths:$
 {{
   local altarcount = 1
   if is_validating() then
@@ -3962,15 +4278,15 @@ TAGS: temple_overflow_generic_5 temple_overflow_generic_4 temple_overflow_generi
 }}
 SUBST: } = })]
 MAP
- xxxxxxxxxxxxx
- xxxxaxxxbxxxx
+    xxxxxxx
+  xxxaxxxbxxx
  xxG...G...Gxx
  mm.........mm
 @m}.........cm@
  mm.........mm
  xxG...G...Gxx
- xxxxexxxdxxxx
- xxxxxxxxxxxxx
+  xxxexxxdxxx
+    xxxxxxx
 ENDMAP
 
 NAME:   chequers_temple_overflow_statue_of_worship
@@ -4000,9 +4316,9 @@ NAME:  chequers_temple_overflow_minitemple
 TAGS:  temple_overflow_generic_5 temple_overflow_generic_4
 TAGS:  temple_overflow_generic_3
 {{
-  local altarcount = 5
-  if not is_validating() then
-    altarcount = get_overflow_altar_count(_G)
+  local altarcount = get_overflow_altar_count(_G)
+  if is_validating() or altarcount == nil then
+    altarcount = 5
   end
   nsubst("O = " .. altarcount .. ":B / *:l")
 }}

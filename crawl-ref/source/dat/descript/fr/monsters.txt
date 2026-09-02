@@ -484,7 +484,7 @@ Une espèce de grenouilles géantes qui possède la capacité de faire des sauts
 de sa proie, ou faire un saut éclair pour s'échapper. Elle est communément
 trouvée en groupe.
 %%%%
-blizzard demon
+cenysus
 
 Un grand démon, recouvert de neige et parcouru d'éclairs.
 %%%%
@@ -505,7 +505,7 @@ brain worm
 Un ver mauve et visqueux avec un grande tête distendue, cette créature se
 nourrit de l'intellect des êtres doués de raison.
 %%%%
-Brimstone Fiend
+rhuddgoch
 
 Un démon puissant et énorme, baigné de flammes infernales et doté de grandes
 ailes écailleuses. Un des plus effrayants habitants de n'importe quel Enfer.
@@ -568,7 +568,7 @@ Un cadavre faiblement animé par nécromancie. Il est facilement destructible,
 mais aussi capable de fusionner avec d'autres pour former d'autres horreurs
 plus puissantes.
 %%%%
-crimson imp
+llaibwca
 
 Un petit démon mineur. Sa mâchoire dentée semble être bloquée en un rictus
 permanent, et ses cornes saillissent de façon obscène de ses plaques
@@ -820,7 +820,7 @@ Son dard massif sur sa queue dégoutte d'un venin mortel, et ses pinces sont
 assez grosses pour vous trancher en deux. Même si le scorpion ordinaire est
 aussi gros et dangereux, cet étrange cousin lui met la misère.
 %%%%
-Executioner
+oxarmordth
 
 Un démon rapide et affreusement puissant. Sa vrai forme est masquée par un
 nuage de lames de faux virevoltantes.
@@ -999,7 +999,7 @@ golden eye
 Un petit œil flottant, vif comme le vent et scintillant comme l'or. Il a un
 regard particulièrement hypnotique.
 %%%%
-greater mummy
+royal mummy
 
 Un ancien pharaon, embaumé puis condamné à la non-vie, maintenant capable de
 grands et terrifiants exploits de magie.
@@ -1008,7 +1008,7 @@ greater naga
 
 Un naga exceptionnel, aussi compétent au combat qu'a la pratique de la magie.
 %%%%
-green death
+gwyrdd
 
 Une forme boursoufflée, couverte de plaies suppurantes et expirant un poison
 mortel.
@@ -1026,7 +1026,7 @@ les nagas. Leur absence de bras, ajouté à leur sens extrême du devoir, en fai
 des gardiens renommés. On dit qu'un garde Serpent préfère mourir au combat
 plutôt que de laisser quoi que ce soit faire intrusion.
 %%%%
-hell beast
+helvityr
 
 Un croisement abominable d'une bête et d'un homme qui produit des glapissements
 épouvantables.
@@ -1046,7 +1046,7 @@ hell knight
 Un guerrier lourdement armuré, de connivence avec les pouvoirs de l'Enfer et
 très souvent accompagné d'autres êtres répugnants de son acabit.
 %%%%
-Hell Sentinel
+gwarchodwr
 
 Un monolite imposant construit et possédé par des forces démoniaques. Une
 centaine d'yeux luisent au travers des fentes de son armure à pointes
@@ -1061,7 +1061,7 @@ hellion
 
 Un terrifiant démon recouvert de flammes infernales crépitantes.
 %%%%
-hellwing
+vlerk
 
 Un hideux démon squelettique avec des ailes de peau séchée.
 %%%%
@@ -1133,7 +1133,7 @@ ice beast
 Une terrible créature composée de neige et de cristaux de glace qui laisse des
 flaques d'eau glacée sur son passage.
 %%%%
-ice devil
+rypuiwel
 
 Un démon de taille humaine couvert de glace brillante.
 %%%%
@@ -1142,7 +1142,7 @@ ice dragon
 Un dragon blanc irradiant de froid. Des flocons de neige sortent de ses
 naseaux.
 %%%%
-Ice Fiend
+Vetrifl
 
 Un énorme démon frigide couvert de glace et auréolé d'air glacé. C'est l'un des
 plus terrible habitants des Enfers.
@@ -1201,7 +1201,7 @@ iron golem
 Une grande statue de métal lourde et très solide, dont le pouvoir de locomotion
 à été donné par des moyens ésotériques.
 %%%%
-iron imp
+haearbwca
 
 Un petit démon mineur, laid et déformé, à la peau métallique.
 %%%%
@@ -1429,7 +1429,7 @@ Une créature des royaumes célestes. Elle consiste d'une roue dans une roue, et
 les deux sont couvertes d'yeux ; les flammes étrange d'un feu sacré oscillent
 tout autour d'elle.
 %%%%
-orange demon
+nychdod
 
 Un démon de couleur ambre avec un queue ressemblant à celle d'un scorpion. Elle
 contient un puissant venin qui peut rendre ses victimes faiblardes et affaiblir
@@ -1619,7 +1619,7 @@ reaper
 
 Une créature squelettique armée d'une faux géante.
 %%%%
-red devil
+cythraul
 
 Un cousin plus grand de l'imp ordinaire, arborant un rictus diabolique et avec
 deux petites ailes aux épaules. Ils préfèrent les tridents acérés, et se
@@ -1723,7 +1723,7 @@ small abomination
 Un amas hideux de parties de corps humains, en partie chair morte animée, en
 partie démon.
 %%%%
-smoke demon
+mygdarth
 
 Un démon infernal qui se montre sous un nuage frémissant de fumée. Ayant des
 pouvoirs pyrotechniques considérables, il peut très efficacement attaquer ses
@@ -1747,7 +1747,7 @@ Un testudine querelleur avec une carapace blindée. Son cou est incroyablement
 extensible et il peut mordre de loin. Si effrayé, il se cachera dans sa
 carapace.
 %%%%
-soul eater
+saelneytandi
 
 Ce démon ressemble à une ombre changeante qui glisse dans l'air. Il irradie
 d'une intense aura de force négative.
@@ -1915,7 +1915,7 @@ toenail golem
 Une statue imposante et animée faite entièrement d'écrêtage d'ongle de doigts
 de pieds. Certaines personnes on vraiment trop de temps à perdre.
 %%%%
-tormentor
+POENYDIO
 
 Un démon maléfique couvert de toute sortes de griffes, pointes et crochets. Il
 est capable d'infliger les tortures des plus agonisantes a ceux qui sont assez
@@ -2022,7 +2022,7 @@ les étangs et les rivières débordent et bondissent à son caprice. Méfiez-vo
 de nombreux aventuriers inconscients se sont trouvés attirés sous ses eaux d'un
 simple toucher, seulement pour qu'il devienne leur lieu de repos final.
 %%%%
-white imp
+gwybwca
 
 Un petit et malicieux démon mineur couvert de givre.
 %%%%

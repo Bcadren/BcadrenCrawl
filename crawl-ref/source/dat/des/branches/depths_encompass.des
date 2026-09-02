@@ -28,7 +28,7 @@
         e.weight("5")
         e.mons("raiju band / spriggan air mage band / titan w:5 / " ..
                "storm dragon w:5 / shock serpent w:5 / " ..
-               "blizzard demon w:15")
+               "cenysus w:15")
         e.mons("w:20 obsidian statue / w:1 orange crystal statue")
         e.mons("glowing shapeshifter")
         e.mons("very ugly thing / ugly thing w:5")
@@ -53,10 +53,11 @@
         e.shuffle("JH")
         e.shuffle("34")
         e.shuffle("m6")
-        e.kitem("p = potion of mutation")
+        e.kitem("p = w:60 potion of mutation / " ..
+                "w:1 potion of cure mutation")
         e.kitem("P = any jewellery good_item")
-        e.kitem("Q = potion of mutation")
-        e.kitem("R = potion of mutation / nothing")
+        e.kitem("Q = potion of cure mutation")
+        e.kitem("R = potion of cure mutation / nothing")
         e.nsubst("u = 2:Q / 1:P / 1:R / *:u")
         e.nsubst("G = 1:G / *:2")
         e.nsubst("H = 2:8 / 2:3")
@@ -114,7 +115,7 @@ MONS:    spectral spriggan / spectral centaur / spectral naga / \
          spectral minotaur w:1 / spriggan simulacrum w:2 / centaur simulacrum w:1 / \
          naga simulacrum w:2 / troll simulacrum w:2 / minotaur simulacrum w:1 / \
          merfolk simulacrum w:2 / vampire / wraith / wight
-MONS:    mana viper / eidolon w:5 / soul eater w:5 / \
+MONS:    mana viper / eidolon w:5 / saelneytandi w:5 / \
          death drake w:5 / flayed ghost / shadow dragon w:2
 MONS:    ancient lich w:20 / tzitzimitl
 KMONS:   89 = patrolling glowing orange brain
@@ -227,8 +228,8 @@ ITEM:    amulet of reflection
 KITEM:   gzZ = ration w:5 tile:food_honeycomb / nothing w:40
 KFEAT:   L = l
 KFEAT:   ~ = w
-KFEAT:   ^ = known teleport trap / known Zot trap
-KFEAT:   T = known permanent teleport trap / dispersal trap
+KFEAT:   ^ = teleport trap / Zot trap
+KFEAT:   T = permanent teleport trap / congregation trap
 NSUBST:  T = 1:. / *:T
 NSUBST:  w = 1:~ / *:w, l = 1:L / *:l
 NSUBST:  A = 1:+ / *:b, B = 1:+ / *:b
@@ -450,8 +451,8 @@ NAME: grunt_profane_temple_geh
 TAGS: grunt_profane_temple no_monster_gen
 : grunt_profane_halls_setup(_G)
 NSUBST: 4 = 8:4 / *:., 5 = 1:6 / *:5
-KMONS: 4 = red devil / hell hound / efreet w:5
-KMONS: 5 = sun demon
+KMONS: 4 = cythraul / hell hound / efreet w:5
+KMONS: 5 = sturnulos
 KMONS: 6 = balrug
 KFEAT: A = stone_arch
 MARKER: A = lua:props_marker { portal=1 }
@@ -483,9 +484,9 @@ NAME: grunt_profane_temple_coc
 TAGS: grunt_profane_temple no_monster_gen
 : grunt_profane_halls_setup(_G)
 NSUBST: 4 = 8:4 / *:., 5 = 1:6 / *:5
-KMONS: 4 = ice devil / ettin simulacrum w:20 / freezing wraith
+KMONS: 4 = rypuiwel / ettin simulacrum w:20 / freezing wraith
 KMONS: 5 = quicksilver dragon simulacrum
-KMONS: 6 = blizzard demon
+KMONS: 6 = cenysus
 KMONS: 8 = ice statue
 KFEAT: A = stone_arch
 MARKER: A = lua:props_marker { portal=1 }
@@ -518,7 +519,7 @@ TAGS: grunt_profane_temple no_monster_gen
 : grunt_profane_halls_setup(_G)
 NSUBST: 4 = 8:4 / *:., 5 = 1:6 / *:5
 KMONS: 4 = shadow / wraith / flying skull
-KMONS: 5 = soul eater
+KMONS: 5 = saelneytandi
 KMONS: 6 = reaper w:18 / lich w:5 / bone dragon w:4
 KFEAT: A = stone_arch
 MARKER: A = lua:props_marker { portal=1 }
@@ -550,7 +551,7 @@ NAME: grunt_profane_temple_dis
 TAGS: grunt_profane_temple no_monster_gen
 : grunt_profane_halls_setup(_G)
 NSUBST: 4 = 8:4 / *:., 5 = 1:6 / *:5
-KMONS: 4 = rust devil
+KMONS: 4 = taeringu
 KMONS: 5 = skeletal warrior / iron troll w:1
 KMONS: 6 = iron dragon / war gargoyle
 KFEAT: A = stone_arch
@@ -643,7 +644,7 @@ MONS:     deep elf mage w:12 / naga mage / hell knight / efreet w:5 / \
           rakshasa w:5 ; robe . wand of iceblast | wand of acid . \
                          trident ego:freezing | trident ego:molten / \
           centaur warrior w:8 ; shortbow ego:molten | shortbow ego:freezing . \
-                                arrow . long sword good_item
+                                long sword good_item
 MONS:     fire dragon w:5 / fire dragon perm_ench:shapeshifter w:5 / \
           ice dragon w:5 / ice dragon perm_ench:shapeshifter w:5 / \
           mana viper w:5 / mana viper perm_ench:shapeshifter w:5 / \
@@ -666,11 +667,11 @@ MONS:     iron dragon w:5 / iron dragon perm_ench:shapeshifter w:5 / \
                            battleaxe ego:molten | battleaxe ego:freezing | \
                            great sword ego:molten | great sword ego:freezing | \
                            great mace ego:molten | great mace ego:freezing
-KMONS:    5 = deep elf blademaster ; mundane crystal plate armour . \
+KMONS:    5 = deep elf blademaster ; mundane crystal plate . \
                                      rapier ego:molten . rapier ego:freezing
 KMONS:    6 = deep elf master archer ; fire dragon scales | ice dragon scales . \
                                        longbow ego:molten | longbow ego:freezing . \
-                                       arrow . potion of haste | potion of resistance
+                                       potion of haste | potion of resistance
 KMONS:    7 = lich / ancient lich w:5
 KMONS:    8 = titan / draconian annihilator w:5
 KMONS:    A = golden dragon w:19 / golden dragon perm_ench:shapeshifter w:1 / \
@@ -882,7 +883,7 @@ MONS:    spriggan defender w:30 / titan w:30 / ancient lich w:30 / \
          draconian monk / draconian annihilator / draconian knight / \
          juggernaut w:20
 KMONS:   Z = draconian knight / draconian annihilator
-KFEAT:   z^ = known zot trap w:499 / floor w:1
+KFEAT:   z^ = zot trap w:499 / floor w:1
 KFEAT:   Z = enter_zot
 SHUFFLE: Y], {([>, HI / HI / IH, JK / JK / KJ
 SHUFFLE: NO / NO / ON, PQ / PQ / QP, RS / RS / SR, lm / lm / ml

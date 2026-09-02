@@ -23,6 +23,7 @@
 #
 ################################################################################
 
+: crawl_require('dlua/vault.lua')
 
 #
 #  st_box_setup
@@ -942,7 +943,7 @@ ENDMAP
 NAME: nicolae_vaults_quartermaster
 TAGS: vaults_hard
 NSUBST: 0 = 1:9 / *:0
-KFEAT: % = known alarm trap / . w:30
+KFEAT: % = alarm trap / . w:30
 KITEM: % = any
 KMONS: 0 = 0 band
 MAP
@@ -1150,7 +1151,7 @@ MONS: vault guard
 KMONS: 2 = vault guard
 KMONS: 3 = vault warden
 KITEM: 23 = $
-KFEAT: ^ = known alarm trap
+KFEAT: ^ = alarm trap
 MAP
 xxxxxxxxxxx
 x$$$$$$$$$x
@@ -1320,4 +1321,52 @@ vv.cc|...|cc.vv
   vv.......vv
    vvv999vvv
      vv.vv
+ENDMAP
+
+NAME:   vaults_door_vault
+TAGS:   vaults_hard
+KMONS:  1 = 8
+KMONS:  2 = 9
+: door_vault_setup(_G)
+MAP
+..............
+..............
+..aaaaaaaaaa..
+..a++++++++a..
+..a++++++++a..
+..a++1111++a..
+..a++1221++a..
+..a++1221++a..
+..a++1111++a..
+..a++++++++a..
+..a++++++++a..
+..aaaaaaaaaa..
+..............
+..............
+ENDMAP
+
+# Not Minivault 9 (or, hellephant zoo)
+NAME:   vaults_not_door_vault_due
+TAGS:   vaults_hard
+WEIGHT: 5
+KMONS:  1 = hell knight
+KMONS:  2 = hellion / balrug
+KMONS:  3 = hellephant
+NSUBST: 2 = 2=1 / 23 / 3
+: door_vault_setup(_G)
+MAP
+..............
+..............
+..aaaaaaaaaa..
+..a++++++++a..
+..a++++++++a..
+..a++1111++a..
+..a++1221++a..
+..a++1221++a..
+..a++1111++a..
+..a++++++++a..
+..a++++++++a..
+..aaaaaaaaaa..
+..............
+..............
 ENDMAP

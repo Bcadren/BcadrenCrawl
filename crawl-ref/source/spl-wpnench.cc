@@ -10,8 +10,9 @@
 #include "areas.h"
 #include "god-item.h"
 #include "god-passive.h"
+#include "invent.h"
 #include "item-prop.h"
-#include "makeitem.h"
+#include "items.h"
 #include "message.h"
 #include "player-equip.h"
 #include "prompt.h"
@@ -25,10 +26,11 @@
  * @param weapon The item in question (which may have just been unwielded).
  * @param verbose whether to print a message about expiration.
  */
-void end_weapon_brand(item_def &weapon, bool verbose)
+void end_weapon_brand(bool verbose)
 {
     ASSERT(you.duration[DUR_EXCRUCIATING_WOUNDS]);
-    set_item_ego_type(weapon, weapon.base_type, you.props[ORIGINAL_BRAND_KEY]);
+    item_def &weapon = you.inv[you.props[PAINED_WEAPON_KEY].get_short()];
+    set_item_ego_type(weapon, you.props[ORIGINAL_BRAND_KEY]);
     you.props.erase(ORIGINAL_BRAND_KEY);
     you.duration[DUR_EXCRUCIATING_WOUNDS] = 0;
 
@@ -58,19 +60,77 @@ void end_weapon_brand(item_def &weapon, bool verbose)
  */
 spret cast_excruciating_wounds(int power, bool fail)
 {
-    item_def& weapon = *you.weapon();
     const brand_type which_brand = SPWPN_PAIN;
-    const brand_type orig_brand = get_weapon_brand(weapon);
+
+    item_def * weapon = nullptr;
+    item_def * wpn0 = you.weapon(0);
+    item_def * wpn1 = you.weapon(1);
+
+    if (wpn0 && !is_brandable_weapon(*wpn0, true))
+        wpn0 = nullptr;
+    if (wpn1 && !is_brandable_weapon(*wpn1, true))
+        wpn1 = nullptr;
 
     // Can only brand melee weapons.
-    if (is_range_weapon(weapon))
+    if (wpn0 && is_range_weapon(*wpn0))
     {
-        mpr("You cannot brand ranged weapons with this spell.");
+        if (!wpn1)
+        {
+            mpr("You cannot brand ranged weapons with this spell.");
+            return spret::abort;
+        }
+        else
+            wpn0 = nullptr;
+    }
+
+    if (!wpn0)
+        weapon = wpn1;
+    else if (!wpn1)
+        weapon = wpn0;
+    else
+    {
+        const int equipn = prompt_invent_item("Embue which weapon with agonizing pain?",
+                menu_type::invlist,
+                OSEL_BRANDABLE_WEAPON,
+                OPER_ANY,
+                invprompt_flag::escape_only);
+
+        if (prompt_failed(equipn))
+            return spret::abort;
+
+        equipment_type hand_used = item_equip_slot(you.inv[equipn]);
+        if (hand_used == EQ_NONE)
+        {
+            mpr("You can only pain wielded weapons.");
+            return spret::abort;
+        }
+        else if (hand_used != EQ_WEAPON0 && hand_used != EQ_WEAPON1)
+        {
+            mpr("That isn't a weapon.");
+            return spret::abort;
+        }
+        weapon = you.slot_item(hand_used);
+        if (is_range_weapon(*weapon))
+        {
+            mpr("You cannot brand ranged weapons with this spell.");
+            return spret::abort;
+        }
+    }
+
+    const brand_type orig_brand = get_weapon_brand(*weapon);
+
+    const bool has_temp_brand = you.duration[DUR_EXCRUCIATING_WOUNDS] 
+            && weapon->link == you.props[PAINED_WEAPON_KEY].get_short();
+
+    const bool end_old = you.duration[DUR_EXCRUCIATING_WOUNDS] && !has_temp_brand;
+
+    if (end_old && !yesno("This will end the effect on your other weapon. Continue anyways?", true, 0))
+    {
+        canned_msg(MSG_OK);
         return spret::abort;
     }
 
-    bool has_temp_brand = you.duration[DUR_EXCRUCIATING_WOUNDS];
-    if (!has_temp_brand && get_weapon_brand(weapon) == which_brand)
+    if (!has_temp_brand && get_weapon_brand(*weapon) == which_brand)
     {
         mpr("This weapon is already branded with pain.");
         return spret::abort;
@@ -82,7 +142,7 @@ spret cast_excruciating_wounds(int power, bool fail)
     if (dangerous_disto)
     {
         const string prompt =
-              "Really brand " + weapon.name(DESC_INVENTORY) + "?";
+              "Really brand " + weapon->name(DESC_INVENTORY) + "?";
         if (!yesno(prompt.c_str(), false, 'n'))
         {
             canned_msg(MSG_OK);
@@ -93,24 +153,20 @@ spret cast_excruciating_wounds(int power, bool fail)
     fail_check();
 
     if (dangerous_disto)
-    {
-        // Can't get out of it that easily...
-        MiscastEffect(&you, nullptr, {miscast_source::wield},
-                      spschool::translocation, 9, 90,
-                      "rebranding a weapon of distortion");
-    }
+        unwield_distortion(true);
+
+    if (end_old)
+        end_weapon_brand();
 
     noisy(spell_effect_noise(SPELL_EXCRUCIATING_WOUNDS), you.pos());
-    mprf("%s %s in agony.", weapon.name(DESC_YOUR).c_str(),
+    mprf("%s %s in agony.", weapon->name(DESC_YOUR).c_str(),
                             silenced(you.pos()) ? "writhes" : "shrieks");
 
     if (!has_temp_brand)
     {
-        you.props[ORIGINAL_BRAND_KEY] = get_weapon_brand(weapon);
-        if (weapon.base_type == OBJ_WEAPONS)
-            set_item_ego_type(weapon, OBJ_WEAPONS, which_brand);
-        else if (weapon.base_type == OBJ_SHIELDS)
-            set_item_ego_type(weapon, OBJ_SHIELDS, which_brand);
+        you.props[ORIGINAL_BRAND_KEY] = get_weapon_brand(*weapon);
+        you.props[PAINED_WEAPON_KEY] = weapon->link;
+        set_item_ego_type(*weapon, which_brand);
         you.wield_change = true;
         you.redraw_armour_class = true;
         if (orig_brand == SPWPN_ANTIMAGIC)

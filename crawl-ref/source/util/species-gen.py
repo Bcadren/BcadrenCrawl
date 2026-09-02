@@ -151,11 +151,10 @@ SpeciesGroup = collections.namedtuple('SpeciesGroup',
                                             ['position', 'width', 'species'])
 SpeciesGroupEntry = collections.namedtuple('SpeciesGroupEntry',
                                             ['priority', 'enum'])
-SPECIES_GROUPS_TEMPLATE = {
-    'Simple': SpeciesGroup('coord_def(0, 0)', '50', []),
-    'Intermediate': SpeciesGroup('coord_def(1, 0)', '20', []),
-    'Advanced': SpeciesGroup('coord_def(2, 0)', '20', []),
-}
+SPECIES_GROUPS_TEMPLATE = collections.OrderedDict()
+SPECIES_GROUPS_TEMPLATE['Simple'] = SpeciesGroup('coord_def(0, 0)', '50', [])
+SPECIES_GROUPS_TEMPLATE['Intermediate'] = SpeciesGroup('coord_def(1, 0)', '20', [])
+SPECIES_GROUPS_TEMPLATE['Advanced'] = SpeciesGroup('coord_def(2, 0)', '20', [])
 SPECIES_GROUP_TEMPLATE = """
     {{
         "{name}",
@@ -175,7 +174,7 @@ UNDEAD_TYPES = ('US_ALIVE', 'US_HUNGRY_DEAD', 'US_UNDEAD', 'US_SEMI_UNDEAD', 'US
 SIZES = ('SIZE_TINY', 'SIZE_LITTLE', 'SIZE_SMALL', 'SIZE_MEDIUM', 'SIZE_LARGE',
     'SIZE_BIG', 'SIZE_GIANT')
 ALL_STATS = ('str', 'int', 'dex')
-ALL_WEAPON_SKILLS = ('SK_SHORT_BLADES', 'SK_LONG_BLADES', 'SK_AXES',
+ALL_WEAPON_SKILLS = ('SK_SHORT_BLADES', 'SK_LONG_BLADES', 'SK_AXES_HAMMERS',
     'SK_WHIPS_FLAILS', 'SK_POLEARMS', 'SK_MACES_STAVES', 'SK_SLINGS', 'SK_BOWS',
     'SK_CROSSBOWS', 'SK_UNARMED_COMBAT')
 
@@ -417,7 +416,7 @@ def main():
             continue
         f_path = os.path.join(args.datadir, f_name)
         try:
-            species_spec = yaml.load(open(f_path))
+            species_spec = yaml.safe_load(open(f_path))
         except yaml.YAMLError as e:
             print("Failed to load %s: %s" % (f_name, e))
             sys.exit(1)

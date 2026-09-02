@@ -67,6 +67,8 @@ bool check_mkdir(const string &what, string *dir, bool silent = false);
 // Find saved games for all game types.
 vector<player_save_info> find_all_saved_characters();
 
+NORETURN void print_save_json(const char *name);
+
 string get_save_filename(const string &name);
 string get_savedir_filename(const string &name);
 string savedir_versioned_path(const string &subdirs = "");
@@ -79,7 +81,7 @@ vector<string> get_title_files();
 
 class level_id;
 
-void trackers_init_new_level(bool transit);
+void trackers_init_new_level();
 
 void update_portal_entrances();
 void reset_portal_entrances();
@@ -94,6 +96,7 @@ void save_game(bool leave_game, const char *bye = nullptr);
 // Save game without exiting (used when changing levels).
 void save_game_state();
 
+void write_save_version(writer &file, save_version version);
 save_version get_save_version(reader &file);
 
 bool save_exists(const string& filename);
@@ -125,7 +128,7 @@ save_version read_ghost_header(reader &inf);
 
 FILE *lk_open(const char *mode, const string &file);
 FILE *lk_open_exclusive(const string &file);
-void lk_close(FILE *handle, const string &file);
+void lk_close(FILE *handle);
 
 // file locking stuff
 bool lock_file_handle(FILE *handle, bool write);

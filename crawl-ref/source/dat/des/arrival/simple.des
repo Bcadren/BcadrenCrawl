@@ -60,14 +60,15 @@ ENDMAP
 NAME:    minmay_arrival_wavy_path
 TAGS:    arrival no_monster_gen
 ORIENT:  float
+NSUBST:  { = 1:{ / .
 MAP
 xxxxxxxxxxxxxxxxxxxxxx
-xx.{xxxxxxxxxxxxxxxxxx
-x....xx....xxxx....xxx
-x....x......xx......xx
+xxxxxxxxxxxxxxxxxxxxxx
+@..xxxx....xxxx....xxx
+@...xx......xx......xx
 xx..xx..xx..xx..xx..xx
-xx..xx..xx..xx..xx..xx
-xx..xx..xx..xx..xx..xx
+xx..xx..x.{{.x..xx..xx
+xx..xx..x.{{.x..xx..xx
 xx..xx..xx..xx..xx..xx
 xx......xx......xx...@
 xxx....xxxx....xxxx..@
@@ -77,7 +78,7 @@ ENDMAP
 
 ##############################################################################
 NAME:    matt_arrival_spirals
-TAGS:    arrival
+TAGS:    arrival no_monster_gen
 ORIENT:  float
 SHUFFLE: {[(
 SUBST:   [=., (=.
@@ -173,7 +174,7 @@ ENDMAP
 NAME:   lemuel_arrival_funnel
 TAGS:   arrival no_monster_gen
 ORIENT: float
-SUBST:  c : ccccwlx.
+SUBST:  c : ccccwlx
 MAP
 xxxxxxxxxxxxxxx
 x......{......x
@@ -207,10 +208,10 @@ xx.xx                 xx.xx
  xx..xx             xx..xx
   x...xx           xx...x
   xx...xx         xx...xx
-   x....xx       xx....x
-   xx....xx     xx....xx
-    x.....xx   xx.....x
-    xx.....xx xx.....xx
+   x....xxxxxxxxxxx....x
+   xx....xx.....xx....xx
+    x......xxxxx......x
+    xx.....xxxxx.....xx
      x......xxx......x
      xx......x......xx
       x.............x
@@ -260,7 +261,7 @@ NAME:    lemuel_arrival_cross
 TAGS:    arrival no_monster_gen
 ORIENT:  float
 SHUFFLE: >d
-ITEM:    stone
+ITEM:    scroll of random uselessness
 MAP
       xxx
       x{x
@@ -327,12 +328,12 @@ ENDMAP
 
 ##############################################################################
 NAME:    dpeg_arrival_radiant
-TAGS:    arrival no_rotate
+TAGS:    arrival no_rotate no_monster_gen
 ORIENT:  float
-NSUBST:  ' = 1:@ / *=.x
+NSUBST:  ' = 2:@ / *=.x
 MAP
 'xxxxxxx'xxxxxxx'
-x.xxxxxx.xxxxxx'x
+x.xxxxxx.xxxxxx.x
 xx..xxxx+xxxx..xx
 xxxx..+...+..xxxx
 xxxxxxx.{.xxxxxxx
@@ -462,7 +463,7 @@ WEIGHT: 4
 ORIENT: float
 MAP
 xxxxx
-..{.@
+.>{.@
 xxxxx
 ENDMAP
 
@@ -474,7 +475,7 @@ SUBST:  v : vcbxxx
 MAP
 xxxxx
 xvvvx
-..{.@
+.>{.@
 xvvvx
 xxxxx
 ENDMAP
@@ -485,7 +486,7 @@ WEIGHT: 3
 ORIENT: float
 MAP
 xxxx
-x{.@
+x{>@
 xxxx
 ENDMAP
 
@@ -495,7 +496,7 @@ TAGS:    arrival no_monster_gen no_rotate
 ORIENT:  float
 MAP
 .......
-.xxmmmxx.
+.xx+++xx.
 .x.....x.
 .m..{..m.
 .m.....m.
@@ -634,8 +635,8 @@ x...xx....x.
 x..xxx...xx.
 ...xx....x..
 ..xxx.{.xxx.
-..xx....xx..
-.xxxx..xx...
+..xx>...xx>.
+@xxxx..xx...
 xxx....xx@.[
 ENDMAP
 
@@ -659,7 +660,7 @@ ENDMAP
 
 ##############################################################################
 NAME:   erik_arrival_triangle_small
-TAGS:   arrival
+TAGS:   arrival no_monster_gen
 WEIGHT: 4
 ORIENT: float
 MAP
@@ -674,7 +675,7 @@ ENDMAP
 
 NAME:   erik_arrival_triangle_medium
 WEIGHT: 3
-TAGS:   arrival
+TAGS:   arrival no_monster_gen
 ORIENT: float
 MAP
             xxx
@@ -689,7 +690,7 @@ MAP
 ENDMAP
 
 NAME:   erik_arrival_triangle_large
-TAGS:   arrival
+TAGS:   arrival no_monster_gen
 WEIGHT: 2
 ORIENT: float
 MAP
@@ -707,7 +708,7 @@ MAP
 ENDMAP
 
 NAME:   erik_arrival_triangle_huge
-TAGS:   arrival
+TAGS:   arrival no_monster_gen
 WEIGHT: 1
 ORIENT: float
 MAP
@@ -840,7 +841,7 @@ MAP
 xxxxxxxxxxx
 x1x1x1x1x1xxx
 @...........x
-...........{x
+.......11..{x
 @...........x
 x1x1x1x1x1xxx
 xxxxxxxxxxx
@@ -876,37 +877,16 @@ MAP
     .............
 ENDMAP
 
-##############################################################
-NAME:   noname_arrival_rooms_in_the_neighbourhood
-TAGS:   arrival no_monster_gen
-RTILE:  x = wall_hall
-FTILE:  .([{ = floor_hall
-SUBST:   [=., (=.
-ORIENT: float
-MAP
- xxxxx             xxxxx
-xx...xx           xx...xx
-x.....x           x.....x
-x..(..+     V     +..[..x
-x.....x           x.....x
-xx...xx   xx+xx   xx...xx
- xxxxx   xx...xx   xxxxx
-         x.....x
-         x..{..x
-         x.....x
-         xx...xx
-          xxxxx
-ENDMAP
 
 ##############################################################
 NAME:    onia_arrival_mini_spirals
-TAGS:    arrival
+TAGS:    arrival no_monster_gen
 ORIENT:  float
 SHUFFLE: ({[<, GT, vcxxxx
 SUBST:   [=., (=., <=.
 MAP
 vvvvvvvvvvv
-vv...v...vv
+vv...+...vv
 vv[v.v.v(vv
 vvvv.v.vvvv
 v.........v
@@ -953,7 +933,7 @@ ENDMAP
 ############################################################################
 # A spiral sometimes made entirely of glass
 NAME:    zelgadis_glass_arrival_small
-TAGS:    arrival
+TAGS:    arrival no_monster_gen
 ORIENT:  float
 SHUFFLE: mvvcccxxxx
 MAP
@@ -974,7 +954,7 @@ NAME:   dpeg_arrival_snail
 TAGS:   arrival no_monster_gen no_rotate
 ORIENT: float
 NSUBST: . = 1:d / *:.
-ITEM:   stone
+ITEM:   scroll of random uselessness
 MAP
          xxxxxxxxxxxxxxxxx
       xxxxxxxx.......xxxxxxx
@@ -985,7 +965,7 @@ xxxxxx........xxxxxxxx.....xxx
 xxxxx.......xxxx....xxx.....xx
 xxxxx......xxx........xx....xx
 xxxx.......xx...xxx...xxx....x
-xxxx......xxx..xxxxx...xx....x
+xxxx......xxx..x+xxx...xx....x
 xxx.......xx..xxx.{xx..xx....x
 xxx......xxx..xxx.xx..xxx....x
 xxx......xxx...xx.....xx....xx
@@ -1370,7 +1350,7 @@ ccc...T...T...ccc
 c...............c
 c.G.G.vvvvv.G.G.c
 c..I..v.{.v..I..c
-c.G.G.vv+vv.G.G.c
+c.G.G.v+v+v.G.G.c
 c...............c
 ccccccccccccccccc
 ENDMAP
@@ -1446,9 +1426,11 @@ TAGS:   arrival no_monster_gen
 ORIENT: float
 SHUFFLE: ({[
 MONS:   plant
+FTILE:  1wtG = floor_grass
+FTILE:  .{ = floor_mud
 MAP
 ttt@ttttt
-t{t.....t
+t{......t
 t.11111.t
 t.1www1.t
 t.1wGw1.t
@@ -1462,6 +1444,8 @@ NAME:   tarquinn_simple_flora_water_b
 TAGS:   arrival no_monster_gen
 ORIENT: float
 MONS:   plant
+FTILE:  Gt1w = floor_grass
+FTILE:  .{+ = floor_mud
 MAP
 xxxxxxxxxxxxx
 +...wwwww...+
@@ -1485,23 +1469,27 @@ TAGS:   arrival no_monster_gen
 ORIENT: float
 SHUFFLE: ([{ABC
 SUBST:  A = }11
-SUBST:  ABC = 1
+SUBST:  BC = 1
 MONS:   plant
+FTILE:  Gt1w = floor_grass
+FTILE:  .{([+ = floor_mud
 MAP
-xxxxxxxxxxxxxxxxxxxx
+xxxxxxx+xxxxxxxxxxxx
 xttttt..C.wwwwwwwwwx
 xttA.....ww11wwww..+
 xt...B.www111ww....x
 x.....ww111www....tx
 +....wwwwwww.....ttx
 xwwwwww..{.....ttttx
-xxxxxxxxxxxxxxxxxxxx
+xxxxxxxxx+xxxxxxxxxx
 ENDMAP
 
 NAME:   tarquinn_simple_flora_water_d
 TAGS:   arrival no_monster_gen
 ORIENT: float
 MONS:   plant, fungus
+FTILE:  Gt1w = floor_grass
+FTILE:  .{+ = floor_mud
 MAP
 xxxxxxxxxx
 +....t1x2xxx
@@ -1515,16 +1503,17 @@ ENDMAP
 NAME:   tarquinn_simple_flora_water_e
 TAGS:   arrival no_monster_gen
 ORIENT: float
-FTILE:  1 = floor_grass
+FTILE:  Gt1w = floor_grass
+FTILE:  .{+ = floor_mud
 MONS:   plant
 MAP
-  xxx
+  x+x
 xxx.xx
 x1w.tx
 x1w{.+
 x1w.tx
 xxx.xx
-  xxx
+  x+x
 ENDMAP
 
 NAME:   tarquinn_simple_flora_water_f
@@ -1532,6 +1521,8 @@ TAGS:   arrival no_monster_gen
 ORIENT: float
 SHUFFLE: 123wwttt
 MONS:   plant, bush, fungus
+FTILE:  Gt1w2 = floor_grass
+FTILE:  .{+3 = floor_mud
 MAP
 xxxxxx+xxx
 x12213.1tx
@@ -1583,7 +1574,7 @@ ORIENT: float
 MAP
 xxxcccxxx
 xccc{cccx
-xc.c.c.cx
+xc.c.c>cx
 xt.....tx
 xwt...twx
 xwwt.twwx
@@ -1611,14 +1602,18 @@ ENDMAP
 NAME:   scummos_arrival_simple_fountains
 TAGS:   arrival no_monster_gen transparent
 ORIENT: float
+NSUBST: y = 3:@ / *:x
+SUBST:  T:TUY
 MAP
-.......
-.T...T.
-..mmm..
-..m{+..
-..mmm..
-.T...T.
-.......
+yyyyyxxxx
+y.......x
+y.T...T.x
+y..qqq..x
+y..q{=..x
+y..qqq..x
+y.T...T.x
+y.......x
+yyyyyxxxx
 ENDMAP
 
 NAME:   scummos_arrival_simple_crosswalls
@@ -1698,11 +1693,11 @@ MAP
 xxxxxxxxxxxxxxxxxx
 x.....x...WWWW...x
 x..{..x..........x
-x.....x..........xG.
+x.....x....WW....xG.
 x+xxxxxyyyyyyyyyy+.@
 x.xtt.+yyyyyyyyyy+.@
 x.xt.txyyyyyyyyyy+.@
-x.xt.tx..........xG.
+x.xt.tx....ll....xG.
 x.+.ttx..........x
 xtxtttx...llll...x
 xxxxxxxxxxxxxxxxxx
@@ -1731,24 +1726,27 @@ ENDMAP
 
 NAME:   lightli_molten_gateway
 TAGS:   arrival no_monster_gen
-ORIENT: float
+COLOUR: v = red
+TILE:   v = dngn_metal_wall_red
+TILE:   x = wall_volcanic
+ORIENT: south
 MAP
-xxxxxxx++xxxxxxx
-xxxxxll..llxxxxx
-xxxllll..llllxxx
-xxlllvl..lvlllxx
+    xxx++xxx
+  xxxll..llxxx
+ xxllll..llllxx
+ xlllvl..lvlllx
 xxlllll..lllllxx
 xllllll..llllllx
 xlllllv..vlllllx
 xllvllv..vllvllx
-xlllllv{.vlllllx
+xlllllv{>vlllllx
 xlllllvvvvlllllx
 xllllllllllllllx
 xxllvllllllvllxx
-xxllllllllllllxx
-xxxllllllllllxxx
-xxxxxllllllxxxxx
-xxxxxxxxxxxxxxxx
+ xllllllllllllx
+ xxllllllllllxx
+  xxxllllllxxx
+    xxxxxxxx
 ENDMAP
 
 ##############################################################################
@@ -1777,8 +1775,8 @@ TAGS:   arrival no_monster_gen
 ORIENT: float
 MAP
 xxxxxxxxxxxxx
-xxxxxG{Gxxxxx
-xx.........xx
+xxxxx.{.xxxxx
+xx...G.G...xx
 xx.........xx
 xx.........xx
 .............
@@ -1792,7 +1790,7 @@ xxxxxxxxxxxxx
 xxxxxG{Gxxxxx
 xx.........xx
 xG.........Gx
-x...........x
+x...G...G...x
 xG.........Gx
 xx.........xx
 .............
@@ -1806,7 +1804,7 @@ xxxxxxxxxxxxx
 xxxxxG{Gxxxxx
 xx.........xx
 xG.........Gx
-x...........x
+x...G...G...x
 xG.........Gx
 xx.........xx
 xx.........xx
@@ -1921,10 +1919,10 @@ ORIENT: float
 TAGS:   arrival no_monster_gen
 MAP
 xxxxxxxxxxxxxxxxxxxxxxxxxx
-x{.......................x
-xxxxxxxxxxxxxxxxxxxxxxxx.x
-x........................x
-x.xxxxxxxxxxxxxxxxxxxxxxxx
+@........................x
+x+xxxxxxxxxxxxxxxxxxxxxx.x
+x...........{............x
+x.xxxxxxxxxxxxxxxxxxxxxx+x
 x........................@
 xxxxxxxxxxxxxxxxxxxxxxxxxx
 ENDMAP
@@ -1937,7 +1935,7 @@ SUBST:  b = cv
 MAP
 xxxxaaacccbbbvvv
 x..............@
-x{.............@
+x{...aa...bb...@
 x..............@
 xxxxaaacccbbbvvv
 ENDMAP
@@ -1951,13 +1949,13 @@ SUBST: 1 = 1WWw.
 MONS: plant
 MAP
 ccccccccc
-c1111111c
-c1111111c
-c1111111c
+c1111111+
+c111111.c
+c11111.1c
 c1....11c
 c.c111.1c
 c.c1111.c
-c(c11111+
+c{c11111+
 ccccccccc
 ENDMAP
 
@@ -2081,20 +2079,6 @@ ENDMAP
 
 ###############################################################################
 
-NAME:   giann_horns
-TAGS:   arrival no_monster_gen
-ORIENT: float
-MAP
-x@xx...................xx@x
-x..xx.................xx..x
-x...xx..G..xx+xx..G..xx...x
-x....xx...xx...xx...xx....x
-x.....xxxxx.....xxxxx.....x
-x............{............x
-xx.......................xx
- xxxxxxxxxxxx+xxxxxxxxxxxx
-ENDMAP
-
 NAME:   giann_bridges
 TAGS:   arrival no_monster_gen
 MONS:   plant
@@ -2120,7 +2104,7 @@ SUBST:  S = $.
 ORIENT: float
 MAP
 xxxxxxxxxxx+xxxxxxxxxxx
-x........xG.Gx........x
+x........+G.G+........x
 x...S....x...x....S...x
 x..STS...xx+xx...STS..x
 xx..S.............S..xx
@@ -2224,7 +2208,7 @@ xxxxxxxxxxxxG@
 ENDMAP
 
 NAME:       psy_arrival_conway
-TAGS:       arrival no_monster_gen no_pool_fixup
+TAGS:       arrival no_monster_gen no_pool_fixup no_trap_gen
 ORIENT:     float
 KMONS:      P = plant / bush
 KFEAT:      P = W
@@ -2232,7 +2216,7 @@ MAP
 xxxxxxxxxxxxxx
 xWPW.........x
 xWWPxx.xxx.{.x
-xPPPxx.xxx...x
+xPWPxx.xxx...x
 x.xxPWPxxxxx.x
 x.xxWPPxxxxx.x
 x...WPWxxxxx.x
@@ -2270,9 +2254,9 @@ MAP
    ..xx...........xx..
    ..xpx.........xpx..
    ..xppx.......xppx..
-   ..xxxxxxxqxxxxxxx..
-   .......xqqqx.......
-   ........xqx........
+   ..xxxxxxx.xxxxxxx..
+   .......x...x.......
+   ........x.x........
           ..x..
            ...
             .
@@ -2291,11 +2275,11 @@ MAP
     ccc.....ccc
     c.........c cccccccccccc.
    cc.........cccGccGccGccGc.
-   c........................@
+   c.G......................@
 pccc........................@
 pG.......{..................@
 pccc........................@
-   c........................@
+   c.G......................@
    cc.........cccGccGccGccGc.
     c.........c cccccccccccc.
     ccc.....ccc
@@ -2381,14 +2365,14 @@ ENDMAP
 NAME:   wander_arrival_desolate
 TAGS:   arrival no_monster_gen no_item_gen
 ORIENT: float
-FTILE:  . = floor_pebble_brown / floor_pebble_darkgray / none
+FTILE:  .>AV{ = floor_pebble_brown / floor_pebble_darkgray / none
 MAP
   .....
  .......
 ....A....
 .........
 ....{....
-.........
+....>....
 ..V...V..
 .........
  .......
@@ -2399,10 +2383,113 @@ TAGS:   arrival no_monster_gen no_item_gen no_pool_fixup
 ORIENT: float
 MAP
    xxxxxxx
- xxxwwwwwxxxx
+ xxxwwwwwxx+x
 xxx........Gxxx
-xx..{.........+@
+xx..{.........+
 xxx........Gxxx
- xxxwwwwwxxxx
+ xxxwwwwwxx+x
    xxxxxxx
+ENDMAP
+
+NAME:     amcnicky_arrival_double_pillar
+TAGS:     arrival no_monster_gen no_item_gen no_pool_fixup
+ORIENT:   float
+SHUFFLE:  JK
+SUBST:    p:wwwlvt, J:x, K:@
+MAP
+JKKKKKKKJ
+J.......J
+J.pp....J
+J.pp....J
+x......xx
+x.xxxx.xx
+x.x....xx
+xxx.{.xxx
+xx....x.x
+xx.xxxx.x
+xx......x
+J....pp.J
+J....pp.J
+J.......J
+JKKKKKKKJ
+ENDMAP
+
+NAME:     amcnicky_arrival_single_pillar
+TAGS:     arrival no_monster_gen no_item_gen no_pool_fixup
+ORIENT:   float
+SHUFFLE:  JK
+SUBST:    p:wwwlvt, J:x, K:@
+MAP
+JKKKKKKKJ
+J.......J
+J.pp....J
+J.pp....J
+x......xx
+x.xxxx.xx
+x.x....xx
+xxx.{.xxx
+  x...x
+  xxxxx
+ENDMAP
+
+NAME:   amcnicky_arrival_feature_with_door
+TAGS:   arrival no_monster_gen no_pool_fixup no_trap_gen
+ORIENT: float
+SUBST:  p:xxxtttvblWAGTVY
+MAP
+xxxxxxxx+xxxxx
+x{...........@
+xxxxxx.......x
+     xx..p..xx
+      xx...xx
+       xx.xx
+        xxx
+ENDMAP
+
+NAME:   amcnicky_arrival_flooded_fountain
+TAGS:   arrival no_monster_gen no_pool_fixup no_trap_gen
+ORIENT: float
+MAP
+xxxxxxxx
+xVww{..x
+xwww...x
+xwww...x
+xww.xx.x
+xw..xx.x
+x......x
+xT.....+
+x......x
+x...xx.x
+x...xx.x
+x......x
+x......x
+xT..>..x
+xxxxxxxx
+ENDMAP
+
+NAME:   amcnicky_arrival_choice
+TAGS:   arrival no_monster_gen no_trap_gen
+ORIENT: float
+SUBST:  p:}}>
+MAP
+    xxx
+xxxxxpx
+x{....x
+xxxxx.x
+    x+x
+ENDMAP
+
+NAME:     amcnicky_arrival_underground_garden
+TAGS:     arrival no_monster_gen no_trap_gen
+ORIENT:   float
+MAP
+  ttttttttttx
+ tt.....tx.{t
+tt..........t
+t....t.t...tx
+t.....T.....t
+t....t.t....t
+tt.........tt
+ tt.......tt
+  ttt@@@ttt
 ENDMAP

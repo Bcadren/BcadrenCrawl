@@ -1,17 +1,20 @@
 #include "AppHdr.h"
 #include <map>
 
+#include "mpr.h"
 #include "species.h"
 
 #include "item-prop.h"
 #include "mutation.h"
 #include "output.h"
+#include "playable.h"
 #include "player.h"
 #include "player-stats.h"
 #include "transform.h"
 #include "random.h"
 #include "skills.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "tiledoll.h"
 
 #include "species-data.h"
@@ -38,9 +41,6 @@ const char *get_species_abbrev(species_type which_species)
 // Needed for debug.cc and hiscores.cc.
 species_type get_species_by_abbrev(const char *abbrev)
 {
-    if (lowercase_string(abbrev) == "dr")
-        return SP_BASE_DRACONIAN;
-
     for (auto& entry : species_data)
         if (lowercase_string(abbrev) == lowercase_string(entry.second.abbrev))
             return entry.first;
@@ -58,11 +58,53 @@ species_type str_to_species(const string &species)
     for (int i = 0; i < NUM_SPECIES; ++i)
     {
         sp = static_cast<species_type>(i);
-        if (species == species_name(sp))
+        if (species == species_name(sp, SPNAME_PLAIN, false))
             return sp;
     }
 
     return SP_UNKNOWN;
+}
+
+/**
+* Returns the current player species name as displayed in a few places
+* Flavourful special cases to the normal general species name handled here.
+*/
+string display_sp_name()
+{
+    if (you.get_mutation_level(MUT_SLIME) >= 3)
+    {
+        if (you.undead_state() && you.undead_state() != US_SEMI_ALIVE)
+        {
+            if (you.is_insubstantial())
+                return "Ectoplasm";
+            return "Death Ooze";
+        }
+        return "Slime";
+    }
+
+    string name = species_name(you.species);
+
+    switch (you.char_class)
+    {
+    case JOB_MUMMY:
+        if (you.species == SP_HUMAN)
+            name = "Mummy";
+        else if (you.species != SP_DRACONIAN || you.experience_level < 7)
+            name = make_stringf("Mummified %s", name.c_str());
+        break;
+    case JOB_DEMIGOD:
+        if (you.species == SP_HUMAN)
+            name = "Demigod";
+        else if (you.species == SP_NAGA)
+            name = "Nagaraja";
+        break;
+    case JOB_DEMONSPAWN:
+        if (you.species == SP_HUMAN)
+            name = "Demonspawn";
+    default: break;
+    }
+
+    return name;
 }
 
 /**
@@ -72,13 +114,47 @@ species_type str_to_species(const string &species)
  * @returns the requested name, which will just be plain if no adjective
  *          or genus is defined.
  */
-string species_name(species_type speci, species_name_type spname_type)
+string species_name(species_type speci, species_name_type spname_type, bool player)
 {
     const species_def& def = get_species_def(speci);
     if (spname_type == SPNAME_GENUS && def.genus_name)
         return def.genus_name;
     else if (spname_type == SPNAME_ADJ && def.adj_name)
         return def.adj_name;
+    if (speci == SP_DRACONIAN)
+    {
+        if (!player)
+            return "Draconian";
+
+        switch (you.drac_colour)
+        {
+        default:
+        case DR_BROWN:
+            if (you.char_class == JOB_MUMMY)
+                return "Draconian";
+            return "Immature Draconian";
+
+        case DR_BLACK:          return "Black Draconian";
+        case DR_BLOOD:          return "Blood Draconian";
+        case DR_BLUE:           return "Blue Draconian";
+        case DR_BONE:           return "Bone Draconian";
+        case DR_CYAN:           return "Cyan Draconian";
+        case DR_GOLDEN:         return "Golden Draconian";
+        case DR_GREEN:          return "Green Draconian";
+        case DR_LIME:           return "Lime Draconian";
+        case DR_MAGENTA:        return "Magenta Draconian";
+        case DR_OLIVE:          return "Olive Draconian";
+        case DR_PEARL:          return "Pearl Draconian";
+        case DR_PINK:           return "Pink Draconian";
+        case DR_PLATINUM:       return "Platinum Draconian";
+        case DR_PURPLE:         return "Purple Draconian";
+        case DR_RED:            return "Red Draconian";
+        case DR_SCINTILLATING:  return "Scintillating Draconian";
+        case DR_SILVER:         return "Silver Draconian";
+        case DR_TEAL:           return "Turquoise Draconian";
+        case DR_WHITE:          return "White Draconian";
+        }
+    }
     return def.name;
 }
 
@@ -89,6 +165,10 @@ string species_name(species_type speci, species_name_type spname_type)
  */
 string species_walking_verb(species_type sp)
 {
+    if (you.char_class == JOB_NAGA)
+        return "Slid";
+    if (you.char_class == JOB_CENTAUR)
+        return "Gallop";
     auto verb = get_species_def(sp).walking_verb;
     return verb ? verb : "Walk";
 }
@@ -117,6 +197,9 @@ bool species_is_undead(species_type species)
 
 bool species_can_swim(species_type species)
 {
+    if (you.char_class == JOB_MERFOLK)
+        return true;
+
     return get_species_def(species).habitat == HT_WATER;
 }
 
@@ -124,11 +207,6 @@ bool species_likes_water(species_type species)
 {
     return species_can_swim(species)
            || get_species_def(species).habitat == HT_AMPHIBIOUS;
-}
-
-bool species_can_throw_large_rocks(species_type species)
-{
-    return species_size(species) >= SIZE_LARGE;
 }
 
 bool species_is_elven(species_type species)
@@ -156,19 +234,29 @@ size_type species_size(species_type species, size_part_type psize)
 
     if (species == SP_LIGNIFITE)
     {
-        if (you.experience_level < 7)
+        if (you.experience_level < 5)
             return SIZE_LITTLE;
-        else if (you.experience_level < 13)
+        else if (you.experience_level < 10)
             return SIZE_SMALL;
-        else if (you.experience_level < 19)
+        else if (you.experience_level < 15)
             return SIZE_MEDIUM;
-        else if (you.experience_level < 25)
+        else if (you.experience_level < 20)
             return SIZE_LARGE;
+        else if (you.experience_level < 25)
+            return SIZE_BIG;
         else
             return SIZE_GIANT;
     }
 
     const size_type size = get_species_def(species).size;
+
+    if (psize == PSIZE_BODY && (you.char_class == JOB_CENTAUR || you.char_class == JOB_NAGA))
+    {
+        if (size == SIZE_GIANT)
+            return size;
+
+        return (size_type)(size + 1);
+    }
 
     if (psize == PSIZE_TORSO
         && bool(get_species_def(species).flags & SPF_SMALL_TORSO))
@@ -188,7 +276,6 @@ bool species_recommends_job(species_type species, job_type job)
 bool species_recommends_weapon(species_type species, weapon_type wpn)
 {
     const skill_type sk =
-          wpn == WPN_THROWN  ? SK_THROWING :
           wpn == WPN_UNARMED ? SK_UNARMED_COMBAT :
                                item_attack_skill(OBJ_WEAPONS, wpn);
 
@@ -199,6 +286,33 @@ bool species_recommends_weapon(species_type species, weapon_type wpn)
 
 monster_type player_species_to_mons_species(species_type species)
 {
+    if (you.species == SP_DRACONIAN)
+    {
+        switch (you.drac_colour)
+        {
+        case DR_BLACK:              return MONS_BLACK_DRACONIAN;
+        case DR_BLOOD:              return MONS_BLOOD_DRACONIAN;
+        case DR_BLUE:               return MONS_BLUE_DRACONIAN;
+        case DR_BONE:               return MONS_BONE_DRACONIAN;
+        case DR_BROWN:   default:   return MONS_DRACONIAN;
+        case DR_CYAN:               return MONS_CYAN_DRACONIAN;
+        case DR_GOLDEN:             return MONS_GOLDEN_DRACONIAN;
+        case DR_GREEN:              return MONS_GREEN_DRACONIAN;
+        case DR_LIME:               return MONS_LIME_DRACONIAN;
+        case DR_MAGENTA:            return MONS_MAGENTA_DRACONIAN;
+        case DR_OLIVE:              return MONS_OLIVE_DRACONIAN;
+        case DR_PEARL:              return MONS_PEARL_DRACONIAN;
+        case DR_PINK:               return MONS_PINK_DRACONIAN;
+        case DR_PLATINUM:           return MONS_PLATINUM_DRACONIAN;
+        case DR_PURPLE:             return MONS_PURPLE_DRACONIAN;
+        case DR_RED:                return MONS_RED_DRACONIAN;
+        case DR_SILVER:             return MONS_SILVER_DRACONIAN;
+        case DR_SCINTILLATING:      return MONS_SCINTILLATING_DRACONIAN;
+        case DR_TEAL:               return MONS_TEAL_DRACONIAN;
+        case DR_WHITE:              return MONS_WHITE_DRACONIAN;
+        }
+    }
+
     return get_species_def(species).monster_species;
 }
 
@@ -219,32 +333,59 @@ const vector<string>& fake_mutations(species_type species, bool terse)
  */
 string species_prayer_action(species_type species)
 {
-  auto action = get_species_def(species).altar_action;
-  return action ? action : "kneel at";
+    if (you.char_class == JOB_NAGA)
+        return "coil in front of";
+
+    auto action = get_species_def(species).altar_action;
+    return action ? action : "kneel at";
 }
 
-const char* scale_type(species_type species)
+const char* scale_type()
 {
-    switch (species)
+    if (you.species != SP_DRACONIAN)
+        return "";
+
+    switch (you.drac_colour)
     {
-        case SP_RED_DRACONIAN:
+        case DR_RED:
             return "fiery red";
-        case SP_WHITE_DRACONIAN:
+        case DR_WHITE:
             return "icy white";
-        case SP_GREEN_DRACONIAN:
+        case DR_GREEN:
             return "lurid green";
-        case SP_YELLOW_DRACONIAN:
-            return "golden yellow";
-        case SP_GREY_DRACONIAN:
-            return "dull iron-grey";
-        case SP_BLACK_DRACONIAN:
-            return "glossy black";
-        case SP_PURPLE_DRACONIAN:
+        case DR_CYAN:
+            return "empereal azure";
+        case DR_LIME:
+            return "slimy lime-green";
+        case DR_SILVER:
+            return "gleaming silver";
+        case DR_BLUE:
+            return "flickering blue";
+        case DR_PURPLE:
             return "rich purple";
-        case SP_PALE_DRACONIAN:
-            return "pale cyan-grey";
-        case SP_BASE_DRACONIAN:
+        case DR_PINK:
+            return "fierce pink";
+        case DR_MAGENTA:
+            return "hazy amethyst";
+        case DR_BLACK:
+            return "shadowy dark";
+        case DR_OLIVE:
+            return "sickly drab";
+        case DR_BROWN:
             return "plain brown";
+        case DR_TEAL:
+            return "spectral turquoise";
+        case DR_GOLDEN:
+            return "imposing gold";
+        case DR_PEARL:
+            return "opalescent pearl";
+        case DR_SCINTILLATING:
+            return "scintillating rainbow";
+        case DR_BLOOD:
+            return "gory crimson";
+        case DR_PLATINUM:
+            return "lustrous platinum";
+        case DR_BONE: // Don't have scales, needs special casing.
         default:
             return "";
     }
@@ -252,41 +393,92 @@ const char* scale_type(species_type species)
 
 monster_type dragon_form_dragon_type()
 {
-    switch (you.species)
+    if (you.species != SP_DRACONIAN)
+        return MONS_FIRE_DRAGON;
+
+    // BCADDO: Consider the unimplemented dragon equivalents mentioned here.
+    switch (you.drac_colour)
     {
-    case SP_WHITE_DRACONIAN:
+    case DR_CYAN:
+        return MONS_WIND_DRAKE;
+    case DR_WHITE:
         return MONS_ICE_DRAGON;
-    case SP_GREEN_DRACONIAN:
+    case DR_GREEN:
         return MONS_SWAMP_DRAGON;
-    case SP_YELLOW_DRACONIAN:
-        return MONS_GOLDEN_DRAGON;
-    case SP_GREY_DRACONIAN:
+    case DR_LIME:
+        return MONS_ACID_DRAGON;
+    case DR_SILVER:
         return MONS_IRON_DRAGON;
-    case SP_BLACK_DRACONIAN:
-        return MONS_STORM_DRAGON;
-    case SP_PURPLE_DRACONIAN:
+    case DR_BLACK:
+        return MONS_SHADOW_DRAGON;
+    case DR_PLATINUM:
+    case DR_PURPLE:
         return MONS_QUICKSILVER_DRAGON;
-    case SP_PALE_DRACONIAN:
+    case DR_MAGENTA:
         return MONS_STEAM_DRAGON;
-    case SP_RED_DRACONIAN:
+    case DR_BONE:
+        return MONS_BONE_DRAGON;
+    case DR_BLUE:
+        return MONS_STORM_DRAGON;
+    case DR_PEARL:
+        return MONS_PEARL_DRAGON;
+    case DR_OLIVE:
+        return MONS_DEATH_DRAKE;
+    case DR_SCINTILLATING:  // Apocalypse Dragon?
+    case DR_PINK:           // Fairy-tale dragon
+    case DR_BLOOD:          // Demon Dragon?
+    case DR_TEAL:           // Spectral Dragon?
+    case DR_GOLDEN:
+        return MONS_GOLDEN_DRAGON;
+    case DR_BROWN:
+    case DR_RED:
     default:
         return MONS_FIRE_DRAGON;
     }
 }
 
-ability_type draconian_breath(species_type species)
+ability_type draconian_breath(bool check_tran)
 {
-    ASSERT(species_is_draconian(species));
-    switch (species)
+    if (you.species != SP_DRACONIAN)
+        return ABIL_NON_ABILITY;
+
+    if (check_tran && you.form == transformation::statue)
+        return ABIL_BREATHE_METAL;
+
+    switch (you.drac_colour)
     {
-    case SP_GREEN_DRACONIAN:   return ABIL_BREATHE_MEPHITIC;
-    case SP_RED_DRACONIAN:     return ABIL_BREATHE_FIRE;
-    case SP_WHITE_DRACONIAN:   return ABIL_BREATHE_FROST;
-    case SP_YELLOW_DRACONIAN:  return ABIL_BREATHE_ACID;
-    case SP_BLACK_DRACONIAN:   return ABIL_BREATHE_LIGHTNING;
-    case SP_PURPLE_DRACONIAN:  return ABIL_BREATHE_POWER;
-    case SP_PALE_DRACONIAN:    return ABIL_BREATHE_STEAM;
-    case SP_BASE_DRACONIAN: case SP_GREY_DRACONIAN:
+    // Basic
+    case DR_BROWN:              return ABIL_BREATHE_DART;
+
+    // Common
+    case DR_GREEN:              
+        if (check_tran && you.form == transformation::dragon)
+            return ABIL_BREATHE_POISON; 
+        return ABIL_BREATHE_MEPHITIC;
+
+    case DR_RED:                return ABIL_BREATHE_FIRE;
+    case DR_WHITE:              return ABIL_BREATHE_FROST;
+    case DR_LIME:               return ABIL_BREATHE_ACID;
+    case DR_BLUE:               return ABIL_BREATHE_LIGHTNING;
+    case DR_PURPLE:             return ABIL_BREATHE_POWER;
+    case DR_MAGENTA:            return ABIL_BREATHE_FOG;
+    case DR_CYAN:               return ABIL_BREATHE_WIND;
+    case DR_SILVER:             return ABIL_BREATHE_SILVER;
+    case DR_PINK:               return ABIL_BREATHE_BUTTERFLIES;
+    case DR_SCINTILLATING:      return ABIL_BREATHE_CHAOS;
+
+    // Undead
+    case DR_BLACK:              return ABIL_BREATHE_DRAIN;
+    case DR_OLIVE:              return ABIL_BREATHE_MIASMA;
+    case DR_BONE:               return ABIL_BREATHE_BONE;
+    case DR_TEAL:               return ABIL_BREATHE_GHOSTLY_FLAMES;
+
+    // Demigod/Rare.
+    case DR_GOLDEN:             return ABIL_BREATHE_FIRE; // Special Cased Later.
+    case DR_PEARL:              return ABIL_BREATHE_HOLY_FLAMES;
+    case DR_BLOOD:              return ABIL_BREATHE_BLOOD;
+    case DR_PLATINUM:           return ABIL_BREATHE_RADIATION;
+
     default: return ABIL_NON_ABILITY;
     }
 }
@@ -307,6 +499,23 @@ bool species_has_claws(species_type species)
                                                      && lum.xp_level == 1; });
 }
 
+void mummify()
+{
+    // Ineligant, but the more 'refined' way of doing it is no better and is more work.
+
+    // Form version lets Draconians keep on transmutation; no effect on other --Mu since can't transmute.
+    you.mutation[MUT_UNBREATHING] = you.innate_mutation[MUT_UNBREATHING] = 1;
+
+    you.mutation[MUT_NEGATIVE_ENERGY_RESISTANCE] = you.innate_mutation[MUT_NEGATIVE_ENERGY_RESISTANCE] = 3;
+    you.mutation[MUT_COLD_RESISTANCE] = you.innate_mutation[MUT_COLD_RESISTANCE] = (you.get_mutation_level(MUT_COLD_RESISTANCE) + 1);
+    you.mutation[MUT_TORMENT_RESISTANCE] = you.innate_mutation[MUT_TORMENT_RESISTANCE] = 1;
+    you.mutation[MUT_COLD_BLOODED] = you.innate_mutation[MUT_COLD_BLOODED] = 0; // Taking this back away from things that have it because it makes no sense on undead. 
+    you.mutation[MUT_SOFT_FLESH] = you.innate_mutation[MUT_SOFT_FLESH] = 0;
+
+    if (you.species != SP_DRACONIAN)
+        you.mutation[MUT_UNDEAD_FLESH] = you.innate_mutation[MUT_UNDEAD_FLESH] = 1;
+}
+
 void give_basic_mutations(species_type species)
 {
     // Don't perma_mutate since that gives messages.
@@ -314,19 +523,62 @@ void give_basic_mutations(species_type species)
         if (lum.xp_level == 1)
             you.mutation[lum.mut] = you.innate_mutation[lum.mut] = lum.mut_level;
 
-    if (you.char_class == JOB_DEMIGOD && you.get_mutation_level(MUT_HIGH_MAGIC) < 3)
+    if (you.char_class == JOB_DEMIGOD && you.get_mutation_level(MUT_HIGH_MAGIC) < mutation_max_levels(MUT_HIGH_MAGIC))
         you.mutation[MUT_HIGH_MAGIC] = you.innate_mutation[MUT_HIGH_MAGIC] = (you.get_mutation_level(MUT_HIGH_MAGIC) + 1);
     
-    // Ineligant, but the more 'refined' way of doing it is no better and is more work.
     if (you.char_class == JOB_MUMMY)
     {
-        you.mutation[MUT_NEGATIVE_ENERGY_RESISTANCE] = you.innate_mutation[MUT_NEGATIVE_ENERGY_RESISTANCE] = 3;
-        you.mutation[MUT_COLD_RESISTANCE] = you.innate_mutation[MUT_COLD_RESISTANCE] = (you.get_mutation_level(MUT_COLD_RESISTANCE) + 1);
-        you.mutation[MUT_TORMENT_RESISTANCE] = you.innate_mutation[MUT_TORMENT_RESISTANCE] = 1;
-        you.mutation[MUT_UNBREATHING] = you.innate_mutation[MUT_UNBREATHING] = 1;
+        mummify();
         you.mutation[MUT_NECRO_ENHANCER] = you.innate_mutation[MUT_NECRO_ENHANCER] = 1;
         you.mutation[MUT_HEAT_VULNERABILITY] = you.innate_mutation[MUT_HEAT_VULNERABILITY] = 1;
-        you.mutation[MUT_COLD_BLOODED] = you.innate_mutation[MUT_COLD_BLOODED] = 0; // Taking this back away from things that have it because it makes no sense on undead.
+        you.mutation[MUT_ANCIENT_WISDOM] = you.innate_mutation[MUT_ANCIENT_WISDOM] = 1;
+    }
+
+    const bool li = (species == SP_LIGNIFITE);
+
+    if (you.char_class == JOB_CENTAUR)
+    {
+        you.mutation[MUT_FAST] = you.innate_mutation[MUT_FAST] = li ? 3 : 2;
+        you.mutation[MUT_SLOW] = you.innate_mutation[MUT_SLOW] = 0;
+        you.mutation[MUT_HOOVES] = you.innate_mutation[MUT_HOOVES] = 1;
+    }
+
+    if (you.char_class == JOB_NAGA)
+    {
+        you.mutation[MUT_ACUTE_VISION] = you.innate_mutation[MUT_ACUTE_VISION] = 1;
+        you.mutation[MUT_FAST] = you.innate_mutation[MUT_FAST] = li ? 2 : 0;
+        you.mutation[MUT_SLOW] = you.innate_mutation[MUT_SLOW] = li ? 0 : 2;
+        you.mutation[MUT_SPIT_POISON] = you.innate_mutation[MUT_SPIT_POISON] = 1;
+        you.mutation[MUT_POISON_RESISTANCE] = you.innate_mutation[MUT_POISON_RESISTANCE] = 1;
+        you.mutation[MUT_SLOW_METABOLISM] = you.innate_mutation[MUT_SLOW_METABOLISM] = 1;
+        you.mutation[MUT_CONSTRICTING_TAIL] = you.innate_mutation[MUT_CONSTRICTING_TAIL] = 1;
+        you.mutation[MUT_SOFT_FLESH] = you.innate_mutation[MUT_SOFT_FLESH] = 0;
+    }
+
+    if (you.char_class == JOB_MERFOLK)
+    {
+        you.mutation[MUT_MERFOLK_TAIL] = you.innate_mutation[MUT_MERFOLK_TAIL] = 1;
+
+        if (you.mutation[MUT_COLD_VULNERABILITY])
+            you.mutation[MUT_COLD_VULNERABILITY] = --you.innate_mutation[MUT_COLD_VULNERABILITY];
+        else
+            you.mutation[MUT_COLD_RESISTANCE] = you.innate_mutation[MUT_COLD_RESISTANCE] = min(3, you.innate_mutation[MUT_COLD_RESISTANCE] + 1);
+    }
+
+    if (you.char_class == JOB_VINE_STALKER)
+    {
+        if (!you.mutation[MUT_BEAK])
+            you.mutation[MUT_FANGS] = you.innate_mutation[MUT_FANGS] = 1;
+        you.mutation[MUT_MANA_SHIELD] = you.innate_mutation[MUT_MANA_SHIELD] = 1;
+        you.mutation[MUT_ANTIMAGIC_BITE] = you.innate_mutation[MUT_ANTIMAGIC_BITE] = 1;
+        you.mutation[MUT_NO_POTION_HEAL] = you.innate_mutation[MUT_NO_POTION_HEAL] = 1;
+        you.mutation[MUT_ROT_IMMUNITY] = you.innate_mutation[MUT_ROT_IMMUNITY] = 1;
+    }
+
+    if ((you.char_class == JOB_CENTAUR || you.char_class == JOB_NAGA) && you_can_wear(EQ_BODY_ARMOUR))
+    {
+        const int deformed = min(you.innate_mutation[MUT_DEFORMED] + 1, mutation_max_levels(MUT_DEFORMED));
+        you.mutation[MUT_DEFORMED] = you.innate_mutation[MUT_DEFORMED] = deformed;
     }
 }
 
@@ -338,21 +590,55 @@ void give_level_mutations(species_type species, int xp_level)
             perma_mutate(lum.mut, lum.mut_level,
                          species_name(species) + " growth");
         }
-    if (you.char_class == JOB_MUMMY && xp_level == 13)
-        perma_mutate(MUT_NECRO_ENHANCER, 2, "mummy growth");
+    if (you.char_class == JOB_MUMMY)
+    {
+        if (xp_level == 7 && you.species == SP_DRACONIAN)
+        {
+            you.mutation[MUT_HEAT_VULNERABILITY] = you.innate_mutation[MUT_HEAT_VULNERABILITY] = 0;
+            string msg;
+            switch (you.drac_colour)
+            {
+            case DR_BONE:   msg = "As your flesh falls away, so does its vulnerability to fire.";                                               break;
+            case DR_TEAL:   msg = "As you leave your mummified body behind, you also leave behind its vulnerability to flames.";                break;
+            default:        //Just in case
+            case DR_OLIVE:
+            case DR_BLACK:  msg = "As you take on an adult scale colour, your bandages fall away and you become less vulnerable to flames.";    break;
+            }
+            mprf(MSGCH_INTRINSIC_GAIN, "%s", msg.c_str());
+        }
+
+        if (xp_level == 13)
+            perma_mutate(MUT_NECRO_ENHANCER, 2, "mummy growth");
+    }
+    if (you.char_class == JOB_VINE_STALKER)
+    {
+        if (xp_level == 4)
+            perma_mutate(MUT_REGENERATION, 1, "symbiont growth");
+        if (xp_level == 12)
+            perma_mutate(MUT_REGENERATION, 1, "symbiont growth");
+    }
 
     // Ineligant, make something more refined if losing mutations with level becomes more common.
     // Also doing this way instead of perma_mutate() to use custom messaging.
-    if (you.species == SP_LIGNIFITE)
+    if (you.species == SP_LIGNIFITE && !(xp_level % 5))
     {
-        if (xp_level == 7)
-            you.mutation[MUT_FAST] = you.innate_mutation[MUT_FAST] = 1;
-        if (xp_level == 13)
-            you.mutation[MUT_FAST] = you.innate_mutation[MUT_FAST] = 0;
-        if (xp_level == 19)
-            you.mutation[MUT_SLOW] = you.innate_mutation[MUT_SLOW] = 1;
-        if (xp_level == 25)
-            you.mutation[MUT_SLOW] = you.innate_mutation[MUT_SLOW] = 2;
+        int fast = 3 - xp_level / 5;
+
+        if (you.char_class == JOB_NAGA)
+            fast--;
+
+        else if (you.char_class == JOB_CENTAUR)
+            fast++;
+
+        fast = max(min(fast, 3), -3);
+
+        int slow = 0 - fast;
+
+        fast = max(min(fast, 3), 0);
+        slow = max(min(slow, 3), 0);
+        
+        you.mutation[MUT_FAST] = you.innate_mutation[MUT_FAST] = fast;
+        you.mutation[MUT_SLOW] = you.innate_mutation[MUT_SLOW] = slow;
     }
 
     // Right now this only happens to lignifites; but leave it open to possibly happen to
@@ -365,21 +651,39 @@ void give_level_mutations(species_type species, int xp_level)
 
 int species_exp_modifier(species_type species)
 {
-    return get_species_def(species).xp_mod;
+    int mod = get_species_def(species).xp_mod;
+    if (you.char_class == JOB_CENTAUR || you.char_class == JOB_DEMIGOD)
+        mod--;
+    return mod;
 }
 
+// This is only called to populate the aptitude information text and to access
+// your current character's stats, so the use of you is fine.
 int species_hp_modifier(species_type species)
 {
-    if (you.char_class == JOB_DEMIGOD)
-        return get_species_def(species).hp_mod + 1;
+    int mod = 0;
+
+    if (you.char_class == JOB_VINE_STALKER)
+        mod = -3;
+    if (you.char_class == JOB_MERFOLK)
+        mod = -1;
+    if (you.char_class == JOB_DEMIGOD || you.char_class == JOB_CENTAUR)
+        mod = 1;
+    if (you.char_class == JOB_NAGA)
+        mod = 2;
+
     if (you.species == SP_LIGNIFITE)
-        return (-2 + div_round_up(you.experience_level - 1, 6));
-    return get_species_def(species).hp_mod;
+        return (-2 + mod + div_round_up(you.experience_level, 5));
+
+    return max(get_species_def(species).hp_mod + mod, -6); // -6 min.
 }
 
 int species_mp_modifier(species_type species)
 {
-    return get_species_def(species).mp_mod;
+    int mod = 0;
+    if (you.char_class == JOB_VINE_STALKER)
+        mod = 2;
+    return get_species_def(species).mp_mod + mod;
 }
 
 int species_mr_modifier(species_type species)
@@ -412,7 +716,10 @@ void species_stat_gain(species_type species)
     if (you.char_class == JOB_MUMMY)
     {
         if (you.experience_level % (sd.how_often + 1) == 0)
+        {
             modify_stat(*random_iterator(sd.level_stats), 1, false);
+            modify_stat(STAT_INT, 1, false);
+        }
     }
     else if (sd.level_stats.size() > 0 && you.experience_level % sd.how_often == 0)
         modify_stat(*random_iterator(sd.level_stats), 1, false);
@@ -435,7 +742,7 @@ species_type find_species_from_string(const string &species, bool initial_only)
     for (int i = 0; i < NUM_SPECIES; ++i)
     {
         const species_type si = static_cast<species_type>(i);
-        const string sp_name = lowercase_string(species_name(si));
+        const string sp_name = lowercase_string(species_name(si, SPNAME_PLAIN, false));
 
         string::size_type pos = sp_name.find(spec);
         if (pos != string::npos)
@@ -506,20 +813,8 @@ void change_species_to(species_type sp)
             you.innate_mutation[i] -= prev_muts[i];
     }
 
-    if (sp == SP_DEMONSPAWN || you.char_class == JOB_DEMONSPAWN)
-    {
-        roll_demonspawn_mutations();
-        for (int i = 0; i < int(you.demonic_traits.size()); ++i)
-        {
-            mutation_type m = you.demonic_traits[i].mutation;
-
-            if (you.demonic_traits[i].level_gained > you.experience_level)
-                continue;
-
-            ++you.mutation[m];
-            ++you.innate_mutation[m];
-        }
-    }
+    if (species_is_draconian(sp))
+        draconian_setup();
 
     update_vision_range(); // for Ba, and for DS with Nightstalker
 
@@ -556,16 +851,14 @@ void change_species_to(species_type sp)
     init_player_doll();
 #endif
     redraw_screen();
+    update_screen();
 }
 
 // A random valid (selectable on the new game screen) species.
 species_type random_starting_species()
 {
-  species_type species;
-  do {
-      species = static_cast<species_type>(random_range(0, NUM_SPECIES - 1));
-  } while (!is_starting_species(species));
-  return species;
+    const auto species = playable_species();
+    return species[random2(species.size())];
 }
 
 // Ensure the species isn't SP_RANDOM/SP_VIABLE and it has recommended jobs
@@ -576,24 +869,20 @@ bool is_starting_species(species_type species)
         && !get_species_def(species).recommended_jobs.empty();
 }
 
-// Check that we can give this draconian species to players as a color.
-static bool _is_viable_draconian(species_type species)
+// A random non-base draconian colour appropriate for the player.
+draconian_colour random_draconian_colour()
 {
-#if TAG_MAJOR_VERSION == 34
-    if (species == SP_MOTTLED_DRACONIAN)
-        return false;
-#endif
-    return true;
+    if (you.char_class == JOB_MUMMY || one_chance_in(50))
+        return random_choose(DR_BLACK, DR_OLIVE, DR_BONE, DR_TEAL);
+    if (you.char_class == JOB_DEMIGOD && !one_chance_in(30))
+        return random_choose(DR_GOLDEN, DR_PEARL, DR_BLOOD, DR_PLATINUM);
+    return random_choose(DR_RED, DR_WHITE, DR_BLUE, DR_CYAN, DR_SILVER, 
+        DR_GREEN, DR_PINK, DR_PURPLE, DR_LIME, DR_MAGENTA, DR_BLACK, DR_SCINTILLATING);
 }
 
-// A random non-base draconian colour appropriate for the player.
-species_type random_draconian_colour()
+bool species_is_removed(species_type species)
 {
-  species_type species;
-  do {
-      species =
-          static_cast<species_type>(random_range(SP_FIRST_NONBASE_DRACONIAN,
-                                                 SP_LAST_NONBASE_DRACONIAN));
-  } while (!_is_viable_draconian(species));
-  return species;
+    if (get_species_def(species).recommended_jobs.empty())
+        return true;
+    return false;
 }

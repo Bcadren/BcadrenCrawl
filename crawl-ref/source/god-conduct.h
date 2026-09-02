@@ -15,6 +15,7 @@ struct god_conduct_trigger
     int pgain;
     bool known;
     unique_ptr<monster> victim;
+    bool did_sanctuary;
 
     god_conduct_trigger(conduct_type c = NUM_CONDUCTS,
                         int pg = 0,
@@ -33,7 +34,7 @@ void did_kill_conduct(conduct_type thing_done, const monster &victim);
 void did_god_conduct(conduct_type thing_done, int level, bool known = true,
                      const monster* victim = nullptr);
 void set_attack_conducts(god_conduct_trigger conduct[3], const monster &mon,
-                         bool known = true);
+                         bool known = true, bool good = false);
 void did_hurt_conduct(conduct_type thing_done, const monster &victim, int damage_done);
 
 void god_conduct_turn_start();

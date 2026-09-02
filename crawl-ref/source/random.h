@@ -5,6 +5,8 @@
 #include <map>
 #include <vector>
 
+#include "debug.h"
+#include "fixedvector.h"
 #include "hash.h"
 #include "rng-type.h"
 #include "pcg.h"
@@ -194,7 +196,7 @@ int random_choose_weighted(const FixedVector<T, SIZE>& choices)
 }
 
 template <typename T>
-T random_choose_weighted(int cweight, T curr)
+T random_choose_weighted(int, T curr)
 {
     return curr;
 }
@@ -216,11 +218,12 @@ struct dice_def
     constexpr dice_def() : num(0), size(0) {}
     constexpr dice_def(int n, int s) : num(n), size(s) {}
     int roll() const;
+    int max() const;
 };
 
 constexpr dice_def CONVENIENT_NONZERO_DAMAGE{42, 1};
 
-dice_def calc_dice(int num_dice, int max_damage);
+dice_def calc_dice(int num_dice, int max_damage, bool random = true);
 
 // I must be a random-access iterator.
 template <typename I>

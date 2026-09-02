@@ -637,7 +637,7 @@ private:
     item_spec pick_item(item_spec_slot &slot);
     bool parse_corpse_spec(item_spec &result, string s);
     bool monster_corpse_is_valid(monster_type *, const string &name,
-                                 bool corpse, bool skeleton, bool chunk);
+                                 bool skeleton);
 
 private:
     vector<item_spec_slot> items;
@@ -672,6 +672,7 @@ public:
     string non_actor_summoner;
 
     bool explicit_spells;
+    bool additional_spells;
     vector<monster_spells> spells;
     monster_flags_t extra_monster_flags;
     vector<mon_enchant> ench;
@@ -687,8 +688,8 @@ public:
           generate_awake(false), patrolling(false), band(false),
           colour(COLOUR_INHERIT), god(GOD_NO_GOD), god_gift(false), hd(0),
           hp(0), abjuration_duration(0), summon_type(0), items(), monname(""),
-          non_actor_summoner(""), explicit_spells(false), spells(),
-          extra_monster_flags(), initial_shifter(RANDOM_MONSTER), props()
+          non_actor_summoner(""), explicit_spells(false), additional_spells(false), 
+          spells(), extra_monster_flags(), initial_shifter(RANDOM_MONSTER), props()
     {
     }
 };
@@ -1187,6 +1188,7 @@ public:
     string describe() const;
     void init();
     void reinit();
+    void reload_epilogue();
 
     void load();
     void strip();
@@ -1208,7 +1210,7 @@ public:
     void write_maplines(writer &) const;
 
     void read_index(reader&);
-    void read_full(reader&, bool check_cache_version);
+    void read_full(reader&);
     void read_maplines(reader&);
 
     void set_file(const string &s);
@@ -1236,7 +1238,7 @@ public:
 
     void hmirror();
     void vmirror();
-    void rotate(bool clockwise);
+    bool rotate(bool clockwise);
     void normalise();
     string resolve();
     void fixup();
@@ -1269,7 +1271,7 @@ public:
     template <typename TagIterator>
     bool has_all_tags(TagIterator begin, TagIterator end) const
     {
-        if (tags.empty() || begin == end) // legacy behavior for empty case
+        if (tags.empty() || begin == end) // legacy behaviour for empty case
             return false;
         for ( ; begin != end; ++begin)
             if (!has_tag(*begin))

@@ -12,18 +12,23 @@
 #include "domino-data.h"
 #include "dungeon.h"
 #include "env.h"
+#include "tile-env.h"
 #include "fprop.h"
 #include "items.h"
 #include "kills.h"
+#include "level-state-type.h"
 #include "mon-util.h"
 #include "options.h"
 #include "pcg.h"
 #include "player.h"
+#include "religion.h"
+#include "season.h"
 #include "state.h"
+#include "tag-version.h"
 #include "terrain.h"
 #include "tile-flags.h"
-#include "tiledef-dngn.h"
-#include "tiledef-player.h"
+#include "rltiles/tiledef-dngn.h"
+#include "rltiles/tiledef-player.h"
 #include "tilemcache.h"
 #include "tilepick.h"
 #include "tiles-build-specific.h"
@@ -42,9 +47,9 @@ void tile_new_level(bool first_time, bool init_unseen)
         for (unsigned int x = 0; x < GXM; x++)
             for (unsigned int y = 0; y < GYM; y++)
             {
-                env.tile_bk_fg[x][y] = 0;
-                env.tile_bk_bg[x][y] = TILE_DNGN_UNSEEN;
-                env.tile_bk_cloud[x][y] = 0;
+                tile_env.bk_fg[x][y] = 0;
+                tile_env.bk_bg[x][y] = TILE_DNGN_UNSEEN;
+                tile_env.bk_cloud[x][y] = 0;
             }
     }
 
@@ -54,15 +59,15 @@ void tile_new_level(bool first_time, bool init_unseen)
     for (unsigned int x = 0; x < GXM; x++)
         for (unsigned int y = 0; y < GYM; y++)
         {
-            unsigned int tile = env.tile_bk_bg[x][y];
+            unsigned int tile = tile_env.bk_bg[x][y];
             if ((tile & TILE_FLAG_NEW_STAIR)
                 && !is_unknown_stair(coord_def(x,y)))
             {
-                env.tile_bk_bg[x][y] &= ~TILE_FLAG_NEW_STAIR;
+                tile_env.bk_bg[x][y] &= ~TILE_FLAG_NEW_STAIR;
             }
             else if ((tile & TILE_FLAG_NEW_TRANSPORTER)
                      && !is_unknown_transporter(coord_def(x,y)))
-                env.tile_bk_bg[x][y] &= ~TILE_FLAG_NEW_TRANSPORTER;
+                tile_env.bk_bg[x][y] &= ~TILE_FLAG_NEW_TRANSPORTER;
         }
 
     tiles.clear_minimap();
@@ -70,15 +75,17 @@ void tile_new_level(bool first_time, bool init_unseen)
     for (unsigned int x = 0; x < GXM; x++)
         for (unsigned int y = 0; y < GYM; y++)
             tiles.update_minimap(coord_def(x, y));
+#else
+    UNUSED(init_unseen);
 #endif
 }
 
 void tile_init_default_flavour()
 {
-    tile_default_flv(you.where_are_you, you.depth, env.tile_default);
+    tile_default_flv(you.where_are_you, tile_env.default_flavour);
 }
 
-void tile_default_flv(branch_type br, int depth, tile_flavour &flv)
+void tile_default_flv(branch_type br, tile_flavour &flv)
 {
     flv.wall    = TILE_WALL_NORMAL;
     flv.floor   = TILE_FLOOR_NORMAL;
@@ -90,6 +97,12 @@ void tile_default_flv(branch_type br, int depth, tile_flavour &flv)
     switch (br)
     {
     case BRANCH_DUNGEON:
+        if (you.depth == 2)
+        {
+            flv.wall  = TILE_WALL_PEBBLE_CYAN;
+            flv.floor = TILE_FLOOR_ROUGH_GREEN;
+            return;
+        }
         flv.wall  = TILE_WALL_NORMAL;
         flv.floor = TILE_FLOOR_NORMAL;
         return;
@@ -171,8 +184,16 @@ void tile_default_flv(branch_type br, int depth, tile_flavour &flv)
         return;
 
     case BRANCH_SLIME:
-        flv.wall  = TILE_WALL_SLIME;
-        flv.floor = TILE_FLOOR_SLIME;
+        if (jiyva_is_dead())
+        {
+            flv.wall = TILE_WALL_RUINED_SLIME;
+            flv.floor = TILE_FLOOR_RUINED_SLIME;
+        }
+        else
+        {
+            flv.wall = TILE_WALL_SLIME;
+            flv.floor = TILE_FLOOR_SLIME;
+        }
         return;
 
     case BRANCH_SNAKE:
@@ -299,13 +320,13 @@ void tile_default_flv(branch_type br, int depth, tile_flavour &flv)
 
 void tile_clear_flavour(const coord_def &p)
 {
-    env.tile_flv(p).floor     = 0;
-    env.tile_flv(p).wall      = 0;
-    env.tile_flv(p).feat      = 0;
-    env.tile_flv(p).floor_idx = 0;
-    env.tile_flv(p).wall_idx  = 0;
-    env.tile_flv(p).feat_idx  = 0;
-    env.tile_flv(p).special   = 0;
+    tile_env.flv(p).floor     = 0;
+    tile_env.flv(p).wall      = 0;
+    tile_env.flv(p).feat      = 0;
+    tile_env.flv(p).floor_idx = 0;
+    tile_env.flv(p).wall_idx  = 0;
+    tile_env.flv(p).feat_idx  = 0;
+    tile_env.flv(p).special   = 0;
 }
 
 void tile_clear_flavour()
@@ -469,7 +490,7 @@ static tileidx_t _pick_dngn_tile_multi(vector<tileidx_t> candidates, int value)
 
 static bool _same_door_at(dungeon_feature_type feat, const coord_def &gc)
 {
-    const dungeon_feature_type door = grd(gc);
+    const dungeon_feature_type door = env.grid(gc);
 
     return door == feat
 #if TAG_MAJOR_VERSION == 34
@@ -491,67 +512,67 @@ void tile_init_flavour(const coord_def &gc, const int domino)
     int rand1 = hash_with_seed(INT_MAX, seed, 0);
     int rand2 = hash_with_seed(INT_MAX, seed, 1);
 
-    if (!env.tile_flv(gc).floor)
+    if (!tile_env.flv(gc).floor)
     {
-        tileidx_t floor_base = env.tile_default.floor;
+        tileidx_t floor_base = tile_env.default_flavour.floor;
         int colour = env.grid_colours(gc);
         if (colour)
             floor_base = tile_dngn_coloured(floor_base, colour);
-        env.tile_flv(gc).floor = pick_dngn_tile(floor_base, rand1, domino);
+        tile_env.flv(gc).floor = pick_dngn_tile(floor_base, rand1, domino);
     }
-    else if (env.tile_flv(gc).floor != TILE_HALO_GRASS
-             && env.tile_flv(gc).floor != TILE_HALO_GRASS2
-             && env.tile_flv(gc).floor != TILE_HALO_VAULT
-             && env.tile_flv(gc).floor != TILE_HALO_DIRT)
+    else if (tile_env.flv(gc).floor != TILE_HALO_GRASS
+             && tile_env.flv(gc).floor != TILE_HALO_GRASS2
+             && tile_env.flv(gc).floor != TILE_HALO_VAULT
+             && tile_env.flv(gc).floor != TILE_HALO_DIRT)
     {
-        env.tile_flv(gc).floor = pick_dngn_tile(env.tile_flv(gc).floor, rand1);
+        tile_env.flv(gc).floor = pick_dngn_tile(tile_env.flv(gc).floor, rand1);
     }
 
-    if (!env.tile_flv(gc).wall)
+    if (!tile_env.flv(gc).wall)
     {
         if ((player_in_branch(BRANCH_DUNGEON) || player_in_branch(BRANCH_DEPTHS))
-            && env.tile_default.wall == TILE_WALL_NORMAL)
+            && tile_env.default_flavour.wall == TILE_WALL_NORMAL)
         {
             vector<tileidx_t> tile_candidates;
             if (player_in_branch(BRANCH_DEPTHS))
                 _get_depths_wall_tiles_by_depth(you.depth, tile_candidates);
             else
                 _get_dungeon_wall_tiles_by_depth(you.depth, tile_candidates);
-            env.tile_flv(gc).wall = _pick_dngn_tile_multi(tile_candidates, rand2);
+            tile_env.flv(gc).wall = _pick_dngn_tile_multi(tile_candidates, rand2);
         }
         else
         {
-            tileidx_t wall_base = env.tile_default.wall;
+            tileidx_t wall_base = tile_env.default_flavour.wall;
             int colour = env.grid_colours(gc);
             if (colour)
                 wall_base = tile_dngn_coloured(wall_base, colour);
-            env.tile_flv(gc).wall = pick_dngn_tile(wall_base, rand2);
+            tile_env.flv(gc).wall = pick_dngn_tile(wall_base, rand2);
         }
     }
     else
-        env.tile_flv(gc).wall = pick_dngn_tile(env.tile_flv(gc).wall, rand2);
+        tile_env.flv(gc).wall = pick_dngn_tile(tile_env.flv(gc).wall, rand2);
 
-    if (feat_is_stone_stair(grd(gc)) && player_in_branch(BRANCH_SHOALS))
+    if (feat_is_stone_stair(env.grid(gc)) && player_in_branch(BRANCH_SHOALS))
     {
-        const bool up = feat_stair_direction(grd(gc)) == CMD_GO_UPSTAIRS;
-        env.tile_flv(gc).feat = up ? TILE_DNGN_SHOALS_STAIRS_UP
+        const bool up = feat_stair_direction(env.grid(gc)) == CMD_GO_UPSTAIRS;
+        tile_env.flv(gc).feat = up ? TILE_DNGN_SHOALS_STAIRS_UP
                                    : TILE_DNGN_SHOALS_STAIRS_DOWN;
     }
 
-    if (feat_is_escape_hatch(grd(gc)) && player_in_branch(BRANCH_TOMB))
+    if (feat_is_escape_hatch(env.grid(gc)) && player_in_branch(BRANCH_TOMB))
     {
-        const bool up = feat_stair_direction(grd(gc)) == CMD_GO_UPSTAIRS;
-        env.tile_flv(gc).feat = up ? TILE_DNGN_ONE_WAY_STAIRS_UP
+        const bool up = feat_stair_direction(env.grid(gc)) == CMD_GO_UPSTAIRS;
+        tile_env.flv(gc).feat = up ? TILE_DNGN_ONE_WAY_STAIRS_UP
                                    : TILE_DNGN_ONE_WAY_STAIRS_DOWN;
     }
 
-    if (feat_is_door(grd(gc)))
+    if (feat_is_door(env.grid(gc)))
     {
         // Check for gates.
-        bool door_left  = _same_door_at(grd(gc), coord_def(gc.x - 1, gc.y));
-        bool door_right = _same_door_at(grd(gc), coord_def(gc.x + 1, gc.y));
-        bool door_up    = _same_door_at(grd(gc), coord_def(gc.x, gc.y - 1));
-        bool door_down  = _same_door_at(grd(gc), coord_def(gc.x, gc.y + 1));
+        bool door_left  = _same_door_at(env.grid(gc), coord_def(gc.x - 1, gc.y));
+        bool door_right = _same_door_at(env.grid(gc), coord_def(gc.x + 1, gc.y));
+        bool door_up    = _same_door_at(env.grid(gc), coord_def(gc.x, gc.y - 1));
+        bool door_down  = _same_door_at(env.grid(gc), coord_def(gc.x, gc.y + 1));
 
         if (door_left || door_right || door_up || door_down)
         {
@@ -572,13 +593,13 @@ void tile_init_flavour(const coord_def &gc, const int domino)
             // NOTE: This requires that closed gates and open gates
             // are positioned in the tile set relative to their
             // door counterpart.
-            env.tile_flv(gc).special = target - TILE_DNGN_CLOSED_DOOR;
+            tile_env.flv(gc).special = target - TILE_DNGN_CLOSED_DOOR;
         }
         else
-            env.tile_flv(gc).special = 0;
+            tile_env.flv(gc).special = 0;
     }
-    else if (!env.tile_flv(gc).special)
-        env.tile_flv(gc).special = hash_with_seed(256, seed, 10);
+    else if (!tile_env.flv(gc).special)
+        tile_env.flv(gc).special = hash_with_seed(256, seed, 10);
 }
 
 enum SpecialIdx
@@ -605,7 +626,7 @@ static bool _adjacent_target(dungeon_feature_type target, int x, int y)
     {
         if (!map_bounds(*ai))
             continue;
-        if (grd(*ai) == target)
+        if (env.grid(*ai) == target)
             return true;
     }
 
@@ -618,15 +639,15 @@ void tile_floor_halo(dungeon_feature_type target, tileidx_t tile)
     {
         for (int y = 0; y < GYM; y++)
         {
-            if (!feat_has_dry_floor(grd[x][y]))
+            if (!feat_has_dry_floor(env.grid[x][y]))
                 continue;
             if (!_adjacent_target(target, x, y))
                 continue;
 
-            bool l_flr = (x > 0 && feat_has_dry_floor(grd[x-1][y]));
-            bool r_flr = (x < GXM - 1 && feat_has_dry_floor(grd[x+1][y]));
-            bool u_flr = (y > 0 && feat_has_dry_floor(grd[x][y-1]));
-            bool d_flr = (y < GYM - 1 && feat_has_dry_floor(grd[x][y+1]));
+            bool l_flr = (x > 0 && feat_has_dry_floor(env.grid[x-1][y]));
+            bool r_flr = (x < GXM - 1 && feat_has_dry_floor(env.grid[x+1][y]));
+            bool u_flr = (y > 0 && feat_has_dry_floor(env.grid[x][y-1]));
+            bool d_flr = (y < GYM - 1 && feat_has_dry_floor(env.grid[x][y+1]));
 
             bool l_target = _adjacent_target(target, x-1, y);
             bool r_target = _adjacent_target(target, x+1, y);
@@ -651,130 +672,130 @@ void tile_floor_halo(dungeon_feature_type target, tileidx_t tile)
             if (l_nrm && r_nrm || u_nrm && d_nrm)
             {
                 // Not much to do here...
-                env.tile_flv[x][y].floor = tile + SPECIAL_FULL;
+                tile_env.flv[x][y].floor = tile + SPECIAL_FULL;
             }
             else if (l_nrm)
             {
                 if (u_nrm)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_NW;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_NW;
                 else if (d_nrm)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_SW;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_SW;
                 else if (u_spc && d_spc)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_W;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_W;
                 else if (u_spc && r_spc)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_SW;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_SW;
                 else if (d_spc && r_spc)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_NW;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_NW;
                 else if (u_spc)
                 {
-                    env.tile_flv[x][y].floor = tile + (coinflip() ?
+                    tile_env.flv[x][y].floor = tile + (coinflip() ?
                         SPECIAL_W : SPECIAL_SW);
                 }
                 else if (d_spc)
                 {
-                    env.tile_flv[x][y].floor = tile + (coinflip() ?
+                    tile_env.flv[x][y].floor = tile + (coinflip() ?
                         SPECIAL_W : SPECIAL_NW);
                 }
                 else
-                    env.tile_flv[x][y].floor = tile + _jitter(SPECIAL_W);
+                    tile_env.flv[x][y].floor = tile + _jitter(SPECIAL_W);
             }
             else if (r_nrm)
             {
                 if (u_nrm)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_NE;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_NE;
                 else if (d_nrm)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_SE;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_SE;
                 else if (u_spc && d_spc)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_E;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_E;
                 else if (u_spc && l_spc)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_SE;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_SE;
                 else if (d_spc && l_spc)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_NE;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_NE;
                 else if (u_spc)
-                    env.tile_flv[x][y].floor = tile + (coinflip() ?
+                    tile_env.flv[x][y].floor = tile + (coinflip() ?
                         SPECIAL_E : SPECIAL_SE);
                 else if (d_spc)
-                    env.tile_flv[x][y].floor = tile + (coinflip() ?
+                    tile_env.flv[x][y].floor = tile + (coinflip() ?
                         SPECIAL_E : SPECIAL_NE);
                 else
-                    env.tile_flv[x][y].floor = tile + _jitter(SPECIAL_E);
+                    tile_env.flv[x][y].floor = tile + _jitter(SPECIAL_E);
             }
             else if (u_nrm)
             {
                 if (r_spc && l_spc)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_N;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_N;
                 else if (r_spc && d_spc)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_NW;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_NW;
                 else if (l_spc && d_spc)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_NE;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_NE;
                 else if (r_spc)
                 {
-                    env.tile_flv[x][y].floor = tile + (coinflip() ?
+                    tile_env.flv[x][y].floor = tile + (coinflip() ?
                         SPECIAL_N : SPECIAL_NW);
                 }
                 else if (l_spc)
                 {
-                    env.tile_flv[x][y].floor = tile + (coinflip() ?
+                    tile_env.flv[x][y].floor = tile + (coinflip() ?
                         SPECIAL_N : SPECIAL_NE);
                 }
                 else
-                    env.tile_flv[x][y].floor = tile + _jitter(SPECIAL_N);
+                    tile_env.flv[x][y].floor = tile + _jitter(SPECIAL_N);
             }
             else if (d_nrm)
             {
                 if (r_spc && l_spc)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_S;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_S;
                 else if (r_spc && u_spc)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_SW;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_SW;
                 else if (l_spc && u_spc)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_SE;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_SE;
                 else if (r_spc)
                 {
-                    env.tile_flv[x][y].floor = tile + (coinflip() ?
+                    tile_env.flv[x][y].floor = tile + (coinflip() ?
                         SPECIAL_S : SPECIAL_SW);
                 }
                 else if (l_spc)
                 {
-                    env.tile_flv[x][y].floor = tile + (coinflip() ?
+                    tile_env.flv[x][y].floor = tile + (coinflip() ?
                         SPECIAL_S : SPECIAL_SE);
                 }
                 else
-                    env.tile_flv[x][y].floor = tile + _jitter(SPECIAL_S);
+                    tile_env.flv[x][y].floor = tile + _jitter(SPECIAL_S);
             }
             else if (u_spc && d_spc)
             {
                 // We know this value is already initialised and
                 // is necessarily in bounds.
-                tileidx_t t = env.tile_flv[x][y-1].floor - tile;
+                tileidx_t t = tile_env.flv[x][y-1].floor - tile;
                 if (t == SPECIAL_NE || t == SPECIAL_E)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_E;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_E;
                 else if (t == SPECIAL_NW || t == SPECIAL_W)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_W;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_W;
                 else
-                    env.tile_flv[x][y].floor = tile + SPECIAL_FULL;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_FULL;
             }
             else if (r_spc && l_spc)
             {
                 // We know this value is already initialised and
                 // is necessarily in bounds.
-                tileidx_t t = env.tile_flv[x-1][y].floor - tile;
+                tileidx_t t = tile_env.flv[x-1][y].floor - tile;
                 if (t == SPECIAL_NW || t == SPECIAL_N)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_N;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_N;
                 else if (t == SPECIAL_SW || t == SPECIAL_S)
-                    env.tile_flv[x][y].floor = tile + SPECIAL_S;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_S;
                 else
-                    env.tile_flv[x][y].floor = tile + SPECIAL_FULL;
+                    tile_env.flv[x][y].floor = tile + SPECIAL_FULL;
             }
             else if (u_spc && l_spc)
-                env.tile_flv[x][y].floor = tile + SPECIAL_SE;
+                tile_env.flv[x][y].floor = tile + SPECIAL_SE;
             else if (u_spc && r_spc)
-                env.tile_flv[x][y].floor = tile + SPECIAL_SW;
+                tile_env.flv[x][y].floor = tile + SPECIAL_SW;
             else if (d_spc && l_spc)
-                env.tile_flv[x][y].floor = tile + SPECIAL_NE;
+                tile_env.flv[x][y].floor = tile + SPECIAL_NE;
             else if (d_spc && r_spc)
-                env.tile_flv[x][y].floor = tile + SPECIAL_NW;
+                tile_env.flv[x][y].floor = tile + SPECIAL_NW;
             else
-                env.tile_flv[x][y].floor = tile + SPECIAL_FULL;
+                tile_env.flv[x][y].floor = tile + SPECIAL_FULL;
         }
     }
 
@@ -798,7 +819,7 @@ void tile_floor_halo(dungeon_feature_type target, tileidx_t tile)
     for (int y = 0; y < GYM - 1; ++y)
         for (int x = 0; x < GXM - 1; ++x)
         {
-            int this_spc = env.tile_flv[x][y].floor - tile;
+            int this_spc = tile_env.flv[x][y].floor - tile;
             if (this_spc < 0 || this_spc > 8)
                 continue;
 
@@ -809,35 +830,56 @@ void tile_floor_halo(dungeon_feature_type target, tileidx_t tile)
             }
 
             // TODO: these conditions are guaranteed?
-            int right_spc = x < GXM - 1 ? env.tile_flv[x+1][y].floor - tile
-                                        : SPECIAL_FULL;
-            int down_spc  = y < GYM - 1 ? env.tile_flv[x][y+1].floor - tile
-                                        : SPECIAL_FULL;
+            int right_spc = x < GXM - 1 ? tile_env.flv[x+1][y].floor - tile
+                                        : int{SPECIAL_FULL};
+            int down_spc  = y < GYM - 1 ? tile_env.flv[x][y+1].floor - tile
+                                        : int{SPECIAL_FULL};
 
             if (this_spc == SPECIAL_N && right_spc == SPECIAL_S)
             {
-                env.tile_flv[x][y].floor = tile + SPECIAL_NE;
-                env.tile_flv[x+1][y].floor = tile + SPECIAL_SW;
+                tile_env.flv[x][y].floor = tile + SPECIAL_NE;
+                tile_env.flv[x+1][y].floor = tile + SPECIAL_SW;
             }
             else if (this_spc == SPECIAL_S && right_spc == SPECIAL_N)
             {
-                env.tile_flv[x][y].floor = tile + SPECIAL_SE;
-                env.tile_flv[x+1][y].floor = tile + SPECIAL_NW;
+                tile_env.flv[x][y].floor = tile + SPECIAL_SE;
+                tile_env.flv[x+1][y].floor = tile + SPECIAL_NW;
             }
             else if (this_spc == SPECIAL_E && down_spc == SPECIAL_W)
             {
-                env.tile_flv[x][y].floor = tile + SPECIAL_SE;
-                env.tile_flv[x][y+1].floor = tile + SPECIAL_NW;
+                tile_env.flv[x][y].floor = tile + SPECIAL_SE;
+                tile_env.flv[x][y+1].floor = tile + SPECIAL_NW;
             }
             else if (this_spc == SPECIAL_W && down_spc == SPECIAL_E)
             {
-                env.tile_flv[x][y].floor = tile + SPECIAL_NE;
-                env.tile_flv[x][y+1].floor = tile + SPECIAL_SW;
+                tile_env.flv[x][y].floor = tile + SPECIAL_NE;
+                tile_env.flv[x][y+1].floor = tile + SPECIAL_SW;
             }
         }
 }
 
 #ifdef USE_TILE
+
+void tile_draw_map_cells()
+{
+    if (crawl_state.game_is_arena())
+        for (rectangle_iterator ri(crawl_view.vgrdc, LOS_MAX_RANGE); ri; ++ri)
+        {
+            tile_draw_map_cell(*ri, true);
+#ifdef USE_TILE_WEB
+            tiles.mark_for_redraw(*ri);
+#endif
+        }
+    else
+        for (radius_iterator ri(you.pos(), LOS_NONE); ri; ++ri)
+        {
+            tile_draw_map_cell(*ri, true);
+#ifdef USE_TILE_WEB
+            tiles.mark_for_redraw(*ri);
+#endif
+        }
+}
+
 static tileidx_t _get_floor_bg(const coord_def& gc)
 {
     tileidx_t bg = TILE_DNGN_UNSEEN | tileidx_unseen_flag(gc);
@@ -862,8 +904,8 @@ static tileidx_t _get_floor_bg(const coord_def& gc)
 
 void tile_draw_floor()
 {
-    for (int cy = 0; cy < env.tile_fg.height(); cy++)
-        for (int cx = 0; cx < env.tile_fg.width(); cx++)
+    for (int cy = 0; cy < tile_env.fg.height(); cy++)
+        for (int cx = 0; cx < tile_env.fg.width(); cx++)
         {
             const coord_def ep(cx, cy);
             const coord_def gc = show2grid(ep);
@@ -871,24 +913,24 @@ void tile_draw_floor()
             tileidx_t bg = _get_floor_bg(gc);
 
             // init tiles
-            env.tile_bg(ep) = bg;
-            env.tile_fg(ep) = 0;
-            env.tile_cloud(ep) = 0;
+            tile_env.bg(ep) = bg;
+            tile_env.fg(ep) = 0;
+            tile_env.cloud(ep) = 0;
         }
 }
 
 void tile_clear_map(const coord_def& gc)
 {
-    env.tile_bk_fg(gc) = 0;
-    env.tile_bk_cloud(gc) = 0;
+    tile_env.bk_fg(gc) = 0;
+    tile_env.bk_cloud(gc) = 0;
     tiles.update_minimap(gc);
 }
 
 void tile_forget_map(const coord_def &gc)
 {
-    env.tile_bk_fg(gc) = 0;
-    env.tile_bk_bg(gc) = 0;
-    env.tile_bk_cloud(gc) = 0;
+    tile_env.bk_fg(gc) = 0;
+    tile_env.bk_bg(gc) = 0;
+    tile_env.bk_cloud(gc) = 0;
     // This may have changed the explore horizon, so update adjacent minimap
     // squares as well.
     for (adjacent_iterator ai(gc, false); ai; ++ai)
@@ -905,20 +947,20 @@ static void _tile_place_item(const coord_def &gc, const item_info &item,
     if (you.see_cell(gc))
     {
         const coord_def ep = crawl_view.grid2show(gc);
-        if (env.tile_fg(ep))
+        if (tile_env.fg(ep))
             return;
 
-        env.tile_fg(ep) = t;
+        tile_env.fg(ep) = t;
 
         if (item_needs_autopickup(item))
-            env.tile_bg(ep) |= TILE_FLAG_CURSOR3;
+            tile_env.bg(ep) |= TILE_FLAG_CURSOR3;
     }
     else
     {
-        env.tile_bk_fg(gc) = t;
+        tile_env.bk_fg(gc) = t;
 
         if (item_needs_autopickup(item))
-            env.tile_bk_bg(gc) |= TILE_FLAG_CURSOR3;
+            tile_env.bk_bg(gc) |= TILE_FLAG_CURSOR3;
     }
 }
 
@@ -927,17 +969,17 @@ static void _tile_place_item_marker(const coord_def &gc, const item_def &item)
     if (you.see_cell(gc))
     {
         const coord_def ep = crawl_view.grid2show(gc);
-        env.tile_fg(ep) |= TILE_FLAG_S_UNDER;
+        tile_env.fg(ep) |= TILE_FLAG_S_UNDER;
 
         if (item_needs_autopickup(item))
-            env.tile_bg(ep) |= TILE_FLAG_CURSOR3;
+            tile_env.bg(ep) |= TILE_FLAG_CURSOR3;
     }
     else
     {
-        env.tile_bk_fg(gc) = ((tileidx_t) env.tile_bk_fg(gc)) | TILE_FLAG_S_UNDER;
+        tile_env.bk_fg(gc) = ((tileidx_t) tile_env.bk_fg(gc)) | TILE_FLAG_S_UNDER;
 
         if (item_needs_autopickup(item))
-            env.tile_bk_bg(gc) |= TILE_FLAG_CURSOR3;
+            tile_env.bk_bg(gc) |= TILE_FLAG_CURSOR3;
     }
 }
 
@@ -957,9 +999,9 @@ static void _tile_place_invisible_monster(const coord_def &gc)
     if (cell.feat() != DNGN_SHALLOW_WATER || cell.cloud() != CLOUD_NONE)
     {
         if (you.see_cell(gc))
-            env.tile_fg(ep) = TILE_UNSEEN_MONSTER;
+            tile_env.fg(ep) = TILE_UNSEEN_MONSTER;
         else
-            env.tile_bk_fg(gc) = TILE_UNSEEN_MONSTER;
+            tile_env.bk_fg(gc) = TILE_UNSEEN_MONSTER;
     }
 
     if (env.map_knowledge(gc).item())
@@ -985,9 +1027,9 @@ static void _tile_place_monster(const coord_def &gc, const monster_info& mon)
             if (item_needs_autopickup(*env.map_knowledge(gc).item()))
             {
                 if (you.see_cell(gc))
-                    env.tile_bg(ep) |= TILE_FLAG_CURSOR3;
+                    tile_env.bg(ep) |= TILE_FLAG_CURSOR3;
                 else
-                    env.tile_bk_bg(gc) |= TILE_FLAG_CURSOR3;
+                    tile_env.bk_bg(gc) |= TILE_FLAG_CURSOR3;
             }
         }
     }
@@ -999,10 +1041,10 @@ static void _tile_place_monster(const coord_def &gc, const monster_info& mon)
 
     if (!you.see_cell(gc))
     {
-        env.tile_bk_fg(gc) = t;
+        tile_env.bk_fg(gc) = t;
         return;
     }
-    env.tile_fg(ep) = t;
+    tile_env.fg(ep) = t;
 
     // Add name tags.
     if (!mons_class_gives_xp(mon.type))
@@ -1031,14 +1073,14 @@ static void _tile_place_monster(const coord_def &gc, const monster_info& mon)
 void tile_reset_fg(const coord_def &gc)
 {
     // remove autopickup cursor, it will be added back if necessary
-    env.tile_bk_bg(gc) &= ~TILE_FLAG_CURSOR3;
+    tile_env.bk_bg(gc) &= ~TILE_FLAG_CURSOR3;
     tile_draw_map_cell(gc, true);
     tiles.update_minimap(gc);
 }
 
 void tile_reset_feat(const coord_def &gc)
 {
-    env.tile_bk_bg(gc) = tileidx_feature(gc);
+    tile_env.bk_bg(gc) = tileidx_feature(gc);
 }
 
 static void _tile_place_cloud(const coord_def &gc, const cloud_info &cl)
@@ -1046,64 +1088,21 @@ static void _tile_place_cloud(const coord_def &gc, const cloud_info &cl)
     if (you.see_cell(gc))
     {
         const coord_def ep = grid2show(gc);
-        env.tile_cloud(ep) = tileidx_cloud(cl);
+        tile_env.cloud(ep) = tileidx_cloud(cl);
     }
     else
-        env.tile_bk_cloud(gc) = tileidx_cloud(cl);
-}
-
-unsigned int num_tile_rays = 0;
-struct tile_ray
-{
-    coord_def ep;
-    aff_type in_range;
-};
-// Allow the rays to fill the whole visible area if necessary. The size is
-// about 4/pi times larger than it needs to be, but this way supports squarelos
-// as well.
-FixedVector<tile_ray, ENV_SHOW_DIAMETER * ENV_SHOW_DIAMETER> tile_ray_vec;
-
-void tile_place_ray(const coord_def &gc, aff_type in_range)
-{
-    // Record rays for later. The curses version just applies
-    // rays directly to the screen. The tiles version doesn't have
-    // (nor want) such direct access. So, it batches up all of the
-    // rays and applies them in viewwindow(...).
-    ASSERT(num_tile_rays < tile_ray_vec.size() - 1);
-    tile_ray_vec[num_tile_rays].in_range = in_range;
-    tile_ray_vec[num_tile_rays++].ep = grid2show(gc);
-}
-
-void tile_draw_rays(bool reset_count)
-{
-    tileidx_t flag = 0;
-
-    for (unsigned int i = 0; i < num_tile_rays; i++)
-    {
-        if (tile_ray_vec[i].in_range < AFF_YES)
-            flag = TILE_FLAG_RAY_OOR;
-        else if (tile_ray_vec[i].in_range == AFF_YES)
-            flag = TILE_FLAG_RAY;
-        else if (tile_ray_vec[i].in_range == AFF_LANDING)
-            flag = TILE_FLAG_LANDING;
-        else if (tile_ray_vec[i].in_range == AFF_MULTIPLE)
-            flag = TILE_FLAG_RAY_MULTI;
-        env.tile_bg(tile_ray_vec[i].ep) |= flag;
-    }
-
-    if (reset_count)
-        num_tile_rays = 0;
+        tile_env.bk_cloud(gc) = tileidx_cloud(cl);
 }
 
 void tile_draw_map_cell(const coord_def& gc, bool foreground_only)
 {
     if (!foreground_only)
-        env.tile_bk_bg(gc) = _get_floor_bg(gc);
+        tile_env.bk_bg(gc) = _get_floor_bg(gc);
 
     if (you.see_cell(gc))
     {
-        env.tile_fg(grid2show(gc)) = 0;
-        env.tile_cloud(grid2show(gc)) = 0;
+        tile_env.fg(grid2show(gc)) = 0;
+        tile_env.cloud(grid2show(gc)) = 0;
     }
 
     const map_cell& cell = env.map_knowledge(gc);
@@ -1120,18 +1119,18 @@ void tile_draw_map_cell(const coord_def& gc, bool foreground_only)
             _tile_place_item(gc, *cell.item(), (cell.flags & MAP_MORE_ITEMS) != 0);
     }
     else
-        env.tile_bk_fg(gc) = 0;
+        tile_env.bk_fg(gc) = 0;
 
     // Always place clouds now they have their own layer
     if (cell.cloud() != CLOUD_NONE)
         _tile_place_cloud(gc, *cell.cloudinfo());
     else
-        env.tile_bk_cloud(gc) = 0;
+        tile_env.bk_cloud(gc) = 0;
 }
 
 void tile_wizmap_terrain(const coord_def &gc)
 {
-    env.tile_bk_bg(gc) = tileidx_feature(gc);
+    tile_env.bk_bg(gc) = tileidx_feature(gc);
 }
 
 static bool _is_torch(tileidx_t basetile)
@@ -1173,6 +1172,8 @@ void tile_apply_animations(tileidx_t bg, tile_flavour *flv)
         if (_is_torch(basetile))
             flv->wall = basetile + (flv->wall - basetile + 1) % tile_dngn_count(basetile);
     }
+#else
+    UNUSED(bg, flv);
 #endif
 }
 
@@ -1263,6 +1264,7 @@ static int _get_door_offset(tileidx_t base_tile, bool opened, bool runed,
 void apply_variations(const tile_flavour &flv, tileidx_t *bg,
                       const coord_def &gc)
 {
+    // TODO: there's an awful lot of hardcoding going on here...
     tileidx_t orig = (*bg) & TILE_FLAG_MASK;
     tileidx_t flag = (*bg) & (~TILE_FLAG_MASK);
 
@@ -1276,6 +1278,13 @@ void apply_variations(const tile_flavour &flv, tileidx_t *bg,
         else if (orig == TILE_WALL_PERMAROCK)
             orig = TILE_WALL_PERMAROCK_BROWN;
     }
+    else if (player_in_branch(BRANCH_DUNGEON) && you.depth == 2)
+    {
+        if (orig == TILE_DNGN_STONE_WALL)
+            orig = TILE_WALL_SEWER;
+        if (orig == TILE_DNGN_METAL_WALL)
+            orig = TILE_DNGN_METAL_WALL_GREEN;
+    }
     else if (player_in_branch(BRANCH_CRYPT))
     {
         if (orig == TILE_DNGN_STONE_WALL)
@@ -1283,9 +1292,19 @@ void apply_variations(const tile_flavour &flv, tileidx_t *bg,
         else if (orig == TILE_DNGN_METAL_WALL)
             orig = TILE_WALL_CRYPT_METAL;
         else if (orig == TILE_DNGN_OPEN_DOOR)
-            orig = TILE_DNGN_OPEN_DOOR_CRYPT;
+        {
+            if (is_christmas())
+                orig = TILE_DNGN_DOOR_CHRISTMAS_CRYPT_OPEN;
+            else
+                orig = TILE_DNGN_OPEN_DOOR_CRYPT;
+        }
         else if (orig == TILE_DNGN_CLOSED_DOOR)
-            orig = TILE_DNGN_CLOSED_DOOR_CRYPT;
+        {
+            if (is_christmas())
+                orig = TILE_DNGN_DOOR_CHRISTMAS_CRYPT;
+            else
+                orig = TILE_DNGN_CLOSED_DOOR_CRYPT;
+        }
     }
     else if (player_in_branch(BRANCH_TOMB))
     {
@@ -1333,12 +1352,29 @@ void apply_variations(const tile_flavour &flv, tileidx_t *bg,
     else if (player_in_branch(BRANCH_SLIME))
     {
         if (orig == TILE_DNGN_STONE_WALL)
-            orig = TILE_STONE_WALL_SLIME;
+        {
+            if (jiyva_is_dead())
+                orig = TILE_STONE_WALL_RUINED_SLIME;
+            else
+                orig = TILE_STONE_WALL_SLIME;
+        }
     }
     else if (player_in_branch(BRANCH_VAULTS))
     {
         if (orig == TILE_DNGN_STONE_WALL)
             orig = TILE_STONE_WALL_VAULT;
+    }
+
+    if (is_christmas())
+    {
+        if (orig == TILE_DNGN_CLOSED_DOOR)
+            orig = TILE_DNGN_DOOR_CHRISTMAS;
+        if (orig == TILE_DNGN_OPEN_DOOR)
+            orig = TILE_DNGN_DOOR_CHRISTMAS_OPEN;
+        if (orig == TILE_DNGN_RUNED_DOOR)
+            orig = TILE_DNGN_DOOR_CHRISTMAS_RUNED;
+        if (orig == TILE_DNGN_SEALED_DOOR)
+            orig = TILE_DNGN_SEALED_CHRISTMAS_DOOR;
     }
 
     if (orig == TILE_FLOOR_NORMAL)
@@ -1348,8 +1384,11 @@ void apply_variations(const tile_flavour &flv, tileidx_t *bg,
     else if (orig == TILE_DNGN_STONE_WALL
              || orig == TILE_DNGN_CRYSTAL_WALL
              || orig == TILE_WALL_PERMAROCK
-             || orig == TILE_WALL_PERMAROCK_CLEAR)
+             || orig == TILE_WALL_PERMAROCK_CLEAR
+             || orig == TILE_DNGN_METAL_WALL
+             || orig == TILE_DNGN_TREE)
     {
+        // TODO: recoloring vaults stone walls from corruption?
         *bg = pick_dngn_tile(tile_dngn_coloured(orig, env.grid_colours(gc)),
                              flv.special);
     }
@@ -1414,7 +1453,7 @@ void tile_apply_properties(const coord_def &gc, packed_cell &cell)
     if (!map_bounds(gc))
         return;
 
-    apply_variations(env.tile_flv(gc), &cell.bg, gc);
+    apply_variations(tile_env.flv(gc), &cell.bg, gc);
 
     const map_cell& mc = env.map_knowledge(gc);
 
@@ -1426,15 +1465,21 @@ void tile_apply_properties(const coord_def &gc, packed_cell &cell)
     else
         cell.halo = HALO_NONE;
 
-    if (mc.monsterinfo() && mc.monsterinfo()->is(MB_HIGHLIGHTED_SUMMONER))
-        cell.is_highlighted_summoner = true;
-
     if (mc.flags & MAP_LIQUEFIED)
         cell.is_liquefied = true;
     else if (print_blood && (_suppress_blood(mc)
                              || _suppress_blood((cell.bg) & TILE_FLAG_MASK)))
     {
         print_blood = false;
+    }
+
+    // Snow shouldn't be repressed by same things as blood. I was wrong.
+    if (mc.flags & MAP_SNOWY)
+    {
+        if (one_chance_in(10))
+            cell.is_snowy = 2;
+        else
+            cell.is_snowy = 1;
     }
 
     // Mold has the same restrictions as blood but takes precedence.
@@ -1463,8 +1508,12 @@ void tile_apply_properties(const coord_def &gc, packed_cell &cell)
     if (mc.flags & MAP_SILENCED)
         cell.is_silenced = true;
 
-    if (feat == DNGN_TREE && player_in_branch(BRANCH_SWAMP))
+    if (feat == DNGN_MANGROVE)
         cell.mangrove_water = true;
+
+    if (feat == DNGN_SLIMESHROOM && !jiyva_is_dead())
+        cell.mushroom_slime = true;
+
     cell.awakened_forest = feat_is_tree(feat) && env.forest_awoken_until;
 
     if (mc.flags & MAP_ORB_HALOED)
@@ -1499,6 +1548,16 @@ void tile_apply_properties(const coord_def &gc, packed_cell &cell)
         }
     }
 
-    cell.flv = env.tile_flv(gc);
+    cell.flv = tile_env.flv(gc);
+
+    if (env.level_state & LSTATE_SLIMY_WALL)
+    {
+        for (adjacent_iterator ai(gc); ai; ++ai)
+            if (env.map_knowledge(*ai).feat() == DNGN_SLIMY_WALL)
+            {
+                cell.flv.floor = TILE_FLOOR_SLIME_ACIDIC;
+                break;
+            }
+    }
 }
 #endif

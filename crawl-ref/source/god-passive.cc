@@ -6,6 +6,7 @@
 #include <cmath>
 
 #include "act-iter.h"
+#include "areas.h"
 #include "artefact.h"
 #include "art-enum.h"
 #include "branch.h"
@@ -18,10 +19,8 @@
 #include "eq-type-flags.h"
 #include "fight.h"
 #include "files.h"
-#include "food.h"
 #include "fprop.h"
 #include "god-abil.h"
-#include "god-item.h"
 #include "god-prayer.h"
 #include "invent.h" // in_inventory
 #include "item-name.h"
@@ -41,8 +40,8 @@
 #include "skills.h"
 #include "spl-clouds.h"
 #include "state.h"
-#include "status.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "terrain.h"
 #include "throw.h"
 #include "unwind.h"
@@ -145,7 +144,7 @@ static const vector<god_passive> god_passives[] =
         },
         { -1, passive_t::resist_mutation,
               "GOD can shield you from mutations",
-              "GOD NOW you from mutations"
+              "GOD NOW shields you from mutations"
         },
         { -1, passive_t::resist_polymorph,
               "GOD can protect you from unnatural transformations",
@@ -158,11 +157,6 @@ static const vector<god_passive> god_passives[] =
         { -1, passive_t::warn_shapeshifter,
               "GOD will NOW warn you about shapeshifters"
         },
-        {
-          6, passive_t::cleanse_mut_potions,
-              "GOD cleanses your potions of mutation",
-              "GOD no longer cleanses your potions of mutation",
-        }
     },
 
     // TSO
@@ -184,10 +178,14 @@ static const vector<god_passive> god_passives[] =
 
     // Kikubaaqudgha
     {
-        {  2, passive_t::miscast_protection_necromancy,
+        { -1, passive_t::extend_undead, 
+              "GOD NOW extends the duration of your undead creations" },
+        {  1, passive_t::power_of_blood,
+              "GOD will NOW allow you to cast with insufficient mana, "
+              "by casting sublimation of blood for one piety." },
+        {  3, passive_t::miscast_protection_necromancy,
               "GOD NOW protects you from necromancy miscasts"
-              " and mummy death curses"
-        },
+              " and mummy death curses" },
         {  4, passive_t::resist_torment,
               "GOD NOW protects you from torment" },
     },
@@ -282,26 +280,14 @@ static const vector<god_passive> god_passives[] =
     {
         { -1, passive_t::neutral_slimes,
               "Slimes and eye monsters are NOW neutral towards you" },
-        { -1, passive_t::jellies_army,
-              "GOD NOW summons jellies to protect you" },
-        { -1, passive_t::jelly_eating,
-              "GOD NOW allows jellies to devour items" },
-        { -1, passive_t::fluid_stats,
-              "GOD NOW adjusts your attributes periodically" },
+        { -1, passive_t::slime_feed,
+              "GOD NOW dissolves the corpses of fallen enemies into ooze and feeds you" },
         {  0, passive_t::slime_wall_immune,
-              "are NOW immune to slime covered walls" },
-        {  2, passive_t::slime_feed,
-              "Items consumed by your fellow slimes NOW feed you" },
-        {  3, passive_t::resist_corrosion,
-              "GOD NOW protects you from corrosion" },
-        {  4, passive_t::slime_mp,
-              "Items consumed by your fellow slimes NOW restore"
-              " your magical power"
-        },
-        {  5, passive_t::slime_hp,
-              "Items consumed by your fellow slimes NOW restore"
-              " your health"
-        },
+              "are NOW immune to slime covered walls" },  
+        {  2, passive_t::fluid_stats,
+              "GOD NOW adjusts your attributes periodically" },
+        {  3, passive_t::mutation_gifts,
+              "GOD NOW mutates you to become more slimelike and less burdened by negative mutations" },
         {  6, passive_t::spawn_slimes_on_hit,
               "spawn slimes when struck by massive blows" },
         {  6, passive_t::unlock_slime_vaults,
@@ -346,8 +332,6 @@ static const vector<god_passive> god_passives[] =
         {  0, passive_t::auto_map, "have improved mapping abilities" },
         {  0, passive_t::detect_montier, "sense threats" },
         {  0, passive_t::detect_items, "sense items" },
-        {  0, passive_t::search_traps,
-              "are NOW better at searching for traps" },
         {  2, passive_t::bondage_skill_boost,
               "get a skill boost from cursed items" },
         {  3, passive_t::sinv, "are NOW clear of vision" },
@@ -364,6 +348,8 @@ static const vector<god_passive> god_passives[] =
               "Your attacks are NOW mimicked by a shadow" },
         {  4, passive_t::shadow_spells,
               "Your attack spells are NOW mimicked by a shadow" },
+        {  5, passive_t::monster_shadows, 
+              "by the grace of GOD, the monsters of the dungeon NOW cast long shadows." },
     },
 
     // Gozag
@@ -428,32 +414,68 @@ static const vector<god_passive> god_passives[] =
     // Wu Jian
     {
         { 0, passive_t::wu_jian_lunge, "perform damaging attacks by moving towards foes." },
-        { 1, passive_t::wu_jian_whirlwind, "lightly attack and pin monsters in place by moving around them." },
-        { 2, passive_t::wu_jian_wall_jump, "perform airborne attacks by moving against a solid obstacle." },
+        { 1, passive_t::wu_jian_whirlwind, "lightly attack monsters by moving around them." },
+        { 2, passive_t::wu_jian_wall_jump, "perform airborne attacks in an area by jumping off a solid obstacle." },
+    },
+
+    // Bahamut / Tiamat
+    {
+        { 0, passive_t::bahamut_tiamat_passive, "" }, // Messaging handled elsewhere.
     },
 };
 COMPILE_CHECK(ARRAYSZ(god_passives) == NUM_GODS);
 
+// Only one right now, but could be more in the future.
+static bool _passive_exceptions(passive_t passive)
+{
+    switch (passive)
+    {
+    case passive_t::power_of_blood:
+        if (!you.can_bleed(false) || you.is_fairy())
+            return true;
+        break;
+    default:
+        break;
+    }
+    return false;
+}
+
+static bool _god_gives_passive_if(god_type god, passive_t passive,
+                                  function<bool(const god_passive&)> condition)
+{
+    const auto &pasvec = god_passives[god];
+    return any_of(begin(pasvec), end(pasvec),
+                  [&] (const god_passive &p) -> bool
+                  { return p.pasv == passive && condition(p); });
+}
+
+bool god_gives_passive(god_type god, passive_t passive)
+{
+  return _god_gives_passive_if(god, passive,
+                               [] (god_passive /*p*/) { return true; });
+}
+
 bool have_passive(passive_t passive)
 {
-    const auto &pasvec = god_passives[you.religion];
-    return any_of(begin(pasvec), end(pasvec),
-                  [passive] (const god_passive &p) -> bool
-                  {
-                      return p.pasv == passive
-                          && piety_rank() >= p.rank
-                          && (!player_under_penance() || p.rank < 0);
-                  });
+    if (_passive_exceptions(passive))
+        return false;
+
+    return _god_gives_passive_if(you.religion, passive,
+                                 [] (god_passive p)
+                                 {
+                                     return piety_rank() >= p.rank
+                                         && (!player_under_penance()
+                                             || p.rank < 0);
+                                 });
 }
 
 bool will_have_passive(passive_t passive)
 {
-    const auto &pasvec = god_passives[you.religion];
-    return any_of(begin(pasvec), end(pasvec),
-                  [passive] (const god_passive &p) -> bool
-                  {
-                      return p.pasv == passive;
-                  });
+    if (_passive_exceptions(passive))
+        return false;
+
+  return _god_gives_passive_if(you.religion, passive,
+                               [] (god_passive/*p*/) { return true; });
 }
 
 // Returns a large number (10) if we will never get this passive.
@@ -488,70 +510,6 @@ int chei_stat_boost(int piety)
         if (piety >= piety_breakpoint(5))
             return 15;
         return (piety - 10) / 10;
-    }
-}
-
-// Eat from one random off-level item stack.
-void jiyva_eat_offlevel_items()
-{
-    // For wizard mode 'J' command
-    if (!have_passive(passive_t::jelly_eating))
-        return;
-
-    if (crawl_state.game_is_sprint())
-        return;
-
-    while (true)
-    {
-        if (one_chance_in(200))
-            break;
-
-        const int branch = random2(NUM_BRANCHES);
-
-        // Choose level based on main dungeon depth so that levels of
-        // short branches aren't picked more often.
-        ASSERT(brdepth[branch] <= MAX_BRANCH_DEPTH);
-        const int level = random2(MAX_BRANCH_DEPTH) + 1;
-
-        const level_id lid(static_cast<branch_type>(branch), level);
-
-        if (lid == level_id::current() || !you.level_visited(lid))
-            continue;
-
-        dprf("Checking %s", lid.describe().c_str());
-
-        level_excursion le;
-        le.go_to(lid);
-        while (true)
-        {
-            if (one_chance_in(200))
-                break;
-
-            const coord_def p = random_in_bounds();
-
-            if (igrd(p) == NON_ITEM || testbits(env.pgrid(p), FPROP_NO_JIYVA))
-                continue;
-
-            for (stack_iterator si(p); si; ++si)
-            {
-                if (!item_is_jelly_edible(*si) || one_chance_in(4))
-                    continue;
-
-                if (one_chance_in(4))
-                    break;
-
-                dprf("Eating %s on %s",
-                     si->name(DESC_PLAIN).c_str(), lid.describe().c_str());
-
-                // Needs a message now to explain possible hp or mp
-                // gain from jiyva_slurp_bonus()
-                mpr("You hear a distant slurping noise.");
-                jiyva_slurp_item_stack(*si);
-                item_was_destroyed(*si);
-                destroy_item(si.index());
-            }
-            return;
-        }
     }
 }
 
@@ -597,30 +555,43 @@ void ash_check_bondage(bool msg)
             s = ET_LEFT;
         else if (i <= EQ_MAX_ARMOUR)
             s = ET_ARMOUR;
+        else if (!you.get_mutation_level(MUT_CYTOPLASMIC_SUSPENSION)
+            && i == EQ_CYTOPLASM)
+        {
+            continue;
+        }
         // Missing hands mean fewer rings
         else if (you.species != SP_OCTOPODE && i == EQ_LEFT_RING
-                 && you.get_mutation_level(MUT_MISSING_HAND))
+            && you.get_mutation_level(MUT_MISSING_HAND))
         {
             continue;
         }
         // Octopodes don't count these slots:
         else if (you.species == SP_OCTOPODE
-                 && ((i == EQ_LEFT_RING || i == EQ_RIGHT_RING)
-                     || (i == EQ_RING_EIGHT
-                         && you.get_mutation_level(MUT_MISSING_HAND))))
+            && ((i == EQ_LEFT_RING || i == EQ_RIGHT_RING)
+                || (i == EQ_RING_EIGHT
+                    && you.get_mutation_level(MUT_MISSING_HAND))))
         {
             continue;
         }
         // *Only* octopodes count these slots:
         else if (you.species != SP_OCTOPODE
-                 && i >= EQ_RING_ONE && i <= EQ_RING_EIGHT)
+            && i >= EQ_RING_ONE && i <= EQ_RING_EIGHT)
         {
             continue;
         }
+        else if (you.species != SP_FAIRY && i == EQ_FAIRY_JEWEL)
+            continue;
         // The macabre finger necklace's extra slot does count if equipped.
         else if (!player_equip_unrand(UNRAND_FINGER_AMULET)
                  && i == EQ_RING_AMULET)
         {
+            continue;
+        }
+        else if (!you.get_mutation_level(MUT_TENDRILS)
+            && i == EQ_RING_LEFT_TENDRIL || i == EQ_RING_RIGHT_TENDRIL)
+        {
+            // Impossible to have this mutation while !Jiyva, but future proofing!
             continue;
         }
         else
@@ -632,8 +603,7 @@ void ash_check_bondage(bool msg)
             slots[s]++;
             if (you.equip[i] != -1)
             {
-                const item_def& item = you.inv[you.equip[i]];
-                if (item.cursed())
+                if (you.inv[you.equip[i]].fragile())
                 {
                     if (s == ET_RIGHT
                         && (_two_handed()
@@ -644,7 +614,7 @@ void ash_check_bondage(bool msg)
                     else
                     {
                         cursed[s]++;
-                        if (i == EQ_BODY_ARMOUR && is_unrandom_artefact(item, UNRAND_LEAR))
+                        if (i == EQ_BODY_ARMOUR && is_unrandom_artefact(you.inv[you.equip[i]], UNRAND_LEAR))
                             cursed[s] += 3;
                     }
                 }
@@ -674,12 +644,18 @@ void ash_check_bondage(bool msg)
     if (you.species == SP_FELID)
     {
         for (int i = EQ_LEFT_RING; i <= EQ_AMULET; ++i)
-            if (you.equip[i] != -1 && you.inv[you.equip[i]].cursed())
+            if (you.equip[i] != -1 && you.inv[you.equip[i]].fragile())
                 ++you.bondage_level;
 
         // Allow full bondage when all available slots are cursed.
         if (you.bondage_level == 3)
             ++you.bondage_level;
+    }
+    // Fairies only have one slot!
+    if (you.species == SP_FAIRY)
+    {
+        if (you.equip[EQ_FAIRY_JEWEL])
+            you.bondage_level = 4;
     }
     else
         for (int i = ET_RIGHT; i < NUM_ET; ++i)
@@ -727,23 +703,23 @@ string ash_describe_bondage(int flags, bool level)
             const string verb = make_stringf("are%s",
                                              you.bondage[ET_RIGHT] ? ""
                                                                     : " not");
-            desc = you.hands_act(verb, "bound.\n");
+            desc = you.hands_act(verb, "liberated.\n");
         }
         else
         {
             // FIXME: what if you sacrificed a hand?
-            desc = make_stringf("One of your hands is bound, but not the other.");
+            desc = make_stringf("One of your hands is liberated, but not the other.\n");
         }
     }
     else if (flags & ETF_RIGHT && you.bondage[ET_RIGHT] != -1)
     {
-        desc = make_stringf("Your right %s is %sbound.\n",
+        desc = make_stringf("Your right %s is %sliberated.\n",
                             you.hand_name(false).c_str(),
                             you.bondage[ET_RIGHT] ? "" : "not ");
     }
     else if (flags & ETF_LEFT && you.bondage[ET_LEFT] != -1)
     {
-        desc = make_stringf("Your left %s is %sbound.\n",
+        desc = make_stringf("Your left %s is %sliberated.\n",
                             you.hand_name(false).c_str(),
                             you.bondage[ET_LEFT] ? "" : "not ");
     }
@@ -752,7 +728,7 @@ string ash_describe_bondage(int flags, bool level)
         && you.bondage[ET_ARMOUR] == you.bondage[ET_JEWELS]
         && you.bondage[ET_ARMOUR] != -1)
     {
-        desc += make_stringf("You are %s bound in armour %s jewellery.\n",
+        desc += make_stringf("You are %s liberated in armour %s jewellery.\n",
                              you.bondage[ET_ARMOUR] == 0 ? "not" :
                              you.bondage[ET_ARMOUR] == 1 ? "partially"
                                                          : "fully",
@@ -762,7 +738,7 @@ string ash_describe_bondage(int flags, bool level)
     {
         if (flags & ETF_ARMOUR && you.bondage[ET_ARMOUR] != -1)
         {
-            desc += make_stringf("You are %s bound in armour.\n",
+            desc += make_stringf("You are %s liberated in armour.\n",
                                  you.bondage[ET_ARMOUR] == 0 ? "not" :
                                  you.bondage[ET_ARMOUR] == 1 ? "partially"
                                                              : "fully");
@@ -770,7 +746,7 @@ string ash_describe_bondage(int flags, bool level)
 
         if (flags & ETF_JEWELS && you.bondage[ET_JEWELS] != -1)
         {
-            desc += make_stringf("You are %s bound in jewellery.\n",
+            desc += make_stringf("You are %s liberated in jewellery.\n",
                                  you.bondage[ET_JEWELS] == 0 ? "not" :
                                  you.bondage[ET_JEWELS] == 1 ? "partially"
                                                              : "fully");
@@ -779,7 +755,7 @@ string ash_describe_bondage(int flags, bool level)
 
     if (level)
     {
-        desc += make_stringf("You are %s bound.",
+        desc += make_stringf("You are %s liberated.",
                              you.bondage_level == 0 ? "not" :
                              you.bondage_level == 1 ? "slightly" :
                              you.bondage_level == 2 ? "moderately" :
@@ -791,19 +767,11 @@ string ash_describe_bondage(int flags, bool level)
     return trim_string(desc);
 }
 
-/* Unused function preserved for possible help during Ash/Curse Rework.
-static bool _is_slot_cursed(equipment_type eq)
-{
-    const item_def *worn = you.slot_item(eq, true);
-    if (!worn || !worn->cursed())
-        return false;
-
-    return true;
-}
-*/
-
 bool passive_id_item(item_def& item, bool silent)
 {
+    if (fully_identified(item))
+        return false;
+    
     iflags_t old_ided = item.flags & ISFLAG_IDENT_MASK;
     iflags_t ided = 0;
 
@@ -857,13 +825,10 @@ void passive_id_monster_equipment(monster* mon)
         if (mon->inv[i] == NON_ITEM)
             continue;
 
-        item_def &item = mitm[mon->inv[i]];
+        item_def &item = env.item[mon->inv[i]];
 
         if (i == MSLOT_WAND)
-        {
             set_ident_type(OBJ_WANDS, item.sub_type, true);
-            mon->props["wand_known"] = true;
-        }
         else
             set_ident_flags(item, ISFLAG_IDENT_MASK);
     }
@@ -891,7 +856,7 @@ static bool is_ash_portal(dungeon_feature_type feat)
 // Yay for rectangle_iterator and radius_iterator not sharing a base type
 static bool _check_portal(coord_def where)
 {
-    const dungeon_feature_type feat = grd(where);
+    const dungeon_feature_type feat = env.grid(where);
     if (feat != env.map_knowledge(where).feat() && is_ash_portal(feat))
     {
         env.map_knowledge(where).set_feature(feat);
@@ -970,13 +935,6 @@ map<skill_type, int8_t> ash_get_boosted_skills(eq_type type)
         {
             boost[SK_EVOCATIONS] = 1;
             boost[SK_MACES_STAVES] = 1;
-
-        }
-        // Staves with an evokable ability but no melee effect.
-        else if (is_weapon(*right)
-                 && item_is_evokable(*right, false, false, false, false))
-        {
-            boost[SK_EVOCATIONS] = 2;
         }
         // Other magical staves.
         else if (right->base_type == OBJ_STAVES)
@@ -998,13 +956,6 @@ map<skill_type, int8_t> ash_get_boosted_skills(eq_type type)
         {
             boost[SK_EVOCATIONS] = 1;
             boost[SK_MACES_STAVES] = 1;
-
-        }
-        // Staves with an evokable ability but no melee effect.
-        else if (is_weapon(*left)
-            && item_is_evokable(*left, false, false, false, false))
-        {
-            boost[SK_EVOCATIONS] = 2;
         }
         // Other magical staves.
         else if (left->base_type == OBJ_STAVES)
@@ -1060,8 +1011,9 @@ bool ash_has_skill_boost(skill_type sk)
 unsigned int ash_skill_point_boost(skill_type sk, int scaled_skill)
 {
     unsigned int skill_points = 0;
+    int piety = div_round_up((3 * piety_rank() + 3), 2);
 
-    skill_points += apply_pity((you.skill_boost[sk] * 2 + 1) * (piety_rank() + 1)
+    skill_points += apply_pity((you.skill_boost[sk] * 2 + 1) * piety
                     * max(scaled_skill, 1) * species_apt_factor(sk));
     return skill_points;
 }
@@ -1121,6 +1073,7 @@ int gozag_gold_in_los(actor *whom)
 // Detects gold for Gozag and Runes for Ashenzari.
 void ash_gozag_level_scan(bool count)
 {
+    ASSERT(you.on_current_level);
     vector<item_def *> gold_piles;
     vector<coord_def> gold_places;
     int gold = 0;
@@ -1212,7 +1165,7 @@ void qazlal_storm_clouds()
     // You are a *storm*. You are pretty loud!
     // Silent Spectres never make noise unless they intentionally send
     // things outside their aura.
-    if (you.species != SP_SILENT_SPECTRE)
+    if (!you.get_mutation_level(MUT_SILENCE_AURA))
         noisy(min((int)you.piety, piety_breakpoint(5)) / 10, you.pos());
 
     const int radius = you.piety >= piety_breakpoint(3) ? 2 : 1;
@@ -1251,7 +1204,7 @@ void qazlal_storm_clouds()
         bool water = false;
         for (adjacent_iterator ai(candidates[i]); ai; ++ai)
         {
-            if (feat_is_watery(grd(*ai)))
+            if (feat_is_watery(env.grid(*ai)))
                 water = true;
         }
 
@@ -1301,6 +1254,7 @@ void qazlal_element_adapt(beam_type flavour, int strength)
         case BEAM_COLD:
         case BEAM_FREEZE:
         case BEAM_ICE:
+        case BEAM_ICY_SHARDS:
             what = BEAM_COLD;
             dur = DUR_QAZLAL_COLD_RES;
             descript = "cold";
@@ -1358,6 +1312,8 @@ void qazlal_element_adapt(beam_type flavour, int strength)
 
     if (what == BEAM_MISSILE)
         you.redraw_armour_class = true;
+    else
+        you.redraw_resists = true;
 }
 
 /**
@@ -1372,7 +1328,6 @@ bool does_ru_wanna_redirect(monster* mon)
             && !mon->friendly()
             && you.see_cell_no_trans(mon->pos())
             && !mons_is_firewood(*mon)
-            && !mon->submerged()
             && !mons_is_projectile(mon->type);
 }
 
@@ -1432,12 +1387,8 @@ monster* shadow_monster(bool equip)
         wpn_index = get_mitm_slot(10);
         if (wpn_index == NON_ITEM)
             return nullptr;
-        item_def& new_item = mitm[wpn_index];
-        if (wpn->base_type == OBJ_STAVES)
-        {
-            new_item.base_type = OBJ_WEAPONS;
-            new_item.sub_type  = WPN_STAFF;
-        }
+
+        item_def& new_item = env.item[wpn_index];
 
         // Hack to prevent a crash. BCADDO: Remove if/when enemies are able to use shield hybrids as weapons.
 
@@ -1449,7 +1400,6 @@ monster* shadow_monster(bool equip)
             else
                 new_item.sub_type = WPN_QUARTERSTAFF;
         }
-
         else
         {
             new_item.base_type = wpn->base_type;
@@ -1476,7 +1426,7 @@ monster* shadow_monster(bool equip)
     mon->hit_points = you.hp;
     mon->set_hit_dice(apply_pity(min(27, max(1,
                                   you.skill_rdiv(wpn_index != NON_ITEM
-                                                 ? item_attack_skill(mitm[wpn_index])
+                                                 ? item_attack_skill(env.item[wpn_index])
                                                  : SK_UNARMED_COMBAT, 10, 20)
                                   + you.skill_rdiv(SK_FIGHTING, 10, 20)))));
     mon->set_position(you.pos());
@@ -1484,7 +1434,7 @@ monster* shadow_monster(bool equip)
     mon->inv[MSLOT_WEAPON]  = wpn_index;
     mon->inv[MSLOT_MISSILE] = NON_ITEM;
 
-    mgrd(you.pos()) = mon->mindex();
+    env.mgrid(you.pos()) = mon->mindex();
 
     return mon;
 }
@@ -1556,7 +1506,7 @@ void dithmenos_shadow_throw(const dist &d, const item_def &item)
     int ammo_index = get_mitm_slot(10);
     if (ammo_index != NON_ITEM)
     {
-        item_def& new_item = mitm[ammo_index];
+        item_def& new_item = env.item[ammo_index];
         new_item.base_type = item.base_type;
         new_item.sub_type  = item.sub_type;
         new_item.quantity  = 1;
@@ -1569,11 +1519,54 @@ void dithmenos_shadow_throw(const dist &d, const item_def &item)
         bolt beem;
         beem.set_target(d);
         setup_monster_throw_beam(mon, beem);
-        beem.item = &mitm[mon->inv[MSLOT_MISSILE]];
+        beem.item = &env.item[mon->inv[MSLOT_MISSILE]];
         mons_throw(mon, beem, mon->inv[MSLOT_MISSILE]);
     }
 
     shadow_monster_reset(mon);
+}
+
+// Strange place for this but it's called at similar times to dithmenos_shadow_spell
+// and dithmenos shadow throw so it makes sense to have them together.
+// Also making it work the same way because, easy.
+void mount_drake_breath(bolt* orig_beam)
+{
+    if (!orig_beam)
+        return;
+
+    if (!you.mounted() || you.mount != mount_type::drake || you.duration[DUR_MOUNT_BREATH])
+        return;
+
+    const coord_def target = orig_beam->target;
+
+    if (target.origin() || orig_beam->is_enchantment())
+        return;
+
+    monster* mon = shadow_monster();
+    if (!mon)
+        return;
+
+    int hd = div_rand_round(you.skill(SK_INVOCATIONS) * 2, 3);
+    if (you.duration[DUR_MOUNT_DRAINING])
+        hd = div_rand_round(hd * 3, 4);
+    hd = max(1, hd);
+
+    mon->set_hit_dice(hd);
+    mon->target = clamp_in_bounds(target);
+
+    if (actor_at(target))
+        mon->foe = actor_at(target)->mindex();
+
+    bolt beem;
+    beem.target = target;
+    beem.aimed_at_spot = orig_beam->aimed_at_spot;
+
+    mprf(MSGCH_FRIEND_SPELL, "Your rime drake breathes a chilling wave!");
+    mons_cast(mon, beem, SPELL_FLASH_FREEZE, MON_SPELL_NATURAL, false);
+
+    shadow_monster_reset(mon);
+
+    you.set_duration(DUR_MOUNT_BREATH, 2 + random2(3));
 }
 
 void dithmenos_shadow_spell(bolt* orig_beam, spell_type spell)
@@ -1618,7 +1611,7 @@ void dithmenos_shadow_spell(bolt* orig_beam, spell_type spell)
 
     mprf(MSGCH_FRIEND_SPELL, "%s mimicks your spell!",
          mon->name(DESC_THE).c_str());
-    mons_cast(mon, beem, shadow_spell, MON_SPELL_WIZARD, false);
+    mons_cast(mon, beem, shadow_spell, MON_SPELL_MAGICAL, false);
 
     shadow_monster_reset(mon);
 }
@@ -1655,40 +1648,43 @@ static void _wu_jian_trigger_serpents_lash(const coord_def& old_pos,
         check_place_cloud(CLOUD_DUST, old_pos, 2 + random2(3) , &you, 1, -1);
 }
 
-void wu_jian_heaven_tick()
+static void _wu_jian_increment_heavenly_storm()
 {
-    if (you.attribute[ATTR_HEAVENLY_STORM] == 0)
-        return;
-
-    // TODO: this is still ridiculous. REWRITEME!
-    if (you.attribute[ATTR_HEAVENLY_STORM] <= 10)
-        you.attribute[ATTR_HEAVENLY_STORM] -= 1;
-    else if (you.attribute[ATTR_HEAVENLY_STORM] <= 15)
-        you.attribute[ATTR_HEAVENLY_STORM] -= 2;
-    else if (you.attribute[ATTR_HEAVENLY_STORM] <= 20)
-        you.attribute[ATTR_HEAVENLY_STORM] -= 3;
-    else if (you.attribute[ATTR_HEAVENLY_STORM] <= 30)
-        you.attribute[ATTR_HEAVENLY_STORM] -= 5;
-    else
-        you.attribute[ATTR_HEAVENLY_STORM] -= 10;
-
-    for (radius_iterator ai(you.pos(), 2, C_SQUARE, LOS_SOLID); ai; ++ai)
-    {
-        if (!cell_is_solid(*ai))
-            place_cloud(CLOUD_GOLD_DUST, *ai, 5 + random2(5), &you);
-    }
-
-    noisy(15, you.pos());
-
-    if (you.attribute[ATTR_HEAVENLY_STORM] == 0)
-        end_heavenly_storm();
-    else
-        you.duration[DUR_HEAVENLY_STORM] = WU_JIAN_HEAVEN_TICK_TIME;
+    int storm = you.props[WU_JIAN_HEAVENLY_STORM_KEY].get_int();
+    if (storm < WU_JIAN_HEAVENLY_STORM_MAX)
+        you.props[WU_JIAN_HEAVENLY_STORM_KEY].get_int()++;
+    if (storm < WU_JIAN_HEAVENLY_STORM_MAX && (player_spec_invo() > 0) && coinflip())
+        you.props[WU_JIAN_HEAVENLY_STORM_KEY].get_int()++;
 }
 
-void end_heavenly_storm()
+void wu_jian_heaven_tick()
 {
-    you.attribute[ATTR_HEAVENLY_STORM] = 0;
+    for (radius_iterator ai(you.pos(), 2, C_SQUARE, LOS_SOLID); ai; ++ai)
+        if (!cell_is_solid(*ai))
+            place_cloud(CLOUD_GOLD_DUST, *ai, 5 + random2(5), &you);
+
+    noisy(15, you.pos());
+}
+
+void wu_jian_decrement_heavenly_storm()
+{
+    int storm = you.props[WU_JIAN_HEAVENLY_STORM_KEY].get_int();
+
+    if (storm > 1)
+    {
+        you.props[WU_JIAN_HEAVENLY_STORM_KEY].get_int()--;
+        you.set_duration(DUR_HEAVENLY_STORM, random_range(2, 3));
+    }
+    else
+        wu_jian_end_heavenly_storm();
+}
+
+// TODO: why isn't this implemented as a duration end effect?
+void wu_jian_end_heavenly_storm()
+{
+    you.props.erase(WU_JIAN_HEAVENLY_STORM_KEY);
+    you.duration[DUR_HEAVENLY_STORM] = 0;
+    invalidate_agrid(true);
     mprf(MSGCH_GOD, "The heavenly storm settles.");
 }
 
@@ -1743,12 +1739,8 @@ static bool _wu_jian_lunge(const coord_def& old_pos)
     if (!mons || !_can_attack_martial(mons) || !mons->alive())
         return false;
 
-    if (you.attribute[ATTR_HEAVENLY_STORM] > 0)
-    {
-        if (player_spec_invo())
-            you.attribute[ATTR_HEAVENLY_STORM]++;
-        you.attribute[ATTR_HEAVENLY_STORM] += 2;
-    }
+    if (you.props.exists(WU_JIAN_HEAVENLY_STORM_KEY))
+        _wu_jian_increment_heavenly_storm();
 
     you.apply_berserk_penalty = false;
 
@@ -1775,9 +1767,7 @@ static bool _wu_jian_lunge(const coord_def& old_pos)
     {
         if (!mons->alive())
             break;
-        melee_attack lunge(&you, mons);
-        lunge.wu_jian_attack = WU_JIAN_ATTACK_LUNGE;
-        lunge.attack();
+        fight_melee(&you, mons, nullptr, false, WU_JIAN_ATTACK_LUNGE);
     }
 
     return true;
@@ -1813,20 +1803,8 @@ static bool _wu_jian_whirlwind(const coord_def& old_pos)
         if (!mons->alive())
             continue;
 
-        if (you.attribute[ATTR_HEAVENLY_STORM] > 0) 
-        {
-            if (player_spec_invo())
-                you.attribute[ATTR_HEAVENLY_STORM]++;
-            you.attribute[ATTR_HEAVENLY_STORM] += 2;
-        }
-
-        // Pin has a longer duration than one player turn, but gets cleared
-        // before its duration expires by wu_jian_end_of_turn_effects. This is
-        // necessary to make sure it works well with Wall Jump's longer aut
-        // count.
-        mons->del_ench(ENCH_WHIRLWIND_PINNED);
-        mons->add_ench(mon_enchant(ENCH_WHIRLWIND_PINNED, 2, nullptr,
-                                   BASELINE_DELAY * 5));
+        if (you.props.exists(WU_JIAN_HEAVENLY_STORM_KEY))
+            _wu_jian_increment_heavenly_storm();
 
         you.apply_berserk_penalty = false;
 
@@ -1852,10 +1830,8 @@ static bool _wu_jian_whirlwind(const coord_def& old_pos)
         {
             if (!mons->alive())
                 break;
-            melee_attack whirlwind(&you, mons);
-            whirlwind.wu_jian_attack = WU_JIAN_ATTACK_WHIRLWIND;
-            whirlwind.wu_jian_number_of_targets = common_targets.size();
-            whirlwind.attack();
+            fight_melee(&you, mons, nullptr, false,
+                WU_JIAN_ATTACK_WHIRLWIND, common_targets.size());
             if (!did_at_least_one_attack)
               did_at_least_one_attack = true;
         }
@@ -1880,7 +1856,7 @@ static bool _wu_jian_trigger_martial_arts(const coord_def& old_pos)
     return did_wu_jian_attacks;
 }
 
-void wu_jian_wall_jump_effects(const coord_def& old_pos)
+void wu_jian_wall_jump_effects()
 {
     vector<monster*> targets;
     for (adjacent_iterator ai(you.pos(), true); ai; ++ai)
@@ -1898,12 +1874,8 @@ void wu_jian_wall_jump_effects(const coord_def& old_pos)
         if (!target->alive())
             continue;
 
-        if (you.attribute[ATTR_HEAVENLY_STORM] > 0)
-        {
-            if (player_spec_invo())
-                you.attribute[ATTR_HEAVENLY_STORM]++;
-            you.attribute[ATTR_HEAVENLY_STORM] += 2;
-        }
+        if (you.props.exists(WU_JIAN_HEAVENLY_STORM_KEY))
+            _wu_jian_increment_heavenly_storm();
 
         you.apply_berserk_penalty = false;
 
@@ -1928,11 +1900,8 @@ void wu_jian_wall_jump_effects(const coord_def& old_pos)
         {
             if (!target->alive())
                 break;
-
-            melee_attack aerial(&you, target);
-            aerial.wu_jian_attack = WU_JIAN_ATTACK_WALL_JUMP;
-            aerial.wu_jian_number_of_targets = targets.size();
-            aerial.attack();
+            fight_melee(&you, target, nullptr, false,
+                WU_JIAN_ATTACK_WALL_JUMP, targets.size());
         }
     }
 }
@@ -1982,7 +1951,7 @@ static int _check_for_uskayaw_targets(coord_def where)
 }
 
 /**
- * Paralyze the monster in this cell, assuming one exists.
+ * Paralyse the monster in this cell, assuming one exists.
  *
  * Duration increases with invocations and experience level, and decreases
  * with target HD. The duration is pretty low, maxing out at 40 AUT.
@@ -2032,8 +2001,13 @@ static int _bond_audience(coord_def where)
 
     monster* mons = monster_at(where);
 
+    // Don't pain bond monsters that aren't invested in fighting the player
+    if (mons->wont_attack())
+        return 0;
+
     int power = apply_pity(you.skill(SK_INVOCATIONS, 7) + you.experience_level
                  - mons->get_hit_dice());
+
     int duration = 20 + random2avg(power, 2);
     mons->add_ench(mon_enchant(ENCH_PAIN_BOND, 1, &you, duration));
 
@@ -2057,4 +2031,54 @@ void uskayaw_bonds_audience()
     }
     else // Reset the timer because we didn't actually execute.
         you.props[USKAYAW_BOND_TIMER] = 0;
+}
+
+static void _slimify_feat(coord_def pos)
+{
+    dungeon_feature_type feat = env.grid(pos);
+
+    if (feat_is_critical(feat))
+        return;
+
+    dungeon_feature_type new_feat = DNGN_FLOOR;
+
+    if (feat == DNGN_SLIMY_WATER && one_chance_in(3)
+        || feat == DNGN_DEEP_SLIMY_WATER || feat == DNGN_DEEP_WATER)
+    {
+        new_feat = DNGN_DEEP_SLIMY_WATER;
+    }
+    else if (feat_has_solid_floor(feat))
+        new_feat = DNGN_SLIMY_WATER;
+    else if (feat_is_tree(feat))
+        new_feat = DNGN_SLIMESHROOM;
+    else if (feat == DNGN_SLIMY_WALL || feat == DNGN_GRATE || feat_is_door(feat))
+    {
+        destroy_wall(pos);
+        new_feat = DNGN_SLIMY_WATER;
+    }
+    else if (feat_is_diggable(feat, true)
+        || feat == DNGN_SILVER_WALL && one_chance_in(10)
+        || (feat == DNGN_METAL_WALL || feat == DNGN_CLEAR_METAL_WALL) && one_chance_in(5)
+        || feat == DNGN_STONE_WALL && one_chance_in(3))
+    {
+        new_feat = DNGN_SLIMY_WALL;
+    }
+
+    if (new_feat == DNGN_FLOOR)
+        return;
+
+    const int turns = 10 + random2avg(you.skill(SK_INVOCATIONS), 2);
+
+    temp_change_terrain(pos, new_feat, turns * BASELINE_DELAY, TERRAIN_CHANGE_SLIME, you.as_monster());
+}
+
+void jiyva_passive_slime()
+{
+    _slimify_feat(you.pos());
+
+    for (adjacent_iterator ai(you.pos()); ai; ++ai)
+    {
+        if (one_chance_in(4))
+            _slimify_feat(*ai);
+    }
 }

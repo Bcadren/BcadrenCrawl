@@ -9,6 +9,8 @@
 
 #include <bitset>
 #include <map>
+#include <vector>
+
 #include <sys/un.h>
 
 #include "cursor-type.h"
@@ -21,6 +23,8 @@
 #include "tilemcache.h"
 #include "tileweb-text.h"
 #include "viewgeom.h"
+
+using std::vector;
 
 class Menu;
 
@@ -35,6 +39,7 @@ enum WebtilesUIState
 struct player_info
 {
     player_info();
+    bool _state_ever_synced;
 
     string name;
     string job_title;
@@ -43,10 +48,13 @@ struct player_info
     string god;
     bool under_penance;
     uint8_t piety_rank;
+    int piety;
 
     uint8_t form;
 
     int hp, hp_max, real_hp_max, poison_survival;
+    bool mounted;
+    int mount_hp, mount_hp_max;
     int mp, mp_max, dd_real_mp_max;
     int contam;
     int noise;
@@ -55,10 +63,21 @@ struct player_info
     int armour_class;
     int evasion;
     int shield_class;
+    int gdr;
 
     int8_t strength, strength_max;
     int8_t intel, intel_max;
     int8_t dex, dex_max;
+
+    bool toggle;
+
+    int res_fire;
+    int res_cold;
+    int res_neg;
+    int res_pois;
+    int res_elec;
+    int res_acid;
+    int mr;
 
     int experience_level;
     int8_t exp_progress;
@@ -77,9 +96,12 @@ struct player_info
     FixedVector<item_info, ENDOFPACK> inv;
     FixedVector<int8_t, NUM_EQUIP> equip;
     int8_t quiver_item;
+    int8_t launcher_item;
+    string quiver_desc;
     string unarmed_attack;
     uint8_t unarmed_attack_colour;
     bool quiver_available;
+    bool hand_lost;
 };
 
 class TilesFramework
@@ -116,9 +138,6 @@ public:
     void add_text_tag(text_tag_type type, const monster_info& mon);
 
     const coord_def &get_cursor() const;
-
-    void add_overlay(const coord_def &gc, tileidx_t idx);
-    void clear_overlays();
 
     void draw_doll_edit();
 

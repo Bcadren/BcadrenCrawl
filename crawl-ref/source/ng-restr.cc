@@ -10,60 +10,72 @@
 
 #include "ng-restr.h"
 
+#include "item-prop.h"
 #include "jobs.h"
 #include "newgame.h"
 #include "newgame-def.h"
+#include "season.h"
 #include "size-type.h"
 #include "species.h"
 
 static bool _banned_combination(job_type job, species_type species)
 {
-    switch (species)
+    switch (job)
     {
-    case SP_FELID:
-        if (job == JOB_GLADIATOR
-            || job == JOB_HUNTER
-            || job == JOB_ARCANE_MARKSMAN)
+    case JOB_BERSERKER:
+        if (species_undead_type(species) != US_ALIVE
+            || species == SP_FORMICID
+            || species == SP_FAIRY)
         {
             return true;
         }
         break;
-    case SP_DEMIGOD:
-        if (job == JOB_BERSERKER
-            || job == JOB_CHAOS_KNIGHT
-            || job == JOB_ABYSSAL_KNIGHT
-            || job == JOB_MONK
-            || job == JOB_PRIEST
-            || job == JOB_DEMIGOD)
+    case JOB_MERFOLK:
+        if (species == SP_OCTOPODE)
+            return true;
+        // Fallthrough
+    case JOB_CENTAUR:
+    case JOB_NAGA:
+    case JOB_GLADIATOR:
+    case JOB_HUNTER:
+    case JOB_ARCANE_MARKSMAN:
+        if (species == SP_FELID)
+            return true;
+        // Fallthrough
+    case JOB_FIGHTER:
+    case JOB_MONK:
+    case JOB_ENCHANTER:
+    case JOB_SKALD:
+        if (species == SP_FAIRY)
+            return true;
+        break;
+    case JOB_MUMMY:
+        if (species == SP_GARGOYLE || species == SP_MOLTEN_GARGOYLE || species == SP_OOZOMORPH || species == SP_LIGNIFITE)
+            return true;
+    case JOB_VINE_STALKER:
+        if (species == SP_LIGNIFITE)
+            return true;
+        // fallthrough
+    case JOB_DEMONSPAWN:
+        if (species_undead_type(species) == US_GHOST)
+            return true;
+        // fallthrough
+    case JOB_TRANSMUTER:
+        if (species_undead_type(species) == US_UNDEAD
+            || species_undead_type(species) == US_HUNGRY_DEAD
+            || species == SP_FAIRY)
         {
             return true;
         }
         break;
-    case SP_LIGNIFITE:
-    case SP_BASE_DRACONIAN:  // Temporarily Banned pending a special case.
-        if (job == JOB_MUMMY)
+    case JOB_JESTER:
+        if (!is_april_fools())
             return true;
-        break;
-    case SP_GHOUL:
-    case SP_SILENT_SPECTRE:
-        if (job == JOB_MUMMY || job == JOB_DEMONSPAWN)
-            return true;
-    case SP_FORMICID:
-        if (job == JOB_BERSERKER)
+        if (species == SP_FAIRY || species == SP_FELID || species == SP_DRACONIAN)
             return true;
     default:
         break;
     }
-
-    if (job == JOB_TRANSMUTER
-        && (species_undead_type(species) == US_UNDEAD
-           || species_undead_type(species) == US_HUNGRY_DEAD))
-    {
-        return true;
-    }
-
-    if (job == JOB_BERSERKER && species_undead_type(species) != US_ALIVE)
-        return true;
 
     return false;
 }
@@ -89,7 +101,10 @@ bool character_is_allowed(species_type species, job_type job)
 
 char_choice_restriction job_allowed(species_type speci, job_type job)
 {
-    if (!is_starting_species(speci) || !is_starting_job(job))
+    if (!is_april_fools() && job == JOB_JESTER)
+        return CC_BANNED;
+
+    if ((!is_starting_species(speci) && speci != SP_UNKNOWN) || !is_starting_job(job))
         return CC_BANNED;
 
     if (_banned_combination(job, speci))
@@ -101,56 +116,27 @@ char_choice_restriction job_allowed(species_type speci, job_type job)
     return CC_RESTRICTED;
 }
 
-bool is_good_combination(species_type spc, job_type job, bool species_first,
-                         bool good)
-{
-    const char_choice_restriction restrict =
-        species_first ? job_allowed(spc, job) : species_allowed(job, spc);
-
-    if (good)
-        return restrict == CC_UNRESTRICTED;
-
-    return restrict != CC_BANNED;
-}
-
 // Is the given god restricted for the character defined by ng?
 // Only uses ng.species and ng.job.
 char_choice_restriction weapon_restriction(weapon_type wpn,
                                            const newgame_def &ng)
 {
-    ASSERT_RANGE(ng.species, 0, NUM_SPECIES);
-    ASSERT_RANGE(ng.job, 0, NUM_JOBS);
-    ASSERT(ng.species == SP_BASE_DRACONIAN
-           || !species_is_draconian(ng.species));
+    ASSERT(is_starting_species(ng.species));
+    ASSERT(is_starting_job(ng.job));
 
     // Some special cases:
 
     if (ng.species == SP_FELID && wpn != WPN_UNARMED)
         return CC_BANNED;
 
-    // These recommend short blades because they're good at stabbing,
-    // but the fighter's armour hinders that.
-    if ((ng.species == SP_NAGA || ng.species == SP_VAMPIRE)
-         && ng.job == JOB_FIGHTER && wpn == WPN_RAPIER)
-    {
-        return CC_RESTRICTED;
-    }
-
-    if (wpn == WPN_QUARTERSTAFF && ng.job != JOB_GLADIATOR
-        && !(ng.job == JOB_FIGHTER && ng.species == SP_FORMICID))
-    {
-        return CC_BANNED;
-    }
-
-    // Javelins are always good, tomahawks not so much.
-    if (wpn == WPN_THROWN)
-    {
-        return species_size(ng.species) >= SIZE_MEDIUM ? CC_UNRESTRICTED
-                                                       : CC_RESTRICTED;
-    }
-
     if (species_recommends_weapon(ng.species, wpn))
         return CC_UNRESTRICTED;
+
+    if (wpn != WPN_UNARMED && wpn != WPN_UNKNOWN &&
+        (ng.job == JOB_MERFOLK) && (wpn_skill(wpn) == SK_SHORT_BLADES))
+    {
+        return CC_UNRESTRICTED;
+    }
 
     return CC_RESTRICTED;
 }

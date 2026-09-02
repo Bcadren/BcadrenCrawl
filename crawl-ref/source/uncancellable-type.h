@@ -1,8 +1,12 @@
 #pragma once
 
+#include "tag-version.h"
+
 enum uncancellable_type
 {
+#if TAG_MAJOR_VERSION == 34
     UNC_ACQUIREMENT,           // arg is AQ_SCROLL
+#endif
     UNC_DRAW_THREE,            // arg is inv slot of the deck
     UNC_STACK_FIVE,            // arg is inv slot of the deck
 #if TAG_MAJOR_VERSION == 34

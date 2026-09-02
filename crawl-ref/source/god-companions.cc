@@ -16,6 +16,7 @@
 #include "mon-util.h"
 #include "religion.h"
 #include "spl-other.h"
+#include "tag-version.h"
 
 map<mid_t, companion> companion_list;
 
@@ -59,6 +60,46 @@ void remove_enslaved_soul_companion()
             return;
         }
     }
+}
+
+// How many abominations total (small and large) can the player have?
+// Uses invocations since Twisted is now a Yred power.
+static int _player_abomination_cap()
+{
+    return 3 + you.skill(SK_INVOCATIONS) / 6;
+}
+
+// How many large abominations can the player have?
+// Uses invocations since Twisted is now a Yred power.
+static int _player_large_abom_cap()
+{
+    if (you.skill(SK_INVOCATIONS) < 3)
+        return 0;
+    return (1 + (you.skill(SK_INVOCATIONS) - 3 / 6));
+}
+
+// Can the player get an additional abomination?
+// If large is true checks if additional small abominations can be allowed to
+// upgrade to larges instead.
+bool player_allowed_abom(bool large)
+{
+    int abom_count = 0;
+    for (auto &entry : companion_list)
+    {
+        monster* mons = monster_by_mid(entry.first);
+        if (!mons)
+            mons = &entry.second.mons.mons;
+        if (!large && mons->type == MONS_ABOMINATION_SMALL)
+            abom_count++;
+        if (mons->type == MONS_ABOMINATION_LARGE)
+            abom_count++;
+    }
+
+    if (abom_count >= _player_abomination_cap())
+        return false;
+    if (large && (abom_count >= _player_large_abom_cap()))
+        return false;
+    return true;
 }
 
 void remove_all_companions(god_type god)
@@ -107,18 +148,30 @@ void update_companions()
 
 void populate_offlevel_recall_list(vector<pair<mid_t, int> > &recall_list)
 {
+    vector <int> lost_monsters;
     for (auto &entry : companion_list)
     {
         int mid = entry.first;
         companion &comp = entry.second;
         if (companion_is_elsewhere(mid, true))
         {
-            // Recall can't pull monsters out of the Abyss
-            if (comp.level.branch == BRANCH_ABYSS)
+            if (comp.level.branch == BRANCH_ABYSS && coinflip())
+            {
+                lost_monsters.emplace_back(mid);
                 continue;
+            }
 
             recall_list.emplace_back(mid, comp.mons.mons.get_experience_level());
         }
+    }
+
+    if (lost_monsters.size() > 0)
+        mprf("You sense %s been permanently lost in the Abyss.", lost_monsters.size() > 1 ? "some allies have" : "an ally has");
+
+    for (int mid : lost_monsters)
+    {
+        remove_monster_from_transit(companion_list[mid].level, mid);
+        companion_list.erase(mid);
     }
 }
 
@@ -182,12 +235,7 @@ bool recall_offlevel_ally(mid_t mid)
 bool companion_is_elsewhere(mid_t mid, bool must_exist)
 {
     if (companion_list.count(mid))
-    {
-        return companion_list[mid].level != level_id::current()
-               || (player_in_branch(BRANCH_PANDEMONIUM)
-                   && companion_list[mid].level.branch == BRANCH_PANDEMONIUM
-                   && !monster_by_mid(mid));
-    }
+        return companion_list[mid].level != level_id::current();
 
     return !must_exist;
 }

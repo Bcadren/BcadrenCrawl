@@ -207,7 +207,6 @@ static string _try_exact_string(const vector<string> &prefixes,
 
 static string __get_speak_string(const vector<string> &prefixes,
                                  const string &key,
-                                 const monster* mons,
                                  bool no_player, bool no_foe,
                                  bool no_foe_name, bool no_god,
                                  bool unseen)
@@ -282,7 +281,9 @@ static string _get_speak_string(const vector<string> &prefixes,
                                 bool unseen)
 {
     int duration = 1;
-    if (mons->hit_points <= 0)
+    if ((mons->flags & MF_BANISHED) && !player_in_branch(BRANCH_ABYSS))
+        key += " banished";
+    else if (mons->hit_points <= 0)
     {
         //separate death/permadeath lines for resurrection monsters
         if (mons_is_mons_class(mons, MONS_NATASHA)
@@ -294,8 +295,6 @@ static string _get_speak_string(const vector<string> &prefixes,
         }
         key += " killed";
     }
-    else if ((mons->flags & MF_BANISHED) && !player_in_branch(BRANCH_ABYSS))
-        key += " banished";
     else if (mons->is_summoned(&duration) && duration <= 0)
         key += " unsummoned";
 
@@ -303,7 +302,7 @@ static string _get_speak_string(const vector<string> &prefixes,
     for (int tries = 0; tries < 10; tries++)
     {
         msg =
-            __get_speak_string(prefixes, key, mons, no_player, no_foe,
+            __get_speak_string(prefixes, key, no_player, no_foe,
                                no_foe_name, no_god, unseen);
 
         // If the first message was non-empty and discarded then discard
@@ -507,7 +506,7 @@ bool mons_speaks(monster* mons)
     // Add Beogh to list of prefixes for orcs (hostile and friendly) if you
     // worship Beogh. (This assumes your being an orc, so might have odd
     // results in wizard mode.) Don't count charmed or summoned orcs.
-    if (you_worship(GOD_BEOGH) && mons_genus(mons->type) == MONS_ORC)
+    if (you_worship(GOD_BEOGH) && monster_class_is_orcish(mons->type))
     {
         if (!mons->has_ench(ENCH_CHARM) && !mons->is_summoned())
         {

@@ -159,9 +159,13 @@ Khufu title
 
 Khufu the Undying Pharaoh
 %%%%
-Kirke title
+Circe title
 
-Kirke, Weaver of Myths
+Circe, Weaver of Myths
+%%%%
+Gammafunk title
+
+Gammafunk, Crafter of Traps
 %%%%
 Lom Lobon title
 
@@ -170,6 +174,10 @@ Lom Lobon, Demon Lord of Forbidden Knowledge
 Louise title
 
 Louise the Corrupted
+%%%%
+Maggie title
+
+Maggie the Vainglorious
 %%%%
 Mara title
 
@@ -275,9 +283,9 @@ Terence title
 
 Terence the Incautious
 %%%%
-Tiamat title
+Livarra title
 
-Tiamat, Avatar of the Dragonlord
+Livarra, High Priestess of Tiamat
 %%%%
 Urug title
 

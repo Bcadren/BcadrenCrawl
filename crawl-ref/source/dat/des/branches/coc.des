@@ -31,8 +31,10 @@ NAME:   grunt_cocytus_stairs_refrigerator
 TAGS:   transparent
 DEPTH:  Coc:1-6
 COLOUR: c = blue
-MONS:   Ice Fiend, blizzard demon, ice devil, white imp
+MONS:   Vetrifl, cenysus, rypuiwel, gwybwca
 KMONS:  H = ice statue
+KMASK:  H = opaque
+KPROP:  H = no_tele_into
 MAP
 xwww..3......
 xwwwwww..4...
@@ -86,10 +88,10 @@ NAME:    nicolae_coc_ice_floe
 DEPTH:   Coc:2-, !Coc:$
 SHUFFLE: {[(, }]}
 NSUBST:  D = 1:1 / 2:2 / *:34
-KMONS:   1 = Ice Fiend
-KMONS:   2 = blizzard demon
-KMONS:   3 = ice devil
-KMONS:   4 = white imp
+KMONS:   1 = Vetrifl
+KMONS:   2 = cenysus
+KMONS:   3 = rypuiwel
+KMONS:   4 = gwybwca
 MAP
       wwwwwwwww
     wwwwwwwwwwwww
@@ -195,10 +197,10 @@ ENDMAP
 
 NAME:    coc_dpeg
 ORIENT:  encompass
-MONS:    patrolling Antaeus, Ice Fiend, ice dragon, blizzard demon
+MONS:    patrolling Antaeus, Vetrifl, ice dragon, cenysus
 KMONS:   E = elemental wellspring
 : serpent_of_hell_setup(_G)
-KMONS:   defg = ice devil w:5 / Ice Fiend / nothing w:5
+KMONS:   defg = rypuiwel w:5 / Vetrifl / nothing w:5
 KITEM:   defg = any misc
 KFEAT:   E = w
 SHUFFLE: O1dD / e4%H / f9*I / g8|J
@@ -274,8 +276,8 @@ ENDMAP
 
 NAME:    coc_old
 ORIENT:  encompass
-MONS:    patrolling Antaeus, Ice Fiend, ice dragon, blizzard demon
-KMONS:   0 = ice devil w:24 / freezing wraith w:6 / \
+MONS:    patrolling Antaeus, Vetrifl, ice dragon, cenysus
+KMONS:   0 = rypuiwel w:24 / freezing wraith w:6 / \
          ice dragon skeleton w:8 / anaconda simulacrum w:6 / \
          titan simulacrum w:6 / hydra simulacrum w:6 / storm dragon simulacrum w:6
 KMONS:   E = elemental wellspring
@@ -358,11 +360,11 @@ ENDMAP
 
 NAME:    coc_mu
 ORIENT:  encompass
-MONS:    patrolling Antaeus, ice fiend
-MONS:    ice devil, ice devil, white imp, ice dragon, freezing wraith
+MONS:    patrolling Antaeus, Vetrifl
+MONS:    rypuiwel, rypuiwel, gwybwca, ice dragon, freezing wraith
 KMONS:   8 = ice statue
 KMONS:   9 = frost giant
-KMONS:   0 = blizzard demon
+KMONS:   0 = cenysus
 KMONS:   e = water elemental
 KMONS:   E = elemental wellspring
 KFEAT:   eE = w
@@ -450,13 +452,13 @@ ENDMAP
 
 NAME:    coc_grunt
 ORIENT:  encompass
-MONS:    patrolling Antaeus, Ice Fiend, ice dragon / nothing
-MONS:    ice devil / bog body w:4 / ice dragon w:3 / \
+MONS:    patrolling Antaeus, Vetrifl, ice dragon / nothing
+MONS:    rypuiwel / bog body w:4 / ice dragon w:3 / \
          freezing wraith w:2 / frost giant w:1
 KMONS:   8 = ice statue
 KMONS:   9 = elemental wellspring
-KMONS:   de = Ice Fiend
-KMONS:   fg = blizzard demon
+KMONS:   de = Vetrifl
+KMONS:   fg = cenysus
 KITEM:   df = superb_item
 KITEM:   egh = gold
 : serpent_of_hell_setup(_G)
@@ -549,15 +551,15 @@ ENDMAP
 NAME:    coc_hangedman
 TAGS:    no_pool_fixup
 ORIENT:  encompass
-MONS:    patrolling Antaeus, ice fiend, blizzard demon
-MONS:    ice devil w:22 / bog body
+MONS:    patrolling Antaeus, Vetrifl, cenysus
+MONS:    rypuiwel w:22 / bog body
 MONS:    anaconda simulacrum / titan simulacrum / \
          hydra simulacrum / storm dragon simulacrum
 KMONS:   6 = ice statue
 KMONS:   7 = patrolling kraken simulacrum / \
              patrolling elemental wellspring
 KMONS:   89 = ice dragon / frost giant w:4
-KMONS:   & = patrolling ice fiend
+KMONS:   & = patrolling Vetrifl
 : serpent_of_hell_setup(_G)
 KITEM:   d = $ no_pickup
 KFEAT:   d67& = W
@@ -647,9 +649,9 @@ ENDMAP
 NAME:     coc_grunt_cove
 ORIENT:   encompass
 MONS:     ice dragon / nothing
-MONS:     ice devil / bog body w:4 / ice dragon w:3 / \
+MONS:     rypuiwel / bog body w:4 / ice dragon w:3 / \
           freezing wraith w:2 / frost giant w:1
-MONS:     patrolling Ice Fiend, patrolling blizzard demon
+MONS:     patrolling Vetrifl, patrolling cenysus
 KMONS:    8 = ice statue
 KMONS:    9 = elemental wellspring
 KFEAT:    9 = w
@@ -738,7 +740,7 @@ ENDMAP
 
 NAME:  coc_grunt_cove_antaeus
 TAGS:  coc_grunt_cove_antaeus
-MONS:  patrolling Antaeus, patrolling Ice Fiend
+MONS:  patrolling Antaeus, patrolling Vetrifl
 KITEM: $ = $ no_pickup
 KITEM: O = icy rune of Zot
 MAP
@@ -750,7 +752,7 @@ ENDMAP
 
 NAME:  coc_grunt_cove_fiend
 TAGS:  coc_grunt_cove_fiend allow_dup
-MONS:  patrolling Ice Fiend
+MONS:  patrolling Vetrifl
 KITEM: $ = $ no_pickup
 MAP
  $*

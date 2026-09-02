@@ -12,10 +12,14 @@
 
 #define KNOWN_PROPS_KEY     "artefact_known_props"
 #define ARTEFACT_PROPS_KEY  "artefact_props"
+#define CURSE_PROPS_KEY     "curse_props"
+#define SOUL_BIND_XP_KEY    "soulbind_experience"
 #define ARTEFACT_NAME_KEY   "artefact_name"
 #define ARTEFACT_APPEAR_KEY "artefact_appearance"
+#define CHANGED_BRAND_KEY   "changed_brand"
 
 #define DAMNATION_BOLT_KEY "damnation_bolt"
+#define EMBRACE_ARMOUR_KEY "embrace_armour"
 
 struct bolt;
 
@@ -30,7 +34,7 @@ enum unrand_flag_type
     UNRAND_FLAG_CHAOTIC          = 0x20,
     UNRAND_FLAG_CORPSE_VIOLATING = 0x40,
     UNRAND_FLAG_NOGEN            = 0x80,
-    UNRAND_FLAG_RANDAPP          =0x100,
+                              // =0x100,  // was UNRAND_FLAG_RANDAPP
     UNRAND_FLAG_UNIDED           =0x200,
     UNRAND_FLAG_SKIP_EGO         =0x400,
     // Please make sure it fits in unrandart_entry.flags (currently 16 bits).
@@ -68,10 +72,11 @@ struct unrandart_entry
     void (*unequip_func)(item_def* item, bool* show_msgs);
     void (*world_reacts_func)(item_def* item);
     void (*melee_effects)(item_def* item, actor* attacker,
-                          actor* defender, bool mondied, int damage);
+                          actor* defender, bool mondied, int damage, bool mount_hit);
     setup_missile_type (*launch)(item_def* item, bolt* beam,
                                  string* ammo_name, bool* returning);
     bool (*evoke_func)(item_def *item, bool* did_work, bool* unevokable);
+    bool (*targeted_evoke_func)(item_def *item, bool* did_work, bool* unevokable, dist* target);
 };
 
 bool is_known_artefact(const item_def &item);
@@ -79,7 +84,6 @@ bool is_artefact(const item_def &item);
 bool is_random_artefact(const item_def &item);
 bool is_unrandom_artefact(const item_def &item, int which = 0);
 bool is_special_unrandom_artefact(const item_def &item);
-bool is_randapp_artefact(const item_def &item);
 void autoid_unrand(item_def &item);
 
 void artefact_fixup_props(item_def &item);
@@ -102,25 +106,26 @@ int find_okay_unrandart(uint8_t aclass, uint8_t atype = OBJ_RANDOM,
 typedef FixedVector< int, ART_PROPERTIES >  artefact_properties_t;
 typedef FixedVector< bool, ART_PROPERTIES > artefact_known_props_t;
 
-void artefact_desc_properties(const item_def        &item,
-                              artefact_properties_t &proprt,
+void artefact_desc_properties(const item_def         &item,
+                              artefact_properties_t  &proprt,
                               artefact_known_props_t &known);
 
-void artefact_properties(const item_def       &item,
-                         artefact_properties_t &proprt,
-                         artefact_known_props_t &known);
+void curse_desc_properties(const item_def        &item,
+                           artefact_properties_t &curse);
+
+void artefact_known_properties(const item_def        &item,
+                              artefact_known_props_t &known);
 
 void artefact_properties(const item_def &item,
-                         artefact_properties_t &proprt);
-
-int artefact_property(const item_def &item, artefact_prop_type prop,
-                      bool &known);
+                              artefact_properties_t  &proprt);
 
 int artefact_property(const item_def &item, artefact_prop_type prop);
 
-int artefact_known_property(const item_def &item, artefact_prop_type prop);
-
 void artefact_learn_prop(item_def &item, artefact_prop_type prop);
+
+bool curse_item(item_def &item);
+bool uncurse_item(item_def &item);
+bool apply_curse(item_def &item, artefact_prop_type prop, bool silent = false);
 
 bool make_item_randart(item_def &item, bool force_mundane = false);
 bool make_item_unrandart(item_def &item, int unrand_index);
@@ -137,12 +142,14 @@ void artefact_set_property(item_def           &item,
                            artefact_prop_type  prop,
                            int                 val);
 
+/// Type for the value of an artefact property
 enum artp_value_type
 {
-    ARTP_VAL_BOOL,
-    ARTP_VAL_POS,
-    ARTP_VAL_BRAND,
-    ARTP_VAL_ANY,
+    ARTP_VAL_BOOL,  ///< bool (e.g. +Fly)
+    ARTP_VAL_POS,   ///< Positive integer (e.g. x% chance to get angry)
+    ARTP_VAL_BRAND, ///< Brand (e.g. flaming, vorpal).
+                    ///      See \ref brand_type in item-prop-enum.h
+    ARTP_VAL_ANY,   ///< int (e.g. dex-4, AC+4, SH+8)
 };
 artp_value_type artp_potential_value_types(artefact_prop_type prop);
 

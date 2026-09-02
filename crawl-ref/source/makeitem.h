@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "book-type.h"
 #include "item-prop-enum.h"
 
 static const int NO_AGENT = -1;
@@ -23,6 +24,11 @@ void item_set_appearance(item_def &item);
 bool is_weapon_brand_ok(int type, int brand, bool strict);
 bool is_armour_brand_ok(int type, int brand, bool strict);
 bool is_missile_brand_ok(int type, int brand, bool strict);
+bool is_staff_brand_ok(int type, int brand, bool strict = true);
+
+special_armour_type defensive_shield_brand(int force_brand = 0);
+special_armour_type generate_armour_type_ego(armour_type type);
+facet_type generate_staff_facet(const item_def& item, int item_level);
 
 int determine_nice_weapon_plusses(int item_level);
 brand_type determine_weapon_brand(const item_def& item, int item_level);
@@ -30,6 +36,7 @@ brand_type determine_weapon_brand(const item_def& item, int item_level);
 bool got_curare_roll(const int item_level);
 void reroll_brand(item_def &item, int item_level);
 
+bool is_banned_book(book_type book, bool divine = false);
 bool is_high_tier_wand(int type);
 
 void squash_plusses(int item_slot);

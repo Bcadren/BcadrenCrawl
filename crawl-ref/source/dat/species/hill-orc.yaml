@@ -1,7 +1,7 @@
 enum: SP_HILL_ORC
 monster: MONS_ORC
-name: Hill Orc
-short_name: HO
+name: "Hill Orc"
+short_name: "HO"
 difficulty: Simple
 difficulty_priority: 100
 species_flags:
@@ -20,7 +20,6 @@ aptitudes:
   slings: -1
   bows: -1
   crossbows: -1
-  throwing: -1
   armour: 1
   dodging: -2
   stealth: -1
@@ -41,6 +40,9 @@ dex: 6
 levelup_stat_frequency: 5
 levelup_stats:
   - str
+mutations:
+  1:
+    MUT_SOFT_FLESH: 1
 recommended_jobs:
   - JOB_FIGHTER
   - JOB_MONK
@@ -51,6 +53,9 @@ recommended_jobs:
 recommended_weapons:
   - SK_WHIPS_FLAILS
   - SK_LONG_BLADES
-  - SK_AXES
+  - SK_AXES_HAMMERS
   - SK_POLEARMS
-create_enum: False
+
+# start TAG_MAJOR_VERSION == 34
+create_enum: false
+# end TAG_MAJOR_VERSION

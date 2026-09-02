@@ -33,14 +33,15 @@ levelup_stats:
   - int
 mutations:
   1:
-    MUT_ANTENNAE: 3
+    MUT_EXOSKELETON: 1
+    MUT_ANTENNAE: 1
+    MUT_STASIS: 1
+    MUT_BURROWING: 1
+    MUT_MULTIARM: 1
 fake_mutations:
-  - long: You cannot be hasted, slowed, berserked, paralysed or teleported.
-    short: permanent stasis
-  - long: You can dig through walls and to a lower floor.
-    short: dig shafts and tunnels
-  - long: Your four strong arms can wield two-handed weapons with a shield.
-    short: four strong arms
+# BCADDO: Make a real mutation (or piggyback on burrowing)
+  - long: Shaft traps can't make you fall very far.
+    short: reduced fall distance
 recommended_jobs:
   - JOB_FIGHTER
   - JOB_HUNTER
@@ -50,10 +51,13 @@ recommended_jobs:
   - JOB_VENOM_MAGE
 recommended_weapons:
   - SK_WHIPS_FLAILS
-  - SK_AXES
+  - SK_AXES_HAMMERS
   - SK_POLEARMS
   - SK_LONG_BLADES
   - SK_MACES_STAVES
   - SK_CROSSBOWS
   - SK_SLINGS
-create_enum: False
+
+# start TAG_MAJOR_VERSION == 34
+create_enum: false
+# end TAG_MAJOR_VERSION

@@ -8,8 +8,6 @@
 #include "cluautil.h"
 #include "food.h"
 #include "religion.h"
-#include "spl-book.h"
-#include "spl-damage.h"
 #include "spl-util.h"
 #include "spl-zap.h"
 
@@ -73,7 +71,7 @@ LUAFN(l_spells_mana_cost)
 LUAFN(l_spells_range)
 {
     spell_type spell = spell_by_name(luaL_checkstring(ls, 1), false);
-    PLUARET(number, spell_range(spell, calc_spell_power(spell, true)));
+    PLUARET(number, spell_range(spell, calc_spell_power(spell, true, false, true, 1, false)));
 }
 
 /*** The maximum range of the spell.
@@ -114,7 +112,7 @@ LUAFN(l_spells_path)
 {
     spell_type spell = spell_by_name(luaL_checkstring(ls, 1), false);
     zap_type zap = spell_to_zap(spell);
-    int power = calc_spell_power(spell, true);
+    int power = calc_spell_power(spell, true, false, true, 1, false);
     int range = spell_range(spell, power);
     // return nil for non-zap or zero-range spells
     if (range <= 0 || zap >= NUM_ZAPS)
@@ -252,9 +250,7 @@ LUAFN(l_spells_target)
  */
 LUAFN(l_spells_dir)
 {
-    spell_type spell = spell_by_name(luaL_checkstring(ls, 1), false);
-    const spell_flags flags = get_spell_flags(spell);
-    PLUARET(boolean, bool(flags & spflag::dir));
+    PLUARET(boolean, false);
 }
 
 /*** Can this spell target objects?
@@ -322,6 +318,34 @@ LUAFN(l_spells_god_loathes)
     PLUARET(boolean, god_loathes_spell(spell, god));
 }
 
+/*** Cast a spell at a target. If the target is not provided, enters interactive
+ * targeting.
+ *
+ * @tparam string spell name
+ * @tparam[opt=0] number x coordinate
+ * @tparam[opt=0] number y coordinate
+ * @tparam[opt=false] boolean if true, aim at the target; if false, shoot past it
+ * @treturn boolean whether an action took place
+ */
+static int l_spells_cast(lua_State *ls)
+{
+    if (you.turn_is_over)
+        return 0;
+    const string spell_name = luaL_checkstring(ls, 1);
+    spell_type spell = spell_by_name(spell_name, false);
+    if (!is_valid_spell(spell))
+    {
+        luaL_argerror(ls, 1, ("Invalid spell: " + spell_name).c_str());
+        return 0;
+    }
+    PLAYERCOORDS(c, 2, 3);
+    dist target;
+    target.target = c;
+    target.isEndpoint = lua_toboolean(ls, 4); // can be nil
+    quiver::spell_to_action(spell)->trigger(target);
+    PLUARET(boolean, you.turn_is_over);
+}
+
 static const struct luaL_reg spells_clib[] =
 {
     { "memorised"     , l_spells_memorised },
@@ -344,6 +368,7 @@ static const struct luaL_reg spells_clib[] =
     { "god_likes"     , l_spells_god_likes },
     { "god_hates"     , l_spells_god_hates },
     { "god_loathes"   , l_spells_god_loathes },
+    { "cast"          , l_spells_cast },
     { nullptr, nullptr }
 };
 

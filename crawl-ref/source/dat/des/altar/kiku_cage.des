@@ -56,7 +56,7 @@ end
 
 NAME:   tgw_kikubaaqudgha
 TAGS:   uniq_altar_kikubaaqudgha temple_overflow_kikubaaqudgha
-DEPTH:  D:2-10
+DEPTH:  D:2-5
 KFEAT:  _ = altar_kikubaaqudgha
 {{
 local tm = TriggerableFunction:new{

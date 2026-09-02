@@ -97,12 +97,12 @@ FTILE:   .123f = floor_swamp, t = floor_grass
 KFEAT:   ,ABCDEF = .
 COLOUR:  deABCDEF = lightblue
 FTILE:   deABCDEF = tutorial_pad
-MONS:    training dummy hp:2 ; stone q:10
+MONS:    training dummy hp:2
 MONS:    rat always_corpse
 MONS:    worm
-ITEM:    tomahawk mundane q:10
+ITEM:    scroll of random uselessness
 ITEM:    shortbow mundane not_cursed
-ITEM:    arrow mundane q:30
+ITEM:    scroll of random uselessness
 MARKER:  d = lua:tutorial2.msg("tomahawks")
 MARKER:  A = lua:tutorial2.msg("throwing")
 MARKER:  B = lua:tutorial2.msg("resting_reminder")

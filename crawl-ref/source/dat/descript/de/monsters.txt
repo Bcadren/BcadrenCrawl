@@ -185,11 +185,11 @@ big fish
 
 Ein kräftiger Fisch mit einem großen zahnigen Maul.
 %%%%
-blizzard demon
+cenysus
 
 Ein größerer Dämon, umgeben von Schnee und Blitzen.
 %%%%
-Brimstone Fiend
+rhuddgoch
 
 Ein riesiger und mächtiger Dämon hat sich im Höllenfeuer mit großen schuppigen
 Flügeln gewunden. Einer der schrecklichsten Bewohner von einigen der Höllen.
@@ -203,7 +203,7 @@ deep troll
 Ein alters gebeugter Troll mit dunkler Haut, diese in Höhlen lebenden
 Tiefen-Trolle reisen oft in Gruppen.
 %%%%
-Executioner
+oxarmordth
 
 Ein schrecklich mächtiger und schneller Dämon dessen Form durch eine Wolke von
 herumwirbelnden Sensen-ähnlichen Klingen verzerrt wird.

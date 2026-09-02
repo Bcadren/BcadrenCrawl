@@ -40,7 +40,7 @@ void UIShrinkableImage::_render()
     m_buf.draw();
 }
 
-SizeReq UIShrinkableImage::_get_preferred_size(Direction dim, int prosp_width)
+SizeReq UIShrinkableImage::_get_preferred_size(Direction dim, int /*prosp_width*/)
 {
     return { 0, (int)(!dim ? m_img.orig_width() : m_img.orig_height()) };
 }
@@ -67,7 +67,7 @@ void loading_screen_open()
     loading_text = make_shared<Text>();
     loading_text->set_margin_for_sdl(15, 0, 0, 0);
     auto vbox = make_shared<Box>(Widget::VERT);
-    vbox->align_cross = Widget::CENTER;
+    vbox->set_cross_alignment(Widget::CENTER);
     vbox->add_child(move(splash));
     vbox->add_child(loading_text);
     FontWrapper *font = tiles.get_crt_font();
@@ -78,10 +78,8 @@ void loading_screen_open()
 
 void loading_screen_close()
 {
-    bool done = Options.tile_skip_title;
-    popup->on(Widget::slots.event, [&](wm_event ev)  {
-        return done = ev.type == WME_KEYDOWN;
-    });
+    bool done = Options.tile_skip_title || crawl_state.test;
+    popup->on_keydown_event([&](const KeyEvent&) { return done = true; });
     if (!done)
         loading_screen_update_msg(load_complete_msg);
     while (!done && !crawl_state.seen_hups)
@@ -93,7 +91,7 @@ void loading_screen_close()
 
 void loading_screen_update_msg(string message)
 {
-    loading_text->set_text(formatted_string(message));
+    loading_text->set_text(message);
     ui::pump_events(0);
 }
 

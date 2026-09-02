@@ -6,31 +6,25 @@
 #include "AppHdr.h"
 
 #include "misc.h"
+#include "mpr.h"
 
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#if !defined(__IBMCPP__) && !defined(TARGET_COMPILER_VC)
+#ifdef UNIX
 #include <unistd.h>
 #endif
 
-#include "coordit.h"
 #include "database.h"
 #include "english.h"
-#include "fprop.h"
 #include "items.h"
-#include "item-use.h"
 #include "libutil.h"
-#include "message.h"
 #include "monster.h"
-#include "prompt.h"
 #include "state.h"
 #include "terrain.h"
 #include "tileview.h"
 #include "traps.h"
-#include "view.h"
-#include "xom.h"
 
 string weird_glowing_colour()
 {
@@ -59,9 +53,6 @@ void swap_with_monster(monster* mon_to_swap)
 
     const bool mon_caught = mon.caught();
     const bool you_caught = you.attribute[ATTR_HELD];
-
-    // If it was submerged, it surfaces first.
-    mon.del_ench(ENCH_SUBMERGED);
 
     mprf("You swap places with %s.", mon.name(DESC_THE).c_str());
 
@@ -103,7 +94,7 @@ void swap_with_monster(monster* mon_to_swap)
                 mpr("You become entangled in the net!");
             else
                 mpr("You get stuck in the web!");
-            you.redraw_quiver = true; // Account for being in a net.
+            quiver::set_needs_redraw();
             you.redraw_evasion = true;
         }
 
@@ -155,8 +146,7 @@ int counted_monster_list::count()
     return nmons;
 }
 
-string counted_monster_list::describe(description_level_type desc,
-                                      bool force_article)
+string counted_monster_list::describe(description_level_type desc)
 {
     string out;
 
@@ -176,32 +166,6 @@ string counted_monster_list::describe(description_level_type desc,
                : cm.first->name(desc);
     }
     return out;
-}
-
-/**
- * Halloween or Hallowe'en (/ˌhæləˈwiːn, -oʊˈiːn, ˌhɑːl-/; a contraction of
- * "All Hallows' Evening"),[6] also known as Allhalloween,[7] All Hallows' Eve,
- * [8] or All Saints' Eve,[9] is a yearly celebration observed in a number of
- * countries on 31 October, the eve of the Western Christian feast of All
- * Hallows' Day... Within Allhallowtide, the traditional focus of All Hallows'
- * Eve revolves around the theme of using "humor and ridicule to confront the
- * power of death."[12]
- *
- * Typical festive Halloween activities include trick-or-treating (or the
- * related "guising"), attending costume parties, decorating, carving pumpkins
- * into jack-o'-lanterns, lighting bonfires, apple bobbing, visiting haunted
- * house attractions, playing pranks, telling scary stories, and watching
- * horror films.
- *
- * @return  Whether the current day is Halloween. (Cunning players may reset
- *          their system clocks to manipulate this. That's fine.)
- */
-bool today_is_halloween()
-{
-    const time_t curr_time = time(nullptr);
-    const struct tm *date = TIME_FN(&curr_time);
-    // tm_mon is zero-based in case you are wondering
-    return date->tm_mon == 9 && date->tm_mday == 31;
 }
 
 bool tobool(maybe_bool mb, bool def)

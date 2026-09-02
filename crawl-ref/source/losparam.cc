@@ -14,6 +14,7 @@
 #include "terrain.h"
 
 const opacity_default opc_default = opacity_default();
+const opacity_mon opc_mon = opacity_mon();
 const opacity_fullyopaque opc_fullyopaque = opacity_fullyopaque();
 const opacity_no_trans opc_no_trans = opacity_no_trans();
 const opacity_fully_no_trans opc_fully_no_trans = opacity_fully_no_trans();
@@ -25,7 +26,25 @@ const opacity_excl opc_excl = opacity_excl();
 
 opacity_type opacity_default::operator()(const coord_def& p) const
 {
-    dungeon_feature_type f = grd(p);
+    dungeon_feature_type f = env.grid(p);
+    if (feat_is_tree(f))
+        return OPC_HALF;
+    if (feat_is_opaque(f))
+        return OPC_OPAQUE;
+    else if (is_opaque_cloud(cloud_type_at(p)))
+        return OPC_HALF;
+    else if (const monster *mon = monster_at(p))
+        return mons_opacity(mon, LOS_DEFAULT);
+    return OPC_CLEAR;
+}
+
+opacity_type opacity_mon::operator()(const coord_def& p) const
+{
+    if (cell_is_runed(p))
+        return OPC_OPAQUE;
+    dungeon_feature_type f = env.grid(p);
+    if (feat_is_tree(f))
+        return OPC_HALF;
     if (feat_is_opaque(f))
         return OPC_OPAQUE;
     else if (is_opaque_cloud(cloud_type_at(p)))
@@ -45,7 +64,7 @@ opacity_type opacity_fullyopaque::operator()(const coord_def& p) const
 
 opacity_type opacity_no_trans::operator()(const coord_def& p) const
 {
-    dungeon_feature_type f = grd(p);
+    dungeon_feature_type f = env.grid(p);
     if (feat_is_opaque(f) || feat_is_wall(f) || feat_is_closed_door(f))
         return OPC_OPAQUE;
     else if (is_opaque_cloud(cloud_type_at(p)))
@@ -55,9 +74,34 @@ opacity_type opacity_no_trans::operator()(const coord_def& p) const
     return OPC_CLEAR;
 }
 
+opacity_type opacity_rocky::operator()(const coord_def& p) const
+{
+    dungeon_feature_type f = env.grid(p);
+    if (f == DNGN_ROCK_WALL || f == DNGN_CLEAR_ROCK_WALL || f == DNGN_SLIMY_WALL)
+        return OPC_CLEAR;
+    if (feat_is_wall(f) || feat_is_closed_door(f))
+        return OPC_OPAQUE;
+    else if (is_opaque_cloud(cloud_type_at(p)))
+        return OPC_HALF;
+    else if (const monster *mon = monster_at(p))
+        return mons_opacity(mon, LOS_NO_TRANS);
+    return OPC_CLEAR;
+}
+
+opacity_type opacity_steel::operator()(const coord_def& p) const
+{
+    if (cell_is_runed(p))
+        return OPC_OPAQUE;
+    if (is_opaque_cloud(cloud_type_at(p)))
+        return OPC_HALF;
+    if (const monster *mon = monster_at(p))
+        return mons_opacity(mon, LOS_NO_TRANS);
+    return OPC_CLEAR;
+}
+
 opacity_type opacity_fully_no_trans::operator()(const coord_def& p) const
 {
-    dungeon_feature_type f = grd(p);
+    dungeon_feature_type f = env.grid(p);
     if (feat_is_opaque(f) || feat_is_wall(f) || feat_is_closed_door(f))
         return OPC_OPAQUE;
     return OPC_CLEAR;

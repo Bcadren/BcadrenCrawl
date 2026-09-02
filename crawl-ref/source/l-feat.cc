@@ -6,7 +6,6 @@
 #include "l-libs.h"
 
 #include "cluautil.h"
-#include "coord.h"
 #include "env.h"
 #include "stringutil.h"
 #include "terrain.h"
@@ -17,7 +16,7 @@
         if (lua_gettop(ls) == 2) \
         { \
             COORDS(c, 1, 2);\
-            lua_pushboolean(ls, val(grd(c)));\
+            lua_pushboolean(ls, val(env.grid(c)));\
         } \
         else if (lua_isnumber(ls, 1)) \
              lua_pushboolean(ls, val(static_cast<dungeon_feature_type>( \

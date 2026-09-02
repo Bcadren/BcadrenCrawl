@@ -9,14 +9,15 @@
 #include "cio.h"
 #include "directn.h"
 #include "env.h"
+#include "tile-env.h"
 #include "libutil.h"
 #include "monster.h"
 #include "output.h"
 #include "describe.h"
 #include "tile-inventory-flags.h"
-#include "tiledef-dngn.h"
-#include "tiledef-icons.h"
-#include "tiledef-player.h"
+#include "rltiles/tiledef-dngn.h"
+#include "rltiles/tiledef-icons.h"
+#include "rltiles/tiledef-player.h"
 #include "tilepick.h"
 #include "tilereg-dgn.h"
 #include "tiles-build-specific.h"
@@ -52,7 +53,7 @@ void MonsterRegion::update()
     }
 }
 
-int MonsterRegion::handle_mouse(MouseEvent &event)
+int MonsterRegion::handle_mouse(wm_mouse_event &event)
 {
     int cx, cy;
     if (!mouse_pos(event.px, event.py, cx, cy))
@@ -75,18 +76,19 @@ int MonsterRegion::handle_mouse(MouseEvent &event)
     const coord_def &gc = mon->pos;
     tiles.place_cursor(CURSOR_MOUSE, gc);
 
-    if (event.event != MouseEvent::PRESS)
+    if (event.event != wm_mouse_event::PRESS)
         return 0;
 
-    if (event.button == MouseEvent::LEFT)
+    if (event.button == wm_mouse_event::LEFT)
     {
         m_last_clicked_item = item_idx;
         return tile_click_cell(gc, event.mod);
     }
-    else if (event.button == MouseEvent::RIGHT)
+    else if (event.button == wm_mouse_event::RIGHT)
     {
         full_describe_square(gc);
         redraw_screen();
+        update_screen();
         return CK_MOUSE_CMD;
     }
 
@@ -106,7 +108,7 @@ bool MonsterRegion::update_tip_text(string &tip)
     return tile_dungeon_tip(mon->pos, tip);
 }
 
-bool MonsterRegion::update_tab_tip_text(string &tip, bool active)
+bool MonsterRegion::update_tab_tip_text(string &/*tip*/, bool /*active*/)
 {
     return false;
 }
@@ -154,7 +156,7 @@ const monster_info* MonsterRegion::get_monster(unsigned int idx) const
 void MonsterRegion::pack_buffers()
 {
     update();
-    const int num_floor = tile_dngn_count(env.tile_default.floor);
+    const int num_floor = tile_dngn_count(tile_env.default_flavour.floor);
 
     unsigned int i = 0;
     for (int y = 0; y < my; y++)
@@ -173,9 +175,9 @@ void MonsterRegion::pack_buffers()
                 if (crawl_view.in_los_bounds_g(gc))
                 {
                     packed_cell cell;
-                    cell.fg = env.tile_fg(ep);
-                    cell.bg = env.tile_bg(ep);
-                    cell.flv = env.tile_flv(gc);
+                    cell.fg = tile_env.fg(ep);
+                    cell.bg = tile_env.bg(ep);
+                    cell.flv = tile_env.flv(gc);
                     tile_apply_properties(gc, cell);
 
                     m_buf.add(cell, x, y);
@@ -187,7 +189,7 @@ void MonsterRegion::pack_buffers()
             }
 
             // Fill the rest of the space with out of sight floor tiles.
-            int tileidx = env.tile_default.floor + i % num_floor;
+            int tileidx = tile_env.default_flavour.floor + i % num_floor;
             m_buf.add_dngn_tile(tileidx, x, y);
             m_buf.add_icons_tile(TILEI_MESH, x, y);
         }

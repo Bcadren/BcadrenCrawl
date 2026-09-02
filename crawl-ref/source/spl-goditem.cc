@@ -7,13 +7,15 @@
 
 #include "spl-goditem.h"
 
+#include "attack.h"  // Attack Strength Punctuation
+#include "art-enum.h"
 #include "cleansing-flame-source-type.h"
-#include "cloud.h"
 #include "coordit.h"
 #include "database.h"
 #include "directn.h"
 #include "english.h"
 #include "env.h"
+#include "tile-env.h"
 #include "fight.h"
 #include "god-conduct.h"
 #include "god-passive.h"
@@ -30,16 +32,15 @@
 #include "mon-cast.h"
 #include "mon-death.h"
 #include "mon-tentacle.h"
-#include "mutation.h"
 #include "religion.h"
 #include "spl-util.h"
 #include "state.h"
 #include "status.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "terrain.h"
-#include "tiledef-dngn.h"
+#include "rltiles/tiledef-dngn.h"
 #include "traps.h"
-#include "view.h"
 #include "viewchar.h"
 
 static void _print_holy_pacification_speech(const string &key,
@@ -289,7 +290,7 @@ static int _pacify_chance(const monster_info& mi, const int pow, int scale)
          / (sides * sides);
 }
 
-static vector<string> _desc_pacify_chance(const monster_info& mi, const int pow)
+vector<string> desc_pacify_chance(const monster_info& mi, const int pow)
 {
     vector<string> descs;
 
@@ -322,7 +323,7 @@ spret cast_healing(int pow, bool fail)
     args.needs_path = false;
     args.self = confirm_prompt_type::cancel;
     args.target_prefix = "Heal";
-    args.get_desc_func = bind(_desc_pacify_chance, placeholders::_1, pow);
+    args.get_desc_func = bind(desc_pacify_chance, placeholders::_1, pow);
     direction(spd, args);
 
     if (!spd.isValid)
@@ -373,6 +374,7 @@ static void _dispellable_player_buffs(player_debuff_effects &buffs)
     // attributes
     static const attribute_type dispellable_attributes[] = {
         ATTR_DEFLECT_MISSILES,
+        ATTR_SKELETON,
     };
 
     for (auto attribute : dispellable_attributes)
@@ -399,7 +401,7 @@ static void _dispellable_player_buffs(player_debuff_effects &buffs)
  *
  * @return  Whether there are any effects to be dispelled.
  */
-bool player_is_debuffable()
+bool player::debuffable() const
 {
     player_debuff_effects buffs;
     _dispellable_player_buffs(buffs);
@@ -413,7 +415,7 @@ bool player_is_debuffable()
  * Forms, buffs, debuffs, contamination, probably a few other things.
  * Flight gets an extra 11 aut before going away to minimize instadeaths.
  */
-void debuff_player()
+void player::debuff()
 {
     bool need_msg = false;
 
@@ -421,32 +423,29 @@ void debuff_player()
     player_debuff_effects buffs;
     _dispellable_player_buffs(buffs);
 
+    lose_staff_shield(BEAM_UNRAVELLING, 3);
+
     for (auto attr : buffs.attributes)
     {
         you.attribute[attr] = 0;
-#if TAG_MAJOR_VERSION == 34
-        if (attr == ATTR_DELAYED_FIREBALL)
-            mprf(MSGCH_DURATION, "Your charged fireball dissipates.");
-        else
-#endif
-            need_msg = true;
+        need_msg = true;
     }
 
-    for (auto duration : buffs.durations)
+    for (auto dur : buffs.durations)
     {
-        int &len = you.duration[duration];
-        if (duration == DUR_TELEPORT)
+        int &len = you.duration[dur];
+        if (dur == DUR_TELEPORT)
         {
             len = 0;
             mprf(MSGCH_DURATION, "You feel strangely stable.");
         }
-        else if (duration == DUR_PETRIFYING)
+        else if (dur == DUR_PETRIFYING)
         {
             len = 0;
             mprf(MSGCH_DURATION, "You feel limber!");
             you.redraw_evasion = true;
         }
-        else if (duration == DUR_FLAYED)
+        else if (dur == DUR_FLAYED)
         {
             len = 0;
             heal_flayed_effect(&you);
@@ -489,8 +488,11 @@ static void _dispellable_monster_buffs(const monster &mon,
     }
 
     // special-case invis, to avoid hitting naturally invis monsters.
-    if (mon.has_ench(ENCH_INVIS) && !mons_class_flag(mon.type, M_INVIS))
+    if (mon.has_ench(ENCH_INVIS) && !mons_class_flag(mon.type, M_INVIS) && !(mon.flags & MF_INVIS) &&
+        !(mons_is_draconian_job(mon.type) && draco_or_demonspawn_subspecies(mon) == MONS_BLACK_DRACONIAN))
+    {
         buffs.push_back(ENCH_INVIS);
+    }
 }
 
 
@@ -499,29 +501,29 @@ static void _dispellable_monster_buffs(const monster &mon,
  *
  * @param mon           The monster in question.
  */
-bool monster_is_debuffable(const monster &mon)
+bool monster::debuffable() const
 {
     vector<enchant_type> buffs;
-    _dispellable_monster_buffs(mon, buffs);
+    _dispellable_monster_buffs(*this, buffs);
     return !buffs.empty();
 }
 
 /**
  * Remove magical effects from a given monster.
- *
- * @param mon           The monster to be debuffed.
  */
-void debuff_monster(monster &mon)
+void monster::debuff()
 {
+    mon_lose_staff_shield(*this, BEAM_UNRAVELLING, 3);
+
     vector<enchant_type> buffs;
-    _dispellable_monster_buffs(mon, buffs);
+    _dispellable_monster_buffs(*this, buffs);
     if (buffs.empty())
         return;
 
     for (enchant_type buff : buffs)
-        mon.del_ench(buff, true, true);
+        del_ench(buff, true, true);
 
-    simple_monster_message(mon, "'s magical effects unravel!");
+    simple_monster_message(*this, "'s magical effects unravel!");
 }
 
 // pow -1 for passive
@@ -536,8 +538,6 @@ int detect_items(int pow)
         map_radius = get_los_radius();
     else
     {
-        if (you.has_mutation(MUT_JELLY_GROWTH))
-            map_radius = 5;
         // Check which god may be providing detect_items and set map_radius
         if (have_passive(passive_t::detect_items))
         {
@@ -727,64 +727,6 @@ bool remove_curse(bool alreadyknown, const string &pre_msg)
     return success;
 }
 
-#if TAG_MAJOR_VERSION == 34
-static bool _selectively_curse_item(bool armour, const string &pre_msg)
-{
-    while (1)
-    {
-        int item_slot = prompt_invent_item("Curse which item?", menu_type::invlist,
-                                           armour ? OSEL_UNCURSED_WORN_ARMOUR
-                                                  : OSEL_UNCURSED_WORN_JEWELLERY,
-                                           OPER_ANY, invprompt_flag::escape_only);
-        if (prompt_failed(item_slot))
-            return false;
-
-        item_def& item(you.inv[item_slot]);
-
-        if (item.cursed()
-            || !item_is_equipped(item)
-            || armour && item.base_type != OBJ_ARMOURS
-            || !armour && item.base_type != OBJ_JEWELLERY)
-        {
-            mprf("Choose an uncursed equipped piece of %s, or Esc to abort.",
-                 armour ? "armour" : "jewellery");
-            more();
-            continue;
-        }
-
-        if (!pre_msg.empty())
-            mpr(pre_msg);
-        do_curse_item(item, false);
-        learned_something_new(HINT_YOU_CURSED);
-        return true;
-    }
-}
-
-bool curse_item(bool armour, const string &pre_msg)
-{
-    // Make sure there's something to curse first.
-    bool found = false;
-    int min_type, max_type;
-    if (armour)
-        min_type = EQ_MIN_ARMOUR, max_type = EQ_MAX_ARMOUR;
-    else
-        min_type = EQ_LEFT_RING, max_type = EQ_RING_AMULET;
-    for (int i = min_type; i <= max_type; i++)
-    {
-        if (you.equip[i] != -1 && !you.inv[you.equip[i]].cursed())
-            found = true;
-    }
-    if (!found)
-    {
-        mprf(MSGCH_PROMPT, "You aren't wearing any piece of uncursed %s.",
-             armour ? "armour" : "jewellery");
-        return false;
-    }
-
-    return _selectively_curse_item(armour, pre_msg);
-}
-#endif
-
 static bool _do_imprison(int pow, const coord_def& where, bool zin)
 {
     // power guidelines:
@@ -837,7 +779,7 @@ static bool _do_imprison(int pow, const coord_def& where, bool zin)
             }
 
             // don't try to shove the orb of zot into lava and/or crash
-            if (igrd(*ai) != NON_ITEM)
+            if (env.igrid(*ai) != NON_ITEM)
             {
                 if (!has_push_spaces(*ai, false, &adj_spots))
                 {
@@ -849,7 +791,7 @@ static bool _do_imprison(int pow, const coord_def& where, bool zin)
 
             // Make sure we have a legitimate tile.
             proceed = false;
-            if (cell_is_solid(*ai) && !feat_is_opaque(grd(*ai)))
+            if (cell_is_solid(*ai) && !feat_is_opaque(env.grid(*ai)))
             {
                 success = false;
                 none_vis = false;
@@ -860,7 +802,7 @@ static bool _do_imprison(int pow, const coord_def& where, bool zin)
         if (!success)
         {
             mprf(none_vis ? "You briefly glimpse something next to %s."
-                        : "You need more space to imprison %s.",
+                          : "You need more space to imprison %s.",
                 targname.c_str());
             return false;
         }
@@ -883,21 +825,21 @@ static bool _do_imprison(int pow, const coord_def& where, bool zin)
 
         // closed doors are solid, but we don't want a behaviour difference
         // between open and closed doors
-        proceed = !cell_is_solid(*ai) || feat_is_door(grd(*ai));
+        proceed = !cell_is_solid(*ai) || feat_is_door(env.grid(*ai));
         if (!zin && monster_at(*ai))
             proceed = false;
 
         if (proceed)
         {
             // All items are moved aside for zin, tomb just skips the tile.
-            if (igrd(*ai) != NON_ITEM && zin)
+            if (env.igrid(*ai) != NON_ITEM && zin)
                 push_items_from(*ai, &adj_spots);
 
             // All traps are destroyed.
             if (trap_def *ptrap = trap_at(*ai))
             {
                 ptrap->destroy();
-                grd(*ai) = DNGN_FLOOR;
+                env.grid(*ai) = DNGN_FLOOR;
             }
 
             // Actually place the wall.
@@ -981,10 +923,10 @@ bool cast_imprison(int pow, monster* mons, int source)
 
 bool cast_smiting(int pow, monster* mons)
 {
-    if (mons == nullptr || mons->submerged())
+    if (mons == nullptr)
     {
         canned_msg(MSG_NOTHING_THERE);
-        // Counts as a real cast, due to invisible/submerged monsters.
+        // Counts as a real cast, due to invisible monsters.
         return true;
     }
 
@@ -1006,9 +948,26 @@ bool cast_smiting(int pow, monster* mons)
     return true;
 }
 
+static void _holy_torment_mount(bool holy)
+{
+    if (!you.mounted() || (holy && you.res_holy_energy(true) >= 0) || (!holy && you.res_torment(true) > 0))
+        return;
+
+    int hploss = max(0, you.mount_hp / 2 - 1);
+
+    if (!hploss)
+        return;
+
+    mprf("Your %s %s%s", you.mount_name(true).c_str(),
+        holy ? "is blasted by holy energy" : "writhes in agony",
+        attack_strength_punctuation(hploss).c_str());
+
+    damage_mount(hploss);
+}
+
 void holy_word_player(holy_word_source_type source)
 {
-    if (!you.undead_or_demonic())
+    if (you.res_holy_energy() >= 0)
         return;
 
     int hploss = max(0, you.hp / 2 - 1);
@@ -1016,7 +975,7 @@ void holy_word_player(holy_word_source_type source)
     if (!hploss)
         return;
 
-    mpr("You are blasted by holy energy!");
+    mprf("You are blasted by holy energy%s", attack_strength_punctuation(hploss).c_str());
 
     const char *aux = "holy word";
 
@@ -1041,6 +1000,10 @@ void holy_word_player(holy_word_source_type source)
     case HOLY_WORD_CARD:
         aux = "the Torment card";
         break;
+
+    case HOLY_WORD_BREATH:
+        aux = "your holy breath";
+        break;
     }
 
     ouch(hploss, type, MID_NOBODY, aux);
@@ -1055,7 +1018,10 @@ void holy_word_monsters(coord_def where, int pow, holy_word_source_type source,
 
     // Is the player in this cell?
     if (where == you.pos())
+    {
         holy_word_player(source);
+        _holy_torment_mount(true);
+    }
 
     // Is a monster in this cell?
     monster* mons = monster_at(where);
@@ -1063,18 +1029,22 @@ void holy_word_monsters(coord_def where, int pow, holy_word_source_type source,
         return;
 
     god_conduct_trigger conducts[3];
-    int hploss = roll_dice(3, 15) + (random2(pow) / 5);
+    int hploss = roll_dice(3, 10 + pow / 10);
 
     if (hploss)
     {
+        string msg = "convulses";
         if (source == HOLY_WORD_ZIN)
-            simple_monster_message(*mons, " is blasted by Zin's holy word!");
-        else
-            simple_monster_message(*mons, " convulses!");
+            msg = "is blasted by Zin's holy word";
+        else if (source == HOLY_WORD_BREATH)
+            msg = "trembles before your holy cry";
+
+        msg = make_stringf(" %s%s", msg.c_str(), attack_strength_punctuation(hploss).c_str());
+        simple_monster_message(*mons, msg.c_str());
 
         if (attacker && attacker->is_player()
-            && source == HOLY_WORD_SCROLL
-            && item_type_known(OBJ_SCROLLS, SCR_HOLY_WORD))
+            && (source == HOLY_WORD_SCROLL && item_type_known(OBJ_SCROLLS, SCR_HOLY_WORD)
+            || source == HOLY_WORD_BREATH))
         {
             set_attack_conducts(conducts, *mons, you.can_see(*mons));
         }
@@ -1106,16 +1076,21 @@ void holy_word(int pow, holy_word_source_type source, const coord_def& where,
 {
     if (!silent && attacker)
     {
-        mprf("%s %s a Word of immense power!",
-             attacker->name(DESC_THE).c_str(),
-             attacker->conj_verb("speak").c_str());
+        if (source == HOLY_WORD_BREATH)
+            mprf("You roar a word of immense power!");
+        else
+        {
+            mprf("%s %s a Word of immense power!",
+                attacker->name(DESC_THE).c_str(),
+                attacker->conj_verb("speak").c_str());
+        }
     }
 
     for (radius_iterator ri(where, LOS_SOLID); ri; ++ri)
         holy_word_monsters(*ri, pow, source, attacker);
 }
 
-void torment_player(actor *attacker, torment_source_type taux)
+void torment_player(const actor *attacker, torment_source_type taux)
 {
     ASSERT(!crawl_state.game_is_arena());
 
@@ -1123,11 +1098,17 @@ void torment_player(actor *attacker, torment_source_type taux)
 
     if (!player_res_torment())
     {
+        const int factor = (player_prot_life()) < 0 ? 7 : 5 - player_prot_life();
+
         // Negative energy resistance can alleviate torment.
-        hploss = max(0, you.hp * (50 - player_prot_life() * 5) / 100 - 1);
+        hploss = max(0, you.hp * factor / 10 - 1);
         // Statue form is only partial petrification.
-        if (you.form == transformation::statue || you.species == SP_GARGOYLE)
+        if (you.is_nonliving() || you.undead_state(true) == US_SEMI_ALIVE)
             hploss /= 2;
+
+        // draconian scales:
+        if (you.get_mutation_level(MUT_DRACONIAN_DEFENSE, true) && you.drac_colour == DR_BLOOD)
+            hploss = random2(hploss);
     }
 
     // Kiku protects you from torment to a degree.
@@ -1142,9 +1123,11 @@ void torment_player(actor *attacker, torment_source_type taux)
                 hploss = 0;
                 simple_god_message(" shields you from torment!");
             }
-            else if (random2(250) < you.piety) // 24% to 80% chance
+            else if (random2(250) < you.piety || taux == TORMENT_KIKUBAAQUDGHA) // 24% to 80% chance
             {
                 hploss -= random2(hploss - 1);
+                if (taux == TORMENT_KIKUBAAQUDGHA)
+                    hploss = div_round_up(2 * hploss, 3);
                 simple_god_message(" partially shields you from torment!");
             }
         }
@@ -1158,7 +1141,6 @@ void torment_player(actor *attacker, torment_source_type taux)
 
     mpr("Your body is wracked with pain!");
 
-
     kill_method_type type = KILLED_BY_BEAM;
     if (crawl_state.is_god_acting())
         type = KILLED_BY_DIVINE_WRATH;
@@ -1171,6 +1153,8 @@ void torment_player(actor *attacker, torment_source_type taux)
     {
     case TORMENT_CARDS:
     case TORMENT_SPELL:
+    case TORMENT_KIKUBAAQUDGHA:
+    case TORMENT_CARD_PAIN:
         aux = "Symbol of Torment";
         break;
 
@@ -1191,10 +1175,6 @@ void torment_player(actor *attacker, torment_source_type taux)
         aux = "Xom's torment";
         break;
 
-    case TORMENT_KIKUBAAQUDGHA:
-        aux = "Kikubaaqudgha's torment";
-        break;
-
     case TORMENT_LURKING_HORROR:
         type = KILLED_BY_SPORE;
         aux = "an exploding lurking horror";
@@ -1213,10 +1193,12 @@ void torment_player(actor *attacker, torment_source_type taux)
 void torment_cell(coord_def where, actor *attacker, torment_source_type taux)
 {
     if (where == you.pos()
-        // The Sceptre of Torment doesn't affect the  wielder.
-        && !(attacker && attacker->is_player() && taux == TORMENT_SCEPTRE))
+        // The Sceptre of Torment and pain card do not affect the user.
+        && !(attacker && attacker->is_player()
+            && (taux == TORMENT_SCEPTRE || taux == TORMENT_CARD_PAIN)))
     {
         torment_player(attacker, taux);
+        _holy_torment_mount(false);
     }
     // Don't return, since you could be standing on a monster.
 
@@ -1234,7 +1216,7 @@ void torment_cell(coord_def where, actor *attacker, torment_source_type taux)
 
     god_conduct_trigger conducts[3];
     int hploss = max(0, mons->hit_points *
-                        (50 - mons->res_negative_energy() * 5) / 100 - 1);
+                        (50 - mons->res_negative_energy() * 10) / 100 - 1);
 
     if (hploss)
     {
@@ -1335,22 +1317,23 @@ void cleansing_flame(int pow, cleansing_flame_source caster, coord_def where,
 
 int random_effects_zap()
 {
-    // 5 Damage, 4 Hex, 3 Charm.
+    // 6 Damage, 4 Hex, 3 Charm.
     return random_choose(ZAP_WAND_FLAME,
                          ZAP_WAND_ACID,
+                         ZAP_WAND_DRAIN,
                          ZAP_ICEBLAST,
                          ZAP_SCATTERSHOT,
                          ZAP_DISINTEGRATE,
                          ZAP_WAND_POLYMORPH,
                          ZAP_ENSLAVEMENT,
                          ZAP_MALMUTATE,
-                         ZAP_WAND_ENSNARE,
+                         ZAP_ENSNARE,
                          ZAP_WAND_HASTING,
                          ZAP_INVISIBILITY,
                          ZAP_WAND_HEALING);
     // BCADNOTE: Old effects removed (some could be worth rescaling?):
     // ZAP_THROW_FROST, ZAP_SLOW, ZAP_CONFUSE, ZAP_TELEPORT_OTHER, ZAP_FIREBALL,
-    // ZAP_BOLT_OF_DRAINING, ZAP_VENOM_BOLT,
+    // ZAP_VENOM_BOLT,
 }
 
 spret cast_random_effects(int pow, bolt& beam, bool fail)
@@ -1367,4 +1350,32 @@ spret cast_random_effects(int pow, bolt& beam, bool fail)
     zapping(zap, pow, beam, false);
 
     return spret::success;
+}
+
+void majin_bo_vampirism(monster &mon, int damage)
+{
+    return;
+    // BCADDO: I like this concept, but I've already reworked the Majin-Bo in
+    // a different direction, make a new artefact for this purpose.
+
+    if (!player_equip_unrand(UNRAND_MAJIN) || crawl_state.is_god_acting())
+        return;
+
+    dprf("Majin bo might trigger, dam: %d.", damage);
+
+    if (damage < 1 || !actor_is_susceptible_to_vampirism(mon)
+        || you.hp == you.hp_max || you.duration[DUR_DEATHS_DOOR]
+        || x_chance_in_y(2, 5))
+    {
+        return;
+    }
+
+    int hp_boost = 1 + random2(damage);
+    hp_boost = resist_adjust_damage(&mon, BEAM_NEG, hp_boost);
+
+    if (hp_boost)
+    {
+        canned_msg(MSG_GAIN_HEALTH);
+        inc_hp(hp_boost);
+    }
 }

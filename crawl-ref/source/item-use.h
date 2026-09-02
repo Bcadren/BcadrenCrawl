@@ -26,6 +26,9 @@ bool god_hates_brand(const int brand);
 
 bool safe_to_remove(const item_def &item, bool quiet = false);
 
+bool subsume_item(int slot = -1);
+bool eject_item();
+
 bool puton_ring(int slot = -1, bool allow_prompt = true,
                 bool check_for_inscriptions = true);
 
@@ -50,12 +53,15 @@ bool wield_weapon(bool auto_wield, int slot = -1,
                   bool show_wield_msg = true,
                   bool adjust_time_taken = true);
 
+bool quick_swap();
 bool double_swap();
+
+void brand_weapon(item_def &wpn, bool player = true);
 
 bool item_is_worn(int inv_slot);
 
-bool enchant_item(item_def &item, bool quiet);
+bool enchant_item(item_def &item, bool quiet, bool player = true);
 
-void random_uselessness();
+void random_uselessness(actor * act);
 
 void prompt_inscribe_item();

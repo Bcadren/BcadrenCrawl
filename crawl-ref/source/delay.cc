@@ -26,18 +26,12 @@
 #include "directn.h"
 #include "dungeon.h"
 #include "english.h"
-#include "enum.h"
 #include "env.h"
-#include "exclude.h"
-#include "exercise.h"
 #include "fineff.h"
 #include "food.h"
 #include "fprop.h"
-#include "god-abil.h"
 #include "god-companions.h"
-#include "god-conduct.h"
 #include "god-passive.h"
-#include "god-prayer.h"
 #include "god-wrath.h"
 #include "hints.h"
 #include "invent.h"
@@ -62,14 +56,11 @@
 #include "prompt.h"
 #include "random.h"
 #include "religion.h"
-#include "rot.h"
 #include "shout.h"
 #include "sound.h"
-#include "spl-other.h"
 #include "spl-selfench.h"
 #include "spl-util.h"
 #include "stairs.h"
-#include "stash.h"
 #include "state.h"
 #include "stringutil.h"
 #include "teleport.h"
@@ -79,17 +70,6 @@
 #include "travel.h"
 #include "view.h"
 #include "xom.h"
-
-class interrupt_block
-{
-public:
-    interrupt_block() { ++interrupts_blocked; }
-    ~interrupt_block() { --interrupts_blocked; }
-
-    static bool blocked() { return interrupts_blocked > 0; }
-private:
-    static int interrupts_blocked;
-};
 
 int interrupt_block::interrupts_blocked = 0;
 
@@ -212,6 +192,22 @@ bool ArmourOnDelay::try_interrupt()
     return false;
 }
 
+bool SubsumptionDelay::try_interrupt()
+{
+    if (duration > 1 && !was_prompted)
+    {
+        if (!crawl_state.disables[DIS_CONFIRMATIONS]
+            && !yesno("Keep subsuming?", false, 0, false))
+        {
+            mprf("You stop subsuming %s.", item.name(DESC_YOUR).c_str());
+            return true;
+        }
+        else
+            was_prompted = true;
+    }
+    return false;
+}
+
 bool ArmourOffDelay::try_interrupt()
 {
     if (duration > 1 && !was_prompted)
@@ -220,6 +216,22 @@ bool ArmourOffDelay::try_interrupt()
             && !yesno("Keep disrobing?", false, 0, false))
         {
             mpr("You stop removing your armour.");
+            return true;
+        }
+        else
+            was_prompted = true;
+    }
+    return false;
+}
+
+bool EjectionDelay::try_interrupt()
+{
+    if (duration > 1 && !was_prompted)
+    {
+        if (!crawl_state.disables[DIS_CONFIRMATIONS]
+            && !yesno("Keep ejecting?", false, 0, false))
+        {
+            mprf("You stop ejecting %s.", item.name(DESC_YOUR).c_str());
             return true;
         }
         else
@@ -362,32 +374,21 @@ shared_ptr<Delay> current_delay()
 
 bool is_being_drained(const item_def &item)
 {
+    // BCaDDO: Needs fixing if vampires are restored in any way.
+    return false;
+}
+
+bool is_being_butchered(const item_def &item)
+{
     if (!you_are_delayed())
         return false;
 
-    return current_delay()->is_being_used(&item, OPER_EAT);
-}
-
-bool is_being_butchered(const item_def &item, bool just_first)
-{
-    for (const auto delay : you.delay_queue)
-    {
-        if (delay->is_being_used(&item, OPER_BUTCHER))
-            return true;
-
-        if (just_first)
-            break;
-    }
-
-    return false;
+    return current_delay()->is_butcher() && current_delay()->is_being_used(item);
 }
 
 bool is_vampire_feeding()
 {
-    if (!you_are_delayed())
-        return false;
-
-    return current_delay()->is_being_used(nullptr, OPER_EAT);
+    return false;
 }
 
 bool player_stair_delay()
@@ -397,16 +398,16 @@ bool player_stair_delay()
 }
 
 /**
- * Is the player currently in the middle of memorizing a spell?
+ * Is the player currently in the middle of memorising a spell?
  *
- * @param spell     A specific spell, or -1 to check if we're memorizing any
+ * @param spell     A specific spell, or -1 to check if we're memorising any
  *                  spell at all.
- * @return          Whether the player is currently memorizing the given type
+ * @return          Whether the player is currently memorising the given type
  *                  of spell.
  */
 bool already_learning_spell(int spell)
 {
-    for (const auto delay : you.delay_queue)
+    for (const auto &delay : you.delay_queue)
     {
         auto mem = dynamic_cast<MemoriseDelay*>(delay.get());
         if (!mem)
@@ -507,19 +508,23 @@ void ArmourOnDelay::start()
     mprf(MSGCH_MULTITURN_ACTION, "You start putting on your armour.");
 }
 
+void SubsumptionDelay::start()
+{
+    mprf(MSGCH_MULTITURN_ACTION, "You start subsuming %s.", item.name(DESC_YOUR).c_str());
+}
+
 void ArmourOffDelay::start()
 {
     mprf(MSGCH_MULTITURN_ACTION, "You start removing your armour.");
 }
 
+void EjectionDelay::start()
+{
+    mprf(MSGCH_MULTITURN_ACTION, "You start ejecting %s.", item.name(DESC_THE).c_str());
+}
+
 void MemoriseDelay::start()
 {
-    if (vehumet_is_offering(spell))
-    {
-        string message = make_stringf(" grants you knowledge of %s.",
-            spell_title(spell));
-        simple_god_message(message.c_str());
-    }
     mprf(MSGCH_MULTITURN_ACTION, "You start memorising the spell.");
 }
 
@@ -566,8 +571,12 @@ command_type TravelDelay::move_cmd() const
 
 void BaseRunDelay::handle()
 {
+    bool first_move = false;
     if (!started)
+    {
+        first_move = true;
         started = true;
+    }
     // Handle inconsistencies between the delay queue and you.running.
     // We don't want to send the game into a deadlock.
     if (!you.running)
@@ -582,8 +591,11 @@ void BaseRunDelay::handle()
 
     command_type cmd = CMD_NO_CMD;
 
-    if ((want_move() && you.confused()) || !i_feel_safe(true, want_move()))
+    if ((want_move() && you.confused()) ||
+        (!(unsafe_once && first_move) && !i_feel_safe(true, want_move())))
+    {
         stop_running();
+    }
     else
     {
         if (want_autoeat() && _auto_eat())
@@ -768,6 +780,7 @@ void Delay::handle()
         you.wield_change = true;
         _pop_delay();
         print_stats();  // force redraw of the stats
+        update_screen();
 #ifdef USE_TILE
         tiles.update_tabs();
 #endif
@@ -820,7 +833,19 @@ void ArmourOnDelay::finish()
     if (is_artefact(armour))
         armour.flags |= ISFLAG_NOTED_ID;
 
-    const equipment_type eq_slot = get_armour_slot(armour);
+    equipment_type eq_slot = get_armour_slot(armour);
+
+    if (you.get_mutation_level(MUT_AMORPHOUS_BODY))
+    {
+        for (int i = EQ_FIRST_MORPH; i <= EQ_LAST_MORPH; i++)
+        {
+            eq_slot = static_cast<equipment_type>(i);
+            item_def * worn = you.slot_item(eq_slot);
+
+            if (!worn)
+                break;
+        }
+    }
 
 #ifdef USE_SOUND
     parse_sound(EQUIP_ARMOUR_SOUND);
@@ -841,21 +866,50 @@ void ArmourOnDelay::finish()
     check_item_hint(armour, old_talents);
 }
 
+void SubsumptionDelay::finish()
+{
+    mprf("You finish subsuming %s.", item.name(DESC_YOUR).c_str());
+
+    equip_item(EQ_CYTOPLASM, item.link);
+}
+
 bool ArmourOffDelay::invalidated()
 {
     return !armour.defined();
 }
 
+bool EjectionDelay::invalidated()
+{
+    return !item.defined();
+}
+
 void ArmourOffDelay::finish()
 {
-    const equipment_type slot = get_armour_slot(armour);
-    ASSERT(you.equip[slot] == armour.link);
+    equipment_type slot = get_armour_slot(armour);
+
+    if (you.get_mutation_level(MUT_AMORPHOUS_BODY))
+    {
+        for (int i = EQ_FIRST_MORPH; i <= EQ_LAST_MORPH; i++)
+        {
+            slot = static_cast<equipment_type>(i);
+            item_def * worn = you.slot_item(slot);
+
+            if (worn && worn->link == armour.link)
+                break;
+        }
+    }
 
 #ifdef USE_SOUND
     parse_sound(DEQUIP_ARMOUR_SOUND);
 #endif
     mprf("You finish taking off %s.", armour.name(DESC_YOUR).c_str());
     unequip_item(slot);
+}
+
+void EjectionDelay::finish()
+{
+    mprf("You finish ejecting %s.", item.name(DESC_YOUR).c_str());
+    unequip_item(EQ_CYTOPLASM);
 }
 
 void MemoriseDelay::finish()
@@ -865,7 +919,7 @@ void MemoriseDelay::finish()
 #endif
     mpr("You finish memorising.");
     add_spell_to_memory(spell);
-    vehumet_accept_gift(spell);
+    quiver::on_actions_changed();
 }
 
 void PasswallDelay::finish()
@@ -876,7 +930,7 @@ void PasswallDelay::finish()
     if (dest.x == 0 || dest.y == 0)
         return;
 
-    switch (grd(dest))
+    switch (env.grid(dest))
     {
     default:
         if (!you.is_habitable(dest))
@@ -884,6 +938,7 @@ void PasswallDelay::finish()
             mpr("...yet there is something new on the other side. "
                 "You quickly turn back.");
             redraw_screen();
+            update_screen();
             return;
         }
         break;
@@ -901,13 +956,14 @@ void PasswallDelay::finish()
     if (monster* m = monster_at(dest))
     {
         // One square, a few squares, anywhere...
-        if (!m->shift() && !monster_blink(m, true))
+        if (!m->shift() && !monster_blink(m, true, true))
             monster_teleport(m, true, true);
         // Might still fail.
         if (monster_at(dest))
         {
             mpr("...and sense your way blocked. You quickly turn back.");
             redraw_screen();
+            update_screen();
             return;
         }
 
@@ -939,6 +995,7 @@ void DerootDelay::finish()
 {
     you.attribute[ATTR_ROOTED] = 0;
     mpr("You finish extracting your roots and can move again.");
+    you.redraw_armour_class = true;
 }
 
 void SMDDelay::finish()
@@ -952,6 +1009,7 @@ void SMDDelay::finish()
         if (!cell_is_solid(*ai) && !cloud_at(*ai) && !one_chance_in(3))
             place_cloud(CLOUD_DUST, *ai, 5 + random2(10), &you);
     }
+    viewwindow();
 }
 
 void BlurryScrollDelay::finish()
@@ -1059,6 +1117,7 @@ void run_macro(const char *macroname)
             --delay->duration;
     }
 #else
+    mprf(MSGCH_ERROR, "CLua bindings not available on this build!");
     UNUSED(macroname);
     stop_delay();
 #endif
@@ -1070,7 +1129,6 @@ static maybe_bool _userdef_interrupt_activity(Delay* delay,
                                               activity_interrupt ai,
                                               const activity_interrupt_data &at)
 {
-#ifdef CLUA_BINDINGS
     lua_State *ls = clua.state();
     if (!ls || ai == activity_interrupt::force)
         return MB_TRUE;
@@ -1099,9 +1157,6 @@ static maybe_bool _userdef_interrupt_activity(Delay* delay,
     {
         return MB_TRUE;
     }
-#else
-    UNUSED(_activity_interrupt_name);
-#endif
     return MB_MAYBE;
 }
 
@@ -1225,7 +1280,7 @@ static inline bool _monster_warning(activity_interrupt ai,
     if (mon->is_summoned() && !delay)
         return false;
 
-    if (at.context == SC_ALREADY_SEEN || at.context == SC_UNCHARM)
+    if (at.context == SC_ALREADY_SEEN)
     {
         // Only say "comes into view" if the monster wasn't in view
         // during the previous turn.
@@ -1233,6 +1288,14 @@ static inline bool _monster_warning(activity_interrupt ai,
         {
             mprf(MSGCH_WARN, "%s is too close now for your liking.",
                  mon->name(DESC_THE).c_str());
+        }
+    }
+    else if (at.context == SC_UNCHARM)
+    {
+        if (testbits(mon->flags, MF_WAS_IN_VIEW) && delay)
+        {
+            mprf(MSGCH_WARN, "%s breaks free of your control.",
+                mon->name(DESC_THE).c_str());
         }
     }
     else if (mon->seen_context == SC_JUST_SEEN)
@@ -1286,84 +1349,18 @@ static inline bool _monster_warning(activity_interrupt ai,
         else
             text += " comes into view.";
 
-        bool ash_id = mon->props.exists("ash_id") && mon->props["ash_id"];
-        bool zin_id = false;
-        string god_warning;
-
-        if (have_passive(passive_t::warn_shapeshifter)
-            && mon->is_shapeshifter()
-            && !(mon->flags & MF_KNOWN_SHIFTER))
-        {
-            ASSERT(!ash_id);
-            zin_id = true;
-            mon->props["zin_id"] = true;
-            discover_shifter(*mon);
-            god_warning = uppercase_first(god_name(you.religion))
-                          + " warns you: "
-                          + uppercase_first(mon->pronoun(PRONOUN_SUBJECTIVE))
-                          + " "
-                          + conjugate_verb("are", mon->pronoun_plurality())
-                          + " a foul ";
-            if (mon->has_ench(ENCH_GLOWING_SHAPESHIFTER))
-                god_warning += "glowing ";
-            god_warning += "shapeshifter.";
-        }
-
-        monster_info mi(mon);
-
-        const string mweap = get_monster_equipment_desc(mi,
-                                                        ash_id ? DESC_IDENTIFIED
-                                                               : DESC_WEAPON,
-                                                        DESC_NONE);
-
-        if (!mweap.empty())
-        {
-            if (ash_id)
-            {
-                god_warning = uppercase_first(god_name(you.religion))
-                              + " warns you:";
-            }
-
-            (ash_id ? god_warning : text) +=
-                " " + uppercase_first(mon->pronoun(PRONOUN_SUBJECTIVE))
-                + " " + conjugate_verb("are", mi.pronoun_plurality())
-                + (mweap[0] != ' ' ? " " : "")
-                + mweap + ".";
-        }
+        mons_set_just_seen(mon);
 
         if (msgs_buf)
-            msgs_buf->push_back(text);
+            msgs_buf->emplace_back(text);
         else
         {
             mprf(MSGCH_MONSTER_WARNING, "%s", text.c_str());
-            if (ash_id || zin_id)
-                mprf(MSGCH_GOD, "%s", god_warning.c_str());
-#ifndef USE_TILE_LOCAL
-            if (zin_id)
-                update_monster_pane();
-#endif
-            if (player_under_penance(GOD_GOZAG)
-                && !mon->wont_attack()
-                && !mon->is_stationary()
-                && !mons_is_object(mon->type)
-                && !mons_is_tentacle_or_tentacle_segment(mon->type))
-            {
-                if (coinflip()
-                    && mon->get_experience_level() >=
-                       random2(you.experience_level))
-                {
-                    mprf(MSGCH_GOD, GOD_GOZAG, "Gozag incites %s against you.",
-                         mon->name(DESC_THE).c_str());
-                    gozag_incite(mon);
-                }
-            }
+            vector<monster*> m;
+            m.push_back(mon);
+            maybe_trigger_shoutitus(m);
+            maybe_gozag_incite(m);
         }
-        if (you.has_mutation(MUT_SCREAM)
-            && x_chance_in_y(3 + you.get_mutation_level(MUT_SCREAM) * 3, 100))
-        {
-            yell(mon);
-        }
-        mons_set_just_seen(mon);
     }
 
     if (crawl_state.game_is_hints())
@@ -1413,7 +1410,7 @@ bool interrupt_activity(activity_interrupt ai,
         || ai == activity_interrupt::monster_attacks)
     {
         const monster* mon = at.mons_data;
-        if (mon && !mon->visible_to(&you) && !mon->submerged())
+        if (mon && !mon->visible_to(&you))
             autotoggle_autopickup(true);
     }
 

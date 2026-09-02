@@ -10,6 +10,9 @@
 
 #include <algorithm>
 #include <chrono>
+#include <vector>
+
+using std::vector;
 
 string weird_glowing_colour();
 
@@ -17,8 +20,6 @@ void swap_with_monster(monster *mon_to_swap);
 
 void handle_real_time(chrono::time_point<chrono::system_clock> when
                       = chrono::system_clock::now());
-
-bool today_is_halloween();
 
 unsigned int breakpoint_rank(int val, const int breakpoints[],
                              unsigned int num_breakpoints);
@@ -35,6 +36,5 @@ struct counted_monster_list
     void add(const monster* mons);
     int count();
     bool empty() { return list.empty(); }
-    string describe(description_level_type desc = DESC_THE,
-                    bool force_article = false);
+    string describe(description_level_type desc = DESC_THE);
 };

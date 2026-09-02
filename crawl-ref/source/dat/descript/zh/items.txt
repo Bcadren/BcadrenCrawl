@@ -200,7 +200,7 @@ corpse
 
 一具尸体。切成肉块后可以食用。
 %%%%
-crystal plate armour
+crystal plate
 
 这件水晶护甲重得吓人，但防护效果也非常好。
 %%%%
@@ -544,10 +544,6 @@ scroll of random uselessness
 
 你也许会为自己能成功使用这个卷轴感到自豪，但其实它真的一点用都没有。
 %%%%
-scroll of remove curse
-
-阅读这个卷轴会移除你装备的物品上的诅咒。
-%%%%
 scroll of teleportation
 
 阅读这个卷轴上的文字后过一段时间，你会被传送到一个随机地点。
@@ -624,7 +620,7 @@ trishula
 一把在圣火中铸就的三叉戟；它的三叉矛尖寓意着三大善神的联盟关系。
 光明神的信徒们常常使用这种三叉戟。
 %%%%
-troll leather armour
+troll leather
 
 一副用巨魔外皮制成的铠甲。它能赋予穿戴者神奇的肢体再生能力（对巨魔无效）。
 %%%%

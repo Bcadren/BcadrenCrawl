@@ -5,6 +5,7 @@
 
 #include "AppHdr.h"
 
+#include "mpr.h"
 #include "randbook.h"
 
 #include <functional>
@@ -12,11 +13,11 @@
 #include "artefact.h"
 #include "database.h"
 #include "english.h"
-#include "god-item.h"
 #include "item-name.h"
 #include "item-status-flag-type.h"
 #include "items.h"
 #include "religion.h"
+#include "makeitem.h"
 #include "spl-book.h"
 #include "stringutil.h"
 
@@ -315,16 +316,40 @@ void build_themed_book(item_def &book, themed_spell_filter filter,
     if (num_spells < 1)
         num_spells = theme_book_size();
 
-    spschool discipline_1 = get_discipline();
-    spschool discipline_2 = get_discipline();
+    vector<spell_type> spells;
+    spells.emplace_back(SPELL_NO_SPELL);
 
     item_source_type agent;
     if (!origin_is_acquirement(book, &agent))
         agent = (item_source_type)origin_as_god_gift(book);
 
-    vector<spell_type> spells;
-    theme_book_spells(discipline_1, discipline_2, filter, agent, num_spells,
-                      spells);
+    spschool discipline_1; 
+    spschool discipline_2;
+
+    int loops = 0;
+    while ((spells[0] == SPELL_NO_SPELL) && loops < 10)
+    {
+        loops++;
+        discipline_1 = get_discipline();
+        discipline_2 = get_discipline();
+        // Substitutions are arbitrary this is to prevent a crash on trying
+        // to create a spellbook of non-player spells.
+        if (spell_type2skill(discipline_1) == SK_EVOCATIONS)
+            discipline_1 = spschool::air;
+        if (spell_type2skill(discipline_2) == SK_EVOCATIONS)
+            discipline_2 = spschool::fire;
+
+        theme_book_spells(discipline_1, discipline_2, filter, agent, num_spells,
+            spells);
+    }
+
+    if (spells[0] == SPELL_NO_SPELL)
+    {
+        // Failed to make a themed book to spec; just default to a book with just flame tongue.
+        spells[0] = SPELL_FLAME_TONGUE;
+        discipline_1 = discipline_2 = spschool::fire;
+    }
+
     fixup_randbook_disciplines(discipline_1, discipline_2, spells);
     init_book_theme_randart(book, spells);
     name_book_theme_randart(book, discipline_1, discipline_2, owner, subject);
@@ -381,12 +406,12 @@ static void _get_spell_list(vector<spell_type> &spells, int level,
     // be checked for each spell with a rarity -1 (i.e. not normally
     // appearing randomly).
     vector<spell_type> special_spells;
-    if (god == GOD_SIF_MUNA)
+    if (god == GOD_SIF_MUNA || god == GOD_XOM)
     {
         for (int i = 0; i < NUM_FIXED_BOOKS; ++i)
         {
             const book_type book = static_cast<book_type>(i);
-            if (is_rare_book(book))
+            if (is_rare_book(book) || (god == GOD_XOM && is_banned_book(book)))
             {
                 for (spell_type spell : spellbook_template(book))
                 {
@@ -547,6 +572,28 @@ static string _gen_randlevel_name(int level, god_type god)
     return apostrophised_owner + bookname;
 }
 
+void _set_book_spell_list(item_def &book, vector<spell_type> spells)
+{
+    sort(begin(spells), end(spells), _compare_spells);
+    spells.resize(RANDBOOK_SIZE, SPELL_NO_SPELL);
+
+    if (spells[0] == SPELL_NO_SPELL)
+    {
+        mprf(MSGCH_ERROR, "Random Spellbook Creation Error!");
+        spells[0] = SPELL_FLAME_TONGUE;
+    }
+
+    CrawlHashTable &props = book.props;
+    props.erase(SPELL_LIST_KEY);
+    props[SPELL_LIST_KEY].new_vector(SV_INT).resize(RANDBOOK_SIZE);
+
+    CrawlVector &spell_vec = props[SPELL_LIST_KEY].get_vector();
+    spell_vec.set_max_size(RANDBOOK_SIZE);
+
+    for (int i = 0; i < RANDBOOK_SIZE; i++)
+        spell_vec[i].get_int() = spells[i];
+}
+
 /**
  * Turn the given book into a randomly-generated spellbook ("randbook"),
  * containing only spells of a given level.
@@ -638,9 +685,7 @@ bool make_book_level_randart(item_def &book, int level)
     vector<bool> avoid_memorised(spells.size(), !completely_random);
     vector<bool> avoid_seen(spells.size(), !completely_random);
 
-    spell_type chosen_spells[RANDBOOK_SIZE];
-    for (int i = 0; i < RANDBOOK_SIZE; i++)
-        chosen_spells[i] = SPELL_NO_SPELL;
+    vector<spell_type> chosen_spells(RANDBOOK_SIZE, SPELL_NO_SPELL);
 
     int book_pos = 0;
     while (book_pos < num_spells)
@@ -668,20 +713,11 @@ bool make_book_level_randart(item_def &book, int level)
         }
 
         spell_used[spell_pos]     = true;
-        chosen_spells[book_pos++] = spell;
+        chosen_spells.push_back(spell);
+        book_pos++;
     }
-    sort(chosen_spells, chosen_spells + RANDBOOK_SIZE, _compare_spells);
-    ASSERT(chosen_spells[0] != SPELL_NO_SPELL);
 
-    CrawlHashTable &props = book.props;
-    props.erase(SPELL_LIST_KEY);
-    props[SPELL_LIST_KEY].new_vector(SV_INT).resize(RANDBOOK_SIZE);
-
-    CrawlVector &spell_vec = props[SPELL_LIST_KEY].get_vector();
-    spell_vec.set_max_size(RANDBOOK_SIZE);
-
-    for (int i = 0; i < RANDBOOK_SIZE; i++)
-        spell_vec[i].get_int() = chosen_spells[i];
+    _set_book_spell_list(book, chosen_spells);
 
     const string name = _gen_randlevel_name(level, god);
     set_artefact_name(book, replace_name_parts(name, book));
@@ -702,19 +738,7 @@ void init_book_theme_randart(item_def &book, vector<spell_type> spells)
 {
     book.sub_type = BOOK_RANDART_THEME;
     _make_book_randart(book);
-
-    spells.resize(RANDBOOK_SIZE, SPELL_NO_SPELL);
-    sort(spells.begin(), spells.end(), _compare_spells);
-    ASSERT(spells[0] != SPELL_NO_SPELL);
-
-    CrawlHashTable &props = book.props;
-    props.erase(SPELL_LIST_KEY);
-    props[SPELL_LIST_KEY].new_vector(SV_INT).resize(RANDBOOK_SIZE);
-
-    CrawlVector &spell_vec = props[SPELL_LIST_KEY].get_vector();
-    spell_vec.set_max_size(RANDBOOK_SIZE);
-    for (int i = 0; i < RANDBOOK_SIZE; i++)
-        spell_vec[i].get_int() = spells[i];
+    _set_book_spell_list(book, move(spells));
 }
 
 /**
@@ -958,82 +982,67 @@ void make_book_roxanne_special(item_def *book)
                       forced_book_theme(disc), 5, "Roxanne");
 }
 
+static spell_type _kiku_extra_spell(vector<spell_type> ch)
+{
+    spell_type extra_spell;
+    do
+    {
+        extra_spell = random_choose(SPELL_BORGNJORS_VILE_CLUTCH,
+                                    SPELL_EXCRUCIATING_WOUNDS,
+                                    SPELL_BOLT_OF_DRAINING,
+                                    SPELL_CIGOTUVIS_DEGENERATION,
+                                    SPELL_DEATH_CHANNEL);
+
+        if (you.species == SP_FELID
+            && extra_spell == SPELL_EXCRUCIATING_WOUNDS)
+        {
+            extra_spell = SPELL_NO_SPELL;
+        }
+
+        for (int i = 0; i < RANDBOOK_SIZE; i++)
+            if (extra_spell == ch[i])
+                extra_spell = SPELL_NO_SPELL;
+    } while (extra_spell == SPELL_NO_SPELL);
+
+    return extra_spell;
+}
+
 void make_book_kiku_gift(item_def &book, bool first)
 {
     book.sub_type = BOOK_RANDART_THEME;
     _make_book_randart(book);
 
-    spell_type chosen_spells[RANDBOOK_SIZE];
-    for (int i = 0; i < RANDBOOK_SIZE; i++)
-        chosen_spells[i] = SPELL_NO_SPELL;
+    vector<spell_type> chosen_spells(RANDBOOK_SIZE, SPELL_NO_SPELL);
 
     // Each book should guarantee the player at least one corpse-using
     // spell, to complement Receive Corpses.
     if (first)
     {
-        bool can_bleed = you.species != SP_GARGOYLE
-            && you.species != SP_GHOUL
-            && you.species != SP_MUMMY
-            && you.char_class != JOB_MUMMY;
-        bool can_regen = you.species != SP_DEEP_DWARF
-            && you.species != SP_MUMMY
-            && you.char_class != JOB_MUMMY;
+        bool can_bleed = you.can_bleed(false);
+        bool can_regen = you.undead_state() == US_ALIVE;
 
         chosen_spells[0] = SPELL_PAIN;
         chosen_spells[1] = SPELL_CORPSE_ROT;
-        chosen_spells[2] = SPELL_ANIMATE_SKELETON;
-        if (can_bleed) // Replace one of the corpse-using spells
-            chosen_spells[random_range(1, 2)] = SPELL_SUBLIMATION_OF_BLOOD;
+        chosen_spells[2] = SPELL_SKELETAL_UPRISING;
+        if (can_bleed)
+            chosen_spells[4] = SPELL_SUBLIMATION_OF_BLOOD;
 
         chosen_spells[3] = (!can_regen || coinflip())
             ? SPELL_VAMPIRIC_DRAINING : SPELL_REGENERATION;
     }
     else
     {
-        chosen_spells[0] = coinflip() ? SPELL_ANIMATE_DEAD : SPELL_SIMULACRUM;
-        chosen_spells[1] = (you.species == SP_FELID || coinflip())
+        chosen_spells[0] = SPELL_ANIMATE_DEAD;
+        chosen_spells[1] = SPELL_SIMULACRUM;
+        chosen_spells[2] = (you.species == SP_FELID || coinflip())
             ? SPELL_BORGNJORS_VILE_CLUTCH : SPELL_EXCRUCIATING_WOUNDS;
-        chosen_spells[2] = random_choose(SPELL_BOLT_OF_DRAINING,
-                                         SPELL_AGONY,
-                                         SPELL_DEATH_CHANNEL);
-
-        spell_type extra_spell;
-        do
-        {
-            extra_spell = random_choose(SPELL_ANIMATE_DEAD,
-                                        SPELL_AGONY,
-                                        SPELL_BORGNJORS_VILE_CLUTCH,
-                                        SPELL_EXCRUCIATING_WOUNDS,
-                                        SPELL_BOLT_OF_DRAINING,
-                                        SPELL_SIMULACRUM,
-                                        SPELL_DEATH_CHANNEL);
-            if (you.species == SP_FELID
-                && extra_spell == SPELL_EXCRUCIATING_WOUNDS)
-            {
-                extra_spell = SPELL_NO_SPELL;
-            }
-
-            for (int i = 0; i < 3; i++)
-                if (extra_spell == chosen_spells[i])
-                    extra_spell = SPELL_NO_SPELL;
-        }
-        while (extra_spell == SPELL_NO_SPELL);
-
-        chosen_spells[3] = extra_spell;
-        chosen_spells[4] = SPELL_DISPEL_UNDEAD;
+        chosen_spells[3] = coinflip() ? SPELL_BOLT_OF_DRAINING :
+                                         SPELL_DEATH_CHANNEL;
+        chosen_spells[4] = _kiku_extra_spell(chosen_spells);
+        chosen_spells[5] = _kiku_extra_spell(chosen_spells);
     }
 
-    sort(chosen_spells, chosen_spells + RANDBOOK_SIZE, _compare_spells);
-
-    CrawlHashTable &props = book.props;
-    props.erase(SPELL_LIST_KEY);
-    props[SPELL_LIST_KEY].new_vector(SV_INT).resize(RANDBOOK_SIZE);
-
-    CrawlVector &spell_vec = props[SPELL_LIST_KEY].get_vector();
-    spell_vec.set_max_size(RANDBOOK_SIZE);
-
-    for (int i = 0; i < RANDBOOK_SIZE; i++)
-        spell_vec[i].get_int() = chosen_spells[i];
+    _set_book_spell_list(book, move(chosen_spells));
 
     string name = "Kikubaaqudgha's ";
     book.props[BOOK_TITLED_KEY].get_bool() = true;
@@ -1077,6 +1086,10 @@ static int _randbook_spell_weight(spell_type spell, int agent)
         if (disciplines & disc)
         {
             const skill_type sk = spell_type2skill(disc);
+
+            if (sk == SK_EVOCATIONS)
+                continue;
+
             total_skill += div_rand_round(you.skill(sk, 256, true), 256);
             num_skills++;
         }
@@ -1185,10 +1198,13 @@ static void _choose_themed_randbook_spells(weighted_spells &possible_spells,
     for (int i = 0; i < size; ++i)
     {
         const spell_type *spell = random_choose_weighted(possible_spells);
-        ASSERT(spell);
+        if (!spell)
+            break;
         spells.push_back(*spell);
         possible_spells[*spell] = 0; // don't choose the same one twice!
     }
+    // `size` is guaranteed to be >0 by an ASSERT in the calling function
+    ASSERT(spells.size() > 0);
 }
 
 /**
@@ -1210,8 +1226,14 @@ void acquire_themed_randbook(item_def &book, int agent)
     // XXX: we could cache this...
     spschool discipline_1
         = _choose_randbook_discipline(possible_spells, agent);
-    spschool discipline_2
-        = _choose_randbook_discipline(possible_spells, agent);
+    spschool discipline_2 = discipline_1;
+    int loops = 0;
+
+    while (discipline_2 == discipline_1 && loops < 24)
+    {
+        discipline_2 = _choose_randbook_discipline(possible_spells, agent);
+        loops++;
+    }
 
     vector<spell_type> spells;
     _choose_themed_randbook_spells(possible_spells, discipline_1, discipline_2,
@@ -1221,7 +1243,7 @@ void acquire_themed_randbook(item_def &book, int agent)
 
     // Acquired randart books have a chance of being named after the player.
     const string owner = agent == AQ_SCROLL && one_chance_in(12) ?
-        you.xom_name :
+        player_name() :
         "";
 
     init_book_theme_randart(book, spells);

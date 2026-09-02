@@ -9,9 +9,12 @@
 // XXX: the msg flag isn't implemented in all cases.
 void equip_item(equipment_type slot, int item_slot, bool msg=true);
 bool unequip_item(equipment_type slot, bool msg=true);
-bool meld_slot(equipment_type slot, bool msg=true);
-bool unmeld_slot(equipment_type slot, bool msg=true);
+bool meld_slot(equipment_type slot);
+bool unmeld_slot(equipment_type slot);
 
+void activate_item(int base_type, int sub_type);
+
+// BCADDO: Delete this?
 // XXX: find a better place for this.
 void lose_permafly_source();
 
@@ -21,3 +24,5 @@ void unequip_effect(equipment_type slot, int item_slot, bool meld, bool msg);
 bool unwield_item(bool handedness = true, bool showMsgs = true);
 
 bool acrobat_boost_active();
+
+void unwield_distortion(bool brand = false);

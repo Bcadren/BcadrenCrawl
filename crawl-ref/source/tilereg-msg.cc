@@ -18,7 +18,7 @@ MessageRegion::MessageRegion(FontWrapper *font_arg) :
 {
 }
 
-int MessageRegion::handle_mouse(MouseEvent &event)
+int MessageRegion::handle_mouse(wm_mouse_event &event)
 {
     if (m_overlay)
         return 0;
@@ -29,7 +29,7 @@ int MessageRegion::handle_mouse(MouseEvent &event)
     if (!inside(event.px, event.py))
         return 0;
 
-    if (event.event != MouseEvent::PRESS || event.button != MouseEvent::LEFT)
+    if (event.event != wm_mouse_event::PRESS || event.button != wm_mouse_event::LEFT)
         return 0;
 
     if (mouse_control::current_mode() != MOUSE_MODE_COMMAND)
@@ -47,9 +47,10 @@ bool MessageRegion::update_tip_text(string& tip)
     return true;
 }
 
-void MessageRegion::set_overlay(bool is_overlay)
+void MessageRegion::set_overlay(bool is_overlay, const VColour &col)
 {
     m_overlay = is_overlay;
+    m_overlay_col = col;
 }
 
 void MessageRegion::render()
@@ -112,8 +113,7 @@ void MessageRegion::render()
             glmanager->reset_transform();
 
             ShapeBuffer buff;
-            VColour col(100, 100, 100, 100);
-            buff.add(sx, sy, ex, sy + height, col);
+            buff.add(sx, sy, ex, sy + height, m_overlay_col);
             buff.draw();
         }
     }

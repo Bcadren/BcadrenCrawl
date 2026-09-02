@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "tag-version.h"
+
 #define HERD_COMFORT_RANGE 6
 
 enum corpse_effect_type
@@ -15,6 +17,8 @@ enum corpse_effect_type
     CE_NOCORPSE,
     CE_CLEAN,
     CE_NOXIOUS,
+    CE_DIVINE,
+    CE_MUTAGENIC,
 };
 
 // TODO: Unify this and a player_equivalent (if applicable)
@@ -40,24 +44,21 @@ enum attack_type
     AT_CONSTRICT,
     AT_TRAMPLE,
     AT_TRUNK_SLAP,
-#if TAG_MAJOR_VERSION == 34
-    AT_SNAP,
-    AT_SPLASH,
-#endif
+    AT_SLAP,
+    AT_SLASH,
+    AT_RAKE,
+    AT_CLAMP,
     AT_POUNCE,
-#if TAG_MAJOR_VERSION == 34
-    AT_REACH_STING,
-    AT_LAST_REAL_ATTACK = AT_REACH_STING,
-#else
-    AT_LAST_REAL_ATTACK = AT_POUNCE,
-#endif
+    AT_PINCER,
+    AT_SHIELD,
+    AT_SLAM,
+    AT_THRASH,
+    AT_LAST_REAL_ATTACK = AT_THRASH,
 
     AT_CHERUB,
-#if TAG_MAJOR_VERSION == 34
-    AT_SHOOT,
-#endif
+    AT_MULTIBITE,
     AT_WEAP_ONLY,   // AT_HIT if wielding a melee weapon, AT_NONE otherwise
-    AT_RANDOM,      // Anything but AT_SHOOT and AT_WEAP_ONLY.
+    AT_RANDOM,      // Randomly selected verb.
     NUM_ATTACK_TYPES,
 };
 
@@ -70,9 +71,7 @@ enum attack_flavour
     AF_BLINK,
     AF_COLD,
     AF_CONFUSE,
-#if TAG_MAJOR_VERSION == 34
-    AF_DISEASE,
-#endif
+    AF_BARBS,
     AF_DRAIN_STR,
     AF_DRAIN_INT,
     AF_DRAIN_DEX,
@@ -84,17 +83,15 @@ enum attack_flavour
     AF_MUTATE,
     AF_POISON_PETRIFY,
     AF_POISON,
+    AF_RANDOM,
 #if TAG_MAJOR_VERSION == 34
-    AF_POISON_NASTY,
     AF_POISON_MEDIUM,
 #endif
     AF_POISON_STRONG,
-#if TAG_MAJOR_VERSION == 34
     AF_POISON_STR,
     AF_POISON_INT,
     AF_POISON_DEX,
     AF_POISON_STAT,
-#endif
     AF_ROT,
     AF_VAMPIRIC,
 #if TAG_MAJOR_VERSION == 34
@@ -105,9 +102,7 @@ enum attack_flavour
     AF_STICKY_FLAME,
     AF_CHAOTIC,
     AF_STEAL,
-#if TAG_MAJOR_VERSION == 34
-    AF_STEAL_FOOD,
-#endif
+    AF_PIERCE_AC,
     AF_CRUSH,
     AF_REACH,
     AF_HOLY,
@@ -118,9 +113,7 @@ enum attack_flavour
     AF_PURE_FIRE,
     AF_DRAIN_SPEED,
     AF_VULN,
-#if TAG_MAJOR_VERSION == 34
-    AF_PLAGUE,
-#endif
+    AF_DISPEL,
     AF_REACH_STING,
     AF_SHADOWSTAB,
     AF_DROWN,
@@ -133,9 +126,15 @@ enum attack_flavour
     AF_SWOOP, // Swoops in to perform a melee attack if far away.
     AF_TRAMPLE, // Trampling effect.
     AF_WEAKNESS,
-#if TAG_MAJOR_VERSION == 34
     AF_MIASMATA,
-#endif
+    AF_PURE_CHAOS,
+	AF_CONTAM,
+    AF_PURE_PAIN,
+    AF_DECAY,
+    AF_FROG,
+    AF_SHATTER,
+    AF_CROC_LUNGE,
+    AF_DEATH_ROLL,
 };
 
 // Non-spell "summoning" types to give to monster::mark_summoned(), or
@@ -152,10 +151,11 @@ enum mon_summon_type
     MON_SUMM_WRATH,   // Divine wrath
     MON_SUMM_AID,     // Divine aid
     MON_SUMM_SCROLL,  // Scroll of summoning
-    MON_SUMM_SHADOW,  // Shadow trap
-#if TAG_MAJOR_VERSION == 34
+    MON_SUMM_BREATH,  // Butterfly breath or similar
+
+    // BCADNOTE: These are long unused but may be restored at some point.
+//    MON_SUMM_SHADOW,  // Shadow trap
     MON_SUMM_LANTERN, // Lantern of shadows
-#endif
 };
 
 #include "mon-flags.h"
@@ -175,6 +175,10 @@ enum habitat_type
     HT_WATER,            // Water critters
     HT_LAVA,             // Lava critters
     HT_AMPHIBIOUS_LAVA,  // Amphibious w/ lava (salamanders)
+    HT_ROCK,             // Rock critters
+    HT_STEEL,            // Metal critters
+    HT_INCORPOREAL,      // Incorporeal critters
+    HT_SLIME,            // Safe for slimy tiles
 
     NUM_HABITATS
 };
@@ -182,7 +186,7 @@ enum habitat_type
 typedef uint32_t resists_t;
 #define mrd(res, lev) (resists_t)((res) * ((lev) & 7))
 
-enum mon_resist_flags
+enum mon_resist_flags : uint32_t
 {
     MR_NO_FLAGS          = 0,
 
@@ -194,21 +198,32 @@ enum mon_resist_flags
     MR_RES_FIRE          = 1 << 6,
     MR_RES_COLD          = 1 << 9,
     MR_RES_NEG           = 1 << 12,
-    MR_RES_ROTTING       = 1 << 15,
-    MR_RES_ACID          = 1 << 18,
+    MR_RES_ACID          = 1 << 16,
 
     MR_LAST_MULTI, // must be >= any multi, < any boolean, exact value doesn't matter
 
-    MR_RES_TORMENT       = 1 << 22,
-    MR_RES_PETRIFY       = 1 << 23,
-    MR_RES_DAMNATION     = 1 << 24,
-    // unused 1 << 25,
-    MR_RES_STICKY_FLAME  = 1 << 26,
-    MR_RES_TORNADO       = 1 << 27,
-    MR_RES_STEAM         = 1 << 28,
+    MR_RES_TORMENT       = 1 << 19,
+    MR_RES_PETRIFY       = 1 << 20,
+    MR_RES_HELLFIRE      = 1 << 21,
+    MR_RES_STICKY_FLAME  = 1 << 22,
+    MR_RES_WIND          = 1 << 23,
+    MR_RES_ROTTING       = 1 << 24,
+
+    MR_PHYSICALS,
+
+    MR_RES_SLASHING      = 1 << 25,
+    MR_RES_PIERCING      = 1 << 26,
+    MR_RES_BLUDGEONING   = 1 << 27,
+    MR_RES_PHYSICAL      = (MR_RES_SLASHING | MR_RES_PIERCING | MR_RES_BLUDGEONING),
+
+    MR_VULNS,
 
     // vulnerabilities
-    MR_VUL_WATER         = 1 << 29,
+    MR_VUL_WATER         = 1 << 28,
+    MR_VUL_SLASHING      = 1 << 29,
+    MR_VUL_PIERCING      = 1 << 30,
+    MR_VUL_BLUDGEONING   = (uint32_t)(1 << 31),
+    MR_VUL_PHYSICAL      = (MR_VUL_SLASHING | MR_VUL_PIERCING | MR_VUL_BLUDGEONING),
     MR_VUL_ELEC          = mrd(MR_RES_ELEC, -1),
     MR_VUL_POISON        = mrd(MR_RES_POISON, -1),
     MR_VUL_FIRE          = mrd(MR_RES_FIRE, -1),
@@ -239,6 +254,7 @@ enum shout_type
     S_CHERUB,               // for cherubs
     S_SQUEAL,               // pigs
     S_LOUD_ROAR,            // dragons, &c. loud!
+    S_GIBBERING,
     NUM_SHOUTS,
 
     // Loudness setting for shouts that are only defined in dat/shout.txt

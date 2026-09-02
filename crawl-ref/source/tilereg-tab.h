@@ -1,8 +1,12 @@
 #ifdef USE_TILE_LOCAL
 #pragma once
 
+#include <vector>
+
 #include "command-type.h"
 #include "tilereg-grid.h"
+
+using std::vector;
 
 // A region that contains multiple region, selectable by tabs.
 class TabbedRegion : public GridRegion
@@ -39,7 +43,7 @@ public:
     virtual void clear() override;
     virtual void render() override;
     virtual void on_resize() override;
-    virtual int handle_mouse(MouseEvent &event) override;
+    virtual int handle_mouse(wm_mouse_event &event) override;
     virtual bool update_tip_text(string &tip) override;
     virtual bool update_tab_tip_text(string &tip, bool active) override;
     virtual bool update_alt_text(string &alt) override;
@@ -54,7 +58,7 @@ protected:
     bool invalid_index(int idx) const;
     bool active_is_valid() const;
     // Returns the tab the mouse is over, -1 if none.
-    int get_mouseover_tab(MouseEvent &event) const;
+    int get_mouseover_tab(wm_mouse_event &event) const;
     void set_icon_pos(int idx);
     void reset_icons(int from_idx);
 

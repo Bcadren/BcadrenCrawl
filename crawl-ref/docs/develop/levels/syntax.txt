@@ -27,6 +27,7 @@ Terrain
  m - clear rock wall                                (DNGN_CLEAR_ROCK_WALL)
  n - clear stone wall                              (DNGN_CLEAR_STONE_WALL)
  o - clear permanent rock wall - always undiggable (DNGN_CLEAR_PERMAROCK_WALL)
+ q - clear runed stone wall - player sees through, monsters don't (DNGN_CLEAR_RUNED_STONE_WALL)
  v - metal wall - grounds electricity                    (DNGN_METAL_WALL)
  y - silver wall - Zin-blessed metal (use sparingly)    (DNGN_SILVER_WALL)
  b - crystal wall - reflects cold and fire             (DNGN_CRYSTAL_WALL)
@@ -34,7 +35,7 @@ Terrain
 
  . - floor                                                    (DNGN_FLOOR)
  + - closed door                                        (DNGN_CLOSED_DOOR)
- = - runed door                                          (DNGN_RUNED_DOOR)
+ = - clear runed door                               (DNGN_RUNED_CLEAR_DOOR)
 
  W - shallow water
  w - deep water - can be randomly turned into shallow water by the
@@ -453,6 +454,12 @@ TAGS:     Tags go on a TAGS: line and are space-separated. You can have several
              actual terrain of the vault affects its passability as seen by the
              dungeon builder. A disconnected region inside a transparent vault
              will cause a veto of the level (but see the "opaque" KMASK below).
+          * "passable": Rather than "transparent", which causes terrain checks
+             to be performed, this indicates that the entire vault should be
+             considered passable. This is primarily of use in rooms for Vaults
+             branch where normal opaqueness would invalid the layout, but the
+             room might contain internal geometry that we wish to ignore due
+             to features the map controls, such as transporters.
 
 LFLOORCOL: blue
           LFLOORCOL: allows you to set the floor colour for the level the
@@ -499,8 +506,7 @@ ITEM:     (list of items, separated by comma)
           Modifiers:
           * "q:N" sets the item quantity to N (if N > 0). Does nothing
              if the item is not stackable.
-          * "charges:N" sets the number of charges for wands. Does no checks
-            against the maximum number of charges.
+          * "charges:N" sets the number of charges for wands.
           * "plus:N" and "plus2:N" set the item pluses for weapons, armour,
             jewellery (such as rings of intelligence or slaying), and
             throwing nets.
@@ -1249,11 +1255,6 @@ KFEAT:    G = C / needle trap / antique armour shop / altar_zin
           for shops, see the section on shop definitions at the end of this
           document.
 
-          If you want a trap to start out known to the player, add "known"
-          to the trap name:
-
-          KFEAT: A = known needle trap
-
           You can also place feature mimics using the same syntax as item
           mimics. For example this altar has a 1 in 10 chance of being
           turned into a mimic:
@@ -1442,7 +1443,6 @@ KPROP:    x = bloody
              the player ending up in a closet or an extremely dense monster
              array (like a hellion island); or for vaults with loot where the
              player is not supposed to get it by teleporting alone.
-          * "no_submerge": Monsters will not submerge in this square.
           * "no_tide": Shoals tides will not affect this square.
           * "no_jiyva": No spawning jellies, no off-level eating.
 

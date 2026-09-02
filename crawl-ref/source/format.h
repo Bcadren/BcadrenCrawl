@@ -3,6 +3,11 @@
 #include <string>
 #include <vector>
 
+#include "externs.h"
+#include "macros.h"
+
+using std::string;
+
 // Definitions for formatted_string
 
 enum fs_op_type
@@ -14,7 +19,7 @@ enum fs_op_type
 class formatted_string
 {
 public:
-    formatted_string(int init_colour = 0);
+    explicit formatted_string(int init_colour = 0);
     explicit formatted_string(const string &s, int init_colour = 0);
 
     operator string() const;
@@ -26,7 +31,7 @@ public:
     void cprintf(const string &s);
     void add_glyph(cglyph_t g);
     void textcolour(int colour);
-    formatted_string chop(int length) const;
+    formatted_string chop(int length, bool pad=false) const;
     formatted_string chop_bytes(int length) const;
     formatted_string substr_bytes(int pos, int length) const;
     formatted_string trim() const;
@@ -46,6 +51,7 @@ public:
     bool operator < (const formatted_string &other) const;
     bool operator == (const formatted_string &other) const;
     const formatted_string &operator += (const formatted_string &other);
+    const formatted_string &operator += (const string &other);
     char &operator [] (size_t idx);
 
 public:
@@ -90,6 +96,34 @@ public:
     typedef vector<fs_op> oplist;
     oplist ops;
 };
+
+template<typename R>
+formatted_string operator+(const formatted_string& lhs, const R&& rhs)
+{
+    formatted_string ret = lhs;
+    ret += rhs;
+    return ret;
+}
+
+template<typename R>
+formatted_string&& operator+(formatted_string&& lhs, const R&& rhs)
+{
+    lhs += rhs;
+    return move(lhs);
+}
+
+inline formatted_string operator+(const formatted_string& lhs, const char* rhs)
+{
+    formatted_string ret = lhs;
+    ret += rhs;
+    return ret;
+}
+
+inline formatted_string&& operator+(formatted_string&& lhs, const char* rhs)
+{
+    lhs += rhs;
+    return move(lhs);
+}
 
 int count_linebreaks(const formatted_string& fs);
 

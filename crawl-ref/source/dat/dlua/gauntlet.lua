@@ -27,7 +27,7 @@ function gauntlet_arena_custom_extra_items(nsubst)
     gauntlet_arena_extra_items_nsubst = nsubst
 end
 
--- Set the extra item placement in arenas to the default behavior. See
+-- Set the extra item placement in arenas to the default behaviour. See
 -- gauntlet_arena_item_setup() for details on this default.
 function gauntlet_arena_default_extra_items()
     gauntlet_arena_extra_items_nsubst = nil
@@ -160,17 +160,25 @@ function gauntlet_arena_item_setup(e, custom_loot)
     -- easilly apply any custom replacement for those extra items.
     e.nsubst("d = d / X")
 
+    -- Redefine these item class glyphs to use no_pickup
+    e.kitem("* = star_item no_pickup")
+    e.kitem("| = superb_item no_pickup")
+    e.kitem("% = any no_pickup")
+    e.kitem("$ = gold no_pickup")
+
     -- Define item slot 'd' and first subst.
     local first_subst = "e*"
     if custom_loot then
-        e.item(custom_loot)
+        e.item(custom_loot .. " no_pickup")
         first_subst = "d"
     else
         e.item("nothing")
     end
 
     -- Define item slot 'e'
-    e.item(dgn.loot_scrolls .. " / " .. dgn.loot_potions)
+    local scrolls = dgn.loot_scrolls:gsub("scroll of", "no_pickup scroll of")
+    local potions = dgn.loot_potions:gsub("potion of", "no_pickup potion of")
+    e.item(scrolls .. " / " .. potions)
     -- Set exactly one loot item.
     e.subst("d = " .. first_subst)
 
@@ -179,22 +187,27 @@ function gauntlet_arena_item_setup(e, custom_loot)
         extra_nsubst = gauntlet_arena_extra_items_nsubst
     end
 
+    local good_aux = dgn.good_aux_armour:gsub("/", "no_pickup /")
+                           .. " no_pickup"
+    local randart_aux = dgn.randart_aux_armour:gsub("/", "no_pickup /")
+                           .. " no_pickup"
     if gauntlet_arena_tier == 1 then
-       -- Item slots 'f' and 'g' for tier 1.
-        e.item(dgn.good_aux_armour)
-        e.item("any jewellery good_item")
+        -- Item slots 'f' and 'g' for tier 1.
+        e.item(good_aux)
+        e.item("any jewellery good_item no_pickup")
 
         if extra_nsubst == nil then
             extra_nsubst = "fg|*|* / ."
         end
     else
-       -- Item slots 'f' and 'g' for tier 2.
+        -- Item slots 'f' and 'g' for tier 2.
         if crawl.one_chance_in(3) then
-            e.item(dgn.randart_aux_armour)
+            e.item(randart_aux)
         else
-            e.item(dgn.good_aux_armour)
+            e.item(good_aux)
         end
-        e.item("any jewellery good_item w:20 / any jewellery randart")
+        e.item("any jewellery good_item w:20 no_pickup " ..
+               "/ any jewellery randart no_pickup")
 
         if extra_nsubst == nil then
             extra_nsubst = "fg / |* / ."
@@ -244,7 +257,7 @@ function gauntlet_arena_terrain_setup(e, rock_unchanged, liquid, plant)
     else
         e.subst("^ : ^...")
     end
-    e.kfeat("^ = dispersal trap / net trap")
+    e.kfeat("^ = congregation trap / net trap")
 
     if not plant then plant = "default" end
     if plant == "demonic" then
@@ -299,7 +312,7 @@ tier1_gauntlet_arenas = {
   {
     first  = {mons = "spiny frog simulacrum / wyvern simulacrum " ..
                       "/ hornet simulacrum", min = 1, max = 1},
-    second = {mons = "simulacrum place:D:12", min = 2, max = 4},
+    second = {mons = "simulacrum place:D:8", min = 2, max = 4},
     liquid = "water",
     plant  = "withered",
   },
@@ -325,33 +338,33 @@ tier1_gauntlet_arenas = {
     plant  = "demonic",
   },
   {
-    first  = {mons = "ice devil", min = 1, max = 1},
-    second = {mons = "white imp", min = 2, max = 4},
+    first  = {mons = "rypuiwel", min = 1, max = 1},
+    second = {mons = "gwybwca", min = 2, max = 4},
     liquid = "water",
     plant  = "demonic",
   },
   {
-    first  = {mons = "soul eater", min = 1, max = 1},
-    second = {mons = "shadow imp", min = 2, max = 4},
+    first  = {mons = "saelneytandi", min = 1, max = 1},
+    second = {mons = "cysgobwca", min = 2, max = 4},
     liquid = "water",
     plant  = "withered",
   },
   {
     first  = {mons = "ynoxinul", min = 1, max = 1},
-    second = {mons = "rust devil", min = 0, max = 1},
-    third  = {mons = "iron imp", min = 2, max = 4},
+    second = {mons = "taeringu", min = 0, max = 1},
+    third  = {mons = "haearbwca", min = 2, max = 4},
     plant  = "demonic",
   },
   {
-    first  = {mons = "smoke demon", min = 1, max = 1},
-    second = {mons = "red devil", min = 0, max = 1},
-    third  = {mons = "crimson imp", min = 2, max = 4},
+    first  = {mons = "mygdarth", min = 1, max = 1},
+    second = {mons = "cythraul", min = 0, max = 1},
+    third  = {mons = "llaibwca", min = 2, max = 4},
     liquid = "lava",
     plant  = "demonic",
   },
   {
     first  = {mons = "neqoxec", min = 1, max = 1},
-    second = {mons = "chaos spawn", min = 1, max = 3},
+    second = {mons = "chaos elemental", min = 1, max = 3},
     plant  = "demonic",
   },
   {
@@ -402,7 +415,7 @@ tier1_gauntlet_arenas = {
   },
   {
     first  = {mons = "death scarab", min = 1, max = 1},
-    second = {mons = "spectre place:Lair:6", min = 1, max = 1},
+    second = {mons = "spectre place:Lair:4", min = 1, max = 1},
     liquid = "water",
     plant  = "withered",
   },
@@ -424,7 +437,7 @@ tier1_gauntlet_arenas = {
   },
   {
     first  = {mons = "wizard", min = 1, max = 1},
-    second = {mons = "white imp / shadow imp", min = 1, max = 3},
+    second = {mons = "gwybwca / cysgobwca", min = 1, max = 3},
   },
   {
     second = {mons = "large abomination", min = 0, max = 2},
@@ -456,7 +469,7 @@ tier2_gauntlet_arenas = {
   {
     first  = {mons = "hydra simulacrum / harpy simulacrum " ..
                       "/ ice dragon simulacrum", min = 1, max = 1},
-    second = {mons = "simulacrum place:D:15", min = 2, max = 4},
+    second = {mons = "simulacrum place:D:8", min = 2, max = 4},
     liquid = "water",
     plant  = "withered",
   },
@@ -506,19 +519,19 @@ tier2_gauntlet_arenas = {
     plant  = "demonic",
   },
   {
-    first  = {mons = "hell beast", min = 1, max = 1},
+    first  = {mons = "helvityr", min = 1, max = 1},
     second = {mons = "hell hound", min = 0, max = 2},
     liquid = "lava",
     plant  = "demonic",
   },
   {
-    first  = {mons = "green death", min = 1, max = 1},
-    second = {mons = "orange demon", min = 0, max = 2},
+    first  = {mons = "gwyrdd", min = 1, max = 1},
+    second = {mons = "nychdod", min = 0, max = 2},
     plant  = "demonic",
   },
   {
     first  = {mons = "hellion", min = 1, max = 1},
-    second = {mons = "sun demon / smoke demon / red devil", min = 0, max = 1},
+    second = {mons = "sturnulos / mygdarth / cythraul", min = 0, max = 1},
     third  = {mons = "hell hound", min = 0, max = 2},
     liquid = "lava",
     plant  = "demonic",
@@ -526,27 +539,27 @@ tier2_gauntlet_arenas = {
   },
   {
     first  = {mons = "balrug", min = 1, max = 1},
-    third  = {mons = "sun demon", min = 0, max = 1},
+    third  = {mons = "sturnulos", min = 0, max = 1},
     third  = {mons = "hell hound", min = 0, max = 2},
     liquid = "lava",
     plant  = "demonic",
     weight = 5
   },
   {
-    first  = {mons = "cacodemon", min = 1, max = 1},
+    first  = {mons = "titivilus", min = 1, max = 1},
     second = {mons = "neqoxec", min = 0, max = 3},
     loot   = "potion of mutation ident:type",
     plant  = "demonic",
     weight = 5
   },
   {
-    first  = {mons = "blizzard demon", min = 1, max = 1},
-    second = {mons = "white imp / ice devil", min = 0, max = 3},
+    first  = {mons = "cenysus", min = 1, max = 1},
+    second = {mons = "gwybwca / rypuiwel", min = 0, max = 3},
     liquid = "water",
   },
   {
     first  = {mons = "reaper", min = 1, max = 1},
-    second = {mons = "hellwing / shadow imp", min = 1, max = 3},
+    second = {mons = "vlerk / cysgobwca", min = 1, max = 3},
     liquid = "water",
     plant  = "withered",
   },
@@ -564,7 +577,7 @@ tier2_gauntlet_arenas = {
   },
   {
     first  = {mons = "death drake", min = 1, max = 1},
-    second = {mons = "zombie place:D:15 / spectre place:D:15", min = 2,
+    second = {mons = "zombie place:D:8 / spectre place:D:8", min = 2,
               max = 4},
     liquid = "water",
     plant  = "withered"
@@ -621,7 +634,7 @@ tier2_gauntlet_arenas = {
   },
   {
     second = {mons = "wizard", min = 2, max = 2},
-    third  = {mons = "white imp / shadow imp", min = 3, max = 6},
+    third  = {mons = "gwybwca / cysgobwca", min = 3, max = 6},
   },
   {
     first  = {mons = "necromancer", min = 1, max = 1},
@@ -631,7 +644,7 @@ tier2_gauntlet_arenas = {
   },
   {
     second = {mons = "death scarab", min = 2, max = 2},
-    third  = {mons = "spectre place:Lair:6", min = 2, max = 4},
+    third  = {mons = "spectre place:Lair:4", min = 2, max = 4},
     liquid = "water",
     plant  = "withered",
   },

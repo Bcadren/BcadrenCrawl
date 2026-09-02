@@ -1,8 +1,10 @@
 %%%%
 Fighting
 
-Fighting skill increases your accuracy and damage in physical combat, and
-also increases your maximum health.
+Fighting skill increases your accuracy and damage in physical combat.
+
+Certain weapon specials are more strongly boosted by fighting than weapon skill; 
+see weapon descriptions for more details.
 %%%%
 Short Blades
 
@@ -23,10 +25,13 @@ weapons of this type, as well as increasing your accuracy and damage with them.
 Being skilled with Long Blades increases your effectiveness with Short Blades,
 and vice versa.
 %%%%
-Axes
+Axes and Hammers
 
-Axes cleave through multiple enemies with a single swing, hitting foes in an
-arc around the wielder.
+Axes and Hammers cleave through multiple enemies with a single swing, hitting 
+foes in an arc around the wielder.
+
+Hammer's base damage is higher, but base delay slower than axes, additionally 
+they hit bluntly instead of sharply having no effect on hydra heads.
 
 Being skilled with Axes will allow you to attack more quickly with all weapons
 of this type, as well as increasing your accuracy and damage with them.
@@ -285,7 +290,4 @@ Evocations skill affects your ability to use magical items like wands and other
 uncommon objects. High skill may increase the power or success rate of such
 items, and may also let you determine the amount of charges a zapped wand has
 left.
-
-The Evocations skill also affects your magical reserves, but to a lesser degree
-than the Spellcasting skill, and only the highest contribution is used.
 %%%%

@@ -38,6 +38,7 @@
 #include "tiles-build-specific.h"
 #include "unicode.h"
 #include "view.h"
+#include "ui.h"
 
 static struct termios def_term;
 static struct termios game_term;
@@ -431,6 +432,8 @@ void set_mouse_enabled(bool enabled)
 #ifdef NCURSES_MOUSE_VERSION
 static int proc_mouse_event(int c, const MEVENT *me)
 {
+    UNUSED(c);
+
     crawl_view.mousep.x = me->x + 1;
     crawl_view.mousep.y = me->y + 1;
 
@@ -467,7 +470,7 @@ static int proc_mouse_event(int c, const MEVENT *me)
 
 static int pending = 0;
 
-int getchk()
+static int _get_key_from_curses()
 {
 #ifdef WATCHDOG
     // If we have (or wait for) actual keyboard input, it's not an infinite
@@ -526,12 +529,11 @@ void set_getch_returns_resizes(bool rr)
     getch_returns_resizes = rr;
 }
 
-int m_getch()
+int getch_ck()
 {
-    int c;
-    do
+    while (true)
     {
-        c = getchk();
+        int c = _get_key_from_curses();
 
 #ifdef NCURSES_MOUSE_VERSION
         if (c == -KEY_MOUSE)
@@ -539,8 +541,12 @@ int m_getch()
             MEVENT me;
             getmouse(&me);
             c = proc_mouse_event(c, &me);
+
+            if (!crawl_state.mouse_enabled)
+                continue;
         }
 #endif
+
 #ifdef KEY_RESIZE
         if (c == -KEY_RESIZE)
         {
@@ -555,39 +561,32 @@ int m_getch()
             // This causes crashiness: e.g. in a menu, make the window taller,
             // then scroll down one line. To fix this, we always sync termsz:
             crawl_view.init_geometry();
+
+            if (!getch_returns_resizes)
+                continue;
         }
 #endif
-    } while (
-#ifdef KEY_RESIZE
-             (c == -KEY_RESIZE && !getch_returns_resizes) ||
-#endif
-             ((c == CK_MOUSE_MOVE || c == CK_MOUSE_CLICK)
-                 && !crawl_state.mouse_enabled));
 
-    return c;
-}
-
-int getch_ck()
-{
-    int c = m_getch();
-    switch (c)
-    {
-    // [dshaligram] MacOS ncurses returns 127 for backspace.
-    case 127:
-    case -KEY_BACKSPACE: return CK_BKSP;
-    case -KEY_DC:    return CK_DELETE;
-    case -KEY_HOME:  return CK_HOME;
-    case -KEY_PPAGE: return CK_PGUP;
-    case -KEY_END:   return CK_END;
-    case -KEY_NPAGE: return CK_PGDN;
-    case -KEY_UP:    return CK_UP;
-    case -KEY_DOWN:  return CK_DOWN;
-    case -KEY_LEFT:  return CK_LEFT;
-    case -KEY_RIGHT: return CK_RIGHT;
+        switch (c)
+        {
+        // [dshaligram] MacOS ncurses returns 127 for backspace.
+        case 127:
+        case -KEY_BACKSPACE: return CK_BKSP;
+        case -KEY_DC:    return CK_DELETE;
+        case -KEY_HOME:  return CK_HOME;
+        case -KEY_PPAGE: return CK_PGUP;
+        case -KEY_END:   return CK_END;
+        case -KEY_NPAGE: return CK_PGDN;
+        case -KEY_UP:    return CK_UP;
+        case -KEY_DOWN:  return CK_DOWN;
+        case -KEY_LEFT:  return CK_LEFT;
+        case -KEY_RIGHT: return CK_RIGHT;
 #ifdef KEY_RESIZE
-    case -KEY_RESIZE: return CK_RESIZE;
+        case -KEY_RESIZE: return CK_RESIZE;
 #endif
-    default:         return c;
+        case -KEY_BTAB: return CK_SHIFT_TAB;
+        default:         return c;
+        }
     }
 }
 
@@ -614,10 +613,18 @@ static void unixcurses_defkeys()
 
     // non-arrow keypad keys (for macros)
     define_key("\033OM", 1010); // Enter
-    define_key("\033OP", 1011); // NumLock
-    define_key("\033OQ", 1012); // /
-    define_key("\033OR", 1013); // *
-    define_key("\033OS", 1014); // -
+
+    // TODO: I don't know under what context these are mapped to numpad keys,
+    // but they are *much* more commonly used for F1-F4. So don't
+    // unconditionally define these. I don't trust anything else in this
+    // function either, but most of it is a bit hard to test. Possibly the
+    // conditional define here should at least be generalized?
+#define check_define_key(s, n) if (!key_defined(s)) define_key(s, n)
+    check_define_key("\033OP", 1011); // NumLock
+    check_define_key("\033OQ", 1012); // /
+    check_define_key("\033OR", 1013); // *
+    check_define_key("\033OS", 1014); // -
+#undef check_define_key
     define_key("\033Oj", 1015); // *
     define_key("\033Ok", 1016); // +
     define_key("\033Ol", 1017); // +
@@ -734,6 +741,9 @@ void console_startup()
 
     set_mouse_enabled(false);
 
+    // TODO: how does this relate to what tiles.resize does?
+    ui::resize(crawl_view.termsz.x, crawl_view.termsz.y);
+
 #ifdef USE_TILE_WEB
     tiles.resize();
 #endif
@@ -805,7 +815,6 @@ void puttext(int x1, int y1, const crawl_view_buffer &vbuf)
             cell++;
         }
     }
-    update_screen();
 }
 
 // These next four are front functions so that we can reduce
@@ -854,7 +863,7 @@ int num_to_lines(int num)
     return num;
 }
 
-void clrscr()
+void clrscr_sys()
 {
     textcolour(LIGHTGREY);
     textbackground(BLACK);
@@ -864,9 +873,6 @@ void clrscr()
     fflush(stdout);
 #endif
 
-#ifdef USE_TILE_WEB
-    tiles.clrscr();
-#endif
 }
 
 void set_cursor_enabled(bool enabled)
@@ -891,8 +897,8 @@ static inline unsigned get_brand(int col)
            (col & COLFLAG_MAYSTAB)          ? Options.may_stab_brand :
            (col & COLFLAG_FEATURE_ITEM)     ? Options.feature_item_brand :
            (col & COLFLAG_TRAP_ITEM)        ? Options.trap_item_brand :
-           (col & COLFLAG_REVERSE)          ? CHATTR_REVERSE
-                                            : CHATTR_NORMAL;
+           (col & COLFLAG_REVERSE)          ? unsigned{CHATTR_REVERSE}
+                                            : unsigned{CHATTR_NORMAL};
 }
 
 // see declaration
@@ -903,20 +909,20 @@ static curses_style curs_attr(COLOURS fg, COLOURS bg, bool adjust_background)
     style.color_pair = 0;
     bool monochrome_output_requested = curs_palette_size() == 0;
 
-    // Convert over to curses colors.
+    // Convert over to curses colours.
     short fg_curses = translate_colour(fg);
     short bg_curses = translate_colour(bg);
 
-    // Resolve fg/bg color conflicts.
+    // Resolve fg/bg colour conflicts.
     curs_adjust_color_pair_to_non_identical(fg_curses, bg_curses,
         adjust_background);
 
     if (!monochrome_output_requested)
     {
-        // Grab the color pair.
+        // Grab the colour pair.
         style.color_pair = curs_calc_pair_safe(fg_curses, bg_curses);
 
-        // Request decolorize if the pair doesn't actually exist.
+        // Request decolourise if the pair doesn't actually exist.
         if (style.color_pair == 0
             && !curs_color_combo_has_pair(fg_curses, bg_curses))
         {
@@ -947,7 +953,7 @@ static curses_style curs_attr(COLOURS fg, COLOURS bg, bool adjust_background)
 
     if (monochrome_output_requested)
     {
-        // Decolorize the output if necessary.
+        // Decolourise the output if necessary.
         if (curs_palette_size() != 0)
             style.color_pair = curs_calc_pair_safe(COLOR_WHITE, COLOR_BLACK);
 
@@ -1514,6 +1520,10 @@ void fakecursorxy(int x, int y)
     cchar_t c = character_at(y_curses, x_curses);
     flip_colour(c);
     write_char_at(y_curses, x_curses, c);
+    // the above still results in changes to the return values for wherex and
+    // wherey, so set the cursor region to ensure that the cursor position is
+    // valid after this call. (This also matches the behavior of real cursorxy.)
+    set_cursor_region(GOTO_CRT);
 }
 
 int wherex()

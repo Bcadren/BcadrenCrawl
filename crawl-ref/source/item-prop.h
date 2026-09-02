@@ -7,15 +7,16 @@
 
 #include <set>
 
+#include "cleave-type.h"
 #include "equipment-type.h"
 #include "item-prop-enum.h"
 #include "reach-type.h"
 #include "size-type.h"
+#include "tag-version.h"
 
 struct bolt;
 
 void init_properties();
-
 
 typedef uint32_t armflags_t;
 #define ard(flg, lev) (armflags_t)((flg) * ((lev) & 7))
@@ -39,6 +40,9 @@ enum armour_flag
     ARMF_RES_POISON         = 1 << 19,
     ARMF_RES_CORR           = 1 << 20,
     ARMF_RES_STEAM          = 1 << 21,
+    ARMF_BERSERK            = 1 << 22,
+    ARMF_INVIS              = 1 << 23,
+
     // vulnerabilities
     ARMF_VUL_FIRE           = ard(ARMF_RES_FIRE, -1),
     ARMF_VUL_COLD           = ard(ARMF_RES_COLD, -1),
@@ -83,9 +87,9 @@ bool  is_hard_helmet(const item_def &item) PURE;
 
 // ego items:
 brand_type choose_weapon_brand(weapon_type wpn_type);
-bool set_item_ego_type(item_def &item, object_class_type item_type,
-                       int ego_type);
+void set_item_ego_type(item_def &item, int ego_type);
 brand_type get_weapon_brand(const item_def &item) PURE;
+facet_type get_staff_facet(const item_def &item) PURE;
 special_armour_type get_armour_ego_type(const item_def &item) PURE;
 special_missile_type get_ammo_brand(const item_def &item) PURE;
 
@@ -121,21 +125,20 @@ void ident_reflector(item_def *item);
 
 // Only works for armour/weapons/missiles
 // weapon functions:
-int weapon_rarity(int w_type) IMMUTABLE;
+int weapon_rarity(int w_type, branch_type place = BRANCH_DUNGEON) IMMUTABLE;
 int shield_rarity(int s_type) IMMUTABLE;
 
 bool is_hybrid(int s_type) IMMUTABLE;
 
+bool is_wieldable_weapon(weapon_type wpn, size_type size);
 bool  is_weapon_wieldable(const item_def &item, size_type size) PURE;
 
 hands_reqd_type basic_hands_reqd(const item_def &item, size_type size) PURE;
 hands_reqd_type hands_reqd(const actor* ac, object_class_type base_type, int sub_type);
 
-bool is_giant_club_type(int wpn_type) IMMUTABLE;
 bool is_ranged_weapon_type(int wpn_type) IMMUTABLE;
 bool is_blessed_weapon_type(int wpn_type) IMMUTABLE;
 bool is_demonic_weapon_type(int wpn_type) IMMUTABLE;
-bool is_magic_weapon_type(int wpn_type) IMMUTABLE;
 
 bool is_melee_weapon(const item_def &weapon) PURE;
 bool is_demonic(const item_def &item) PURE;
@@ -146,12 +149,18 @@ bool convert2bad(item_def &item);
 
 int get_vorpal_type(const item_def &item) PURE;
 int get_damage_type(const item_def &item) PURE;
-int single_damage_type(const item_def &item) PURE;
 
+bool weapon_has_flag(const int wpn, const wpn_flags flag);
+
+bool is_blessable_item(const item_def &item);
 bool is_brandable_weapon(const item_def &wpn, bool allow_ranged, bool divine = false);
 
+skill_type wpn_skill(weapon_type wpn) PURE;
 skill_type item_attack_skill(const item_def &item) PURE;
 skill_type item_attack_skill(object_class_type wclass, int wtype) IMMUTABLE;
+skill_type staff_magic_skill(const item_def &item) PURE;
+
+bool is_heavy_manmade_armour(const item_def *item) IMMUTABLE;
 
 bool staff_uses_evocations(const item_def &item);
 bool item_skills(const item_def &item, set<skill_type> &skills);
@@ -165,15 +174,12 @@ const char *ammo_name(const weapon_type bow) PURE;
 bool has_launcher(const item_def &ammo) PURE;
 bool is_throwable(const actor *actor, const item_def &wpn,
                   bool force = false) PURE;
-launch_retval is_launched(const actor *actor, const item_def *launcher0,
-                          const item_def *launcher1, const item_def &missile) PURE;
+launch_retval is_launched(const actor *actor, const item_def *launcher,
+                          const item_def &missile) PURE;
 
-bool ammo_always_destroyed(const item_def &missile) PURE;
-bool ammo_never_destroyed(const item_def &missile) PURE;
-int  ammo_type_destroy_chance(int missile_type) PURE;
 int  ammo_type_damage(int missile_type) PURE;
 
-
+cleave_type weapon_cleave(const item_def &item) PURE;
 reach_type weapon_reach(const item_def &item) PURE;
 
 // Macguffins
@@ -215,6 +221,7 @@ int get_armour_res_corr(const item_def &arm) PURE;
 int get_armour_repel_missiles(const item_def &arm, bool check_artp) PURE;
 int get_armour_cloud_immunity(const item_def &arm) PURE;
 bool get_armour_improved_vision (const item_def &arm, bool check_artp) PURE;
+bool get_armour_rampaging(const item_def &arm, bool check_artp) PURE;
 
 int get_jewellery_res_fire(const item_def &ring, bool check_artp) PURE;
 int get_jewellery_res_cold(const item_def &ring, bool check_artp) PURE;
@@ -233,7 +240,6 @@ equipment_type get_item_slot(object_class_type type, int sub_type) IMMUTABLE;
 equipment_type get_item_slot(const item_def &item) PURE;
 
 int weapon_base_price(weapon_type type) PURE;
-int missile_base_price(missile_type type) PURE;
 int armour_base_price(armour_type type) PURE;
 int shield_base_price(shield_type type) PURE;
 
@@ -243,7 +249,8 @@ string food_type_name(int sub_type);
 const char *weapon_base_name(weapon_type subtype) IMMUTABLE;
 weapon_type name_nospace_to_weapon(string name_nospace);
 
-int weapon_damage(const item_def &item);
+bool is_effectively_light_armour(const item_def *item);
+int weapon_base_damage(const item_def &item);
 int weapon_delay(const item_def &item);
 
 void seen_item(const item_def &item);

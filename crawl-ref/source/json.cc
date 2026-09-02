@@ -478,7 +478,7 @@ bool json_validate(const char *json)
     return true;
 }
 
-JsonNode *json_find_element(JsonNode *array, int index)
+JsonNode *json_find_element(const JsonNode *array, int index)
 {
     JsonNode *element;
     int i = 0;
@@ -496,7 +496,7 @@ JsonNode *json_find_element(JsonNode *array, int index)
     return nullptr;
 }
 
-JsonNode *json_find_member(JsonNode *object, const char *name)
+JsonNode *json_find_member(const JsonNode *object, const char *name)
 {
     JsonNode *member;
 
@@ -528,7 +528,7 @@ static JsonNode *mknode(JsonTag tag)
 
 JsonNode *json_mknull()
 {
-    return mknode(JSON_nullptr);
+    return mknode(JSON_NULL);
 }
 
 JsonNode *json_mkbool(bool b)
@@ -548,6 +548,11 @@ static JsonNode *mkstring(char *s)
 JsonNode *json_mkstring(const char *s)
 {
     return mkstring(json_strdup(s));
+}
+
+JsonNode *json_mkstring(string s)
+{
+    return json_mkstring(s.c_str());
 }
 
 JsonNode *json_mknumber(double n)
@@ -1036,7 +1041,7 @@ static void emit_value(SB *out, const JsonNode *node)
     ASSERT(tag_is_valid(node->tag));
     switch (node->tag)
     {
-        case JSON_nullptr:
+        case JSON_NULL:
             sb_puts(out, "null");
             break;
         case JSON_BOOL:
@@ -1064,7 +1069,7 @@ void emit_value_indented(SB *out, const JsonNode *node, const char *space, int i
     ASSERT(tag_is_valid(node->tag));
     switch (node->tag)
     {
-        case JSON_nullptr:
+        case JSON_NULL:
             sb_puts(out, "null");
             break;
         case JSON_BOOL:
@@ -1322,7 +1327,7 @@ static void emit_number(SB *out, double num)
 
 static bool tag_is_valid(unsigned int tag)
 {
-    return /* tag >= JSON_nullptr && */ tag <= JSON_OBJECT;
+    return /* tag >= JSON_NULL && */ tag <= JSON_OBJECT;
 }
 
 static bool number_is_valid(const char *num)

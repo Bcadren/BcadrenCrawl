@@ -90,7 +90,7 @@ end
 
 # Set the default depth for vaults.  Be sure to adapt or specify
 # the DEPTH of particularly easy, tough, or thematic vaults.
-default-depth: D:12-, Depths, !Depths:$
+default-depth: D:6-, Depths, !Depths:$
 
 ###############################################################################
 #
@@ -104,7 +104,7 @@ TAGS:   extra
 DEPTH:  D, !D:$, Depths, !Depths:$
 ORIENT: float
 WEIGHT: 5
-: if you.absdepth() > 8 then
+: if you.absdepth() > 4 then
 KITEM:  " = club, quarterstaff, quarterstaff good_item
 : else
 KITEM:  " = club, quarterstaff, quarterstaff
@@ -120,7 +120,7 @@ ENDMAP
 # Staircase flavour vaults.
 #
 NAME:    minmay_staircase_windowed_small
-TAGS:    extra luniq_staircase decor
+TAGS:    extra luniq_staircase decor transparent
 DEPTH:   D:2-, !D:$, Depths:2-, !Depths:$
 ORIENT:  float
 WEIGHT:  5
@@ -142,7 +142,7 @@ ccccc
 ENDMAP
 
 NAME:    minmay_staircase_windowed_large
-TAGS:    extra luniq_staircase decor
+TAGS:    extra luniq_staircase decor transparent
 DEPTH:   D:2-, !D:$, Depths:2-, !Depths:$
 ORIENT:  float
 WEIGHT:  5
@@ -230,7 +230,7 @@ cccccc.....cccccc
 ENDMAP
 
 NAME:    minmay_staircase_bubble
-TAGS:    extra luniq_staircase decor
+TAGS:    extra luniq_staircase decor transparent
 DEPTH:   D:2-, !D:$, Depths:2-, !Depths:$
 ORIENT:  float
 SUBST:   m = mmmm.
@@ -263,7 +263,7 @@ ENDMAP
 
 NAME:    infiniplex_staircase_zigzag_1
 ORIENT:  float
-TAGS:    extra luniq_staircase decor
+TAGS:    extra luniq_staircase decor transparent
 DEPTH:   D:2-, !D:$, Depths:2-, !Depths:$
 WEIGHT:  3
 NSUBST:  @ 1:@ / *:x
@@ -555,7 +555,7 @@ ENDMAP
 
 NAME:    infiniplex_staircase_9_rooms
 ORIENT:  float
-TAGS:    extra luniq_staircase no_monster_gen decor
+TAGS:    extra luniq_staircase no_monster_gen decor transparent
 DEPTH:   D:2-, !D:$, Depths:2-, !Depths:$
 WEIGHT:  2
 # Room contents
@@ -780,8 +780,8 @@ EWwwwwwwwWE
 EZwwDEDwwZE
 DZwwE}EwwZD
 EZwwDEDwwZE
-EWwSWwwwwWE
-!DZSSSwwZD!
+EWwZWwwwwWE
+!DZSSZwwZD!
  EDWZZZWDE
   !EEDEE!
 ENDMAP
@@ -789,7 +789,7 @@ ENDMAP
 # This is replaced by infiniplex_staircase_pool_lava for low levels
 NAME:    infiniplex_staircase_pool
 ORIENT:  float
-TAGS:    extra luniq_staircase decor
+TAGS:    extra luniq_staircase decor transparent
 DEPTH:   D, !D:$, Lair, Swamp
 WEIGHT:  2 (D), 20 (Swamp)
 SUBST:   D = ww.
@@ -814,7 +814,7 @@ ENDMAP
 #    There are a few small changes to accout for lava being impassible.
 NAME:    infiniplex_staircase_pool_lava
 ORIENT:  float
-TAGS:    extra luniq_staircase decor
+TAGS:    extra luniq_staircase decor transparent
 DEPTH:   Depths
 WEIGHT:  2
 SUBST:   D = ll.
@@ -841,7 +841,7 @@ ENDMAP
 NAME:   mumra_celtic_spiral_tile
 ORIENT: float
 TAGS:   transparent allow_dup decor
-DEPTH:  D:1-10
+DEPTH:  D:1-5
 WEIGHT: 2
 MAP
             xxxxxxxxxxxxx
@@ -944,7 +944,7 @@ ENDMAP
 
 NAME:  minmay_weird_star
 TAGS:  no_pool_fixup no_monster_gen
-DEPTH:  D:8-, !D:$
+DEPTH:  D:4-, !D:$
 ORIENT: float
 MONS:  plant
 SUBST: x : x:9 c:1
@@ -981,7 +981,7 @@ ENDMAP
 NAME:    hangedman_decor_cross_pass
 TAGS:    transparent extra decor no_pool_fixup
 ORIENT:  float
-DEPTH:   D:8-, Depths, Elf
+DEPTH:   D:4-, Depths, Elf
 SHUFFLE: _- / _- / -_, '" / '" / "', !? / !? / !?
 SHUFFLE: HIJK / HIJK / IHKJ, LMNO / LMNO / MLON, PQRS / PQRS / QPSR
 SUBST:   HJLNPR = ., I : z:6 .:1, K : z., M : z:6 .:1, O : z., Q : z:6 .:1, S : z.
@@ -1024,7 +1024,8 @@ NAME:   kennysheep_cross_landing
 ORIENT: centre
 TAGS:   no_pool_fixup extra decor
 SUBST:  c:ccxxbvt
-DEPTH:  D:10-, Depths
+KFEAT:  t = mangrove
+DEPTH:  D:5-, Depths
 MAP
           cc+cc
          ccw.wcc
@@ -1086,7 +1087,7 @@ ENDMAP
 # Earth elementals (formerly Stone Golems)
 #
 NAME:   minmay_stone_box
-DEPTH:  D:10-
+DEPTH:  D:4-
 ORIENT: float
 WEIGHT: 5
 KMONS:  " = earth elemental
@@ -1134,8 +1135,8 @@ ENDMAP
 # Cavepeople
 #
 NAME:   erik_cavepeople
-TAGS:   no_monster_gen
-DEPTH:  D:7-11
+TAGS:   no_monster_gen transparent
+DEPTH:  D:4-6
 ORIENT: float
 WEIGHT: 5
 MONS:   jackal / hound, yak, human
@@ -1145,7 +1146,7 @@ MONS:   Edmund / Jessica / Sigmund, Ijyb / Psyche
 SUBST:  1 = 11., 3 = 3., 4 = 34, 5 = 35
 # Guarantee two winding tunnel into the center in this mess.
 SHUFFLE: rR / sS / uU / vV / wW / yY / zZ, uU / nN
-SUBST:   rsn = . RSN = @, uUvVwWyYzZ = x
+SUBST:   rsn = ., RSN = @, uUvVwWyYzZ = x
 MAP
          xSxxxxx    xxxxxxxxxxUx
          xxssxxx    xx1xxxxxxuxx
@@ -1174,10 +1175,10 @@ ENDMAP
 # Old Forge (1KB)
 #
 NAME:    old_forge
-DEPTH:   D:4-12
+DEPTH:   D:3-6
 ORIENT:  float
 KITEM:   ? = singing_sword, damaged short sword, \
-             damaged long sword, damaged hand axe
+             damaged long sword, damaged hatchet
 KITEM:   ! = damaged executioner's axe, damaged short sword, \
              damaged long sword, damaged morningstar
 KITEM:   + = damaged eveningstar, damaged short sword, \
@@ -1185,7 +1186,7 @@ KITEM:   + = damaged eveningstar, damaged short sword, \
 KITEM:   & = damaged mace / nothing
 MONS:    fungus, plant
 MONS:    adder, scorpion
-MONS:    rat / porcupine, river rat / hell rat
+MONS:    rat / porcupine, sewer rat / hell rat
 MONS:    bat
 KFEAT:   w = web
 SHUFFLE: ?!+
@@ -1216,7 +1217,7 @@ ENDMAP
 # The slime creature may seem too tough for the level where this appears, but
 # since it is a normal speed monster with no range attacks, it can be escaped.
 NAME:   lemuel_slime
-DEPTH:  D:6-, Lair
+DEPTH:  D:3-, Lair
 ORIENT: float
 MONS:   w:20 ooze / jelly / fungus
 MONS:   slime creature / oklob plant
@@ -1233,11 +1234,12 @@ ENDMAP
 ##############################################################################
 # Beware the mummy's curse (Lemuel)
 #
+# BCADDO: Turn into ossuary?
 NAME:    lemuel_minitomb
 ORIENT:  float
 DEPTH:   Depths, !Depths:$, Crypt
 MONS:    zombie / nothing
-MONS:    mummy, patrolling guardian mummy, patrolling greater mummy
+MONS:    mummy, patrolling guardian mummy, patrolling royal mummy
 MONS:    zombie
 MONS:    mummy / nothing
 SHUFFLE: 2F, cbv
@@ -1265,7 +1267,7 @@ ENDMAP
 NAME:   lemuel_insect_pit
 TAGS:   no_rotate
 ORIENT: float
-DEPTH:  D:5-12
+DEPTH:  D:3-6
 SUBST:  1 = 1:70 2:60 3:25
 MONS:   giant cockroach w:30 / butterfly w:20
 MONS:   worker ant
@@ -1289,7 +1291,7 @@ ENDMAP
 # Troll bridge (Lemuel)
 #
 NAME:   lemuel_troll_bridge
-DEPTH:  D:9-, Depths
+DEPTH:  D:5-, Depths
 ORIENT: float
 TAGS:   no_pool_fixup patrolling
 MONS:   yak, death yak
@@ -1305,13 +1307,13 @@ xxxxx...........................xxxxxx
 xwwwx...........................xxxxxx
 xwwwx.............1.............xxxxxx
 xwwwx...........................xxxxxx
-xwwwwwwwwwwwwwwwww.wwwwwwwwwww..xxxxxx
-xxwwwwwwwwwwxxxxxw.wwwwwwwwwwwwwwwwxxx
+xwwwWWWWWWWWWWWWWw.wWWWWWWWWWW..xxxxxx
+xxwwwwwwwwwwxxxxxw.wwwwwwwwwwWWWWwwxxx
 xxwwwwwwwwwwx333xw.wxxxxxwwwwwwwwwwwxx
 xxwwwwwwwwwwx*33+...+33*xwwwwwwwwwwwwx
 xxxwwwwwwwwwxxxxxw.wx333xwwwwwwwwwwwwx
-xxxxxwwwwwwwwwwwww.wxxxxxwwwwwwwwwwwwx
-xxxxx...wwwwwwwwww.wwwwwwwwwwwwwwwwwwx
+xxxxxWWWWwwwwwwwww.wxxxxxwwwwwwwwwwwwx
+xxxxx...WWWWWWWWWw.wWWWWWWWWWWWWWwwwwx
 xxxxx...........................xwwwwx
 xxxxx............1.1............xxwwwx
 xxxxx...........................xxwwwx
@@ -1323,7 +1325,7 @@ ENDMAP
 #
 NAME:   lemuel_bear_cage
 ORIENT: float
-DEPTH:  D:7-
+DEPTH:  D:4-
 MONS:   black bear / polar bear
 MONS:   hippogriff / manticore w:3
 MONS:   yak / dream sheep w:5 / death yak w:3
@@ -1348,9 +1350,9 @@ ENDMAP
 #
 NAME:    lemuel_vampire_tower
 TAGS:    no_monster_gen no_pool_fixup
-DEPTH:   D:12-, Depths, !Depths:$, Crypt
+DEPTH:   D:6-, Depths, !Depths:$, Crypt
 ORIENT:  float
-MONS:    rat / porcupine / w:6 river rat / w:3 hell rat / w:20 bat
+MONS:    rat / porcupine / w:6 sewer rat / w:3 hell rat / w:20 bat
 MONS:    wolf / spectral wolf w:2 / hell hound w:12 / raiju w:2
 MONS:    flying skull, phantasmal warrior / jiangshi
 MONS:    human zombie, frost giant zombie / fire giant zombie, vampire
@@ -1403,8 +1405,8 @@ NAME:    onia_ninara_swampy_vault
 TAGS:    no_pool_fixup no_monster_gen
 DEPTH:   Lair:4-, !Lair:$, Snake, !Snake:$, Depths, !Depths:$
 ORIENT:  float
-KMONS:   1 = slime creature w:20 / swamp worm w:50 / \
-             vampire mosquito / crocodile / swamp drake w:15
+KMONS:   1 = tyrant leech / swamp worm w:50 / \
+             vampire mosquito band / goliath frog / swamp drake w:15
 KMONS:   23 = alligator / swamp dragon / hydra
 KMONS:   45 = tentacled monstrosity / thorn hunter
 KITEM:   3 = any good_item / any potion / gold
@@ -1448,10 +1450,10 @@ ENDMAP
 # Another low-level vault - LP
 #
 NAME:    lemuel_reptile_caves
-DEPTH:   D:10-13, Lair:1-, !Lair:$
+DEPTH:   D:5-7, Lair:1-, !Lair:$
 ORIENT:  float
 TAGS:    transparent no_pool_fixup
-MONS:    leopard gecko / frilled lizard, crocodile, iguana
+MONS:    leopard gecko / cinder newt, crocodile, iguana
 MONS:    rime drake / swamp drake
 MONS:    adder, water moccasin
 SUBST:   4 = 34
@@ -1466,7 +1468,7 @@ SUBST:   Y=xw
 SUBST:   Z=xWw
 MAP
 xxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxXW**wZxxxxxxxxxxxxxxX**XXx
+xxXW**wwxxxxxxxxxxxxxxX**XXx
 xZwWwwwZxxxxxxX33xxxxxX423Xx
 xZWww232ZxxxxX121xxxxX.13Xxx
 xZZWww2ZxxxxxX.1xxxxxw222Xxx
@@ -1489,7 +1491,7 @@ ENDMAP
 NAME:    gargoyle_guard
 ORIENT:  float
 TAGS:    patrolling no_monster_gen
-DEPTH:   D:12-, !D:$
+DEPTH:   D:6-, !D:$
 # you should be able to arrive both via stairs and via corridor
 SUBST:   { = {([)]}
 MONS:    gargoyle, war gargoyle
@@ -1516,7 +1518,7 @@ ENDMAP
 #
 NAME:    lemuel_ogre_cave
 ORIENT:  float
-DEPTH:   D:9-, !D:$, Orc
+DEPTH:   D:4-, !D:$, Orc
 TAGS:    no_pool_fixup
 MONS:    ogre, two-headed ogre, ogre mage / Erolcha, plant / fungus
 MONS:    ogre zombie, two-headed ogre zombie
@@ -1553,11 +1555,11 @@ ENDMAP
 ##############################################################################
 # Slaugherhouse (Zaba)
 #
-# Butchers have either knives (daggers) or hand axes. They have some chance
+# Butchers have either knives (daggers) or hatchets. They have some chance
 # of opening the doors so animals can go for a walk, that's intended.
 #
 NAME:   slaughterhouse
-DEPTH:  Lair:5-, D:11-
+DEPTH:  Lair:5-, D:5-
 TAGS:   no_monster_gen
 ORIENT: float
 WEIGHT: 5
@@ -1567,7 +1569,7 @@ MARKER: F = lua:fog_machine { \
                 size_buildup_time = 25, cloud_type = "freezing vapour" \
             }
 MONS:   death yak w:5 / dream sheep w:3 / yak w:7
-MONS:   generate_awake human ; dagger | hand axe
+MONS:   generate_awake human ; dagger | hatchet
 SUBST:  F=d, 2=2.
 ITEM:   ration w:5 / nothing
 KFEAT:  ~ = closed_clear_door
@@ -1945,7 +1947,7 @@ ENDMAP
 #
 NAME:    nrook_guardian_serpent_snake_passage
 ORIENT:  float
-DEPTH:   D:9-, Snake
+DEPTH:   D:5-, Snake
 TAGS:    no_monster_gen no_rotate
 MONS:    patrolling guardian serpent
 SHUFFLE: yY/zZ
@@ -1975,7 +1977,7 @@ ENDMAP
 # There is a path to the center that the freezing clouds never appear on.
 # It's pretty obvious. -LP
 NAME:    lemuel_ice_spiral_1
-DEPTH:   D:12-
+DEPTH:   D:6-
 WEIGHT:  1
 ORIENT:  float
 TAGS:    no_item_gen no_monster_gen
@@ -2021,7 +2023,7 @@ ENDMAP
 NAME:    lemuel_ice_spiral_2
 TAGS:    uniq_spiral layout_rooms layout_city
 TAGS:    no_item_gen no_monster_gen no_tele_into
-DEPTH:   D:5-
+DEPTH:   D:3-
 ORIENT:  float
 SUBST:   * : *$
 MARKER:  D = lua:fog_machine { cloud_type = "freezing vapour", \
@@ -2042,7 +2044,7 @@ ENDMAP
 # Flame loot (Lemuel)
 #
 NAME:   lemuel_flame_loot_2
-DEPTH:  D:9-, Depths
+DEPTH:  D:4-, Depths
 ORIENT: float
 ITEM:   nothing
 SUBST:  * = |**...
@@ -2180,7 +2182,7 @@ ENDMAP
 
 NAME:    hangedman_screamer
 TAGS:    no_monster_gen
-DEPTH:   D:9-, Depths, Crypt
+DEPTH:   D:5-, Depths, Crypt
 ORIENT:  float
 MONS:    patrolling flying skull
 MONS:    zombie / skeleton
@@ -2223,10 +2225,10 @@ ENDMAP
 ##############################################################################
 
 NAME:   nicolae_whirlpool
-TAGS:   patrolling no_pool_fixup no_rotate no_monster_gen
+TAGS:   patrolling no_pool_fixup no_rotate no_monster_gen transparent
 ORIENT: float
 MONS:   centaur, centaur warrior
-DEPTH:  D:6-, Depths
+DEPTH:  D:3-, Depths
 : if you.in_branch("D") then
 SUBST:  1 = ..1
 SUBST:  2 = 1
@@ -2253,7 +2255,7 @@ ENDMAP
 ##############################################################################
 
 NAME:   wad_bat_island
-DEPTH:  D:12-, !D:$
+DEPTH:  D:6-, !D:$
 ORIENT: float
 WEIGHT: 4
 FTILE: >.12t = floor_grass
@@ -2292,7 +2294,7 @@ DEPTH:   Depths, !Depths:$
 WEIGHT:  3
 MONS:    generate_awake floating eye, eye of devastation, glowing orange brain
 MONS:    generate_awake golden eye, slime creature, jelly
-KFEAT:   > = known shaft trap
+KFEAT:   > = shaft trap
 KFEAT:   n = iron_grate
 KMASK:   ' = !no_monster_gen
 KMASK:   ' = !no_item_gen
@@ -2447,9 +2449,9 @@ DEPTH:   Depths
 MONS:    plant w:14 / fungus w:4 / bush w:2
 MONS:    fire dragon / ice dragon / lindwurm / hell hound
 MONS:    death yak / manticore / catoblepas / dire elephant
-MONS:    hydra / anaconda / hornet w:2 / redback w:3 / wolf spider w:5 / harpy
+MONS:    hydra / blood boa / hornet w:2 / redback w:3 / wolf spider w:5 / harpy
 MONS:    spriggan druid, spriggan rider
-MONS:    sphinx / hell beast w:5 / caustic shrike w:5
+MONS:    sphinx / helvityr w:5 / caustic shrike w:5
 ITEM:    ration / nothing w:80
 NSUBST:  ' : 1:2 / 1:3 / 1:4 / 2 = 233444. / *:.
 NSUBST:  " : 2:2 / 2:3 / 2:4 / 4 = 233444. / *:.
@@ -2501,12 +2503,12 @@ ORIENT: float
 DEPTH: Depths
 TAGS: no_monster_gen
 SHUFFLE: PFIEMONLSAKRVCTHD
-KMONS: P = green death / green draconian / nagaraja w:5 / swamp dragon / \
+KMONS: P = gwyrdd / green draconian / nagaraja w:5 / swamp dragon / \
            redback
-KMONS: F = fire giant w:5 / fire dragon / fire elemental / red draconian / sun demon
-KMONS: I = frost giant w:5 / ice dragon / blizzard demon / white draconian / \
+KMONS: F = fire giant w:5 / fire dragon / fire elemental / red draconian / sturnulos
+KMONS: I = frost giant w:5 / ice dragon / cenysus / white draconian / \
            ice dragon
-KMONS: E = titan w:5 / storm dragon / black draconian / ball lightning
+KMONS: E = titan w:5 / storm dragon / blue draconian / ball lightning
 KMONS: O = orc knight / orc sorcerer / orc warlord w:5 / orc high priest / \
            orc warrior
 KMONS: N = deep elf knight w:5 / deep elf archer w:5 / \
@@ -2517,7 +2519,7 @@ KMONS: S = swamp dragon / hydra w:5 / thorn hunter / large slime creature / \
            alligator
 KMONS: A = alligator snapping turtle w:5 / merfolk avatar / merfolk aquamancer / \
            merfolk impaler / harpy
-KMONS: K = nagaraja w:5 / naga mage / anaconda / naga warrior / \
+KMONS: K = nagaraja w:5 / naga mage / anaconda w:3 / blood boa w:7 / naga warrior / \
            guardian serpent
 KMONS: R = emperor scorpion / wolf spider / orb spider / ghost moth w:5 / \
            tarantella
@@ -2526,10 +2528,10 @@ KMONS: V = vault guard / stone giant w:5 / yaktaur captain / dancing weapon / \
            skeletal warrior
 KMONS: C = skeletal warrior / bone dragon / vampire / lich w:5
 KMONS: T = mummy priest w:5 / guardian mummy / sphinx / mummy / reaper
-KMONS: H = balrug w:5 / blizzard demon w:5 / shadow demon w:5 / \
-           hell beast w:5 / sun demon / ice devil / rust devil / soul eater / \
+KMONS: H = balrug w:5 / cenysus w:5 / cysgodol w:5 / \
+           helvityr w:5 / sturnulos / rypuiwel / taeringu / saelneytandi / \
            hell knight w:5
-KMONS: D = frilled lizard / kobold / hobgoblin w:5 / goblin / adder
+KMONS: D = cinder newt / kobold / hobgoblin w:5 / goblin / adder
 MAP
 xxvvvvvvvvvvvvvxx
 xvv..vvvvvvv..vvx
@@ -2611,6 +2613,7 @@ ENDMAP
 #
 # (Arguably doesn't work as well in Zot / entering Zot, but moths of wrath...)
 NAME:   grunt_twist_and_shout
+TAGS:   transparent
 ORIENT: centre
 DEPTH:  Depths, Zot, !Zot:$
 PLACE:  Depths:$
@@ -2679,7 +2682,7 @@ MAP
    cccccccc     cccccccc
   cc|*2...ccccccc......cc
  cc|**..2.+......cccccc.c
-  cc|*2...cccccccc    c.c
+  cc|*2...ccccccccccccc.c
 ccccccccccccccccccccccc.cc
 @...1...1........1...1...@
 ..........................
@@ -2687,7 +2690,7 @@ ccccccccccccccccccccccc.cc
 ..........................
 @...1...1........1...1...@
 cc.ccccccccccccccccccccccc
- c.c    cccccccc...2*|cc
+ c.ccccccccccccc...2*|cc
  c.cccccc......+.2..**|cc
  cc......ccccccc...2*|cc
   cccccccc     cccccccc
@@ -2701,16 +2704,16 @@ PLACE:   Depths:$
 WEIGHT:  5 (Depths:$, Geh), 10
 MONS:    hell knight
 : if you.where() == dgn.level_name(dgn.br_entrance("Zot")) then
-MONS:    yellow draconian, black draconian, ettin
+MONS:    turquoise draconian, bone draconian, ettin
 NSUBST:  2 = 2:2 / 2:3 / 2:4 / * = 222334
 : elseif you.in_branch("Depths") then
 MONS:    deep troll
 : else
-# hell beast perm_ench:invis is too gimmicky.
+# helvityr perm_ench:invis is too gimmicky.
 # Fortunately, we have a permanently invisible 2 already.
 MONS:    lorocyproca
 : end
-ITEM:    arbalest, bolt, potion of curing, potion of heal wounds
+ITEM:    arbalest, potion of curing, potion of heal wounds
 ITEM:    potion of invisibility
 : if you.in_branch("Geh") then
 SUBST: defgh = .
@@ -2773,18 +2776,19 @@ cc..e....................e2.cc
               @@
 ENDMAP
 
+# BCADDO: This one might outta be an ossuary too?
 NAME:   ragdoll_tomb_raider
 TAGS:   no_item_gen no_monster_gen patrolling
-DEPTH:  D:14-, Depths, Crypt, !Crypt:$
+DEPTH:  D:7-, Depths, Crypt, !Crypt:$
 ORIENT: float
 KITEM:  $ = amulet_of_vitality / any good_item
 KITEM:  12345d = gold / any / nothing
 KITEM:  67M = superb_item / any
-KFEAT:  ~ = known zot trap
+KFEAT:  ~ = zot trap
 KMONS:  1 = mummy
 KMONS:  25 = guardian mummy
 KMONS:  36 = mummy priest
-KMONS:  47 = greater mummy
+KMONS:  47 = royal mummy
 KMONS:  H = sphinx
 : if you.absdepth() <= 17 then
 SUBST: 12 = 12d, 3 = 123, 4 = 6, H = .
@@ -2792,7 +2796,7 @@ SUBST: 12 = 12d, 3 = 123, 4 = 6, H = .
 SUBST: 4 = 67, 3 = 345, 2 = 23d, 1 = 12, H = H`
 : end
 : if you.in_branch("Crypt") then
-KMONS: M = Khufu, greater mummy
+KMONS: M = Khufu, royal mummy
 : elseif you.absdepth() <= 17 then
 KMONS: M = Menkaure, mummy priest
 : else
@@ -2800,14 +2804,12 @@ SUBST: M = 6
 : end
 SUBST:  C = c
 NSUBST: ~ = 2:~ / 1:~. / *:.
-COLOUR: G = yellow
-TILE:   G = dngn_sarcophagus_sealed
+KFEAT:  G = sarcophagus
 COLOUR: c = yellow
 TILE:   c = wall_tomb
 COLOUR: C = white
 TILE:   C = wall_lab_stone
 FTILE:  .~cCG1234567M$ = floor_sandstone
-: set_feature_name("granite_statue", "sealed sarcophagus")
 MAP
 xxxxxxxxxxxxxxxxxxxxx
 xcccccccccccccccccccx
@@ -2909,7 +2911,7 @@ ENDMAP
 
 NAME: cheibrodos_breeding_chamber
 TAGS: no_item_gen no_monster_gen
-DEPTH: D:10-
+DEPTH: D:5-
 ORIENT: float
 MONS: wizard, ugly thing, very ugly thing
 SUBST: y = * |:4, r = *:2 %
@@ -2940,14 +2942,14 @@ ORIENT: float
 : local brnd = crawl.random2(15)
 : if brnd >= 10 then
 MONS: mana viper / naga warrior / naga mage
-MONS: nagaraja / naga ritualist / w:8 green death
+MONS: nagaraja / naga ritualist / w:8 gwyrdd
 : elseif brnd >= 5 then
 MONS: jumping spider / wolf spider / tarantella
-MONS: emperor scorpion / w:8 green death / w:3 ghost moth
+MONS: emperor scorpion / w:8 gwyrdd / w:3 ghost moth
 : else
 MONS: skeletal warrior ; long sword ego:venom | broad axe ego:venom \
       | halberd ego:venom
-MONS: reaper ; scythe ego:venom / w:8 green death \
+MONS: reaper ; scythe ego:venom / w:8 gwyrdd \
       / ancient champion ; great mace ego:venom | battleaxe ego:venom \
       | glaive ego:venom
 : end
@@ -2990,7 +2992,7 @@ cc'nn-...-nnnnnc...cncnc...cnnnnn-...-nn'cc
 ENDMAP
 
 NAME: cheibrodos_magma_flow
-DEPTH: D:11-, !D:$, Lair:3-, !Lair:$
+DEPTH: D:5-, !D:$, Lair:2-, !Lair:$
 ORIENT: float
 TAGS: no_item_gen no_monster_gen
 KMONS: ' = lava snake
@@ -3018,7 +3020,7 @@ xxl.lll...xx...lllxx..llxxxx..xxlllxx
 ENDMAP
 
 NAME:   kennysheep_slugbush
-DEPTH:  D:3-7
+DEPTH:  D:2-4
 ORIENT: float
 MONS:   dart slug
 NSUBST: w = 15:xxc
@@ -3054,7 +3056,7 @@ TAGS:    transparent patrolling
 DEPTH:   Depths, !Depths:$
 ORIENT:  float
 MONS:    necromancer ; wand of iceblast . \
-         staff of fire w:15 | quarterstaff ego:molten w:15 . \
+         staff of fire w:15 | cleaver ego:molten w:15 . \
          robe ego:fire_resistance w:14 | robe ego:cold_resistance w:15 | \
          robe ego:resistance w:1
 MONS:    necromancer ; wand of iceblast . \
@@ -3115,9 +3117,9 @@ KMONS:  7 = spriggan defender ; staff of fire | staff of cold | \
 KMONS:  8 = tengu reaver ; battleaxe ego:molten | great sword ego:freezing | \
                            halberd ego:electrocution | lajatang ego:vorpal . \
                            fire dragon scales | ice dragon scales
-KMONS:  9 = red draconian / white draconian / black draconian
-KMONS:  0 = red draconian monk / white draconian monk / black draconian monk
-KMONS:  ! = orb of fire / electric golem / ice fiend / iron giant
+KMONS:  9 = golden draconian / scintillating draconian / black draconian
+KMONS:  0 = golden draconian monk / scintillating draconian monk / black draconian monk
+KMONS:  ! = orb of fire / electric golem / Vetrifl / iron giant
 KMONS:  & = ancient lich
 KITEM:  $ = $ no_pickup
 KFEAT:  ~ = .
@@ -3193,7 +3195,7 @@ ORIENT:  float
 # The dances of angels and devils, of blessed birds and antagonist serpents...
 # and perhaps the stinger plunging into the poor toro de lidia?
 MONS:    dancing weapon ; scythe ego:antimagic
-MONS:    cherub, rakshasa, angel / daeva, balrug / blizzard demon
+MONS:    cherub, rakshasa, angel / daeva, balrug / cenysus
 MONS:    caustic shrike, shadow dragon
 KMONS:   8 = tengu reaver
 KMONS:   9 = bone dragon
@@ -3238,7 +3240,7 @@ ENDMAP
 # should be fine otherwise.
 #
 NAME:   minmay_shoctagon
-DEPTH:  D:12-, Depths:1-2, Elf
+DEPTH:  D:6-, Depths:1-2, Elf
 ORIENT: float
 MONS:   raiju / sixfirhy w:2
 KMONS:  2 = shock serpent / storm dragon
@@ -3266,13 +3268,13 @@ xxB...AAA...Bxx
 ENDMAP
 
 NAME:   minmay_roctagon
-DEPTH:  D:12-, Depths:1-2, Elf
+DEPTH:  D:6-, Depths:1-2, Elf
 ORIENT: float
 MONS:   two-headed ogre / troll
 KMONS:  2 = stone giant / iron dragon
 ITEM:   book of geomancy / book of the earth / manual of earth magic / \
         staff of earth ident:type / ring of protection ident:type / \
-        wand of scattershot ident:type / crystal plate armour w:5
+        wand of scattershot ident:type / crystal plate w:5
 KITEM:  2 = devastator
 : minmay_elemental_octagon_setup(_G)
 MAP
@@ -3294,7 +3296,7 @@ xxB.A.A.A.A.Bxx
 ENDMAP
 
 NAME:   minmay_coctagon
-DEPTH:  D:10-, Elf
+DEPTH:  D:5-, Elf
 ORIENT: float
 MONS:   polar bear w:6 / rime drake / ice beast
 KMONS:  2 = frost giant / ice dragon
@@ -3324,7 +3326,7 @@ xxB..AA.AA..Bxx
 ENDMAP
 
 NAME:   minmay_firetagon
-DEPTH:  D:10-, Elf, Geh, !Geh:$
+DEPTH:  D:5-, Elf, Geh, !Geh:$
 ORIENT: float
 MONS:   fire bat
 KMONS:  2 = fire giant / fire dragon
@@ -3363,30 +3365,34 @@ NSUBST:  1 = 4:1 / 8=1... / .
 SUBST:   2 = 2.
 SUBST:   c : c b:2 v:2
 SUBST:   Y : YVbn .:40
+FTILE:   @v.12Yde = FLOOR_CRYPT
+TILE:    v = WALL_CRYPT
 MAP
- ccc       ccc
-cc.cccccccccdcc
-@.c...c1c...cdc
-cc.....c.....cc
- c..Y.1c1.Y.2c
-cc...1.c.1...cc
-c1c.1.c1c.1.c1c
-cc1ccc1c1ccc1cc
-c1c.1.c1c.1.c1c
-cc...1.c.1...cc
- c..Y.1c1.Y..c
-cc.....c...2.cc
-cdc.2.c1c...cdc
-ccdcccccccccdcc
- ccc       ccc
+vvvvvvvvvvvvvvv
+vv.vvvvvvvvvdvv
+@.v...v1v...vdv
+vv.....v.....vv
+vv..Y.1v1.Y.2vv
+vv...1.v.1...vv
+v1v.1.v1v.1.v1v
+vv1vvv1v1vvv1vv
+v1v.1.v1v.1.v1v
+vv...1.v.1...vv
+vv..Y.1v1.Y..vv
+vv.....v...2.vv
+vdv.2.v1v...vdv
+vvdvvvvvvvvvdvv
+vvvvvvvvvvvvvvv
 ENDMAP
 
 NAME:    minmay_guarded_unrand_sceptre_of_torment
 ORIENT:  float
 DEPTH:   Depths, Crypt
-MONS:    mummy priest, greater mummy
+MONS:    mummy priest, royal mummy
 KITEM:   d = sceptre_of_torment no_pickup ident:type
-KMONS:   d = greater mummy
+KMONS:   d = royal mummy
+FTILE:   c@12.d = FLOOR_SANDSTONE
+TILE:    c = WALL_TOMB
 MAP
 ccccccccccc@ccccccccccc
  cc2.....cc..c.....1cc
@@ -3403,29 +3409,33 @@ ENDMAP
 
 NAME:    minmay_guarded_unrand_sword_of_power
 ORIENT:  float
-DEPTH:   D:13-
-MONS:    vault guard
+DEPTH:   D:4-
+MONS:    vault guard, vault warden
 ITEM:    sword_of_power no_pickup
+FTILE:   c.8G1q+d = floor_vault
+TILE:    c = stone_wall_vault
+KFEAT:   + = runed_clear_door
 MAP
- vvvvvvvv
-vv......vv
-v.8..G811vv
-v.....11..vv
-v...vvv....v
-v...+dn....@
-v...vvv....v
-v.....11..vv
-v.8..G811vv
-vv......vv
- vvvvvvvv
+ cccccccc
+cc......cc
+c.8..G811cc
+c.....112.cc
+c...ccc....c
+c...+dq....+@
+c...ccc....c
+c.....112.cc
+c.8..G811cc
+cc......cc
+ cccccccc
 ENDMAP
 
 NAME:    minmay_guarded_unrand_guard
-DEPTH:   D:12-, Depths:1-4
+DEPTH:   D:6-, Depths:1-4
 ORIENT:  float
 ITEM:    glaive_of_the_guard no_pickup
 SUBST:   b : bxcmG.T
 NSUBST:  3:9 / 4=9. / ., 8 = 2:8 / 6=8.. / .
+FTILE:   v.*@G89db = FLOOR_ETCHED
 MAP
 vvvvvvv@vvvvvvv
 v...v*v.v*v...v
@@ -3445,10 +3455,10 @@ vvvvvvvvvvvvvvv
 ENDMAP
 
 NAME: cheibrodos_frozen_isle
-DEPTH: D:8-
+DEPTH: D:4-
 TAGS: no_item_gen no_monster_gen no_pool_fixup
 ORIENT: float
-MONS: ice statue, ice devil, ufetubus
+MONS: ice statue, rypuiwel, ufetubus
 KPROP: 1-' = no_tele_into
 NSUBST: ' = 5=*$ / *:%
 NSUBST: - = 4:2 / 4:3 / 4=23 / *:.
@@ -3474,35 +3484,40 @@ MAP
         ...
 ENDMAP
 
-NAME: cheibrodos_iron_armory
-DEPTH: D:5-10
+NAME: cheibrodos_iron_armoury
+DEPTH: D:3-6
 TAGS: no_item_gen no_monster_gen
 ORIENT: float
-MONS: rust devil, orc warrior
-ITEM: scimitar / w:1 scimitar good_item, halberd / w:1 halberd good_item
-ITEM: war axe / w:1 war axe good_item, morningstar / w:1 morningstar good_item
-ITEM: plate armour / w:1 plate armour good_item
-ITEM: chain mail / w:1 chain mail good_item
+MONS: torturous demonspawn ; demon whip, orc warrior ; plate armour good_item . demon trident
+ITEM: scimitar good_item / scimitar not_cursed randart w:3, halberd good_item / halberd not_cursed randart w:3
+ITEM: war axe good_item / war axe not_cursed randart w:3, morningstar good_item / morningstar not_cursed randart w:3
+ITEM: plate armour good_item / plate armour not_cursed randart
+ITEM: chain mail good_item / chain mail not_cursed randart
+KFEAT: A = enter_hell
+TILE: A = dngn_enter_dis
+TILE: G = dngn_statue_iron
+KFEAT: + = closed_clear_door
 NSUBST: " = 1:h / 1:i
 NSUBST: - = 1:d / 1:e / 1:f / 1:g
+FTILE: A1.-vhidefg+2Gt)q = FLOOR_ETCHED
 MAP
-    .....
-  ...vvv...
- ..nvvAvvn..
- .vvt1.1tvv.
-..v-.....-v..
-.vvv.....vvv.
-.v"+.2G2.+"v.
-.vvv.....vvv.
-..v-.....-v..
- .vvt...tvv.
- ..nvv)vvn..
-  ...vvv...
-    .....
+    '''''
+  '''vvv'''
+ ''qvvAvvq''
+ 'vvt1.1tvv'
+''v-.....-v''
+'vvv.....vvv'
+'q"+.2G2.+"q'
+'vvv.....vvv'
+''v-.....-v''
+ 'vvt...tvv'
+ ''qvv)vvq''
+  '''vvv'''
+    '''''
 ENDMAP
 
 NAME: cheibrodos_quashed
-DEPTH: D:4-8
+DEPTH: D:2-4
 TAGS: no_item_gen no_monster_gen
 ORIENT: float
 MONS: quasit
@@ -3519,22 +3534,25 @@ MAP
 ENDMAP
 
 NAME: cheibrodos_shockbox
-DEPTH: D:7-
+DEPTH: D:3-
 TAGS: no_item_gen no_monster_gen
 ORIENT: float
-KMONS: - = sixfirhy
-KITEM: - = star_item / w:1 superb_item / w:1 demon blade ego:electrocution / \
+KMONS: - = generate_awake sixfirhy
+KITEM: - = any weapon ego:electrocution / w:1 demon blade ego:electrocution / \
            w:1 glaive ego:electrocution / w:1 broad axe ego:electrocution
+KFEAT: + = runed_clear_door
+FTILE: qv-+ = FLOOR_ETCHED
 MAP
 ..@..
-.vnv.
-.n-n.
-.v=v.
+.vqv.
+.q-q.
+.v+v.
 .....
 ENDMAP
 
+# Fairly hard for 2, but fits the sewer theme.
 NAME: cheibrodos_two_vegetables
-DEPTH: D:5-10
+DEPTH: D:2
 TAGS: no_item_gen no_monster_gen no_pool_fixup
 ORIENT: float
 KMONS: 1 = electric eel
@@ -3550,13 +3568,13 @@ MAP
 xx;xxxxxxxx;xx
 xWxx..`BB_xx0x
 xWx...``B__x.x
-x;x....`BB_m.x
+x;x....`BB_q.x
 x.x+..``B__x;x
 x..x..`BB_xxWxx
 xx;xxxxxxxxxxWxx
  xWWxx..`AA-xxWx
  xxWx...``A--x;x
-  x;x....`AA-m.x
+  x;x....`AA-q.x
   x.x+..``A--x.x
   x..x..`AA-xx+x
   xx9xxxxxxxx.@.
@@ -3592,54 +3610,62 @@ MAP
 ENDMAP
 
 NAME: cheibrodos_quadrivalence
-DEPTH: D:12-, Depths
+DEPTH: D:6-7, Depths, !Depths:$
 TAGS: no_item_gen no_monster_gen no_pool_fixup
 ORIENT: float
-: if you.branch() == "Depths" then
-MONS: smoke demon / sun demon, balrug / w:2 nothing
-MONS: ynoxinul , blizzard demon / w:2 nothing
+MONS: mygdarth / sturnulos, balrug
+MONS: ynoxinul , cenysus
+MONS: cythraul ; trident ego:molten / cythraul ; trident mundane, rypuiwel
+: if crawl.coinflip() then
+COLOUR: -c2+'.B56 = red
+FTILE: -2+'. = floor_rough_red
 : else
-MONS: red devil ; trident, sun demon / w:5 smoke demon / w:3 nothing
-MONS: ice devil, ynoxinul / w:2 nothing
-: end
-SHUFFLE: l2'/w4B
-NSUBST: ' = 3:1 / 3=1. / *:., B = 3:3 / 3=3. / *:., - = 2=|* / 4:* / 6=$%
+SUBST: l = w , 2 = 4, ' = B
+COLOUR: -c2+'.B56 = blue
+FTILE: -2+'.B = floor_frozen
+TILE: c = WALL_ICY_STONE
+:end
+NSUBST: ' = 3:1 / 4:5 / 3=1. / *:., B = 3:3 / 4:6 / 3=3. / *:., - = 2=|* / 4:* / 6=$%
 MAP
-...................
-.ccccc.......ccccc.
-.c-c-ccccccccc-c-c.
-.cc2c+c'''''c+c2cc.
-.c-cnc'lllll.cnc-c.
-.cc+c'll...l..c+cc.
-..cc'll..l..l..cc..
-..c'll..lll..ll'c..
-..c'l..lllll..l'c..
-..c'l.ll.)lll.l'c..
-..c'l.....ll..l'c..
-..c'll...ll..ll'c..
-..cc'll..l..ll'cc..
-.cc+c'll...ll'c+cc.
-.c-cnc'lllll'cnc-c.
-.cc2c+c'''''c+c2cc.
-.c-c-ccccccccc-c-c.
-.ccccc.......ccccc.
-...................
+"""""""""""""""""""
+"ccccc"""""""ccccc"
+"c-c-ccccccccc-c-c"
+"cc2c+c'''''c+c2cc"
+"c-cnc'lllll.cnc-c"
+"cc+c'll...l..c+cc"
+""cc'll..l..l..cc""
+""c'll..lll..ll'c""
+""c'l..lllll..l'c""
+""c'l.ll.)lll.l'c""
+""c'l.....ll..l'c""
+""c'll...ll..ll'c""
+""cc'll..l..ll'cc""
+"cc+c'll...ll'c+cc"
+"c-cnc'lllll'cnc-c"
+"cc2c+c'''''c+c2cc"
+"c-c-ccccccccc-c-c"
+"ccccc"""""""ccccc"
+"""""""""""""""""""
 ENDMAP
 
-NAME: cheibrodos_tormentor_scu
-DEPTH: D:11-, Depths
+NAME: cheibrodos_poenydio_scu
+DEPTH: D:6-, Depths
 TAGS: no_item_gen no_monster_gen
 ORIENT: float
 : if you.branch() == "Depths" then
 MONS: tzitzimitl, hell knight / skeletal warrior / w:2 lich
 : else
-MONS: tormentor
-MONS: death knight / w:5 wraith / w:1 freezing wraith / w:4 skeletal warrior
+MONS: poenydio
+MONS: death knight / w:5 wraith / w:2 freezing wraith / w:4 skeletal warrior
 : end
 ITEM: demon whip ego:pain / demon whip ego:draining / demon blade ego:pain \
       / demon blade ego:draining / demon trident ego:pain \
       / demon trident ego:draining
-KFEAT: - = iron_grate
+KPROP: 1"- = no_tele_into
+KFEAT:  - = iron_grate
+FTILE:  c-" = FLOOR_NERVES_DARKGRAY
+TILE:   c = WALL_BARS_DARKGRAY
+KFEAT:  c  = rock_wall
 NSUBST: " = 2 = w:2 d | / 5:* / 5=%$.
 NSUBST: ' = 3:* / 6:% / *:.
 NSUBST: ` = 5:2 / 4=2.
@@ -3673,10 +3699,10 @@ ORIENT: float
 MONS: w:5 wolf spider / tarantella / redback,  demonic crawler / orb spider
 MONS: spark wasp
 : else
-MONS: w:5 anaconda / black mamba / water moccasin, mana viper, shock serpent
+MONS: w:5 blood boa / black mamba / water moccasin, mana viper, shock serpent
 : end
 ITEM: w:60 star_item / crystal ball of energy / staff of air / \
-      staff of energy / lightning rod w:15  / fan of gales w:15
+      lightning rod w:15  / fan of gales w:15
 NSUBST: " = 1:2 / 1:1 / 3=12., ' = 1:2 / 1:1 / 3=12., - = 2:3, ` = 2=*% / *:%
 MAP
 @...........
@@ -3697,10 +3723,10 @@ MAP
 ENDMAP
 
 NAME: cheibrodos_grave_circle
-DEPTH: D:7-11
+DEPTH: D:4-6
 TAGS: no_item_gen no_monster_gen
 ORIENT: float
-MONS: place:D:14 skeleton w:5 / place:D:14 zombie, shadow imp, hellwing
+MONS: place:Depths:1 skeleton w:5 / place:Depths:1 zombie, cysgobwca, vlerk
 NSUBST: . = 5:1 / 3=1. / 3:2 / 2=2., " = 1:*% / 4=$%.
 SUBST: . = .....--__tG
 KMONS: t = withered plant
@@ -3726,10 +3752,14 @@ MAP
 ENDMAP
 
 NAME: cheibrodos_greedy_goblins
-DEPTH: D:2-4
+DEPTH: D:1-2
 TAGS: no_item_gen no_monster_gen
 ORIENT: float
 MONS: goblin, hobgoblin
+:if you.depth() < 2 then
+SUBST: + : = , m : q
+:end
+KFEAT: + = closed_clear_door
 SUBST: - = 112..., " = 12., ' = 12.
 MAP
     .....
@@ -3748,7 +3778,7 @@ MAP
 ENDMAP
 
 NAME: cheibrodos_thug_alley
-DEPTH: D:3-6
+DEPTH: D:2-3
 TAGS: no_item_gen no_monster_gen
 ORIENT: float
 KPROP: w;W = no_tele_into
@@ -3771,9 +3801,9 @@ ENDMAP
 
 NAME: cheibrodos_fertilizer
 TAGS: no_item_gen no_monster_gen no_tele_into
-DEPTH: D:2-8
+DEPTH: D:1-4
 ORIENT: float
-: if you.absdepth() > 4 then
+: if you.depth() > 2 then
 MONS: kobold / big kobold w:6, ooze / jelly, slime creature
 : else
 MONS: kobold, ooze, jelly
@@ -3783,11 +3813,16 @@ dgn.delayed_decay(_G, 'd', 'goblin skeleton / hobgoblin skeleton ' ..
                            '/ rat skeleton / bat skeleton')
 dgn.delayed_decay_extra(_G, 'e', 'human skeleton', 'star_item')
 }}
+: if you.depth() < 2 then
+KFEAT: + = runed_door
+: end
+KFEAT: b = closed_door
 KMONS: A = fungus / toadstool
 KMONS: B = fungus / toadstool
 KMONS: C = fungus / toadstool
 KMONS: D = fungus / toadstool
 KFEAT: ` = floor
+KFEAT: _ = altar_fedhas
 FTILE: `ABCDd = floor_mud
 COLOUR: `ABCDd = brown
 NSUBST: ' = 4:1 / 4=1. / 1:% / 2=%.
@@ -3797,11 +3832,11 @@ MAP
         xxxxxxxxxxxxx
   xxxxxxxxxxxxxxxxxxx
  xxxxxxxxxxxx""""""xx
- xxx''''''xx+AAAAAAxx
+ xxx''''''xxbAAAAAAxx
 .xx'''''''x1x""""""xx
 .+.'''''''x.xBBBBBBxx
-@+.'''''''x.x""""""xx
-.+.'''''x+x.xCCCCCCxx
+@+.'''_'''x.x""""""xx
+.+.'''''xbx.xCCCCCCxx
 .xx'''''x.x.x""""""xx
  xxx''''x.x.xDDDDDDxx
  xxxxxxxxx.xx"""""exx
@@ -3809,9 +3844,10 @@ MAP
         xxxxxxxxxxxxx
 ENDMAP
 
+# BCADDO: unique statue tiles?
 NAME: cheibrodos_monumental
 TAGS: no_item_gen no_monster_gen
-DEPTH: D:12-
+DEPTH: D:6-
 ORIENT: float
 MONS: ogre / two-headed ogre
 MONS: stone giant / frost giant w:3 / fire giant w:3
@@ -3820,8 +3856,8 @@ KMONS: B = plant
 KMONS: C = cyclops
 KFEAT: A = granite_statue
 KFEAT: C = W
-FTILE:  2$|*%AB = floor_grass
-COLOUR:  2$|*%AB = green
+FTILE:  -2$|*%AB = floor_grass
+COLOUR:  -2$|*%AB = green
 SUBST: P = PPP..
 NSUBST: " = 2:C / 2=CW / *:W, ' = 2:1 / 2=1., ` = 2:1 / 2=1.
 NSUBST: ; = 2:1 / 2=1., _ = 2:1 / 2=1., - = 1:| / 2=|* / 2:* / 1=*% / *:%
@@ -3849,31 +3885,11 @@ cGWW"WWA-$2$-AWW"WWGc
    .....;.c.`.....
 ENDMAP
 
-NAME: cheibrodos_pilgrimage
-TAGS: no_item_gen no_monster_gen
-DEPTH: D:2-4
-ORIENT: float
-MONS: orc priest band, orc
-SUBST: ' : cG.w
-MAP
- ...........
-..ccccccccc.
-.ccc........
-.cc..'2..'..
-.c$........@
-@nT.1......@
-.c$........@
-.cc..'2..'..
-.ccc........
-..ccccccccc.
- ...........
-ENDMAP
-
 NAME: cheibrodos_statue_roulette
 TAGS: no_item_gen no_monster_gen
-DEPTH: D:7-
+DEPTH: D:3-
 ORIENT: float
-: if you.depth() > 12 then
+: if you.depth() > 5 then
 KMONS: ' = molten gargoyle
 KITEM: ' = % / w:2 *
 KFEAT: " = l
@@ -3902,7 +3918,7 @@ ENDMAP
 
 NAME: cheibrodos_steamvent
 TAGS: no_monster_gen
-DEPTH: D:6-11
+DEPTH: D:4-6
 ORIENT: float
 MONS: steam dragon
 SHUFFLE: VGA
@@ -3922,18 +3938,28 @@ xx...xx xxxxxx
   .@.
 ENDMAP
 
-NAME: cheibrodos_wizards_tower
-TAGS: no_item_gen no_monster_gen no_pool_fixup
-DEPTH: D:7-12, Elf
+NAME:   cheibrodos_wizards_tower
+TAGS:   no_pool_fixup
+DEPTH:  D:4-, Elf
 ORIENT: float
-: if you.branch() == "Elf" then
-MONS: deep elf sorcerer / deep elf annihilator
+ITEM:   robe good_item / cloak good_item / scarf / pair of boots good_item \
+        / pair of gloves good_item / hat good_item
+ITEM:   randbook w:40 / any magical staff
+: if you.in_branch("D") then
+MONS:   wizard / orc sorcerer, deep elf annihilator
+:   if you.depth() < 5 then
+NSUBST: " = 1 / 1... / ., - = d / *% / %$.. / .
+:   elseif you.depth() < 7 then
+NSUBST: " = 1 / 1. / 2... / ., - = de / |* / %$ / .
+:   else
+NSUBST: " = 1 / 2=1. / 2. / ., - = d / e / |* / %$ / .
+:   end
 : else
-MONS: wizard / orc sorcerer
+MONS:   deep elf sorcerer / deep elf annihilator
+NSUBST: " = 2=1 / 4=1. / ., - = d / e / 2=|* / *% / %$.. / .
 : end
 SHUFFLE: AB / CD / EF
-SUBST: A = ., B = W, CDEF = w
-NSUBST: " = 2:1 / 2=1., - = 1=*| / 2=*% / 2=%.
+SUBST:   A = ., B = W, CDEF = w
 MAP
  ....@....
 ..wwFEFww..
@@ -3961,10 +3987,10 @@ MONS: mana viper, orc knight ; battleaxe | great mace | broad axe \
           | w:3 broad axe ego:antimagic . plate armour \
           | plate armour ego:magic_resistance
 MONS: stone giant / iron troll / w:5 ettin
-MONS: spriggan berserker ; rapier | quick blade | demon whip \
-          | w:3 rapier ego:antimagic | w:3 quick blade ego:antimagic \
+MONS: spriggan berserker ; rapier | tanto | demon whip \
+          | w:3 rapier ego:antimagic | w:3 tanto ego:antimagic \
           | w:3 demon whip ego:antimagic
-MONS: spriggan defender ; quick blade ego:antimagic \
+MONS: spriggan defender ; tanto ego:antimagic \
           | demon whip ego:antimagic, quicksilver dragon
 KMONS: T = yaktaur captain
 KMONS: Y = orc knight ; battleaxe | great mace | broad axe \
@@ -4018,7 +4044,9 @@ ENDMAP
 
 NAME:    gammafunk_sealed_library
 TAGS:    no_monster_gen no_trap_gen
-DEPTH:   Crypt, D:12-, Depths, Elf, Snake, Zot
+# Allow placement in Vaults as a room.
+TAGS:    vaults_hard preserve_wall passable
+DEPTH:   Crypt, D:6-, Depths, Elf, Snake, Vaults, Zot
 ORIENT:  float
 ITEM:    any book, any manual, any jewellery good_item
 ITEM:    robe good_item / cloak good_item / scarf good_item \
@@ -4034,27 +4062,35 @@ MONS:    phantasmal warrior
 MONS:    necromancer / vampire mage / vampire knight / deep elf death mage \
          / eidolon
 MONS:    revenant / ancient champion / lich, ancient lich
-SUBST: 4 = 23, 5 = 4
+SUBST:   4 = 23, 5 = 4
 : elseif you.in_branch("D") then
 MONS:    eye of draining
 MONS:    boggart / kobold demonologist / deep elf mage / tengu conjurer
 MONS:    wizard / necromancer / orc sorcerer / ogre mage
 MONS:    deep elf annihilator / deep troll earth mage / sphinx / tengu reaver
-SUBST: 4 = 23, 5 = 4
-: elseif you.in_branch("Depths") then
-MONS:    floating eye / phantasmal warrior
-MONS:    boggart / ogre mage / wizard / necromancer
+SUBST:   4 = 23, 5 = 4
+: elseif you.in_branch("Vaults") then
+MONS:    glowing orange brain / great orb of eyes / phantasmal warrior
+MONS:    boggart / rakshasa / ogre mage / wizard / necromancer
 MONS:    deep elf sorcerer / deep elf annihilator / deep elf demonologist \
-      / deep elf death mage / deep troll earth mage / spriggan air mage \
-      / vampire mage / hell knight
+         / deep elf high priest / deep elf death mage / deep troll earth mage
 MONS:    sphinx / tengu reaver / lich / fire giant / frost giant
-MONS:    titan / ancient lich
+MONS:    titan / ancient lich / glowing shapeshifter
+: elseif you.in_branch("Depths") then
+MONS:    floating eye / great orb of eyes / glowing orange brain \
+         / phantasmal warrior
+MONS:    boggart / rakshasa / ogre mage / wizard / necromancer
+MONS:    deep elf sorcerer / deep elf annihilator / deep elf demonologist \
+         / deep elf high priest / deep elf death mage / deep troll earth mage \
+         / spriggan air mage / vampire mage
+MONS:    sphinx / tengu reaver / lich / fire giant / frost giant
+MONS:    titan / ancient lich / glowing shapeshifter
 : elseif you.in_branch("Elf") then
 MONS:    water elemental / shapeshifter, deep elf mage / w:1 orc sorcerer
 MONS:    deep elf sorcerer / deep elf annihilator / deep elf demonologist \
-      / deep elf death mage
+         / deep elf death mage
 MONS:    glowing shapeshifter
-SUBST: 4 = 23, 5 = 4
+SUBST:   4 = 23, 5 = 4
 : elseif you.in_branch("Snake") then
 MONS:    mana viper / guardian serpent
 MONS:    naga mage / naga ritualist / salamander mystic, nagaraja
@@ -4094,21 +4130,23 @@ MAP
 .........................
 ENDMAP
 
+# BCADDO: Ruin this when jiyva is dead.
 NAME:    gammafunk_jiyva_shrine
 TAGS:    no_monster_gen no_trap_gen
-DEPTH:   D:8-, Depths
+DEPTH:   D:4-, Depths
 ORIENT:  float
 : item(dgn.loot_scrolls .. " / " .. dgn.loot_potions)
 ITEM:    any jewellery good_item, any jewellery randart
+FTILE:   -_'RrSsQb = FLOOR_SLIME
 # Choose random landing site with exit placed far from this.
-SHUFFLE: Qq / Rr / Ss
-NSUBST:  q = q / '
+SHUFFLE: Qb / Rr / Ss
+NSUBST:  b = b / '
 SUBST:   RSrs = '
 : if you.in_branch("D") then
-:   if you.depth() < 10 then
+:   if you.depth() < 5 then
 MONS:    slime creature, glowing orange brain / great orb of eyes
 NSUBST:  ' = de / 2=|* / *% / -, - = 4=1 / 5=1. / 2. / .
-:   elseif you.depth() < 13 then
+:   elseif you.depth() < 7 then
 MONS:    slime creature
 MONS:    glowing orange brain / great orb of eyes / eye of devastation
 NSUBST:  ' = de / 2=|* / * / %$-- / -, - = 4=1 / 6=1. / 2=2. / .
@@ -4131,19 +4169,22 @@ NSUBST:  - = 4=1 / 6=1. / 2 / 2=2. / 3=3 / 4=3. / .
 : end
 MARKER:  P = lua:transp_loc("jiyva_chamber_entry")
 MARKER:  Q = lua:transp_dest_loc("jiyva_chamber_entry")
-MARKER:  q = lua:transp_loc("jiyva_chamber_exit")
+MARKER:  b = lua:transp_loc("jiyva_chamber_exit")
 MARKER:  Z = lua:transp_dest_loc("jiyva_chamber_exit")
+KFEAT:   _ = altar_jiyva
+KFEAT:   a = slimy_water
+TILE:    c = STONE_WALL_SLIME
 COLOUR:  c = green
 COLOUR:  n = lightgreen
 MAP
     ccccccc
    ccscccscc
   cc''cRc''cc
- .cq'-----''c.
- .ncc-----ccn.
-@Pnn---_--QnnZ@
- .ncc-----ccn.
- .cq'-----''c.
+ .cb'-----''c.
+ .qcc-aaa-ccq.
+@Pqq--a_a-QqqZ@
+ .qcc-aaa-ccq.
+ .cb'-----''c.
   cc''cSc''cc
    ccrcccrcc
     ccccccc
@@ -4151,8 +4192,9 @@ ENDMAP
 
 NAME:   gammafunk_beogh_shrine
 TAGS:   no_monster_gen no_trap_gen
-DEPTH:  D:7-, Orc
+DEPTH:  D:4-, Orc
 ORIENT: float
+FTILE:  -Rc.n'Q_I = FLOOR_ORC
 : item(dgn.loot_scrolls .. " / " .. dgn.loot_potions)
 ITEM:   cloak good_item / scarf good_item / helmet good_item \
         / hat good_item / pair of gloves good_item / pair of boots good_item
@@ -4160,13 +4202,13 @@ ITEM:   cloak randart / helmet randart / hat randart / pair of gloves randart \
         / pair of boots randart
 NSUBST: R = R / -
 : if you.in_branch("D") then
-:   if you.depth() < 10 then
+:   if you.depth() < 5 then
 MONS: orc, ogre / w:40 orc warrior / w:5 troll / w:5 two-headed ogre
 MONS: orc wizard / orc priest
 MONS: cyclops / ogre mage / orc knight
 NSUBST: - = 4=1 / 4=1. / 2=2 / 2=2. / 3=3 / 4=3. / 4... / .
 NSUBST: ' = de / 2=|* / *% / 3=$ / .
-:   elseif you.depth() < 13 then
+:   elseif you.depth() < 7 then
 MONS: orc / orc wizard / orc priest
 MONS: ogre / w:30 orc warrior / two-headed ogre / cyclops / troll
 MONS: orc sorcerer / orc high priest / ogre mage
@@ -4198,11 +4240,11 @@ MAP
   cc----R--..cc
   c---ncncn...c
   c---'c'c'...c
- .c-n'-----'n.c.
- .n-cc-I-I-cc.n.
-@PnRn'--_--'nQnS@
- .n-cc-I-I-cc.n.
- .c-n'-----'n.c.
+ `c-n'-----'n.c`
+ `q-cc-I-I-cc.q`
+@PqRn'--_--'nQqS@
+ `q-cc-I-I-cc.q`
+ `c-n'-----'n.c`
   c---'c'c'...c
   c---ncncn...c
   cc----R--..cc
@@ -4211,18 +4253,20 @@ ENDMAP
 
 NAME:   gammafunk_corrupted_shrine
 TAGS:   no_monster_gen no_trap_gen
-DEPTH:  D:7-, Depths, Abyss
+DEPTH:  D:4-, Depths, Abyss
 ORIENT: float
 : item(dgn.loot_scrolls .. " / " .. dgn.loot_potions)
 ITEM:    any jewellery good_item, any jewellery randart
+FTILE:  'pcqbQ_-q = FLOOR_NERVES
+COLOUR: 'pcqbQ_-q = jewel
 SUBST:  p = b.
 NSUBST: ' = R / '
 : if you.in_branch("D") then
-:   if you.depth() < 10 then
+:   if you.depth() < 5 then
 MONS:   small abomination, unseen horror / ancient zyme, ugly thing
 MONS:   raiju / large abomination / shapeshifter
 NSUBST: ' = de / 2=|* / *% / -, - = 3=1 / 3=1. / 2. / 2=3 / 2=3. / 4... / .
-:   elseif you.depth() < 13 then
+:   elseif you.depth() < 6 then
 MONS:   small abomination / ugly thing
 MONS:   unseen horror / ancient zyme / worldbinder
 MONS:   large abomination / raiju / shapeshifter
@@ -4257,29 +4301,28 @@ MARKER: P = lua:transp_loc("corrupted_shrine_entry")
 MARKER: Q = lua:transp_dest_loc("corrupted_shrine_entry")
 MARKER: R = lua:transp_loc("corrupted_shrine_exit")
 MARKER: S = lua:transp_dest_loc("corrupted_shrine_exit")
-COLOUR: bc = magenta
-COLOUR: n = lightmagenta
+COLOUR: c = magenta
 MAP
  cccc..@..cccc
-cc''nc...cn''cc
+cc''qc...cq''cc
 c''pbc...cbp''c
-c'p--nnPnn--p'c
-ccb---nnn---bcc
+c'p--qqPqq--p'c
+ccb---qqq---bcc
  ccc-------ccc
    cc-----cc
     c--_--c
    cc-----cc
  ccc---Q---ccc
-ccb---nnn---bcc
-c'p--nnSnn--p'c
+ccb---qqq---bcc
+c'p--qqSqq--p'c
 c''pbc...cbp''c
-cc''nc...cn''cc
+cc''qc...cq''cc
  cccc..@..cccc
 ENDMAP
 
 NAME:   gammafunk_steamed_eel
 TAGS:   no_monster_gen no_trap_gen no_tele_into no_pool_fixup
-DEPTH:  D:3-9
+DEPTH:  D:1-3
 ORIENT: float
 KMONS:  p = plant
 KMONS:  1 = electric eel
@@ -4293,19 +4336,19 @@ MARKER: R = lua:transp_loc("steamed_eel_exit")
 MARKER: S = lua:transp_dest_loc("steamed_eel_exit")
 MAP
  .................
- .nnnnnnnnnnnnnnn.
- .nGpnWWW1W1WnpGn.
-..n..n..-----n..n..
-@PnQd+..-t---+*RnS@
-..n..n..-----n..n..
- .nGpnWWW1W1WnpGn.
- .nnnnnnnnnnnnnnn.
+ .qqqqqqqqqqqqqqq.
+ .qGpqWWW1W1WqpGq.
+..q..q..-----q..q..
+@PqQd=..-t---=*RqS@
+..q..q..-----q..q..
+ .qGpqWWW1W1WqpGq.
+ .qqqqqqqqqqqqqqq.
  .................
 ENDMAP
 
 NAME:   gammafunk_wand_slinger
 TAGS:   no_monster_gen no_trap_gen no_tele_into no_pool_fixup
-DEPTH:  D:3-13
+DEPTH:  D:1-6
 ORIENT: float
 KMASK:  LM = no_item_gen
 ITEM:   wand of flame
@@ -4313,17 +4356,16 @@ ITEM:   wand of iceblast / wand of acid
 ITEM:   wand of random effects / wand of disintegration / \
         / wand of enslavement / wand of polymorph w:5
 ITEM:   wand of clouds / wand of scattershot
-MONS: shadow imp, orc priest, kobold demonologist
+MONS: cysgobwca, orc priest, kobold demonologist
 MONS: deep elf knight / fire crab / orc high priest / orc sorcerer
 KMONS:  p = plant
 KFEAT:  p = W
-KFEAT:  - = iron_grate
-: if you.depth() <= 5 then
+: if you.depth() <= 3 then
 NSUBST: L = 1:1 / 1=12N / N, M = 1:1 / 1=12N / N, N = 1:2 / 3..... / .
 SUBST: * = ., | = *
 # Always place one wand, and make it more likely to be flame
 SUBST: D = d:20 e f g
-: elseif you.depth() <= 8 then
+: elseif you.depth() <= 4 then
 NSUBST: L = 1:1 / 1:2 / 2=12N / N, M = 1:1 / 1:2 / 2=12N / N
 NSUBST: N = 1:3 / 1=3. / 4..... / .
 SUBST: | = .
@@ -4343,21 +4385,21 @@ MARKER: R = lua:transp_loc("wand_slinger_exit")
 MARKER: S = lua:transp_dest_loc("wand_slinger_exit")
 MAP
  .................
- .nnnnnnnnnnnnnnn.
- .nGpnLLLLLLL-WGn.
- .np.nwwwwwwwn.pn.
-..n.En..WWW..n*$n..
-@PnQD+..WtW..+|RnS@
-..n.Fn..WWW..n*$n..
- .np.nwwwwwwwn.pn.
- .nGpnMMMMMMM-WGn.
- .nnnnnnnnnnnnnnn.
+ .qqqqqqqqqqqqqqq.
+ .qGpqLLLLLLLqWGq.
+ .qp.qwwwwwwwq.pq.
+..q.Eq..WWW..q*$q..
+@PqQD=..WtW..=|RqS@
+..q.Fq..WWW..q*$q..
+ .qp.qwwwwwwwq.pq.
+ .qGpqMMMMMMMqWGq.
+ .qqqqqqqqqqqqqqq.
  .................
 ENDMAP
 
 NAME:   nzn_motion_control
 TAGS:   no_pool_fixup no_monster_gen
-DEPTH:  D:10-, Lair:4-, Shoals:2-, !Shoals:$
+DEPTH:  D:5-, Lair:4-, Shoals:2-, !Shoals:$
 ORIENT: float
 SHUFFLE: HY / 12, $%, eE / rR
 SUBST:  ER = ., r = x, e = + .
@@ -4390,7 +4432,7 @@ ENDMAP
 
 NAME:  gammafunk_mikee_crab_dinner
 TAGS:  no_monster_gen no_trap_gen patrolling
-DEPTH: D:10-, Depths, Lair:3-, Swamp, Zot
+DEPTH: D:5-, Depths, Lair:3-, Swamp, Zot
 ORIENT: float
 KMONS: F = apocalypse crab
 KITEM: F = |
@@ -4440,52 +4482,51 @@ c.-3...1..c
 ccccccccccc
 ENDMAP
 
-NAME: gammafunk_cloud_chamber
-TAGS: no_monster_gen no_trap_gen no_tele_into
-DEPTH: D:4-, Lair
+NAME:   gammafunk_cloud_chamber
+TAGS:   no_monster_gen no_trap_gen no_tele_into
+DEPTH:  D:2-, Lair
 ORIENT: float
-KMASK: -'DE12 = no_item_gen
+KMASK:  -'DE12 = no_item_gen
 # Cancellation placed only for mutagenic clouds.
-ITEM: potion of resistance ident:type, potion of cancellation ident:type q:2
+ITEM:   potion of resistance ident:type, potion of cancellation ident:type q:2
 # Replaces a gold pile in late Dungeon
-ITEM: cloak good_item / scarf good_item / pair of boots good_item \
-      / pair of gloves good_item / hat good_item
+: item(dgn.good_aux_armour)
 # Monsters appropriate for the cloud type must be defined in order of
 # cloud_types and come in pairs. Some levels define a more difficult monster on
 # '2', otherwise the monster is repeated.
 : if you.in_branch("D") then
-:   if you.depth() <= 6 then
-:     cloud_types = {"flame", "freezing vapour", "poison gas"}
-KMONS: 1 = fire bat
-KMONS: 2 = nothing
-KMONS: 34 = ice beast
-KMONS: 56 = ogre zombie ; giant club ego:venom | giant spiked club ego:venom \
-           / orc warrior zombie ; hand axe ego:venom | war axe ego:venom \
+:   if you.depth() <= 3 then
+:       cloud_types = {"flame", "freezing vapour", "poison gas"}
+KMONS:  1 = fire bat
+KMONS:  2 = nothing
+KMONS:  34 = ice beast
+KMONS:  56 = ogre zombie ; giant club ego:venom | giant spiked club ego:venom \
+           / orc warrior zombie ; hatchet ego:venom | war axe ego:venom \
                | short sword ego:venom | long sword ego:venom \
                | flail ego:venom | mace ego:venom \
            / gnoll sergeant zombie ; spear ego:venom | trident ego:venom
 # In earliest 3 levels, thin out monsters and downgrade loot a bit.
-SUBST: | = %, ' = -
+SUBST:  | = %, ' = -
 NSUBST: 1 = 1 / 2 / 1- / 1---- / -
-:   elseif you.depth() <= 9 then
-:     cloud_types = {"flame", "freezing vapour", "poison gas", "acidic fog"}
-MONS: fire bat, fire elemental / hell hound
-MONS: ice beast, simulacrum place:D:15
-MONS: water moccasin
-KMONS: 6 = ogre zombie ; giant club ego:venom | giant spiked club ego:venom \
-           / orc warrior zombie ; hand axe ego:venom | war axe ego:venom \
+:   elseif you.depth() <= 4 then
+:      cloud_types = {"flame", "freezing vapour", "poison gas", "acidic fog"}
+MONS:   fire bat, fire elemental / hell hound
+MONS:   ice beast, simulacrum place:D:$
+MONS:   water moccasin
+KMONS:  6 = ogre zombie ; giant club ego:venom | giant spiked club ego:venom \
+           / orc warrior zombie ; hatchet ego:venom | war axe ego:venom \
                | short sword ego:venom | long sword ego:venom \
                | flail ego:venom | mace ego:venom \
            / gnoll sergeant zombie ; spear ego:venom | trident ego:venom
-KMONS: 7 = jelly
-KMONS: 8 = acid dragon
-SUBST: | = *
-NSUBST: 1 = 2:1 / 2 / *=12-, $ = f / $
-:   elseif you.depth() <= 12 then
+KMONS:  7 = jelly
+KMONS:  8 = acid dragon
+SUBST:  | = *
+NSUBST: 1 = 2=1 / 2 / 12-, $ = f / $
+:   elseif you.depth() <= 6 then
 :     cloud_types = {"flame", "poison gas", "acidic fog"}
 MONS: fire bat / fire elemental, hell hound w:20 / fire crab
 MONS: water moccasin w:40 / spiny frog / black mamba
-KMONS: 4 = two-headed ogre zombie \
+KMONS:  4 = two-headed ogre zombie \
                ; dire flail ego:venom | great mace ego:venom \
                . giant club ego:venom | giant spiked club ego:venom \
            / orc knight zombie ; war axe ego:venom | battleaxe ego:venom \
@@ -4493,27 +4534,27 @@ KMONS: 4 = two-headed ogre zombie \
                | dire flail ego:venom | great mace ego:venom \
            / tengu warrior zombie ; halberd ego:venom | glaive ego:venom \
                | bardiche ego:venom
-KMONS: 5 = jelly / acid dragon
-KMONS: 6 = acid dragon
-NSUBST: 1 = 2:1 / 2 / *=12-, $ = f / $
+KMONS:  5 = jelly / acid dragon
+KMONS:  6 = acid dragon
+NSUBST: 1 = 2=1 / 2 / 12-, $ = f / $
 :   else
-:     cloud_types = {"acidic fog", "mutagenic fog"}
-MONS: acid dragon, acid dragon / acid blob
-MONS: ugly thing, ugly thing / very ugly thing
-SUBST: ' = n
-NSUBST: 1 = 2:1 / 2 / *=12-, $ = f / * / $
+:       cloud_types = {"acidic fog", "mutagenic fog"}
+MONS:   acid dragon, acid dragon / acid blob
+MONS:   ugly thing, ugly thing / very ugly thing
+SUBST:  ' = n
+NSUBST: 1 = 2=1 / 2 / 12-, $ = f / * / $
 :   end
 : elseif you.in_branch("Lair") then
-:  cloud_types = {"flame", "freezing vapour", "poison gas"}
-MONS: fire bat / fire elemental, hell hound / fire crab
-MONS: simulacrum place:Lair
-MONS: dire elephant simulacrum / anaconda simulacrum / wolf spider simulacrum \
-      / hydra simulacrum
-MONS: spiny frog / black mamba, swamp dragon
-NSUBST: 1 = 2:1 / 2 / *=12-, $ = f / * / $
+:       cloud_types = {"flame", "freezing vapour", "poison gas"}
+MONS:   fire bat / fire elemental, hell hound / fire crab
+MONS:   simulacrum place:Lair
+MONS:   dire elephant simulacrum / anaconda simulacrum \
+        / wolf spider simulacrum / hydra simulacrum
+MONS:   spiny frog / black mamba, swamp dragon
+NSUBST: 1 = 2=1 / 2 / 12-, $ = f / * / $
 : end
 # Any ' not replace with floor or wall above become cloud squares
-SUBST: ' = E
+SUBST:  ' = E
 {{
   -- Choose the cloud theme; the monster glyphs are defined in pairs in the
   -- order as cloud_types. The D and E glyphs become fog machines of sizes 2
@@ -4541,11 +4582,11 @@ MAP
          ccccccc
   cccccccc1---1c
   c-D--D-c-D--Dc
-..c------c--''-n
-..n--n.n.+1-'$*n..
-@PnD-Qd..+D-'|RnS@
-..n--n.n.+1-'$*n..
-  c------c1-''-n
+..c------c--''-q
+..q--n.n.+1-'$*q..
+@PqD-Qd..+D-'|RqS@
+..q--n.n.+1-'$*q..
+  c------c1-''-q
   c-D--D-c-D--Dc
   cccccccc1---1c
          ccccccc
@@ -4555,10 +4596,10 @@ ENDMAP
 # The kobolds from kennysheep's sewer church have taken their cult mainstream
 NAME:   wander_kiku_kobolds
 TAGS:   no_monster_gen no_item_gen
-DEPTH:  D:8-12
+DEPTH:  D:4-6
 ORIENT: float
 KMONS:  1 = kobold demonologist
-KMONS:  2 = shadow imp
+KMONS:  2 = cysgobwca
 KMONS:  k = kobold / big kobold w:3
 KMONS:  u = kobold skeleton / kobold zombie
 KITEM:  ?1 = kobold skeleton
@@ -4591,6 +4632,50 @@ ccccc---kkk---ccccc
      ...@@@...
 ENDMAP
 
+NAME:   gammafunk_boulding_lane
+TAGS:   no_monster_gen no_trap_gen
+DEPTH:  D:4-, Lair, Spider
+ORIENT: float
+ITEM:   pair of boots ego:rampaging ident:all
+ITEM:   pair of boots ego:rampaging good_item ident:all
+ITEM:   pair of boots ego:rampaging randart ident:all
+MONS:   boulder beetle, torpor snail
+: if you.in_branch("D") then
+:     if you.depth() < 11 then
+SUBST:  * = ., D = G
+NSUBST: 1 = 1 / .
+:     elseif you.depth() < 14 then
+SUBST:  d = e, D = G
+NSUBST: 1 = 1 / 1., * = * / .
+:     else
+SUBST:  d = ef, D = 2
+NSUBST: 1 = 2=1 / 1., * = * / *. / .
+:     end
+: elseif you.in_branch("Lair") then
+:     if you.depth() < 4 then
+SUBST:  d = de, D = G
+NSUBST: 1 = 1 / 1. / ., * = *. / .
+:     else
+SUBST:  d = e, D = 2G
+NSUBST: 1 = 1 / 1., * = * / .
+:     end
+: else
+SUBST: d = f, D = 2
+: end
+MARKER: P = lua:transp_loc("boulding_lane_entry")
+MARKER: Q = lua:transp_dest_loc("boulding_lane_entry")
+MARKER: R = lua:transp_loc("boulding_lane_exit")
+MARKER: S = lua:transp_dest_loc("boulding_lane_exit")
+MAP
+.cccccccccc
+...n*1..cGc
+...ndnnn.cccc
+@SPnR1...QlDn@
+...n.nnn.cccc
+...n*1..cGc
+.cccccccccc
+ENDMAP
+
 ###############################################################################
 #
 # <<3>> Abstract or generic threat vaults.
@@ -4613,6 +4698,8 @@ KFEAT:   } = }
 KFEAT:   ) = )
 : if not you.in_branch("D") then
 KMONS:   ]}) = 9
+: else
+KMONS:   ]}) = 0
 : end
 SHUFFLE: ]}), [{(
 MAP
@@ -4651,12 +4738,9 @@ ENDMAP
 ##############################################################################
 # Rooms
 NAME:    minmay_opposing_rooms
-DEPTH:   D:4-
+DEPTH:   D:3-
 ORIENT:  float
 SHUFFLE: 0%
-: if you.absdepth() < 6 then
-SUBST:   9 = 0
-: end
 MAP
 xxxxxxxxxxxxxxcccccxx
 xxxx........xcc%.%ccx
@@ -4679,7 +4763,7 @@ ENDMAP
 # Klotski a.k.a. what we learned from the elders.
 NAME:    minmay_klotski
 SHUFFLE: }])>
-DEPTH:   D:6-12
+DEPTH:   D:3-6
 ORIENT:  float
 SUBST:   0 = 0.., 9 = 9., 8 = 88.
 MONS:    bush
@@ -4714,8 +4798,9 @@ ENDMAP
 
 ##############################################################################
 # Statue pair
+# BCADDO: Yin/Yang?
 NAME:    minmay_separated_statues
-DEPTH:   D:8-
+DEPTH:   D:4-
 ORIENT:  float
 MONS:    obsidian statue, orange crystal statue, ice statue
 SHUFFLE: 123
@@ -4734,9 +4819,90 @@ xx*.1..xx..2.*xx
 ENDMAP
 
 ##############################################################################
+# Split out of an entry vault as its own thing
+# Guarded early non-temple god altar.
+NAME:    erik_temple
+PLACE:   D:1-3
+ORIENT:  float
+TAGS:    no_trap_gen extra
+NSUBST:  ' = 12:1 / 4:2 / 1:3 / *:'
+KPROP:   'tCD> = no_tele_into
+KMASK:   'tCD> = no_item_gen
+: local rnd = crawl.random2(3)
+: if rnd == 0 then
+KFEAT:   C = altar_beogh
+SUBST:   DG = I
+KMONS:   1 = orc / nothing
+KMONS:   2 = orc wizard / orc priest / orc / nothing
+KMONS:   3 = orc warrior
+: elseif rnd == 1 then
+KFEAT:   C = altar_lugonu
+KFEAT:   D = enter_abyss
+KMONS:   1 = ufetubus / haearbwca
+KMONS:   2 = quasit
+KMONS:   3 = demonic crawler
+KFEAT:   t = shallow_water
+KMONS:   t = demonic plant
+: elseif rnd == 2 then
+KFEAT:   C = altar_jiyva
+SUBST:   D = '
+KFEAT:   123 = slimy_water w:30 / floor
+KFEAT:   ' = slimeshroom / slimy_water
+KFEAT:   t = slimeshroom
+KMONS:   1 = ooze
+KMONS:   2 = jelly
+KMONS:   3 = slime creature
+: else
+SUBST:   D = V
+KMONS:   1 : gnoll / orc / 0 w:20
+KMONS:   2 : big kobold / ogre / 0 w:60
+KMONS:   3 : troll / 0 w:70
+SUBST:   t = T
+: end
+MAP
+............
+...xxxxxxxx.
+..xxxxt''tx.
+.xxxxx''''x.
+.G.x$q'C''x.
+...+0=''''x.
+...+0=''''x.
+.G.x$q'D''x.
+.xxxxx''''x.
+..xxxxt''tx.
+...xxxxxxxx.
+............
+ENDMAP
+
+##############################################################################
+# Split out of an entry vault as its own thing
+NAME:    erik_hall
+ORIENT:  float
+TAGS:    extra
+PLACE:   D:1-3
+SHUFFLE: TTGGVY
+NSUBST:  x = 1:+ / *:c
+MAP
+..............
+....T....ccc..
+........ccccc.
+........ccccc.
+..cxxc...ccc..
+.cc00cc.......
+.c>cc%x...T...
+.ccc%xc.......
+..cxxc...ccc..
+........ccccc.
+........ccccc.
+....T....ccc..
+..............
+ENDMAP
+
+
+##############################################################################
 # Statue gallery
 NAME:    minmay_statue_hallways
-DEPTH:   D:8-
+DEPTH:   D:4-
 ORIENT:  float
 MONS:    orange crystal statue / obsidian statue / ice statue
 MAP
@@ -4759,7 +4925,7 @@ ORIENT: float
 SUBST:  c:ccxxb.
 SUBST:  t:ttGGbT.
 SUBST:  w:wwwl.
-DEPTH:  D:10-, Depths
+DEPTH:  D:5-, Depths
 MAP
 c@@@@@@@@c
 cwt....twc
@@ -4797,7 +4963,7 @@ ENDMAP
 ##############################################################################
 # Wavy paths in crystal walls
 NAME:   minmay_wavy_crystal
-DEPTH:  D:10-
+DEPTH:  D:5-
 ORIENT: float
 MAP
 bbbbbbbbbbbb@.@bbbbbb
@@ -4828,8 +4994,9 @@ ENDMAP
 ##############################################################################
 # A traditional vault
 NAME:    minmay_two_paths
+TAGS:    transparent
 ORIENT:  float
-DEPTH:   D:12-, Depths, !Depths:$
+DEPTH:   D:6-, Depths, !Depths:$
 MAP
 cccccccccccccccc
 c.9.c......c.9.c
@@ -4852,7 +5019,7 @@ ENDMAP
 ##############################################################################
 # An old-fashioned vault, by Lemuel
 NAME:  lemuel_traditional_vault
-DEPTH: D:12-, Depths
+DEPTH: D:6-, Depths
 ORIENT: float
 SUBST: 9 = 9 0 8:2
 SUBST: 0 = 0 .
@@ -4891,7 +5058,7 @@ NAME:    lemuel_ice_statue
 MONS:    ice statue
 TAGS:    no_pool_fixup
 ORIENT:  float
-DEPTH:   D:7-
+DEPTH:   D:3-
 SUBST:   * : *$
 SUBST:   * = |:5 * .
 SUBST:   T = TU
@@ -4956,7 +5123,7 @@ ENDMAP
 # and the walls are always diggable then.
 #
 NAME:    dpeg_oklob_shooting_range
-DEPTH:   Depths, !Depths:$, Lair:2-, Elf:2-
+DEPTH:   Depths:2-, !Depths:$, Lair:2-, Elf:2-
 WEIGHT:  2
 ORIENT:  float
 SHUFFLE: ab" / AB'
@@ -4992,7 +5159,7 @@ ENDMAP
 #                   shanties or makeshift dwellings. By Core Xii
 #
 NAME:   corexii_shantytown
-DEPTH:  D:4-8
+DEPTH:  D:2-4
 ORIENT: float
 TAGS:   no_monster_gen no_item_gen
 NSUBST: + = 1:+ / *:=
@@ -5005,7 +5172,7 @@ NSUBST: Q = 1:+ / *:x, R = 1:+ / *:x, S = 1:+ / *:x, T = 1:+ / *:x
 NSUBST: U = 1:+ / *:x, V = 1:+ / *:x
 # There are 111 - glyphs, which leads to about 27 monsters
 SUBST:  - = 2:20 d .:50
-ITEM:   any food / any weapon / any missile / w:5 any armour / \
+ITEM:   any food / any weapon / w:5 any armour / \
         w:5 any potion / w:5 any scroll, w:1 any misc
 MONS:   plant / w:40 nothing, goblin / hobgoblin / kobold / orc / w:5 gnoll
 MAP
@@ -5037,7 +5204,7 @@ ENDMAP
 ##############################################################################
 # Cluster of small buildings with basic monsters and loot, by Core Xii
 NAME:   corexii_shack_village
-DEPTH:  D:3-9
+DEPTH:  D:1-4
 ORIENT: float
 TAGS:   no_monster_gen no_item_gen
 NSUBST: A = 1:+ / *:x, B = 1:+ / *:x, C = 1:+ / *:x, D = 1:+ / *:x
@@ -5045,7 +5212,7 @@ NSUBST: E = 1:+ / *:x, F = 1:+ / *:x, G = 1:+ / *:x, H = 1:+ / *:x
 # 39 - glyphs, leading to about 10 monsters.
 SUBST:  - = 2:20 d .:50
 SUBST:  T = T:50 V G 1 .:20
-ITEM:   any food / any weapon / any missile / w:5 any armour / w:5 any potion
+ITEM:   any food / any weapon / w:5 any armour / w:5 any potion
 MONS:   plant / w:40 nothing, goblin / hobgoblin / kobold / orc
 MAP
 ....................
@@ -5293,7 +5460,7 @@ ENDMAP
 
 NAME:    hangedman_arrow_trap
 ORIENT:  float
-DEPTH:   D:12-, !D:$, Depths:2-, !Depths:$
+DEPTH:   D:6-, !D:$, Depths:2-, !Depths:$
 MAP
 xxxxxxxxxxxxxxxxxx
 xcccccccxxcccccccx
@@ -5313,7 +5480,7 @@ ENDMAP
 ##############################################################################
 
 NAME:   wad_guarded_room
-DEPTH:  D:6-, !D:$, Depths:2-, !Depths:$
+DEPTH:  D:3-, !D:$, Depths:2-, !Depths:$
 ORIENT: float
 WEIGHT: 4
 FTILE: ' = floor_pebble
@@ -5356,7 +5523,7 @@ ENDMAP
 ##############################################################################
 
 NAME:   wad_statue_garden
-DEPTH:  D:8-, !D:$, Depths:2-, !Depths:$
+DEPTH:  D:4-, !D:$, Depths:2-, !Depths:$
 ORIENT: float
 WEIGHT: 4
 FTILE: ' = floor_pebble
@@ -5427,7 +5594,7 @@ ENDMAP
 
 NAME: wad_river_or_something
 ORIENT: float
-DEPTH:  D:2-, !D:$
+DEPTH:  D, !D:$
 WEIGHT: 4
 MAP
 xx@xxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -5454,7 +5621,7 @@ ENDMAP
 ##############################################################################
 
 NAME: wad_crossroads
-DEPTH:  D:2-, !D:$
+DEPTH:  D:4-, !D:$
 ORIENT: float
 WEIGHT: 4
 FTILE: 'G = floor_pebble
@@ -5482,7 +5649,7 @@ ENDMAP
 ###############################################################################
 
 NAME:   wad_arrow_thing
-DEPTH:  D:8-, !D:$, Depths:2-, !Depths:$
+DEPTH:  D:4-, !D:$, Depths:2-, !Depths:$
 ORIENT: float
 WEIGHT: 4
 FTILE:  ' = floor_pebble
@@ -5515,7 +5682,7 @@ ENDMAP
 ###############################################################################
 
 NAME:   wad_cavern_with_rooms
-DEPTH:  D:8-, !D:$, Depths:2-, !Depths:$
+DEPTH:  D:4-, !D:$, Depths:2-, !Depths:$
 ORIENT: float
 WEIGHT: 4
 FTILE: ' = floor_pebble
@@ -5587,7 +5754,7 @@ ENDMAP
 NAME:    hangedman_cross_stitches
 ORIENT:  float
 TAGS:    transparent no_monster_gen
-DEPTH:   D:6-, !D:$, Depths, !Depths:$, Elf, Snake
+DEPTH:   D:3-, !D:$, Depths, !Depths:$, Elf, Snake
 WEIGHT:  5 (Elf, Snake), 10
 KMONS:   0 = 0
 KMONS:   9 = 9
@@ -5621,7 +5788,7 @@ ENDMAP
 NAME:    hangedman_cross_veins
 ORIENT:  float
 TAGS:    transparent no_monster_gen no_pool_fixup
-DEPTH:   D:8-, Depths, !Depths:$, Elf, Snake, Abyss
+DEPTH:   D:4-, Depths, !Depths:$, Elf, Snake, Abyss
 WEIGHT:  5 (Elf, Snake), 10
 KMONS:   12 = 0
 KMONS:   34 = 9
@@ -5668,7 +5835,7 @@ ENDMAP
 
 NAME:   hangedman_cross_cluster
 TAGS:   patrolling transparent no_monster_gen
-DEPTH:  D:9-, !D:$, Depths, !Depths:$
+DEPTH:  D:4-, !D:$, Depths, !Depths:$
 ORIENT: float
 SUBST:  C = CTUV, y : xc, z : ccvb, 1 = 0''
 KMASK:  ' = !no_monster_gen
@@ -5753,7 +5920,7 @@ ENDMAP
 ###############################################################################
 
 NAME:   evilmike_horseshoe
-DEPTH:  D:12-, Depths, !Depths:$
+DEPTH:  D:6-, Depths, !Depths:$
 ORIENT: float
 MAP
    xxxxxxxxxxxxxxxxxxxxx
@@ -5789,7 +5956,7 @@ ENDMAP
 # non-D branches)
 
 NAME:   grunt_deathspiral_large
-TAGS:   patrolling uniq_deathspiral
+TAGS:   patrolling uniq_deathspiral transparent
 DEPTH:  Depths, !Depths:$
 ORIENT: centre
 SHUFFLE: )]}>
@@ -5841,7 +6008,7 @@ cc..c..cc..cc...ccc+cccc..c..c...c..c
 ENDMAP
 
 NAME: grunt_deathspiral_small
-TAGS: patrolling uniq_deathspiral
+TAGS: patrolling uniq_deathspiral transparent
 DEPTH: Depths, !Depths:$, Crypt, !Crypt:$, \
        Dis, !Dis:$, Geh, !Geh:$, Tar, !Tar:$, Coc, !Coc:$, \
        Zot, !Zot:$
@@ -5850,27 +6017,27 @@ SHUFFLE: )]}>
 SUBST:  } = }>
 SUBST:  ] = ]>
 # Like the door vault, pick interesting monsters for the 8s in branches,
-# but use normal OOD for D.
+# but use normal OOD for Depths.
 # Also remove the bits of loot for Hell branches and Zot.
 : if you.in_branch("Crypt") then
 KMONS:  8 = bone dragon / lich / ancient lich / w:5 death cob / \
             w:5 curse toe / w:5 zombie / w:5 skeleton / eidolon / \
-            w:20 reaper / soul eater / w:30 place:Crypt
+            w:20 reaper / saelneytandi / w:30 place:Crypt
 : elseif you.in_branch("Dis") then
-KMONS:  8 = w:5 tzitzimitl / w:5 ice fiend / w:5 brimstone fiend / \
-            w:5 hell sentinel / iron dragon / tormentor / iron golem / \
+KMONS:  8 = w:5 tzitzimitl / w:5 Vetrifl / w:5 rhuddgoch / \
+            w:5 gwarchodwr / iron dragon / poenydio / iron golem / \
             place:Dis
 SUBST:  *% = .
 : elseif you.in_branch("Geh") then
-KMONS:  8 = brimstone fiend / w:5 hell sentinel / hellion / balrug / \
+KMONS:  8 = rhuddgoch / w:5 gwarchodwr / hellion / balrug / \
             fire giant / place:Geh
 SUBST:  *% = .
 : elseif you.in_branch("Tar") then
-KMONS:  8 = w:15 tzitzimitl / reaper / w:5 soul eater / shadow dragon / \
+KMONS:  8 = w:15 tzitzimitl / reaper / w:5 saelneytandi / shadow dragon / \
             lich / ancient lich / w:15 place:Tar
 SUBST:  *% = .
 : elseif you.in_branch("Coc") then
-KMONS:  8 = w:15 blizzard demon / frost giant / w:5 titan / w:15 ice fiend / \
+KMONS:  8 = w:15 cenysus / frost giant / w:5 titan / w:15 Vetrifl / \
             w:5 simulacrum / place:Coc
 SUBST:  *% = .
 : elseif you.in_branch("Zot") then
@@ -5974,7 +6141,7 @@ ENDMAP
 ###############################################################################
 
 NAME:   minmay_spiral_squares
-DEPTH:  D:12-, !D:$, Depths, !Depths:$
+DEPTH:  D:6-, !D:$, Depths, !Depths:$
 ORIENT: float
 SUBST:  0 = 0., 9 = 9.
 SUBST:  x : x:7 c:3, c : c:8 v:1 b:1
@@ -6014,7 +6181,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@x
 ENDMAP
 
 NAME:   minmay_five_octagons
-DEPTH:  D:12-, !D:$, Depths, !Depths:$
+DEPTH:  D:6-, !D:$, Depths, !Depths:$
 ORIENT: float
 KPROP:  8 = no_tele_into
 SUBST:  8 = .:130 8 |, 0 = 0 .:240
@@ -6055,7 +6222,7 @@ ENDMAP
 
 
 NAME:   minmay_imperfect_grid
-DEPTH:  D:8-, !D:$, Depths, !Depths:$
+DEPTH:  D:4-, !D:$, Depths, !Depths:$
 ORIENT: float
 SUBST:  0 = 0., 9 = 9.
 SUBST:  x : x:7 c:3, c : c:8 v:1 b:1
@@ -6095,7 +6262,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@
 ENDMAP
 
 NAME:   minmay_quarter_circles
-DEPTH:  D:8-, !D:$, Depths, !Depths:$
+DEPTH:  D:4-, !D:$, Depths, !Depths:$
 ORIENT: float
 SUBST:  0 = 0., 9 = 99.
 SUBST:  x : x:7 c:3, c : c:8 v:1 b:1
@@ -6127,7 +6294,8 @@ cccccccccccccccccc@xxxxxxxxxxxxx
 ENDMAP
 
 NAME:   minmay_ornate_pinched
-DEPTH:  D:8-, !D:$, Depths, !Depths:$
+DEPTH:  D:4-, !D:$, Depths, !Depths:$
+TAGS:   transparent
 ORIENT: float
 SUBST:  0 = 0., 9 = 99.
 SUBST:  x : x:7 c:1 v:1 b:1
@@ -6165,6 +6333,7 @@ ENDMAP
 
 NAME:   minmay_split_circle
 DEPTH:  Depths, !Depths:$
+TAGS:   transparent
 ORIENT: float
 SUBST:  0 = 01., 9 = 91.
 SUBST:  c : cv b:1
@@ -6205,6 +6374,7 @@ ENDMAP
 
 NAME:   minmay_quantized_circle
 DEPTH:  Depths, !Depths:$
+TAGS:   transparent
 ORIENT: float
 SUBST:  0 = 0., 9 = 9., b : ccb, t : ttm, x : xxxxvb
 MAP
@@ -6242,7 +6412,8 @@ xxxxxxxxxxxxxxc@cxxxxxxxxxxxxxx
 ENDMAP
 
 NAME:   minmay_four_partial_circles
-DEPTH:  D:8-, !D:$
+DEPTH:  D:4-, !D:$
+TAGS:   transparent
 ORIENT: float
 WEIGHT: 7
 SUBST:  ? : . x:8 b:1 v:1, ! : . x:2, 0 = 00.
@@ -6275,7 +6446,7 @@ xx......xx    xx......xx
 ENDMAP
 
 NAME:   minmay_eight_partial_circles
-DEPTH:  D:12-, !D:$, Depths, !Depths:$
+DEPTH:  D:6-, !D:$, Depths, !Depths:$
 ORIENT: float
 WEIGHT: 3
 SUBST:  ? : . x:5 G:2 b:1 c:1 T:1, 0 = 0., 9 = 99., 8 = 8.
@@ -6312,7 +6483,8 @@ xx.....xx xx.....xx xx.....xx
 ENDMAP
 
 NAME:   minmay_swirls_squares
-DEPTH:  D:12-, !D:$, Depths, !Depths:$
+DEPTH:  D:6-, !D:$, Depths, !Depths:$
+TAGS:   transparent
 ORIENT: float
 SUBST:  9 = 999.
 SUBST:  x : x:7 c:1 v:1 b:1
@@ -6351,7 +6523,7 @@ MAP
 ENDMAP
 
 NAME:    minmay_big_diamond_grid
-DEPTH:   D:12-, !D:$, Depths, !Depths:$
+DEPTH:   D:6-, !D:$, Depths, !Depths:$
 ORIENT:  float
 SHUFFLE: ABC
 SUBST:   A = ., B = ., C = x, 0 = 0., 9 = 9.
@@ -6384,32 +6556,34 @@ x@xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@x
 ENDMAP
 
 NAME:   minmay_blocking_statues
-DEPTH:  D:12-, !D:$, Depths, !Depths:$
+DEPTH:  D:6-, !D:$, Depths, !Depths:$
 ORIENT: float
 SUBST:  0 = 0., 9 = 99.
+KMASK:  - = !opaque
 MAP
 @cccccccccccccccccc
-.cccccccccccc99***c
-..GccG....GccGxxx*c
-.0.cc.0..0.cc.xxx*c
-...G...xx.....xxx9c
-...G...xx......0c9c
-.0.cc.0..0.cc...c0c
-..GccG....Gcc...c0c
-.ccxxcc..ccxxcc.00c
-.ccxxcc..ccxxcc.00c
-..GccG....Gcc...c0c
-.0.cc.0..0.cc...c0c
-.......xx...G..0c9c
-.......xx...G.xxx9c
-.0.cc.0..0.cc.xxx*c
-..GccG....GccGxxx*c
-.cccccccccccc99***c
+-cccccccccccc99***c
+-.GccG....GccGxxx*c
+-0.cc.0..0.cc.xxx*c
+-..G...xx.....xxx9c
+-..G...xx......0c9c
+-0.cc.0..0.cc...c0c
+-.GccG....Gcc...c0c
+-ccxxcc..ccxxcc.00c
+-ccxxcc..ccxxcc.00c
+-.GccG....Gcc...c0c
+-0.cc.0..0.cc...c0c
+-......xx...G..0c9c
+-......xx...G.xxx9c
+-0.cc.0..0.cc.xxx*c
+-.GccG....GccGxxx*c
+-cccccccccccc99***c
 @cccccccccccccccccc
 ENDMAP
 
 NAME:   minmay_flawed_box
 DEPTH:  D:6-10
+TAGS:   transparent
 ORIENT: float
 SUBST:  X = x.
 MONS:   orc wizard / nothing
@@ -6443,7 +6617,10 @@ ENDMAP
 
 NAME:   minmay_four_inscribed_fans
 DEPTH:  Depths
+TAGS:   transparent
 ORIENT: float
+KPROP:  | = no_tele_into
+KMASK:  | = opaque
 SUBST:  x : x:7 c:3, c : c:8 v:1 b:1
 SUBST:  9 = 999.
 MAP
@@ -6490,7 +6667,8 @@ MAP
 ENDMAP
 
 NAME:   minmay_concentric_multi
-DEPTH:  D:12-, Depths
+DEPTH:  D:6-, Depths
+TAGS:   transparent
 ORIENT: float
 NSUBST: A = 1:+ / *:+xx, B = 1:+ / *:+cc, C = 1:+ / *:+xx
 SUBST:  x : x:7 c:3, c : c:8 v:1 b:1
@@ -6532,7 +6710,7 @@ MAP
 ENDMAP
 
 NAME:   minmay_diamond_stairs
-DEPTH:  D:8-, !D:$, Depths:2-, !Depths:$
+DEPTH:  D:4-, !D:$, Depths:2-, !Depths:$
 ORIENT: float
 SUBST:  x : x:7 c:3, c : c:8 v:1 b:1
 SUBST:  F : .:40 GTUb
@@ -6540,28 +6718,29 @@ SUBST:  9 = 9.
 : if you.absdepth() < 12 then
 SUBST:  8 = 9
 : end
+KMASK: - = !opaque
 MAP
-            .......
-          ....9x9....
-        .....ccccc.....
-      .....xxc<.>cxx.....
-    .....xxx.c.8.c.xxx.....
-  .....xxx...c...c...xxx.....
-.....xxx...F.c...c.F...xxx.....
-..9xxx.......c...c.......xxx9..
-.xxx{........+...+........}xxx.
-..9xxx.......c...c.......xxx9..
-.....xxx...F.c...c.F...xxx.....
-  .....xxx...c...c...xxx.....
-    .....xxx.c.8.c.xxx.....
-      .....xxc<.>cxx.....
-        .....ccccc.....
-          ....9x9....
-            .......
+            -------
+          ----9x9----
+        -----ccccc-----
+      -----xxc<.>cxx-----
+    -----xxx.c.8.c.xxx-----
+  -----xxx...c...c...xxx-----
+-----xxx...F.c...c.F...xxx-----
+--9xxx.......c...c.......xxx9--
+-xxx{........+...+........}xxx-
+--9xxx.......c...c.......xxx9--
+-----xxx...F.c...c.F...xxx-----
+  -----xxx...c...c...xxx-----
+    -----xxx.c.8.c.xxx-----
+      -----xxc<.>cxx-----
+        -----ccccc-----
+          ----9x9----
+            -------
 ENDMAP
 
 NAME:   minmay_octo_star
-DEPTH:  D:12-, Depths
+DEPTH:  D:6-, Depths
 ORIENT: float
 SUBST:  x : x:7 c:3, c : c:8 v:1 b:1
 SUBST:  9 = 999.
@@ -6601,6 +6780,7 @@ ENDMAP
 
 NAME:   minmay_central_circle
 DEPTH:  Depths
+TAGS:   transparent
 ORIENT: float
 SUBST:  x : x:8 c:2, c : c:8 v:2
 SUBST:  9 = 999., 8 = 888.
@@ -6641,7 +6821,8 @@ MAP
 ENDMAP
 
 NAME:   minmay_strange_plus
-DEPTH:  D:12-, Depths
+DEPTH:  D:6-, Depths
+TAGS:   transparent
 ORIENT: float
 SUBST:  9 = 999., 8 = 888.
 MAP
@@ -6677,7 +6858,8 @@ MAP
 ENDMAP
 
 NAME:   minmay_cut_squares
-DEPTH:  D:8-, Depths
+DEPTH:  D:4-, Depths
+TAGS:   transparent
 ORIENT: float
 SUBST:  9 = 9.
 SUBST:  x : x:7 c:1 v:1 b:1
@@ -6708,7 +6890,8 @@ MAP
 ENDMAP
 
 NAME:   minmay_bad_star
-DEPTH:  D:12-, Depths
+DEPTH:  D:6-, Depths
+TAGS:   transparent
 ORIENT: float
 SUBST:  9 = 9., 8 = 8.
 SUBST:  x : x:7 c:3, c : c:8 v:1 b:1
@@ -6742,7 +6925,8 @@ MAP
 ENDMAP
 
 NAME:   minmay_door_path
-DEPTH:  D:1-4
+DEPTH:  D:1-2
+TAGS:   transparent
 ORIENT: float
 SUBST:  0 = .0%
 SUBST:  ? : .GTV
@@ -6778,7 +6962,8 @@ xxxxxxxxxxxxx
 ENDMAP
 
 NAME:   minmay_tri_box
-DEPTH:  D:8-, Depths
+DEPTH:  D:4-, Depths
+TAGS:   transparent
 ORIENT: float
 SUBST:  9 = 9.
 SUBST:  x : x:7 c:3, c : c:8 v:1 b:1
@@ -6809,7 +6994,8 @@ xxxxxxxxxxxxxxxxxxxxx
 ENDMAP
 
 NAME:   minmay_dotted_concentric_squares
-DEPTH:  D:12-, Depths
+DEPTH:  D:6-, Depths
+TAGS:   transparent
 ORIENT: float
 SUBST:  9 = 9....
 SUBST:  x : x:7 c:3, c : c:8 v:1 b:1
@@ -6845,7 +7031,8 @@ MAP
 ENDMAP
 
 NAME:   minmay_textured_paths
-DEPTH:  D:12-, Depths
+DEPTH:  D:6-, Depths
+TAGS:   transparent
 ORIENT: float
 SUBST:  8 = 888., 9 = 9.
 SUBST:  ? = .:70 GTUVm<>
@@ -6881,7 +7068,8 @@ MAP
 ENDMAP
 
 NAME:   minmay_distorted_concentric_squares
-DEPTH:  D:8-, Depths
+DEPTH:  D:4-, Depths
+TAGS:   transparent
 ORIENT: float
 SUBST:  9 = 9., 0 = 0.
 SUBST:  x : x:27 c:1 v:1 b:1
@@ -6908,7 +7096,8 @@ MAP
 ENDMAP
 
 NAME:   minmay_containers
-DEPTH:  D:12-, Depths
+DEPTH:  D:6-, Depths
+TAGS:   transparent
 ORIENT: float
 SUBST:  C : B C:5
 SUBST:  B : A B:5
@@ -6944,7 +7133,8 @@ xxxcccccccccccccccccccc@
 ENDMAP
 
 NAME:   minmay_curly_fans
-DEPTH:  D:8-, Depths
+DEPTH:  D:4-, Depths
+TAGS:   transparent
 ORIENT: float
 SUBST:  x : x:7 c:1 v:1 b:1
 SUBST:  9 = 9.
@@ -6971,7 +7161,8 @@ MAP
 ENDMAP
 
 NAME:   minmay_crescents
-DEPTH:  D:12-, Depths
+DEPTH:  D:6-, Depths
+TAGS:   transparent
 ORIENT: float
 SUBST:  x : x:7 c:3, c : c:8 v:1 b:1
 SUBST:  G = .GTU
@@ -7083,6 +7274,7 @@ ENDMAP
 ###############################################################################
 
 NAME:   minmay_rotating_shell
+TAGS:   transparent
 ORIENT: float
 DEPTH:  Depths
 WEIGHT: 3
@@ -7144,7 +7336,7 @@ PLACE:  Depths:$
 ORIENT: centre
 : if you.where() == dgn.level_name(dgn.br_entrance("Zot")) then
 :     zot_entry_setup(_G)
-TAGS:   patrolling no_monster_gen
+TAGS:   patrolling no_monster_gen transparent
 NSUBST: 0 = 6:1 / 2 = 1. / 2:0 / *:.
 NSUBST: 9 = 2:3 / 1:9 / *:.
 SUBST:  8 = 2, | = -
@@ -7182,7 +7374,7 @@ PLACE:  Depths:$
 ORIENT: centre
 : if you.where() == dgn.level_name(dgn.br_entrance("Zot")) then
 :     zot_entry_setup(_G)
-TAGS:   no_monster_gen
+TAGS:   no_monster_gen transparent
 NSUBST: 0 = 6:1 / 2 = 1. / 2:0 / *:.
 NSUBST: 9 = 2:3 / 1:9 / *:.
 SUBST:  8 = 2, | = -
@@ -7339,7 +7531,7 @@ MAP
      xx.......xx
     xx.0..G..0.xx
    xx...xxxxx...xx
-  xx.0.xx   xx.0.xx
+  xx.0.xxxxxxx.0.xx
   x...xxxxxxxxx...x
 xxx...xxx...xxx...xxx
 @...................@
@@ -7347,7 +7539,7 @@ xG..0..G..{..G..0..Gx
 @...................@
 xxx...xxx...xxx...xxx
   x...xxxxxxxxx...x
-  xx.0.xx   xx.0.xx
+  xx.0.xxxxxxx.0.xx
    xx...xxxxx...xx
     xx.0..G..0.xx
      xx.......xx
@@ -7359,6 +7551,7 @@ ENDMAP
 
 NAME:   grunt_arcs
 ORIENT: float
+TAGS:   transparent
 DEPTH:  Depths
 KMONS:  0 = 0 band
 KMONS:  9 = 9 band
@@ -7400,7 +7593,7 @@ ENDMAP
 
 NAME:   cheibrodos_orc_bank
 TAGS:   no_item_gen no_monster_gen
-DEPTH:  Orc, !Orc:$, D:10-14
+DEPTH:  Orc, !Orc:$, D:5-7
 ORIENT: float
 MONS:   orc, orc warrior, orc knight, hobgoblin
 KITEM:  $ = $ no_pickup
@@ -7424,7 +7617,7 @@ ENDMAP
 
 NAME:   cheibrodos_leafed_vault
 TAGS:   no_item_gen no_monster_gen
-DEPTH:  D:14-, Depths:1-5
+DEPTH:  D:7-, Depths:1-5
 ORIENT: float
 NSUBST: - = 4 = 8 / 8 = 9 / 90 = . / * = .:45 0
 SUBST:  " = $:5 * |:3
@@ -7467,7 +7660,7 @@ ENDMAP
 NAME:   kennysheep_kobold_lugonu_temple
 ORIENT: float
 TAGS:   transparent no_item_gen no_monster_gen no_trap_gen
-DEPTH:  D:10-
+DEPTH:  D:5-
 KFEAT:  C = altar_lugonu
 KFEAT:  ' = floor
 KFEAT:  ~ = floor
@@ -7506,7 +7699,7 @@ ENDMAP
 NAME:   kennysheep_orc_sif_temple
 ORIENT: float
 TAGS:   no_item_gen no_monster_gen no_trap_gen no_pool_fixup
-DEPTH:  D:6-10
+DEPTH:  D:3-5
 KFEAT:  C = altar_sif_muna
 MONS:   orc wizard / nothing, orc warrior
 MAP
@@ -7530,7 +7723,7 @@ ENDMAP
 NAME:   kennysheep_demon_hangout
 ORIENT: float
 TAGS:   no_item_gen no_monster_gen no_trap_gen
-DEPTH:  D:12-
+DEPTH:  D:6-
 MONS:   common demon, lesser demon
 MAP
   lx@@@xl
@@ -7576,7 +7769,7 @@ ENDMAP
 NAME:   kennysheep_the_goblin_king
 ORIENT: float
 TAGS:   no_monster_gen no_trap_gen
-DEPTH:  D:2-4
+DEPTH:  D:2
 KMONS:  1 = Ijyb / hobgoblin, hobgoblin
 KMONS:  2 = goblin
 MAP
@@ -7595,9 +7788,9 @@ ENDMAP
 NAME:   kennysheep_steamy
 ORIENT: float
 TAGS:   no_monster_gen
-DEPTH:  D:5-10
+DEPTH:  D:3-5
 MONS:   steam dragon, fungus
-KFEAT:  ^ = known shaft trap
+KFEAT:  ^ = shaft trap
 SUBST:  p = .....^22222wwwww
 MAP
    xxxxx
@@ -7632,7 +7825,7 @@ ENDMAP
 NAME:   kennysheep_funnel
 ORIENT: float
 TAGS:   no_trap_gen no_monster_gen
-DEPTH:  D:12-, !D:$, Depths:2-, !Depths:$
+DEPTH:  D:6-, !D:$, Depths:2-, !Depths:$
 MAP
     ccc
    cc.cc
@@ -7663,7 +7856,7 @@ ENDMAP
 NAME:   kennysheep_six_static_rooms
 TAGS:   transparent
 ORIENT: float
-DEPTH:  D:2-, Depths, Elf, Zot, Snake, !D:$, !Depths:$
+DEPTH:  D:3-, Depths, Elf, Zot, Snake, !D:$, !Depths:$
 MAP
   xxxxx   xxxxx   xxxxx
  xx...xx xx...xx xx...xx
@@ -7690,9 +7883,9 @@ ENDMAP
 
 NAME:   kennysheep_big_flooded_room
 ORIENT: float
-DEPTH:  D:2-, Depths, !D:$, !Depths:$
+DEPTH:  D, Depths, !D:$, !Depths:$
 : ks_random_setup(_G)
-: if you.absdepth() < 5 then
+: if you.absdepth() < 3 then
 SUBST:  9 = 0, * = %
 : end
 MAP
@@ -7720,7 +7913,7 @@ ENDMAP
 
 NAME:   kennysheep_cluttered_fort
 ORIENT: float
-DEPTH:  D:14-, Depths, !Depths:$
+DEPTH:  D:7-, Depths, !Depths:$
 NSUBST: % : 1:|
 SUBST:  % = *
 SUBST:  9 = 9900.
@@ -7752,7 +7945,7 @@ ENDMAP
 NAME:   kennysheep_bubble_arena
 TAGS:   no_item_gen no_trap_gen
 ORIENT: float
-DEPTH:  D:14-, Depths, !Depths:$
+DEPTH:  D:7-, Depths, !Depths:$
 NSUBST: % = 5:|
 SUBST:  % : %$
 : ks_random_setup(_G, true)
@@ -7838,7 +8031,7 @@ MAP
 ENDMAP
 
 NAME: cheibrodos_lost_city_excavation
-DEPTH: D:11-, Depths
+DEPTH: D:5-, Depths
 TAGS: no_item_gen no_monster_gen
 ORIENT: float
 : if you.in_branch("D") then
@@ -8067,8 +8260,7 @@ NSUBST: 7 = 2:H / *:.
 KMONS: _ = torpor snail patrolling
 KFEAT: _ = altar_cheibriados
 KITEM: _ = plate armour good_item ego:ponderousness no_pickup /\
-           crystal plate armour good_item ego:ponderousness no_pickup w:5 /\
-           gold dragon scales good_item ego:ponderousness no_pickup w:5
+           crystal plate good_item ego:ponderousness no_pickup w:5 
 # general settings
 KMONS: T = torpor snail
 KMONS: D = 0 band
@@ -8107,7 +8299,8 @@ MAP
 ENDMAP
 
 NAME:   kennysheep_windowed_halls
-DEPTH:  D:5-, Depths
+DEPTH:  D:2-, Depths
+KFEAT:  + = runed_door
 ORIENT: float
 SUBST:  c : cccvb
 MAP
@@ -8132,7 +8325,7 @@ ccccccccccccccccccccccc
 ENDMAP
 
 NAME: kennysheep_ambush_hall
-DEPTH: D:8-, Depths, Elf, Zot
+DEPTH: D:4-, Depths, Elf, Zot
 ORIENT: float
 TAGS: transparent
 SUBST: T : TGV.
@@ -8157,7 +8350,7 @@ xx..0x..T.T..x0..xx
 ENDMAP
 
 NAME: kennysheep_blocky_hall
-DEPTH: D:8-, Depths, Elf, Zot
+DEPTH: D:4-, Depths, Elf, Zot
 ORIENT: float
 TAGS: transparent
 MAP
@@ -8189,13 +8382,9 @@ xxxxx...xxxxxxxxxxxxx...x
 ENDMAP
 
 NAME: kennysheep_blocky_room
-DEPTH: D:8-, Depths, Elf, Zot
+DEPTH: D:4-, Depths, Elf, Zot
 ORIENT: float
 TAGS: transparent
-: if you.absdepth() < 5 then
-SUBST:  9 = 0
-NSUBST: * = 2:* / *:%
-: end
 MAP
         xxxxxxxxxxxxx
         x...........x
@@ -8225,13 +8414,9 @@ xxxxx...x...x+xxxxxxx...x
 ENDMAP
 
 NAME: kennysheep_room_grid
-DEPTH: D:12-, Depths, Elf, Zot
+DEPTH: D:6-, Depths, Elf, Zot
 ORIENT: float
 TAGS: transparent
-: if you.absdepth() < 5 then
-SUBST:  9 = 0
-NSUBST: * = 2:* / *:%
-: end
 MAP
  xxxxx xxxxx xxxxx
 xx...x@x...x@x...xx
@@ -8255,7 +8440,7 @@ xx...x@x...x@x...xx
 ENDMAP
 
 NAME: kennysheep_bubbly
-DEPTH: D:12-, Depths, Elf, Zot
+DEPTH: D:6-, Depths, Elf, Zot
 ORIENT: float
 MAP
          xxxxxxx
@@ -8264,11 +8449,11 @@ MAP
      xx...........xx
      x.............x
     xx...0.xxx.0...xx
-    x.....xx xx.....x
-    x....xx   xx....+
-    x....x     x....+
-    x....xx   xx....+
-    x.....xx xx.....x
+    x.....xxxxx.....x
+    x....xxxxxxx....+
+    x....xxxxxxx....+
+    x....xxxxxxx....+
+    x.....xxxxx.....x
     xx...0.xxx.0...xx
      x.............x
   xxxxx...........xx
@@ -8291,7 +8476,7 @@ ENDMAP
 
 
 NAME: kennysheep_spiral_hall
-DEPTH: D:4-, Depths, Elf, Zot
+DEPTH: D:2-, Depths, Elf, Zot
 ORIENT: float
 TAGS: transparent
 SUBST:  G : GTV.
@@ -8360,7 +8545,7 @@ cccccc.................cccccc
 ENDMAP
 
 NAME:    minmay_heptahexagon
-DEPTH:   D:12-, Depths
+DEPTH:   D:6-, Depths
 ORIENT:  float
 ITEM:    book of debilitation / book of maledictions
 # randomize how open the hexagons are to each other
@@ -8405,7 +8590,7 @@ ENDMAP
 
 NAME:   minmay_box_of_curves
 ORIENT: float
-DEPTH:  D:11-, Depths
+DEPTH:  D:5-, Depths
 SUBST:  x : cvb, ? : .TGtxcvbm
 SUBST:  ' : '", ' : .:50 xcvbm, " : .:50 xcvbm
 SUBST:  9 = 999., 8 = 888.
@@ -8442,7 +8627,7 @@ xxxxxxxxxxxxxxx@xxxxxxxxxxxxxxx
 ENDMAP
 
 NAME:   minmay_ambush_box
-DEPTH:  D:11-, Depths, Elf
+DEPTH:  D:5-, Depths, Elf
 ORIENT: float
 SUBST:  c : cvb
 SUBST:  ' : .xcvb n:2 t:2 G:3 T:3
@@ -8463,7 +8648,7 @@ cccccc@cccccc
 ENDMAP
 
 NAME:   minmay_gate_of_8
-DEPTH:  D:8-, Depths
+DEPTH:  D:4-, Depths
 ORIENT: float
 KMONS:  8 = 8
 KITEM:  8 = |
@@ -8483,7 +8668,7 @@ cc88cxxxxx
 ENDMAP
 
 NAME:    minmay_shrinking_squares
-DEPTH:   D:9-, Depths
+DEPTH:   D:4-, Depths
 ORIENT:  float
 NSUBST:  9 = 1:9 / 1:. / * = 9.
 NSUBST:  8 = 1:8 / 1:. / * = 8.
@@ -8502,7 +8687,7 @@ xxxxxxxxxx
 ENDMAP
 
 NAME:   minmay_chopped_fan
-DEPTH:  D:9-, Depths
+DEPTH:  D:4-, Depths
 ORIENT: float
 SUBST:  x : cvb
 MAP
@@ -8530,7 +8715,7 @@ xxxxx....|x|x
 ENDMAP
 
 NAME:   minmay_mutant_horseshoe
-DEPTH:  D:11-, Depths
+DEPTH:  D:5-, Depths
 ORIENT: float
 SUBST:  x : cvb
 MAP
@@ -8545,7 +8730,7 @@ xx.xxxxx.xx
 ENDMAP
 
 NAME:   minmay_diamond_boxcup
-DEPTH:  D:2-6
+DEPTH:  D:1-3
 ORIENT: float
 NSUBST: 0 = 4:0 / 8 = 0. / *:.
 SUBST:  x : x:60 cvb
@@ -8566,7 +8751,7 @@ xxxxxxxxxxxxx
 ENDMAP
 
 NAME:   minmay_glassy_protrusions
-DEPTH:  D:11-, Depths
+DEPTH:  D:5-, Depths
 ORIENT: float
 SUBST:  x : cvb
 MAP
@@ -8581,7 +8766,7 @@ xx9xx*x*xx9xx
 ENDMAP
 
 NAME:   minmay_blocky_corners
-DEPTH:  D:7-
+DEPTH:  D:4-
 ORIENT: float
 SUBST:  x : cvb, 9 = 99.
 MAP
@@ -8595,7 +8780,7 @@ xx9.xxx.9xx
 ENDMAP
 
 NAME:   minmay_wonky_spiral
-DEPTH:  D:1-4
+DEPTH:  D:1-2
 ORIENT: float
 SUBST:  0 = 0.
 MAP
@@ -8611,7 +8796,7 @@ xxxxxxxxx
 ENDMAP
 
 NAME:   minmay_cornered_nines
-DEPTH:  D:6-13
+DEPTH:  D:4-7
 ORIENT: float
 SUBST:  x : x:90 cvb
 MAP
@@ -8627,7 +8812,7 @@ xxxxxxxxx
 ENDMAP
 
 NAME:   minmay_sliced_demisemicircle
-DEPTH:  D:9-, Depths
+DEPTH:  D:4-, Depths
 ORIENT: float
 SUBST:  x : ccvvb
 NSUBST: 8 = 2:8 / 4 = 8. / *:.
@@ -8651,10 +8836,11 @@ xxxxxxxxxxxxxxx
 ENDMAP
 
 NAME:   minmay_roachtagon
-DEPTH:  D:2-3
+DEPTH:  D:2
+TAGS:   no_pool_fixup
 ORIENT: float
 MONS:   giant cockroach
-NSUBST: 1 = 5:1 / 10 = 1. / 2:% / 2 = %. / *:.
+NSUBST: 1 = 5:1 / 10 = 1W / 2:% / 2 = %W / *:W..
 SUBST:  " = @x
 MAP
   xxxx"x
@@ -8672,7 +8858,7 @@ ENDMAP
 # The center is always reachable in these two vaults
 # regardless of transformation arrangements.
 NAME:    minmay_bloctagon
-DEPTH:   D:8-, Depths
+DEPTH:   D:4-, Depths
 ORIENT:  float
 SUBST:   x : x:60 c:15 v b:5
 SHUFFLE: ABCE, 0%
@@ -8705,7 +8891,7 @@ xxxx..BBAACC..xxxx
 ENDMAP
 
 NAME:    minmay_bloctagon_deflated
-DEPTH:   D:8-, Depths
+DEPTH:   D:4-, Depths
 ORIENT:  float
 SUBST:   x : x:60 c:15 v b:5
 SHUFFLE: ABCE, 9*
@@ -8728,7 +8914,7 @@ xx.BAC.xx
 ENDMAP
 
 NAME: cheibrodos_elevator_heist
-DEPTH: D:8-,!D:$
+DEPTH: D:4-,!D:$
 TAGS: no_item_gen no_monster_gen
 ORIENT: float
 MAP
@@ -8752,7 +8938,7 @@ vvvvvvvvvvvvvvvvv
 ENDMAP
 
 NAME: cheibrodos_helix_gallery
-DEPTH: D:1-12
+DEPTH: D:1-6
 ORIENT: float
 NSUBST: - = 2:0
 MAP
@@ -8773,7 +8959,7 @@ ccWWW..W..WW...Wcc
 ENDMAP
 
 NAME: cheibrodos_histonic
-DEPTH: D:8-
+DEPTH: D:4-
 TAGS: no_item_gen no_monster_gen
 ORIENT: float
 NSUBST: ' = 3:0 / 2=0., _ = 3:0 / 2=0., ` = 1=90 / 2:0 / 3=0.
@@ -8831,11 +9017,14 @@ cc```wwwcccncccwww'''cc
 ENDMAP
 
 NAME: cheibrodos_barr_body
-TAGS: no_item_gen no_monster_gen
-DEPTH: D:4-12
+TAGS: no_item_gen no_monster_gen transparent
+DEPTH: D:2-6
 ORIENT: float
 NSUBST: " = 1:9 / 2:0 / 2=0., ; = 2:0 / 2=0.
 NSUBST: ' = 2:0 / 2=0. , _ = 2:0 / 2=0.
+: if you.depth() < 3 then
+SUBST: 9 = 0
+: end
 MAP
 .......@.......
 .xxxx.....xxxx.
@@ -8855,11 +9044,11 @@ MAP
 ENDMAP
 
 NAME: cheibrodos_old_hovel
-TAGS: no_item_gen no_monster_gen
-DEPTH: D:2-4
+TAGS: no_item_gen no_monster_gen no_pool_fixup transparent
+DEPTH: D:2-3
 ORIENT: float
 KMONS: P = plant
-NSUBST: " = 1:0 / 1:%, - = 2:P / 4=P.
+NSUBST: " = 1:0 / 1:%, - = 2:P / 4=P. / *=wWWW..
 SUBST: x = x:50 P.
 MAP
 ..........
@@ -8875,8 +9064,8 @@ MAP
 ENDMAP
 
 NAME: cheibrodos_fzero
-TAGS: no_item_gen no_monster_gen
-DEPTH: D:5-
+TAGS: no_item_gen no_monster_gen transparent
+DEPTH: D:3-
 ORIENT: float
 NSUBST: " = 3:0 / 3=0. / 1=9.., ` = 3:0 / 2=0. / 1=9..
 NSUBST: ' = 3:0 / 3=0. / 2:9 / 1=9.
@@ -8903,7 +9092,7 @@ ENDMAP
 
 NAME: cheibrodos_ideogram_h
 TAGS: no_item_gen no_monster_gen
-DEPTH: D:8-
+DEPTH: D:4-
 ORIENT: float
 KMONS: 9 = 9
 KMONS: - = 0
@@ -8933,150 +9122,206 @@ x.___x-;x..x;.``xw
 @.xwwwwwwwwwwwwwwx
 ENDMAP
 
-NAME: gammafunk_sealed_arena
-TAGS: no_monster_gen no_trap_gen
-DEPTH: Crypt, D:8-, Depths, Elf, Zot
+NAME:   gammafunk_sealed_arena
+TAGS:   no_monster_gen no_trap_gen
+# Allow placement in Vaults as a room.
+TAGS:   vaults_hard preserve_wall passable
+DEPTH:  Crypt, D:4-, Depths, Elf, Shoals, Snake, Spider, Swamp, Vaults, Zot
 ORIENT: float
-ITEM:  any jewellery good_item
-ITEM:  cloak good_item / scarf good_item / helmet good_item / hat good_item \
-       / pair of gloves good_item / pair of boots good_item
-KITEM: R = |
-MONS: orange crystal statue / obsidian statue
+ITEM:   any jewellery good_item
+ITEM:   cloak good_item / scarf good_item / helmet good_item / hat good_item \
+        / pair of gloves good_item / pair of boots good_item
+KITEM:  R = |
+: if you.in_branch("Shoals") or you.in_branch("Spider") then
+MONS:   orange crystal statue
+: else
+MONS:   orange crystal statue / obsidian statue
+: end
 # In earlier Dungeon depths, one d item and remove 1/3 of the 9 spawns
 # on-average.  Elsewhere place one d item and one e item and don't reduce the 9
 # spawns.
-: if you.in_branch("D") and you.depth() < 12 then
+: if you.in_branch("D") and you.depth() < 6 then
 SUBST: 1 = 1..., 9 = 99., " = d, ' = $
 : elseif you.in_branch("D") then
 SUBST: 1 = 1.
 : end
-SUBST:  " = $, h : b., i : b., b : bcvx
+SUBST:  " = $, h : b., i : b.
+: if you.in_branch("Spider") or you.in_branch("Swamp") then
+SUBST:  b : cx
+: else
+SUBST:  b : bcvx
+: end
 NSUBST: ' = d / e / $
+KITEM:  P = scroll of random uselessness
 MARKER: P = lua:transp_loc("sealed_arena_entry")
 MARKER: Q = lua:transp_dest_loc("sealed_arena_entry")
 MARKER: R = lua:transp_loc("sealed_arena_exit")
 MARKER: S = lua:transp_dest_loc("sealed_arena_exit")
 MAP
   ...........
- ..nnnnnnnnn..
- .nn9......nn.
- .nG.hi9ih.Gn.
- .n..ih.hi$*n.
-..n9.....8'|n..
-@Pn..Q.1.."RnS@
-..n9.....8'|n..
- .n..ih.hi$*n.
- .nG.hi9ih.Gn.
- .nn9......nn.
- ..nnnnnnnnn..
+ ..qqqqqqqqq..
+ .qq9......qq.
+ .qG.hi9ih.Gq.
+ .q..ih.hi$*q.
+..q9.....8'|q..
+@Pq..Q.1.."RqS@
+..q9.....8'|q..
+ .q..ih.hi$*q.
+ .qG.hi9ih.Gq.
+ .qq9......qq.
+ ..qqqqqqqqq..
   ...........
 ENDMAP
 
-NAME: gammafunk_its_a_trap
-TAGS: no_monster_gen no_trap_gen no_tele_into
-DEPTH: Crypt, D:$, Depths, Elf, Shoals, Spider, Snake, Swamp, Zot
-ORIENT: float
-KMASK: ^ = no_item_gen
-ITEM: any randart jewellery
+NAME:    gammafunk_its_a_trap
+TAGS:    no_monster_gen no_trap_gen no_tele_into
+# Allow placement in Vaults as a room.
+TAGS:    vaults_hard preserve_wall passable
+DEPTH:   Crypt, D:$, Depths, Elf, Snake, Spider, Pan, Vaults, Zot
+ORIENT:  float
+KMASK:   ^ = no_item_gen
+: item(dgn.loot_scrolls .. " / " .. dgn.loot_potions)
+ITEM:    any randart jewellery
 SHUFFLE: FGHI / JKLM
-NSUBST: D = ^ / ., E = ^ / ., I = . / "
-SUBST: FGH = ., JKLM = ", ' = ^., " = ^^.
-KFEAT: ^ = known zot trap
-MARKER: P = lua:transp_loc("its_a_trap_entry")
-MARKER: Q = lua:transp_dest_loc("its_a_trap_entry")
-MARKER: R = lua:transp_loc("its_a_trap_exit")
-MARKER: S = lua:transp_dest_loc("its_a_trap_exit")
+NSUBST:  D = ^ / ., E = ^ / ., I = . / "
+SUBST:   FGH = ., JKLM = ", ' = ^., " = ^^., d = dd$
+# Supplement the 8s in Crypt and Zot since OOD defs in these branches aren't
+# very deep.
+: if you.in_branch("Crypt") then
+KMONS:   2 = ancient lich
+NSUBST:  8 = 2 / 8
+: elseif you.in_branch("Pandemonium") then
+# 8 and 9 spawns aren't a thing in Pan, so replace these with scary things.
+KMONS:   2 = greater demon / nonbase demonspawn
+KMONS:   3 = executioner / brimstone fiend / ice fiend / tzitzimitl \
+           / hell sentinel
+SUBST:   8 = 39, 9 = 02
+: elseif you.in_branch("Zot") then
+KMONS:   2 = ancient lich / orb of fire / curse toe
+SUBST:   8 = 28
+: end
+KFEAT:   ^ = zot trap
+MARKER:  P = lua:transp_loc("its_a_trap_entry")
+MARKER:  Q = lua:transp_dest_loc("its_a_trap_entry")
+MARKER:  R = lua:transp_loc("its_a_trap_exit")
+MARKER:  S = lua:transp_dest_loc("its_a_trap_exit")
+: if you.in_branch("Vaults") then
+SUBST:   - = .
+: else
+CLEAR:   -
+: end
 MAP
-       cccccccccc
-      cccccccccccc
-     ccccccccccccccc
-  ccccccccDcc^ccccccccccc
-  ccccccc.D....cccccccccc
-  cccccc".c.ccc..cccccccc
-  ccc.''."c"I.0'".cd^$ccc
-  ccc''.c"GHc.9'".c'*'nnn
-..nnn^..cFc"I.0'"^+|^$nnn..
-@PnnnQ.^."""c.8'""c'*RnnnS@
-..nnn^..cJc"M.0'"^+|^$nnn..
-  ccc''.c"KLc.9'".c'*'nnn
-  ccc.''."c"M.0'".c|^dccc
-  cccccc".c.ccc..cccccccc
-  ccccccc.E....cccccccccc
-  ccccccccEcc^ccccccccccc
-     ccccccccccccccc
-      cccccccccccc
-       cccccccccc
+      ------------
+     --cccccccccc--
+    --cccccccccccc---
+ ----ccccccccccccccc------
+ -ccccccccDcc^ccccccccccc-
+ -ccccccc.D....cccccccccc-
+ -cccccc".c.ccc..cccccccc-
+ -ccc.''."c"I.0'".ce^dccc-
+ -ccc''.c"GHc.9'".c'*'qqq-
+..qqq^..cFc"I.0'"^+|^dqqq..
+@PqqqQ.^."""c.8'""c'*RqqqS@
+..qqq^..cJc"M.0'"^+|^dqqq..
+ -ccc''.c"KLc.9'".c'*'qqq-
+ -ccc.''."c"M.0'".c|^eccc-
+ -cccccc".c.ccc..cccccccc-
+ -ccccccc.E....cccccccccc-
+ -ccccccccEcc^ccccccccccc-
+ ----ccccccccccccccc------
+    --cccccccccccc---
+     --cccccccccc--
+      ------------
 ENDMAP
 
-NAME: gammafunk_dig_for_victory
-TAGS: no_monster_gen no_item_gen no_trap_gen
-# Must not place on a branch end so it can place downhatch
-DEPTH: Crypt, !Crypt:$, D:13-, !D:$, Depths, !Depths:$, Pan, Zot, !Zot:$
+NAME:   gammafunk_dig_for_victory
+TAGS:   no_monster_gen no_trap_gen
+# Allow placement in Vaults as a room.
+TAGS:   vaults_hard preserve_wall passable
+# This must not place on a branch end so it can place a downhatch.
+DEPTH:  Crypt, !Crypt:$, D:6-, !D:$, Depths, !Depths:$, Pan, Vaults
+DEPTH:  Zot, !Zot:$
 ORIENT: float
-KPROP: 1DEFHJKR|*$em = no_tele_into
-ITEM: any wand ident:all, any randart jewellery
+KPROP: 1DEFHJKR|*$efm = no_tele_into
+{{
+-- Guarantee at least 5 charges, and on-average give 50% more than usual.
+item("wand of enslavement charges:" .. tostring(5 + crawl.random2(6)) ..
+     "ident:all")
+item(dgn.loot_scrolls .. " / " .. dgn.loot_potions)
+}}
+ITEM:   any randart jewellery
 # Do these substs now so they can be cleaned up by branch.
 NSUBST: D = 1:8 / 2:9 / 0, F = 1:8 / 2:9 / 0, J = 1:8 / 2:9 / 0, e = 2:e / |
 SUBST:  E = 89..
-: if you.in_branch("D") or you.in_branch("Depths") then
+: if you.in_branch("D") or you.in_branch("Depths")
+:    or you.in_branch("Vaults") then
 KMONS: 1H = deep troll earth mage
-COLOUR: n = lightblue
+COLOUR: q = lightblue
 COLOUR: c = blue
-TILE:   n = dngn_transparent_stone_blue
+TILE:   q = DNGN_TRANSPARENT_RUNED_STONE_BLUE
 : else
-KMONS: 1HK = cacodemon
+KMONS: 1HK = titivilus
 :   if you.in_branch("Crypt") then
 KMONS: 2 = ancient lich
 NSUBST: 8 = 2 / 8
 :   elseif you.in_branch("Pandemonium") then
 # 8 and 9 spawns aren't a thing in Pan, so replace these with scary things.
 KMONS: 2 = greater demon / nonbase demonspawn
-KMONS: 3 = executioner / brimstone fiend / ice fiend / tzitzimitl \
-           / hell sentinel
+KMONS: 3 = oxarmordth / rhuddgoch / Vetrifl / tzitzimitl \
+           / gwarchodwr
 SUBST: 8 = 39, 9 = 02, H = K
 :   elseif you.in_branch("Zot") then
 KMONS: 2 = ancient lich / orb of fire / curse toe
 SUBST: 8 = 28
 :   end
-COLOUR: n = yellow
+COLOUR: q = yellow
 COLOUR: c = brown
-TILE:   n = dngn_transparent_stone_yellow
+TILE:   q = DNGN_TRANSPARENT_RUNED_STONE_YELLOW
 : end
-KFEAT: H = >
-KFEAT: K = {
 MARKER: P = lua:transp_loc("dig_for_victory_entry")
 MARKER: Q = lua:transp_dest_loc("dig_for_victory_entry")
 MARKER: R = lua:transp_loc("dig_for_victory_exit")
 MARKER: S = lua:transp_dest_loc("dig_for_victory_exit")
+: if you.in_branch("Vaults") then
+SUBST:   ' = .
+: else
+CLEAR:   '
+: end
 MAP
-       cccccccccccccccc
-       cccccccccccccccc
-       cccccccccccccccc
-       ccn1mmDDDEEmmmcc
-  ccccccnnnnmDDDEmmmmccccccc
-  c.....mmmmmmmmmmmmmnem*mec
-  c.....mmmmmmmmmmmmmmmmmmmn
-  c.....mmmmmmmmmmmmmn*m$m$n
- .n.....mmmmmmmmmmJJmmmmmmmn.
-@PnQ.d.........mmmHJmn|mRm|nS@
- .n.....mmmmmmmmmmJJmmmmmmmn.
-  c.....mmmmmmmmmmmmmn*m$m$n
-  c.....mmmmmmmmmmmmmmmmmmmn
-  c.....mmmmmmmmmmmmmnem*mec
-  ccccccnnnnmFFFEmmmmccccccc
-       ccn1mmFFFEEmmmcc
-       cccccccccccccccc
-       cccccccccccccccc
-       cccccccccccccccc
+      ''''''''''''''''''
+      'cccccccccccccccc'
+      'cccccccccccccccc'
+      'cccccccccccccccc'
+ ''''''ccq1mmDDDEEmmmcc''''''
+ 'ccccccqqqqmDDDEmmmmccccccc'
+ 'c.....mmmmmmmmmmmmmme.*.ec'
+ 'c.....mmmmmmmmmmmmmq.....q'
+ 'c.....mmmmmmmmmmmmmm*.$.$q'
+ .q.....mmmmmmmmmmJJmq.....q.
+@PqQ.d.........mmmHJ..|.R.|qS@
+ .q.....mmmmmmmmmmJJmq.....q.
+ 'c.....mmmmmmmmmmmmmm*.$.$q'
+ 'c.....mmmmmmmmmmmmmq.....q'
+ 'c.....mmmmmmmmmmmmmme.*.ec'
+ 'ccccccqqqqmFFFEmmmmccccccc'
+ ''''''ccq1mmFFFEEmmmcc''''''
+      'cccccccccccccccc'
+      'cccccccccccccccc'
+      'cccccccccccccccc'
+      ''''''''''''''''''
 ENDMAP
 
 NAME:    emtedronai_trogs_sanctum
 TAGS:    no_monster_gen no_trap_gen no_tele_into no_item_gen
-DEPTH:   D:13-, Depths
+# Allow placement in Vaults as a room.
+TAGS:    vaults_hard preserve_wall passable
+DEPTH:   D:6-, Orc, Vaults, Depths
 ORIENT:  float
-KITEM:   _ = necklace of bloodlust no_pickup / wrath of trog no_pickup
+FTILE:   qv.4-+Q'gn62~351*Y$*ef_ = FLOOR_ETCHED
+# Removed Wrath of Trog for flavour reasons. Bloodlust is just as solid and fitting a reward.
+KITEM:   _ = necklace of bloodlust no_pickup
 ITEM:    manual of armour w:30 / manual of fighting w:30 / \
-         manual of long blades / manual of axes / manual of whips & flails / \
+         manual of long blades / manual of axes & hammers / manual of whips & flails / \
          manual of polearms / manual of dodging / manual of shields
 ITEM:    executioner's axe good_item no_pickup w:5 / \
          battleaxe good_item randart no_pickup / \
@@ -9090,27 +9335,43 @@ ITEM:    executioner's axe good_item no_pickup w:5 / \
          glaive good_item randart no_pickup / \
          demon trident good_item no_pickup
 ITEM:    plate armour good_item randart w:20 no_pickup / \
-         crystal plate armour good_item no_pickup / \
+         crystal plate good_item no_pickup / \
          chain mail good_item randart no_pickup
 ITEM:    potion of berserk rage ident:type
 SHUFFLE: def
 KPROP:   .$*def123456 = bloody w:5 / nothing
-: if you.in_branch("Depths") then
-MONS:    patrolling juggernaut
-MONS:    deep troll w:15 / spriggan berserker w:15 / stone giant / \
-         iron troll w:5 / ettin w:5
-MONS:    deep elf annihilator / deep elf demonologist / titan / boggart / \
-         deep elf sorcerer / spriggan air mage / lich / vampire mage
-: else
+: if you.in_branch("D") then
 MONS:    patrolling ettin / patrolling iron troll
 MONS:    troll w:15 / two-headed ogre w:15 / cyclops w:5 / deep troll w:5
 MONS:    ogre mage / wizard / deep elf mage / boggart / necromancer
+: elseif you.in_branch("Orc") then
+MONS:    patrolling stone giant / patrolling ettin
+MONS:    troll w:15 / two-headed ogre w:15 / cyclops w:5 / deep troll w:5 \
+         / orc knight
+# The orcs mostly offer naughty elves to Trog's Sanctum, with a few naughty
+# orcs and ogres thrown in.
+MONS:    orc sorcerer w:5 / ogre mage w:5 / deep elf mage w:60 \
+         / deep elf sorcerer / deep elf demonologist / deep elf annihilator
+KMONS:   7 = deep elf elementalist
+SUBST:   5 = 7, " = m
+: elseif you.in_branch("Vaults") then
+MONS:    patrolling ettin / patrolling iron troll
+MONS:    two-headed ogre / cyclops / deep troll w:15 / stone giant
+MONS:    wizard / boggart / deep elf annihilator / deep elf demonologist \
+         / deep elf sorcerer / deep elf high priest / titan / lich
+# Depths
+: else
+MONS:    patrolling juggernaut
+MONS:    deep troll w:15 / spriggan berserker w:15 / stone giant / \
+         iron troll w:5 / ettin w:5
+MONS:    boggart / deep elf annihilator / deep elf demonologist / titan \
+         / deep elf sorcerer / spriggan air mage / lich / vampire mage
 : end
 MONS:    generate_awake moth of wrath, deep troll earth mage
 KMONS:   6 = silent spectre
 : dgn.delayed_decay(_G, '\'`', 'human skeleton')
 KFEAT:   _ = altar_trog
-KFEAT:   - = iron_grate
+KFEAT:   -" = iron_grate
 FTILE:   ` = floor_rough_lightred
 MARKER:  ` = lua:fog_machine { \
                cloud_type = "flame", pow_min = 10, pow_max = 10, delay = 10, \
@@ -9119,52 +9380,58 @@ MARKER:  P = lua:transp_loc("trogsanc_entry")
 MARKER:  Q = lua:transp_dest_loc("trogsanc_entry")
 MARKER:  6 = lua:transp_loc("trogsanc_exit")
 MARKER:  R = lua:transp_dest_loc("trogsanc_exit")
+COLOUR:  v = red
+TILE:    v = wall_lab_metal
+KFEAT:   ~ = runed_clear_door
+: if you.in_branch("Vaults") then
+SUBST:   E@ = ., F = @
+: else
+CLEAR:   EF
+: end
 MAP
-vvvvvvvv...@...vvvvvvvv
-vvvvvvvv.......vvvvvvvv
-vvvvvvvv.......vvvvvvvv
-vvvvvvvvnv.P.vnvvvvvvvv
-vvvvvvvv4vnnnv4vvvvvvvv
-vvvvvvvv-vnnnv-vvvvvvvv
-vvvvvvv..+.Q.+..vvvvvvv
-vvvvvv...+.'.+...vvvvvv
-vvvvv....v.g.v....vvvvv
-vvv`-..v-vnvnv-v..-`vvv
-vvvvv..-4vv6vv4-..vvvvv
-vvv4-22v-vn=nv-v22-4vvv
-vvv3v...$$e_f$$...v3vvv
-vvv3-....$*d*$....-3vvv
-vvv3v..Y..***..Y..v3vvv
-vvv5-......1......-5vvv
-vvvvv22.........22vvvvv
-vvvvv-v-vvnnnvv-v-vvvvv
-vvvvv4v`vvnnnvv`v4vvvvv
-vvvvvvvvv..R..vvvvvvvvv
-vvvvvvv4n.....n4vvvvvvv
-vvvvvvvvv..@..vvvvvvvvv
+EEEEEEEEEEEEFEEEEEEEEEEEE
+Evvvvvvvv"""@"""vvvvvvvvE
+Evvvvvvvv"""""""vvvvvvvvE
+Evvvvvvvv"""""""vvvvvvvvE
+Evvvvvvvvqv"P"vqvvvvvvvvE
+Evvvvvvvv4vqqqv4vvvvvvvvE
+Evvvvvvvv-vqqqv-vvvvvvvvE
+Evvvvvvv..+.Q.+..vvvvvvvE
+Evvvvvv...+.'.+...vvvvvvE
+Evvvvv....v.g.v....vvvvvE
+Evvv`-..v-vnvnv-v..-`vvvE
+Evvvvv..-4vv6vv4-..vvvvvE
+Evvv4"22v-vn~nv-v22"4vvvE
+Evvv3v...$$e_f$$...v3vvvE
+Evvv3"....$*d*$...."3vvvE
+Evvv3v..Y..***..Y..v3vvvE
+Evvv5"......1......"5vvvE
+Evvvvv22.........22vvvvvE
+Evvvvv-v-vvqqqvv-v-vvvvvE
+Evvvvv4v`vvqqqvv`v4vvvvvE
+Evvvvvvvvv""R""vvvvvvvvvE
+Evvvvvvv4q"""""q4vvvvvvvE
+Evvvvvvvvv""@""vvvvvvvvvE
+EEEEEEEEEEEEFEEEEEEEEEEEE
 ENDMAP
 
 NAME:    nzn_random_ring
-TAGS:    no_pool_fixup no_monster_gen no_trap_gen
+TAGS:    no_pool_fixup no_monster_gen no_trap_gen no_exits
 DEPTH:   D:4-, !D:$, Depths, !Depths:$, Lair, !Lair:$, Zot, !Zot:$
-NSUBST:  D = 4:0 / 4 = 0. / 4=^. / r / ., E = 20:W / 12:w
-NSUBST:  F = 9 / 4:0 / 4=0. / 4:r / 4=^. / ., H = 0 / 9 / 4=09.. / 2:r / .
+NSUBST:  D = 4=0 / 4=0. / 4=^. / r / ., E = 20=W / 12=w / .
+NSUBST:  F = 9 / 4=0 / 4=0. / 4=r / 4=^. / ., H = 0 / 9 / 4=09.. / 2=r / .
 NSUBST:  J = wl, K = 1 / } / s / K, 2 = 2 / G
 NSUBST:  h = 2:@ / c, j = 2:. / *:cv, k = . / *:bcv
-: if you.absdepth() < 8 then
-SHUFFLE: wW / LL
-SUBST:   9 = 0, 1 = 9:40 8, 2 = G, r = $%, s = *, ^ = ^.
-KFEAT:   ^ = shaft trap / teleport trap / alarm trap / dispersal trap
-: elseif you.in_branch("Dungeon") then
+: if you.in_branch("Dungeon") then
 MONS:    ice statue
 SHUFFLE: wW / LL
 SUBST:   9 = 09, 1 = 98, 2 = G:50 1, r = $%, s =  *|, } = }>
-KFEAT:   ^ = shaft trap / teleport trap / alarm trap / dispersal trap
+KFEAT:   ^ = shaft trap / teleport trap / alarm trap / congregation trap
 : elseif you.in_branch("Lair") then
 KMONS:   p = plant
 SHUFFLE: Ww / LL
 SUBST:   9 = 09, 1 = 98, r = $%, s = *|,  2G = ., bcv = x, } = }>, K = p
-KFEAT:   ^ = shaft trap / teleport trap / alarm trap / dispersal trap
+KFEAT:   ^ = shaft trap / teleport trap / alarm trap / congregation trap
 : elseif you.in_branch("Depths") then
 MONS:    juggernaut / ancient lich / golden dragon
 MONS:    obsidian statue / orange crystal statue
@@ -9173,7 +9440,7 @@ SUBST:   2 = G:50 2, r = $*, s = |
 KFEAT:   ^ = shaft trap / alarm trap / zot trap
 : elseif you.in_branch("Zot") then
 MONS:    ancient lich / orb of fire, orange crystal statue
-SUBST:   2 = G:50 2 r = *:30 |, wW = l, K = ), s = ]
+SUBST:   2 = G:50 2, r = *:30 |, wW = l, K = ), s = ]
 KFEAT:   ^ = zot trap
 : end
 SUBST: K = TUV, L = .
@@ -9203,7 +9470,7 @@ ENDMAP
 NAME:   minmay_skewed_foursquare
 TAGS:   transparent
 ORIENT: float
-DEPTH:  D:2-
+DEPTH:  D
 : if crawl.one_chance_in(10) then
 SUBST:  ' : y, y = y., z : .
 : elseif crawl.coinflip() then
@@ -9251,7 +9518,7 @@ ENDMAP
 NAME:   minmay_razor_zed
 TAGS:   transparent
 ORIENT: float
-DEPTH:  D:2-
+DEPTH:  D
 SUBST:  ' : x. ':2
 SUBST:  ' = x.
 SUBST:  x : xcvb
@@ -9289,42 +9556,42 @@ ENDMAP
 NAME:   minmay_recursive_quarters
 TAGS:   transparent
 ORIENT: float
-DEPTH:  D:2-
+DEPTH:  D
 # use an undiggable material to prevent players from wasting dig charges looking
 # for secrets in the solid parts
 SUBST:  y : c:9 v:1
 # average of 4 monsters per item (yes, one item is better than the other one)
 SUBST:  0 = 0...
 MAP
-xxxxxxxxxxx@xxbxxxxxxxx
-x.....................x
-x.....yyyy....b...yy..x
-x...yyyyyy....y...yyy.x
-x..yyyyyyb....yy..yyy.x
-x..yy*0000...yyy......x
-x.yyy0000b...yyyy.....x
-x.yyy0000y...yyyyyy...x
-x.yyy000yy..yyyyyyyyb.b
-x.yyb0byyy..yyyyyy....x
-x..........yyyy.......x
-x.........yyy.........x
-x.......yyyy..........x
-x....yyyyyy..yyyb0byy.x
-b.byyyyyyyy..yy000yyy.x
-x...yyyyyy...y0000yyy.x
-x.....yyyy...b0000yyy.x
-x......yyy...0000%yy..x
-x.yyy..yy....byyyyyy..x
-x.yyy...y....yyyyyy...x
-x..yy...b....yyyy.....x
-x.....................x
-xxxxxxxxbxx@xxxxxxxxxxx
+           @  b        
+ ..................... 
+ .....yyyy....b...yy.. 
+ ...yyyyyy....y...yyy. 
+ ..yyyyyyb....yy..yyy. 
+ ..yy*0000...yyy...... 
+ .yyy0000b...yyyy..... 
+ .yyy0000y...yyyyyy... 
+ .yyy000yy..yyyyyyyyb.b
+ .yyb0byyy..yyyyyy.... 
+ ..........yyyy....... 
+ .........yyy......... 
+ .......yyyy.......... 
+ ....yyyyyy..yyyb0byy. 
+b.byyyyyyyy..yy000yyy. 
+ ...yyyyyy...y0000yyy. 
+ .....yyyy...b0000yyy. 
+ ......yyy...0000%yy.. 
+ .yyy..yy....byyyyyy.. 
+ .yyy...y....yyyyyy... 
+ ..yy...b....yyyy..... 
+ ..................... 
+        b  @           
 ENDMAP
 
 NAME:   minmay_general_purpose_star
 TAGS:   transparent
 ORIENT: float
-DEPTH:  D:2-
+DEPTH:  D
 SUBST:  y : xcvb n:5
 SUBST:  z : xcvbnGTUV.
 SUBST:  0 = 0..
@@ -9362,7 +9629,7 @@ ENDMAP
 NAME:   minmay_evil_eye
 TAGS:   transparent
 ORIENT: float
-DEPTH:  D:2-
+DEPTH:  D
 SUBST:  0 = 0..
 MAP
 xxxxx
@@ -9384,7 +9651,7 @@ ENDMAP
 NAME:   minmay_spotlight
 TAGS:   transparent
 ORIENT: float
-DEPTH:  D:2-
+DEPTH:  D
 SUBST:  0 = 0...
 MAP
 xxxx
@@ -9402,7 +9669,7 @@ ENDMAP
 
 NAME:    minmay_polygon_palace
 ORIENT:  float
-DEPTH:   D:4-,Depths
+DEPTH:   D:2-,Depths
 SHUFFLE: ''"
 SUBST:   ' : +
 SUBST:   " : x
@@ -9438,7 +9705,7 @@ ENDMAP
 
 NAME:   minmay_clustersquares
 ORIENT: float
-DEPTH:  D:4-
+DEPTH:  D:2-
 SUBST:  x : cvb
 SUBST:  " : xcvbn .:50
 SUBST:  ' : xcvbn .:50
@@ -9461,7 +9728,7 @@ ENDMAP
 
 NAME:   minmay_angry_zag
 TAGS:   transparent
-DEPTH:  D:2-,Depths
+DEPTH:  D, Depths
 ORIENT: float
 SUBST:  0 = 0..
 SUBST:  ' : x.
@@ -9481,7 +9748,7 @@ ENDMAP
 
 NAME:   minmay_bubble_buster
 ORIENT: float
-DEPTH:  D:3-,Depths
+DEPTH:  D, Depths
 SUBST:  0 = 0...
 SUBST:  c : cvb
 MAP
@@ -9506,42 +9773,9 @@ xx00x+cc...cc....x
          xxxx
 ENDMAP
 
-NAME:   minmay_inner_zag
-TAGS:   transparent
-ORIENT: float
-DEPTH:  D:2-,Depths
-SUBST:  0 = 00.
-# 1/51 chance of tons of statues
-SUBST:  ' : xcvbn G:1
-MAP
-           xx.@.x
-          xx.'.xxx
-         xx.'.xx0xx
-        xx.'.xx.'.xx
-       xx.'.xx.'.'.xx
-      xx.'.xx.'.x.'.xx
-     xx.'.xx.'.xxx.'.xx
-    xx.'.xx.'.xx0xx.'.xx
-   xx.'.xx.'.xx.'.xx.'.xx
-  xx.'.xx.'.xx.'.'.xx.'.xx
- xx.'.xx.'.xx.'...'.xx.'.xx
-xx0'.xx0'.xx%%%%xx.'0xx.'0xx
- xx.'.xx.'...'.xx.'.xx.'.xx
-  xx.'.xx.'.'.xx.'.xx.'.xx
-   xx.'.xx.'.xx.'.xx.'.xx
-    xx.'.xx0xx.'.xx.'.xx
-     xx.'.xxx.'.xx.'.xx
-      xx.'.x.'.xx.'.xx
-       xx.'.'.xx.'.xx
-        xx.'.xx.'.xx
-         xx0xx.'.xx
-          xxx.'.xx
-           x.@.xx
-ENDMAP
-
 NAME:   minmay_octagon_keep
 ORIENT: float
-DEPTH:  D:3-, Depths
+DEPTH:  D:2-, Depths
 SUBST:  0 = 0.
 SUBST:  ' : .:40 cvbG
 MAP
@@ -9564,6 +9798,7 @@ cc0..cc . cc..0cc
  ccccc  @  ccccc
 ENDMAP
 
+# BCADDO: Flood when placing in Sewer
 NAME:   minmay_alternating_diamond
 TAGS:   transparent
 ORIENT: float
@@ -9593,7 +9828,7 @@ ENDMAP
 
 NAME:   minmay_inside_and_out
 ORIENT: float
-DEPTH:  D:11-, Depths
+DEPTH:  D:5-, Depths
 SUBST:  x : cvb
 SUBST:  9 = 000999..
 KMASK:  ' = !opaque
@@ -9635,7 +9870,7 @@ ENDMAP
 
 NAME:    minmay_chambers_of_ones
 ORIENT:  float
-DEPTH:   D:1-2
+DEPTH:   D:1
 SUBST:   x : xxxxxcccvb
 MAP
 xxxxxxxxxxxxxx
@@ -9653,7 +9888,7 @@ ENDMAP
 
 NAME:    minmay_chambers_of_twos
 ORIENT:  float
-DEPTH:   D:2-4
+DEPTH:   D:1-2
 SUBST:   x : xxxxxcccvb
 SHUFFLE: $%
 MAP
@@ -9677,7 +9912,7 @@ ENDMAP
 
 NAME:    minmay_chambers_of_threes
 ORIENT:  float
-DEPTH:   D:3-6
+DEPTH:   D:1-3
 SUBST:   x : xxxxxcccvb
 MAP
 xxxxxxxxxxxxxxxxxxxx
@@ -9695,7 +9930,7 @@ ENDMAP
 
 NAME:    minmay_chambers_of_fours
 ORIENT:  float
-DEPTH:   D:4-8
+DEPTH:   D:2-4
 SHUFFLE: xm / xm / xm / xm / xm / cn / cn / cn / vn / bn
 MAP
      xxxxxxx
@@ -9716,7 +9951,7 @@ ENDMAP
 
 NAME:    minmay_chambers_of_sixes
 ORIENT:  float
-DEPTH:   D:6-12
+DEPTH:   D:3-6
 SHUFFLE: xm / xm / xm / xm / xm / cn / cn / cn / vn / bn
 MAP
     xxxx
@@ -9734,7 +9969,7 @@ ENDMAP
 
 NAME:    minmay_chambers_of_sevens
 ORIENT:  float
-DEPTH:   D:7-14
+DEPTH:   D:3-7
 SUBST:   T = TTTTV
 SUBST:   x : xxxxxcccvb
 MAP
@@ -9766,7 +10001,7 @@ ENDMAP
 NAME:   minmay_slanted_spiral_squares
 TAGS:   transparent
 ORIENT: float
-DEPTH:  D:7-, Depths, Elf
+DEPTH:  D:3-, Depths, Elf
 SUBST:  ' = 0.., " = 09..
 SUBST:  c : ccccvb
 MAP
@@ -9798,7 +10033,7 @@ ENDMAP
 NAME:    minmay_complete_graph
 ORIENT:  float
 TAGS:    transparent
-DEPTH:   D:11-, Depths
+DEPTH:   D:5-, Depths
 # average of 16 0s, 8 9s, and 4 8s
 SUBST:   0 = 0 .:170, 9 = 9 .:140, 8 = 8 .:50
 SUBST:   x : xcvb, ! = .xcvbTV|9, ? : .:100 TTTTV
@@ -9838,10 +10073,11 @@ xx0x00xx99999xxx8xxx99999xx00x0xx
             xxx@G@xxx
 ENDMAP
 
+# BCADNOTE: No longer Float. Considering moving.
 NAME:   minmay_s_stair_smasher
 TAGS:   transparent
-ORIENT: float
-DEPTH:  D:7-14
+ORIENT: south
+DEPTH:  D:3-, !D:$
 SUBST:  1 = 0.
 MAP
 @.....                     .....@

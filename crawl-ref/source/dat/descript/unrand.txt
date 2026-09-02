@@ -3,7 +3,7 @@ Singing Sword
 
 An enchanted blade which loves nothing more than to sing to its owner, whether
 they want it to or not. The sword may sing so intensely that it radiates
-damaging sonic waves as you strike, especially in combat involving dangerous or
+damaging sonic waves as it strikes, especially in combat involving dangerous or
 numerous foes.
 %%%%
 Sulking Sword
@@ -41,16 +41,20 @@ weakness.
 %%%%
 staff of Olgreb
 
-A staff which was once wielded by the mighty wizard Olgreb. It increases the
-power of its wielder's poison magic, and can be evoked to activate its own
-venomous spells. Its touch may poison even resistant creatures, and it grants
-immunity to all venoms while wielded.
+A staff which was once wielded by the mighty alchemist and poison mage Olgreb. 
+It increases the power of its wielder's poison and transmutations magic and on
+successful cast of any poison spell expends an additional amount of the wielder's
+mana to transmute the poison in the environment.
 %%%%
 staff of Wucad Mu
 
-A crystal staff overflowing with magical energies. It can be evoked to restore
-large amounts of magical energy, but with the risk of damaging the user's mind.
-Its power depends on the wielder's Evocations skill.
+A crystal staff overflowing with magical energies. Its energy reduces the mana 
+cost of all spells while wielding it. Enhances the wielder's Charms and Hex spells.
+
+On melee, it deals much weaker damage than other enhancer staves; but drains
+the magical energy of the target making it less able to cast and restoring some 
+magical energy to the wielder. The strength of this melee effect depends on
+the wielder's Evocations and Spellcasting skills.
 %%%%
 Vampire's Tooth
 
@@ -61,12 +65,11 @@ restores a greater portion of life to its user than other vampiric weapons.
 scythe of Curses
 
 A scythe surrounded by an ominous aura of dread. It carries a terrible and
-highly irritating curse, which it busily inflicts on both the wielder and their
-enemies.
+ancient curse, which it busily inflicts on both the wielder and their enemies.
 %%%%
 sceptre of Torment
 
-An accursed golden sceptre, created by some unknown hellish power. When used in
+An accursed bone sceptre, created by some unknown hellish power. When used in
 combat, it causes agonising pain in all those unfortunate enough to gaze upon
 it, save for the wielder.
 %%%%
@@ -88,8 +91,8 @@ without draining the wielder's vitality in the process.
 sceptre of Asmodeus
 
 A bright ruby sceptre, carrying some of the powers of the arch-fiend Asmodeus.
-Evoking it can summon fiery demons from their infernal home to do your bidding,
-although they will not remain enslaved for long.
+Evoking it can summon fiery demons from their infernal home to do the wielder's
+bidding, although they will not remain enslaved for long.
 %%%%
 faerie dragon scales
 
@@ -117,7 +120,7 @@ reveals the machinations of those who would prefer to stay invisible.
 demon blade "Leech"
 
 An unerringly vampiric blade which gorges itself on drained life force every
-time it strikes.
+time it strikes, leaving behind a mess of blood and gore.
 %%%%
 dagger of Chilly Death
 
@@ -167,7 +170,7 @@ sword of jihad
 
 A sword made of one huge piece of crystal. Legend says it was the Shining One's
 gift to a worshipper. This blade is notorious for inducing bloodthirsty rage in
-both the wielder and all of his or her mortal followers.
+both the wielder and all of their mortal followers.
 %%%%
 arbalest "Hellfire"
 
@@ -207,9 +210,12 @@ A beautiful mithril axe, probably lost by some dwarven hero.
 Elemental Staff
 
 A powerful staff which used to belong to the leader of the Guild of Five
-Elements. In addition to the protection it provides, those skilled in
-Evocations may discharge powerful blasts of elemental energy when striking with
-it.
+Elements. The staff enhances the power of all elemental spells cast by its
+wielder. In addition to the protection it provides, those skilled in Evocations
+and elemental magic may discharge powerful blasts of elemental energy when 
+striking with it. Regardless of the element of the strike; the magical skill
+determining the damage is the highest of the wielder's four core elemental
+magic skills.
 %%%%
 heavy crossbow "Sniper"
 
@@ -333,6 +339,13 @@ the wearer to sense potential victims nearby. They also allow the wearer to
 easily find vulnerabilities when attacking unaware opponents, allowing
 effective stabbing attacks with any weapon.
 %%%%
+hood of the Assassin
+
+A soft hood, enchanted by members of the Assassin's Guild to allow the wearer
+to sense potential victims nearby. It also allows the wearer to easily spot
+vulnerabilities when attacking unaware opponents, allowing effective stabbing
+attacks with any weapon.
+%%%%
 Lear's hauberk
 
 A well-made golden hauberk that covers all of its wearer's body parts. It
@@ -347,12 +360,11 @@ The {{
 }}skin of some strange animal, native to cold and distant lands. It radiates
 the chill of its native habitat, slowing creatures from warmer climes.
 %%%%
-salamander hide armour
+salamander hide
 
 Most salamanders' bodies are consigned to the fiery depths from which they
-sprang. Rarely, though, salamanders instead preserve the skins of those that
-passed. The runes and decorations on this hide suggest it once belonged to a
-respected warrior or priest - perhaps even a king.
+sprang. Those that die on the surface leave hides that grant some protection
+from their natural hot environment and can be evoked for a hot-tempered rage.
 %%%%
 gauntlets of War
 
@@ -416,12 +428,9 @@ A phosphorescent cloak, woven of pure light beams.
 %%%%
 ratskin cloak
 
-A cloak stitched from the hides of hundreds of hell rats, by an enchantress
-with a magic loom and too much time on her hands. It provides excellent
-protection from rats of all kinds.
-
-It can be evoked to summon rats from the Dungeon to accompany the wearer,
-for a time.
+A cloak stitched from the hides of hundreds of hell rats by an enchantress with
+far too much time on her hands. Blows inflicted on the wearer will occasionally
+provoke rats concealed beneath the cloak to scurry out and assist.
 %%%%
 shield of the Gong
 
@@ -503,7 +512,7 @@ slither at almost a human's pace.
 Black Knight's horse barding
 
 A heavy barding made from pitch-black steel and inlaid with plates of black
-diamond. It once protected the steed of the Black Knight during his reign of
+diamond. It once protected the steed of the Black Knight during their reign of
 terror. Those who wear it become partially undead, gaining some of the benefits
 without the unfortunate downsides, although the great weight of metal and stone
 slows the wearer somewhat.
@@ -540,7 +549,7 @@ As you hold this axe your mind does not feel fully your own. Your body begins
 to exhibit strength far beyond its capabilities, and your movements become
 guided by Makhleb.
 %%%%
-moon troll leather armour
+moon troll leather
 
 A suit of armour rumoured to have been created by enchanting the hide of a
 now-extinct species of troll. Whether the name rings true or is merely
@@ -562,7 +571,6 @@ A large, iron-shod maul specialised for dealing massively powerful blows. Such
 power comes at a price: the maul's head is so heavy it takes a great length of
 time to lift it up for another swing.
 %%%%
-# TAG_MAJOR_VERSION == 34
 hat of the High Council
 
 A relic of some ancient wizarding war. Centuries later, it still crackles with
@@ -573,7 +581,7 @@ find it enhances the power of their spells.
 arc blade
 
 A blade somehow crafted from pure electricity. Striking an enemy with it
-occasionally unleashes powerful arcs of lightning.
+unleashes arcs of lightning.
 
 These may arc to other adjacent creatures, or back to the wielder, before
 eventually grounding out. It deals reduced damage when arcing to the wielder,
@@ -597,7 +605,7 @@ A huge mace imbued with potent fire magic. It fills those it strikes with
 inner flame, and offers protection against the resulting devastation as well
 as immunity to clouds of flame.
 %%%%
-orange crystal plate armour
+orange crystal plate
 
 A suit of armour carved from transparent orange crystal. It provides remarkable
 protection for both mind and body. The wearer can even channel psychic energies
@@ -609,7 +617,12 @@ Majin-Bo
 A staff inhabited by a mighty demon, tricked and trapped in this form long
 ago. To survive, she now offers tremendous arcane power at a small price: a
 tiny portion of the caster's life essence, taken alongside the magic used every
-time its wielder casts a spell.
+time its wielder casts a spell. Spells cast while wielding this staff become
+much more powerful, but always chaotic and evil; often lashing out with acid 
+or hellfire instead of their intended element.
+
+On melee, this staff deals additional damage based on the wielder's necromancy
+skill and heals the wielder by up to half the damage dealt.
 %%%%
 pair of quick blades "Gyre" and "Gimble"
 
@@ -624,7 +637,6 @@ contamination almost as effectively. Anyone reckless enough to place it on
 their head would find their magic regeneration dramatically increased, at the
 cost of multiplying any magical contamination received.
 %%%%
-# TAG_MAJOR_VERSION == 34
 crown of Eternal Torment
 
 A gold crown set with jet-black gems. It permanently afflicts its wearer with
@@ -672,7 +684,7 @@ Maxwell's thermic engine
 
 A strange sword, one blade blistering hot and the other icy cold. When it hits
 its target the thermal gradient increases. What causes this effect is unknown
-but it is rumored that otherworldly forces are involved.
+but it is rumoured that otherworldly forces are involved.
 %%%%
 demon trident "Rift"
 
@@ -680,3 +692,29 @@ A small wrinkle in the very fabric of reality, magically bound to a shaft by
 some mad acolyte of Lugonu. It possesses an unusually large reach that
 teleports its attack directly to its victim.
 %%%%
+staff of Battle
+
+A staff encased in vividly coloured scales, wrought by a long-forgotten wizard.
+It was the mage Iskenderun's favorite playtoy. The staff increases the power of
+its wielder's earth and charms magic. When danger looms, it conjures a battlesphere, 
+the strength of which depends on the wielder's skill with Charms and Earth.
+%%%%
+Klown Katapult
+
+A psychedelically coloured toy slingshot enhanced with the power of Klowns. 
+It generates infinite kream pies to fire, which may blind those that they hit.
+%%%%
+Jester's Cap
+
+A colourful hat adorned with noisy bells that seem to constantly call forth 
+the distant sounds of children and playgrounds. It once belonged to a favourite 
+toy of Xom, whose attention is drawn to whoever wears it. This 'special attention' 
+is even more chaotic than normal Xom worship!
+%%%%
+Cigotuvi's embrace
+
+Armour borne of rotten flesh and bone and gristle, held intact by the will of a
+long-dead sorcerer. The dreadful energies within it call to the bodies of the
+recently dead, sucking them in, protecting the wearer with a cocoon of carrion.
+This protection only lasts a short time, however - the ward against decay holds
+true within, but not without.

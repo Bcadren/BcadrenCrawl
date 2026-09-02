@@ -22,8 +22,6 @@ enum wm_event_type
     WME_RESIZE,
     WME_EXPOSE,
     WME_MOVE,
-    WME_FOCUSIN,
-    WME_FOCUSOUT,
     WME_NUMEVENTS = 15
 };
 
@@ -49,7 +47,7 @@ struct wm_keyboard_event
     wm_keysym keysym;
 };
 
-struct MouseEvent
+struct wm_mouse_event
 {
     enum mouse_event_type
     {
@@ -115,7 +113,7 @@ struct wm_event
     unsigned char type;
     wm_active_event active;
     wm_keyboard_event key;
-    MouseEvent mouse_event;
+    wm_mouse_event mouse_event;
     wm_resize_event resize;
     wm_expose_event expose;
     wm_quit_event quit;
@@ -167,9 +165,8 @@ public:
     virtual void delay(unsigned int ms) = 0;
 
     // Event functions
-    virtual int raise_custom_event() = 0;
     virtual int wait_event(wm_event *event, int timeout) = 0;
-    virtual unsigned int get_event_count(wm_event_type type) = 0;
+    virtual bool next_event_is(wm_event_type type) = 0;
     virtual void show_keyboard() = 0;
 
     // Display functions

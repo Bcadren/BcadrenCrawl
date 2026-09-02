@@ -19,8 +19,7 @@ enum class passive_t
     none = 0,
 
     /// The god prefers that items be cursed: acquirement grants cursed items,
-    /// enchant scrolls and miscasts preserve curse status, and remove curse
-    /// allows selecting a subset of items.
+    /// enchant scrolls and miscasts preserve curse status.
     want_curses,
 
     /// You detect the presence of portals.
@@ -37,9 +36,6 @@ enum class passive_t
 
     /// You detect the presence of items.
     detect_items,
-
-    /// You are better at searching for traps.
-    search_traps,
 
     /// You have innate see invisible.
     sinv,
@@ -95,6 +91,9 @@ enum class passive_t
     /// Your shadow casts attack spells alongside you.
     shadow_spells,
 
+    /// Monsters block LoS.
+    monster_shadows,
+
     /// No accuracy penalty in umbra. Gain stealth in umbra.
     nightvision,
 
@@ -141,9 +140,6 @@ enum class passive_t
     /// Warning about shapeshifters when they come to view.
     warn_shapeshifter,
 
-    /// Cleanse mutation potions (they only delete mutations).
-    cleanse_mut_potions,
-
     /// Torment resistance, piety dependent.
     resist_torment,
 
@@ -152,6 +148,9 @@ enum class passive_t
 
     /// Protection against necromancy miscasts and mummy death curses.
     miscast_protection_necromancy,
+
+    /// Increased duration of created derived undead.
+    extend_undead,
 
     /// Chance to extend berserk duration and avoid paralysis, piety dependent.
     extend_berserk,
@@ -186,23 +185,11 @@ enum class passive_t
     /// You are immune to slime covered walls
     slime_wall_immune,
 
-    /// Jiyva protects you from corrosion
-    resist_corrosion,
-
-    /// Items consumed by your fellow slimes restores your mana reserve
-    slime_mp,
-
-    /// Items consumed by your fellow slimes restores your health
-    slime_hp,
-
-    /// Jiyva summons jellies to protect you
-    jellies_army,
-
-    /// Jiyva allows jellies to eats off-level and seen items.
-    jelly_eating,
-
     /// Jiyva adjusts your stats as needed.
     fluid_stats,
+
+    /// Jiyva turns you into a slime.
+    mutation_gifts,
 
     // You have a chance to spawn slimes when hit hard
     spawn_slimes_on_hit,
@@ -259,6 +246,12 @@ enum class passive_t
     wu_jian_lunge,
     wu_jian_whirlwind,
     wu_jian_wall_jump,
+
+    // Bahamut's Protection or Tiamat's retribution (checks this and an prop)
+    bahamut_tiamat_passive,
+
+    // Kiku's Instant sublimation of blood casts.
+    power_of_blood,
 };
 
 enum ru_interference
@@ -269,11 +262,11 @@ enum ru_interference
 };
 
 int apply_pity(int power);
+bool god_gives_passive(god_type god, passive_t passive);
 bool have_passive(passive_t passive);
 bool will_have_passive(passive_t passive);
 int rank_for_passive(passive_t passive);
 int chei_stat_boost(int piety = you.piety);
-void jiyva_eat_offlevel_items();
 void ash_init_bondage(player *y);
 void ash_check_bondage(bool msg = true);
 string ash_describe_bondage(int flags, bool level);
@@ -298,13 +291,17 @@ void shadow_monster_reset(monster *mon);
 void dithmenos_shadow_melee(actor* target);
 void dithmenos_shadow_throw(const dist &d, const item_def &item);
 void dithmenos_shadow_spell(bolt* orig_beam, spell_type spell);
+void jiyva_passive_slime();
 void uskayaw_prepares_audience();
 void uskayaw_bonds_audience();
 
-void wu_jian_wall_jump_effects(const coord_def& old_pos);
-bool wu_jian_has_momentum(wu_jian_attack_type);
 void wu_jian_heaven_tick();
+void wu_jian_decrement_heavenly_storm();
+void wu_jian_end_heavenly_storm();
+void wu_jian_wall_jump_effects();
+bool wu_jian_has_momentum(wu_jian_attack_type);
 bool wu_jian_post_move_effects(bool did_wall_jump,
                                const coord_def& initial_position);
 void wu_jian_end_of_turn_effects();
-void end_heavenly_storm();
+
+void mount_drake_breath(bolt* orig_beam);

@@ -2,6 +2,8 @@
 
 #include <set>
 
+#include "macros.h"
+
 // Character info has its own top-level tag, mismatching majors don't break
 // compatibility there.
 // DO NOT BUMP THIS UNLESS YOU KNOW WHAT YOU'RE DOING. This would break
@@ -232,13 +234,35 @@ enum tag_minor_version
     TAG_MINOR_SINGULAR_THEY,       // Add singular they pronouns
     TAG_MINOR_ABYSS_UNIQUE_VAULTS, // Separate abyss vault tracking from main dungeon
     TAG_MINOR_INCREMENTAL_PREGEN,  // save tracks whether the game is an incremental pregen game
+    TAG_MINOR_REMOVE_AMMO,         // Removal of Ammunition/Missile items
+    TAG_MINOR_CURSE_REWORK,        // Change from basic curses to negative artProp curses
+    TAG_MINOR_DRACONIAN_REWORK,    // Save file changes related to the new Draconian mutation set.
+    TAG_MINOR_ZOT_DRACONIAN_COLOURS, // Have to adjust the monster-type.h enum to allow more draconian colours...
+    TAG_MINOR_DUNGEON_SHORTENING,  // Shortening the dungeon also lots of clean-up and restoring the ability to drop items down shafts
+    TAG_MINOR_MANGROVE_MUSHROOM,   // Allowing Mangroves outside of Swamp and Giant Mushrooms outside of slime.
+    TAG_MINOR_MOUNTS,              // Adding a mount to player.h
+    TAG_MINOR_MOUNT_REGEN,         // Additional part of mounts in player.h
+    TAG_MINOR_MOUNT_ENERGY,        // Mount melee part to player.h
+    TAG_MINOR_GOLDIFY_MANUALS,     // Manuals disintegrate when picked up, like books.
+    TAG_MINOR_JIYVA_REWORK,        // Draining old Jiyva mutations to start Jiyva rework.
+    TAG_MINOR_ICICLE_CASCADE,      // Adding this spell also removed Ignition. Tagging adjust spellbook should this affect a player.
+    TAG_MINOR_YRED_SPELLS,         // Save spells with enslaved souls. Save monsters spawn items for enslaved soul use.
+    TAG_MINOR_MISCAST_MUTATIONS,   // Add unique temporary mutations from miscasts.
+    TAG_MINOR_TRACK_REGEN_ITEMS,   // Regen items take effect only after maxhp is reached
+    TAG_MINOR_MORGUE_SCREENSHOTS,  // Screenshots morgue section
+    TAG_MINOR_MONSTER_TYPE_SIZE,   // Consistently marshall monster_type enums
+    TAG_MINOR_REVEALED_TRAPS,      // No skill check to spot traps
+    TAG_MINOR_MERGE_VETOES,        // Merge veto tags in vaults
+    TAG_MINOR_APPENDAGE,           // Change beastly appendage
+    TAG_MINOR_REALLY_UNSTACK_EVOKERS, // Unstack all evokers
+    TAG_MINOR_SETPOLY,             // Despoiler polymorph wands
+    TAG_MINOR_MOSTLY_REMOVE_AMMO,  // Mainline's ammo removal (used for new quiver adjustments Bcadren-side).
+    TAG_MINOR_IMPROVE_STAFF_ACQ,   // A full seen brand array, like weapons and armours used for Staves for Acquirement and Troves.
+    TAG_MINOR_SUMMON_XP,           // Save xp 'stolen' by summons to empower the summon later.
 #endif
     NUM_TAG_MINORS,
     TAG_MINOR_VERSION = NUM_TAG_MINORS - 1
 };
-
-// Marshalled as a byte in several places.
-COMPILE_CHECK(TAG_MINOR_VERSION <= 0xff);
 
 // tags that affect loading bones files. If you do save compat that affects
 // ghosts, these must be updated in addition to the enum above.
@@ -270,6 +294,15 @@ struct save_version
     static save_version current_bones()
     {
         return save_version(TAG_MAJOR_VERSION, *bones_minor_tags.crbegin());
+    }
+
+    static save_version minimum_supported()
+    {
+#if TAG_MAJOR_VERSION == 34
+        return save_version(33, 17);
+#else
+        return save_version(TAG_MAJOR_VERSION, 0);
+#endif
     }
 
     bool valid() const
@@ -324,12 +357,7 @@ struct save_version
 
     bool is_ancient() const
     {
-        return valid() &&
-#if TAG_MAJOR_VERSION == 34
-            (major < 33 && minor < 17);
-#else
-            major < TAG_MAJOR_VERSION;
-#endif
+        return valid() && *this < minimum_supported();
     }
 
     bool is_compatible() const

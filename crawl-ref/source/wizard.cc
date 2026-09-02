@@ -3,6 +3,7 @@
  * @brief Wizard mode command handling.
 **/
 #include "AppHdr.h"
+#include "options.h"
 
 #ifdef WIZARD
 
@@ -17,7 +18,6 @@
 #include "dgn-shoals.h" // wizard_mod_tide
 #include "files.h" // save_game
 #include "god-companions.h" // wizard_list_companions
-#include "god-passive.h" // jiyva_eat_offlevel_items
 #include "hiscores.h"
 #include "items.h"
 #include "luaterp.h" // debug_terp_lua
@@ -55,7 +55,7 @@ static void _do_wizard_command(int wiz_command)
         return;
     }
 
-    case 'a': acquirement(OBJ_RANDOM, AQ_WIZMODE); break;
+    case 'a': acquirement_menu(); break;
     case 'A': wizard_set_all_skills(); break;
     case CONTROL('A'):
         if (player_in_branch(BRANCH_ABYSS))
@@ -104,10 +104,7 @@ static void _do_wizard_command(int wiz_command)
     case CONTROL('I'): debug_item_statistics(); break;
 
     // case 'j': break;
-    case 'J':
-        mpr("Running Jiyva off-level sacrifice.");
-        jiyva_eat_offlevel_items();
-        break;
+    // case 'J': break;
     // case CONTROL('J'): break;
 
     case 'k': wizard_set_xl(true); break;
@@ -133,7 +130,7 @@ static void _do_wizard_command(int wiz_command)
     case 'P': debug_place_map(true); break;
     case CONTROL('P'): wizard_list_props(); break;
 
-    // case 'q': break;
+    case 'q': wizard_drac_colour();  break;
     // case 'Q': break;
     case CONTROL('Q'): wizard_toggle_dprf(); break;
 
@@ -271,6 +268,7 @@ void handle_wizard_command()
         you.wizard = true;
         you.suppress_wizard = false;
         redraw_screen();
+        update_screen();
         if (crawl_state.cmd_repeat_start)
         {
             crawl_state.cancel_cmd_repeat("Can't repeat re-activating wizard "
@@ -303,6 +301,7 @@ void handle_wizard_command()
         you.wizard = true;
         save_game(false);
         redraw_screen();
+        update_screen();
 
         if (crawl_state.cmd_repeat_start)
         {
@@ -387,6 +386,7 @@ void enter_explore_mode()
         you.explore = true;
         save_game(false);
         redraw_screen();
+        update_screen();
 
         if (crawl_state.cmd_repeat_start)
         {
@@ -408,6 +408,7 @@ int list_wizard_commands(bool do_redraw_screen)
                        "<w>k</w>      change experience level and skills\n"
                        "<w>l</w>      change experience level\n"
                        "<w>Ctrl-P</w> list props\n"
+                       "<w>q</w>      change draconian colour\n"
                        "<w>r</w>      change character's species\n"
                        "<w>s</w>      set skill to level\n"
                        "<w>x</w>      gain an experience level\n"
@@ -516,7 +517,10 @@ int list_wizard_commands(bool do_redraw_screen)
 
     int key = show_keyhelp_menu(cols.formatted_lines());
     if (do_redraw_screen)
+    {
         redraw_screen();
+        update_screen();
+    }
     return key;
 }
 #endif // defined(WIZARD)

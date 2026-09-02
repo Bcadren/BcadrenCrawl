@@ -4,6 +4,7 @@
 
 #include <climits>
 
+#include "cio.h"
 #include "colour.h"
 #include "lang-fake.h"
 #include "libutil.h"
@@ -299,6 +300,13 @@ formatted_string::operator += (const formatted_string &other)
     return *this;
 }
 
+const formatted_string &
+formatted_string::operator += (const string& other)
+{
+    ops.emplace_back(other);
+    return *this;
+}
+
 int formatted_string::width() const
 {
     // Just add up the individual string lengths.
@@ -410,7 +418,7 @@ int formatted_string::find_last_colour() const
     return LIGHTGREY;
 }
 
-formatted_string formatted_string::chop(int length) const
+formatted_string formatted_string::chop(int length, bool pad) const
 {
     formatted_string result;
     for (const fs_op& op : ops)
@@ -429,6 +437,8 @@ formatted_string formatted_string::chop(int length) const
         else
             result.ops.push_back(op);
     }
+    if (pad && length > 0)
+        result += string(length, ' ');
 
     return result;
 }
@@ -543,7 +553,7 @@ void formatted_string::fs_op::display() const
             ::textcolour(colour);
         break;
     case FSOP_TEXT:
-        ::cprintf("%s", text.c_str());
+        wrapcprintf("%s", text.c_str());
         break;
     }
 }

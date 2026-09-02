@@ -2,15 +2,21 @@
 
 #include "jobs.h"
 
-#include "enum.h"
+#include "art-enum.h"
+#include "artefact.h" // For Jester
 #include "errors.h"
 #include "item-prop.h"
+#include "items.h"
 #include "libutil.h"
 #include "mapdef.h"
 #include "mon-util.h"
 #include "ng-setup.h"
+#include "playable.h"
 #include "player.h"
+#include "skills.h"
 #include "stringutil.h"
+#include "tilepick.h"
+#include "xom.h"
 
 #include "job-data.h"
 
@@ -43,9 +49,9 @@ const char *get_job_name(job_type which_job)
 
     if (which_job == JOB_XOM)
     {
-        if (you.xom_insult == "")
+        if (!you.props.exists(XOM_AX_TITLE_KEY))
             xom_insult_name();
-        return you.xom_insult.c_str();
+        return you.props[XOM_AX_TITLE_KEY].get_string().c_str();
     }
     return _job_def(which_job).name;
 }
@@ -118,6 +124,36 @@ bool job_custom_stats(job_type job)
 
 void give_job_equipment(job_type job)
 {
+    if (job == JOB_JESTER)
+    {
+        item_def &item(you.inv[11]);    
+        item.base_type = OBJ_WEAPONS;
+        item.sub_type  = WPN_HUNTING_SLING;
+        item.quantity  = 1;
+        make_item_unrandart(item, UNRAND_KLOWN);
+        origin_set_startequip(item);
+        you.equip[EQ_WEAPON0] = 11;
+
+        item_def &hat(you.inv[10]);
+        hat.base_type = OBJ_ARMOURS;
+        hat.sub_type  = ARM_HAT;
+        hat.quantity  = 1;
+        make_item_unrandart(hat, UNRAND_JESTER_CAP);
+        origin_set_startequip(hat);
+        you.equip[EQ_HELMET] = 10;
+        you.unrand_reacts.set(EQ_HELMET);
+
+        item_def * robe = newgame_make_item(OBJ_ARMOURS, ARM_ROBE);
+
+        if (robe)
+        {
+            robe->props["worn_tile_name"] = "robe_jester";
+            bind_item_tile(*robe);
+        }
+
+        return;
+    }
+
     item_list items;
     for (const string& it : _job_def(job).equipment)
         items.add_item(it);
@@ -130,7 +166,7 @@ void give_job_equipment(job_type job)
         if (spec.props.exists("plus"))
             plus = spec.props["plus"];
         newgame_make_item(spec.base_type, spec.sub_type, max(spec.qty, 1),
-                          plus, spec.ego);
+                                            plus, spec.ego);
     }
 }
 
@@ -143,16 +179,14 @@ void give_job_skills(job_type job)
         int amount = entry.second;
         if (skill == SK_WEAPON)
         {
-            const item_def *weap = you.weapon();
+            const item_def *weap = you.slot_item(EQ_WEAPON0);
             skill = weap ? item_attack_skill(*weap) : SK_UNARMED_COMBAT;
             //XXX: WTF?
             if (you.species == SP_FELID && job == JOB_FIGHTER)
                 amount += 2;
-            // Don't give throwing hunters Short Blades skill.
-            if (job_gets_ranged_weapons(job) && !(weap && is_range_weapon(*weap)))
-                skill = SK_THROWING;
         }
-        you.skills[skill] += amount;
+        if (!is_useless_skill(skill))
+            you.skills[skill] += amount;
     }
 }
 
@@ -186,17 +220,22 @@ bool job_recommends_species(job_type job, species_type species)
 // A random valid (selectable on the new game screen) job.
 job_type random_starting_job()
 {
-    job_type job;
-    do {
-        job = static_cast<job_type>(random_range(0, NUM_JOBS - 1));
-    } while (!is_starting_job(job));
-    return job;
+    const auto jobs = playable_jobs();
+    return jobs[random2(jobs.size())];
 }
 
-// Ensure the job isn't JOB_RANDOM/JOB_VIABLE and it has recommended species
-// (old disabled jobs have none).
 bool is_starting_job(job_type job)
 {
-    return job < NUM_JOBS
-        && !_job_def(job).recommended_species.empty();
+    return job_type_valid(job)  // Ensure the job isn't RANDOM/VIABLE/UNKNOWN
+        && !job_is_removed(job);
+}
+
+bool job_is_removed(job_type job)
+{
+    return _job_def(job).recommended_species.empty();
+}
+
+vector<species_type> job_recommended_species(job_type job)
+{
+    return _job_def(job).recommended_species;
 }

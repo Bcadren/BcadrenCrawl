@@ -18,7 +18,6 @@ aptitudes:
   slings: 3
   bows: 3
   crossbows: 3
-  throwing: 3
   armour: 3
   dodging: 3
   stealth: 4
@@ -45,14 +44,14 @@ levelup_stats: []
 levelup_stat_frequency: 28
 mutations:
   1:
+    MUT_SOFT_FLESH: 1
     MUT_LOW_MAGIC: 1
     MUT_GODS_PITY: 2
     MUT_MUTATION_RESISTANCE: 1
+    MUT_GOBLINS_GREED: 1
 fake_mutations:
   - long: Your stats never grow through leveling.
     short: stagnant stats
-  - long: Your goblin ancestry allows you to find more gold. (+20%)
-    short: goblin's greed
 recommended_jobs:
   - JOB_FIGHTER
   - JOB_BERSERKER
@@ -66,6 +65,8 @@ recommended_weapons:
   - SK_POLEARMS
   - SK_MACES_STAVES
   - SK_LONG_BLADES
-  - SK_THROWING
   - SK_CROSSBOWS
-create_enum: False
+  
+# start TAG_MAJOR_VERSION == 34
+create_enum: false
+# end TAG_MAJOR_VERSION

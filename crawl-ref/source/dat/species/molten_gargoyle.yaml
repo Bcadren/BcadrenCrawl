@@ -1,0 +1,73 @@
+﻿create_enum: false
+enum: SP_MOLTEN_GARGOYLE
+monster: MONS_MOLTEN_GARGOYLE
+name: "Molten Gargoyle"
+short_name: "MG"
+difficulty: Simple
+difficulty_priority: 70
+aptitudes:
+  xp: -1
+  hp: -3
+  mp_mod: 0
+  mr: 3
+  fighting: 1
+  short_blades: -1
+  long_blades: -1
+  axes: -1
+  polearms: -1
+  whips_and_flails: -2
+  maces_and_staves: -1
+  slings: -2
+  bows: -2
+  crossbows: -2
+  armour: False
+  dodging: 1
+  stealth: -1
+  shields: 1
+  necromancy: -3
+  translocations: -1
+  transmutations: 2
+  air_magic: -2
+  ice_magic: -3
+  fire_magic: 3
+  earth_magic: 2
+  poison_magic: -2
+str: 5
+int: 8
+dex: 11
+levelup_stat_frequency: 4
+levelup_stats:
+  - int
+  - dex
+species_flags:
+  - hairless
+mutations:
+  1:
+    MUT_ARTIFICIAL_FLESH: 1
+    MUT_ROT_IMMUNITY: 1
+    MUT_NEGATIVE_ENERGY_RESISTANCE: 1
+    MUT_PETRIFICATION_RESISTANCE: 1
+    MUT_SHOCK_RESISTANCE: 1
+    MUT_UNBREATHING: 1
+    MUT_BREATHE_MAGMA: 1
+    MUT_CORE_MELDING: 2
+    MUT_HEAT_RESISTANCE: 3
+    MUT_COLD_VULNERABILITY: 2
+  14:
+    MUT_BIG_WINGS: 1
+  18:
+    MUT_BREATHE_MAGMA: 1
+fake_mutations:
+  - long: You are resistant to torment.
+    short: torment resistant
+  - long: You regenerate faster while walking on lava.
+    short: lava walking
+recommended_jobs:
+  - JOB_FIGHTER
+  - JOB_BERSERKER
+  - JOB_WIZARD
+  - JOB_FIRE_ELEMENTALIST
+  - JOB_EARTH_ELEMENTALIST
+recommended_weapons:
+  - SK_MACES_STAVES
+  - SK_CROSSBOWS

@@ -15,7 +15,7 @@ knife of Accuracy
 
 Tas ir gandrīz nekļūdīgi precīzs.
 %%%%
-salamander hide armour
+salamander hide
 
 Ādas bruņas, kas izgatavotas no salamandru ādas.
 %%%%

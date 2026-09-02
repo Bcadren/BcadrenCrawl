@@ -1,6 +1,6 @@
 enum: SP_TROLL
 monster: MONS_TROLL
-name: Troll
+name: "Troll"
 adjective: Trollish
 difficulty: Simple
 difficulty_priority: 40
@@ -16,10 +16,9 @@ aptitudes:
   whips_and_flails: -2
   polearms: -2
   maces_and_staves: -1
-  slings: -4
+  slings: -1
   bows: -4
   crossbows: -4
-  throwing: -1
   armour: -2
   dodging: -2
   stealth: -5
@@ -47,12 +46,11 @@ levelup_stats:
   - str
 mutations:
   1:
-    MUT_TOUGH_SKIN: 3
+    MUT_SOFT_FLESH: 1
     MUT_REGENERATION: 1
-    MUT_CLAWS: 3
+    MUT_CLAWS: 2
     MUT_GOURMAND: 1
-    MUT_FAST_METABOLISM: 3
-    MUT_SHAGGY_FUR: 1
+    MUT_FAST_METABOLISM: 2
 recommended_jobs:
   - JOB_FIGHTER
   - JOB_MONK
@@ -64,4 +62,7 @@ recommended_jobs:
 recommended_weapons:
   - SK_MACES_STAVES
   - SK_UNARMED_COMBAT
-create_enum: False
+
+# start TAG_MAJOR_VERSION == 34
+create_enum: false
+# end TAG_MAJOR_VERSION

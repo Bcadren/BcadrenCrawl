@@ -45,7 +45,7 @@ function callback.grunt_crypt_arrival_guards_awaken(data,triggerable,trigger,mar
         crawl.mpr("You hear grinding stone!", "warning");
     end
     for slave in iter.slave_iterator("trap_sarcophagus", 1) do
-        if dgn.feature_name(dgn.grid(slave.x, slave.y)) == "granite_statue" then
+        if dgn.feature_name(dgn.grid(slave.x, slave.y)) == "sarcophagus" then
             dgn.terrain_changed(slave.x, slave.y, "floor", false)
             dgn.colour_at(slave.x, slave.y, "lightgray")
             dgn.create_monster(slave.x, slave.y,
@@ -72,13 +72,13 @@ function crypt_loot_plus(e)
   local amulet = "amulet of regeneration randart good_item"
   -- One drop-off of these,
   e.kitem("d = double sword w:5 " .. drain .." / triple sword w:5 " .. drain ..
-          " / quick blade " .. drain .. " / executioner's axe " .. drain ..
+          " / tanto " .. drain .. " / executioner's axe " .. drain ..
           " / eveningstar " .. drain .. " / bardiche " .. drain ..
           " / lajatang " .. drain)
   e.kitem("e = great sword " .. pain .." / battleaxe " .. pain ..
           " / great mace " .. pain .. " / glaive " .. pain ..
           " / quarterstaff " .. pain)
-  e.kitem("f = great sword " .. vamp .." / quick blade " .. vamp ..
+  e.kitem("f = great sword " .. vamp .." / tanto " .. vamp ..
           " / battleaxe " .. vamp .. " / great mace " .. vamp ..
           " / glaive " .. vamp)
   e.kitem("g = " .. ring .. ", " .. ring .. " / " .. amulet .. " w:2, " ..
@@ -88,13 +88,11 @@ function crypt_loot_plus(e)
           "bloodbane / leech / sword_of_zonguldrok / " ..
           "finisher / scythe_of_curses / majin-bo / sceptre_of_torment / " ..
           "undeadhunter")
-  e.kitem("i = necronomicon / " .. book .. "necromutation / " ..
-          book .. "death's_door / " .. book .. "haunt / " ..
-          book .. "borgnjor's_revivification / " .. book .. "infestation")
+  e.kitem("i = manual of necromancy / book of unlife")
   e.kitem("j = lamp of fire w:15 / phial of floods w:15 / " ..
           "fan of gales w:15 / crystal ball of energy / " ..
-          "staff of energy ident:type, staff of death / staff of power / " ..
-          "staff of wizardry / any magical staff w:5")
+          "staff of transmutation ident:type, staff of death / " ..
+          "any magical staff w:5")
   e.subst("d = d:20 ef g:20")
   e.subst("h = h:5 ij")
 end
@@ -349,7 +347,7 @@ ENDMAP
 # It's been undisturbed for so long, cobwebs are starting to form.
 NAME:   grunt_crypt_arrival_webbed
 TAGS:   extra uniq_crypt_arrival no_monster_gen no_trap_gen no_item_gen
-KFEAT:  ^ = known web trap / w:20 floor
+KFEAT:  ^ = web trap / w:20 floor
 DEPTH:  Crypt:1
 WEIGHT: 30
 ORIENT: south
@@ -419,9 +417,8 @@ SUBST:  HI = G
   lua_marker('G', props_marker {trap_sarcophagus=1,
                                 veto_dig="veto",
                                 veto_shatter="veto"})
-  set_feature_name("granite_statue", "sarcophagus")
 }}
-KFEAT:  G = granite_statue
+KFEAT:  G = sarcophagus
 SUBST:  J = V
 SUBST:  C = c
 MAP
@@ -668,8 +665,8 @@ ENDMAP
 NAME:    minmay_shadows
 ORIENT:  northwest
 DEPTH:   Crypt, Tar
-MONS:    shadow, soul eater, tzitzimitl
-ITEM:    any misc
+MONS:    shadow, saelneytandi, tzitzimitl
+ITEM:    lantern of shadows
 SUBST:   A : x., B : x., C : x., E : x., F : x.
 : if you.in_branch("Tar") then
 NSUBST:  d = 1:} / 1:)
@@ -736,7 +733,7 @@ DEPTH:  Crypt
 MONS:   mummy, guardian mummy, ushabti
 KMONS:  4 = guardian mummy
 KMONS:  5 = mummy priest
-KMONS:  6 = greater mummy
+KMONS:  6 = royal mummy
 SUBST:  1 = 2231
 KITEM:  345 = |
 MAP
@@ -1065,7 +1062,7 @@ DEPTH:   Crypt
 # Yred nearly-all-melee set, Kiku necro-casters set, ghosts set, tomb set.
 MONS:    minotaur zombie / ettin zombie / skeletal warrior w:20
 MONS:    death knight, bone dragon w:14 / profane servitor
-MONS:    necromancer / vampire mage w:6 / soul eater w:2
+MONS:    necromancer / vampire mage w:6 / saelneytandi w:2
 MONS:    vampire mage / deep elf death mage, lich / reaper w:2
 MONS:    shadow wraith / phantasmal warrior / ghost crab w:4
 KMONS:   8 = eidolon / flayed ghost
@@ -1318,7 +1315,7 @@ MONS: freezing wraith, shadow wraith
 KMONS: | = ancient lich
 KITEM: | = plate armour good_item ego:cold_resistance \
            / ice dragon scales good_item \
-           / crystal plate armour good_item ego:cold_resistance w:5 \
+           / crystal plate good_item ego:cold_resistance w:5 \
            / executioner's axe good_item ego:freezing w:5 \
            / battleaxe good_item ego:freezing \
            / lajatang good_item ego:freezing \
@@ -1328,7 +1325,7 @@ KITEM: | = plate armour good_item ego:cold_resistance \
            / great mace good_item ego:freezing \
            / eveningstar good_item ego:freezing \
            / bardiche good_item ego:freezing \
-           / quick blade good_item  ego:freezing w:5
+           / tanto good_item  ego:freezing w:5
 MARKER: V = lua:fog_machine { cloud_type = "freezing vapour", pow_min = 0, \
                               pow_max = 10, delay = 20, size = 3, \
                               walk_dist = 0, excl_rad = 0 }
@@ -1443,7 +1440,7 @@ MONS:   wraith / freezing wraith / shadow wraith / spectral thing / \
         hungry ghost / w:15 shadow / w:5 nothing
 # mummy layout - rare
 : else
-MONS:   greater mummy
+MONS:   royal mummy
 MONS:   sphinx
 MONS:   mummy priest
 MONS:   mummy priest
@@ -1625,6 +1622,7 @@ PLACE:  Crypt:$
 MARKER: m = lua:portal_desc {wall_phase = 1}
 KFEAT:  m = iron_grate
 KMASK:  1 = opaque
+KPROP:  1 = no_tele_into
 MONS:   patrolling lich / patrolling ancient lich
 MONS:   bone dragon / curse skull / curse toe
 MONS:   flying skull / skeletal warrior / skeleton
@@ -1677,7 +1675,7 @@ KFEAT:  p = .
 KMONS:  p = withered plant
 ####### hidden skeleton; sometimes good pain weapon, or draining short sword
 KMONS:  ! = skeletal warrior ; w:2 dagger ego:pain | short sword ego:acid |\
-                               w:2 rapier ego:pain | w:1 quick blade ego:pain
+                               w:2 rapier ego:pain | w:1 tanto ego:pain
 KFEAT:  o = granite_statue
 SUBST:  B = b %
 KITEM:  b = any book
@@ -1717,7 +1715,7 @@ KMONS:  S = shadow / wraith / freezing wraith / shadow wraith / wight
 KMONS:  t = fire giant skeleton / fire dragon skeleton
 KMONS:  X = w:1 curse skull / w:19 revenant
 : else
-KMONS:  t = w:20 hell knight / smoke demon / red devil
+KMONS:  t = w:20 hell knight / mygdarth / cythraul
 KMONS:  X = w:1 curse skull / w:19 hell knight
 : end
 ####### Randomisation of doors
@@ -1839,7 +1837,7 @@ MONS:   jumping spider / wolf spider / redback / w:19 nothing
 MONS:   w:5 wraith / phantasmal warrior / eidolon / w:5 freezing wraith / w:5 nothing
 MONS:   wyvern skeleton / w:30 nothing
 MONS:   w:2 ushabti / w:3 guardian mummy / w:2 mummy
-MONS:   w:5 patrolling mummy priest / w:1 patrolling greater mummy
+MONS:   w:5 patrolling mummy priest / w:1 patrolling royal mummy
 KMONS:  z = patrolling curse skull
 SHUFFLE: 9H
 : if crawl.coinflip() then
@@ -1859,13 +1857,15 @@ KMONS:  F = patrolling bone dragon
 KFEAT:  _ = altar_kikubaaqudgha
 KMONS:  9 = patrolling ancient lich
 KMONS:  H = w:20 patrolling lich / patrolling ancient lich
-KMONS:  0 = patrolling reaper w:5 / patrolling soul eater
+KMONS:  0 = patrolling reaper w:5 / patrolling saelneytandi
 KMONS:  A = patrolling deep elf death mage
 KMONS:  B = necromancer
-KMONS:  C = hellwing
+KMONS:  C = vlerk
 KMONS:  E = skeleton w:13 / nothing
 KMONS:  F = patrolling reaper
 : end
+KPROP:  ijkl = no_tele_into
+SUBST:  i = *, j = -, k = 0, l = <
 SUBST:  n : ncc
 : set_feature_name("granite_statue", "gravestone")
 : set_feature_name("tree", "dead tree")
@@ -1895,11 +1895,11 @@ ttttT.t.T.............ccc-cccc-C'C-cccc-ccc..T...............T...t..tc3333333ctt
 tttttT.....cccccccccccccc-cVcC-'''-CcVc-cccccccccccccc.........T...tpcccnnnccctt
 ttttT..t..cc----+---------c-+-''x''-+-c---------+--E-cc....vvvv.T.t.Tttttttttttt
 ttttTt.....n-B--cccmmcccccc-c--'''--c-ccccccmmcccEEE-n..T..v44vT....Tttttttttttt
-ttttT..T..ccEEE-ccc00cc-----cc--'--cc-----cc00ccc-EEEcc....v--v....t.Ttttttttttt
-tttTt.T....n----cc--cc--ccccccc---ccccccc--cc--cc-E--n.....-vvv...t...Tttttttttt
-ttT.......ccc+ccc*-cc--ccccccccc+ccccccccc--cc-*ccc+ccc.........T....tTttttttttt
-ttT..t555..cc-cc**cc--ccccccc-------ccccccc--cc**cc-cc....T.......T....Ttttttttt
-tttT.55T..ccc-c<*ccc+cc-------AV-VA-------cc+ccc*<c-ccc.............t...Tttttttt
+ttttT..T..ccEEE-ccckkcc-----cc--'--cc-----cckkccc-EEEcc....v--v....t.Ttttttttttt
+tttTt.T....n----ccjjcc--ccccccc---ccccccc--ccjjcc-E--n.....-vvv...t...Tttttttttt
+ttT.......ccc+cccijcc--ccccccccc+ccccccccc--ccjiccc+ccc.........T....tTttttttttt
+ttT..t555..cc-cciicc--ccccccc-------ccccccc--cciicc-cc....T.......T....Ttttttttt
+tttT.55T..ccc-cliccc+cc-------AV-VA-------cc+cccilc-ccc.............t...Tttttttt
 ttttT5t....cc-cccc-EE-c-B-xxxx'''''xxxx-B-c----cccc-cc...vvvvvvv..T...t.Tttttttt
 tttttT....ccc+ccccEEEEc---xxxx'''''xxxx---c0--0cccc+ccc..v---4--v....t.Ttttttttt
 ttttT..t...n--'F-c-EE-c---xxxx''_''xxxx---c----c--'B-n...v-xxxx-v..T..tTtttttttt
@@ -1956,7 +1956,7 @@ ENDMAP
 #  skeletal ([ancient] liches, bone dragons, ancient champions)
 #  vampire (Jory, vampire [knight / mage], dancing weapons)
 #  ghostly (revenant, eidola, shadow dragon)
-#  mummy (greater mummy, mummy priests, sphinx)
+#  mummy (royal mummy, mummy priests, sphinx)
 #
 # Loot:
 #  roughly similar loot to evilmike's haunted forest
@@ -2000,7 +2000,7 @@ MONS:   generate_awake shadow dragon / generate_awake ghost moth
 SUBST:  2 = ., ' = 2, " = 4
 : else
 MONS:   patrolling guardian mummy w:7 / patrolling ushabti w:3
-MONS:   greater mummy
+MONS:   royal mummy
 MONS:   mummy priest / ushabti w:6
 MONS:   guardian mummy ; long sword | great sword | \
         battleaxe | war axe | broad axe . chain mail w:15 | plate armour w:1
@@ -2096,7 +2096,7 @@ KMONS:   Q = flayed ghost / shadow w:20
 
 # Boss tier monsters.
 : if crawl.one_chance_in(4) then
-KMONS:   R = Khufu, greater mummy
+KMONS:   R = Khufu, royal mummy
 KMONS:   S = mummy priest
 KMONS:   T = guardian mummy
 : elseif crawl.one_chance_in(3) then
@@ -2187,7 +2187,7 @@ PLACE:   Crypt:$
 ORIENT:  north
 MONS:    ancient champion, lich / revenant, jiangshi / ghoul w:2
 MONS:    profane servitor / bone dragon / curse toe / \
-         greater mummy w:2 / ancient lich w:2
+         royal mummy w:2 / ancient lich w:2
 MONS:    skeletal warrior ; halberd | glaive | bardiche w:5
 MONS:    freezing wraith w:20 / shadow wraith w:20 / flayed ghost
 MONS:    zombie w:20 / skeleton w:20 / simulacrum / nothing w:25

@@ -191,7 +191,7 @@ corpse
 
 Trup. Możesz oprawić go aby uzyskać jadalne mięso.
 %%%%
-crystal plate armour
+crystal plate
 
 Niewiarygodnie ciężka ale też i nieziemsko efektywna zbroja z litego kawału
 wytrzymałego kryształu.
@@ -555,29 +555,6 @@ scroll of blinking
 Ten zwój pozwala czytającemu przenieść się na krótki dystans, z pełną precyzją.
 Jak każdy kontrolowany teleport, powoduje to magiczne skażenie.
 %%%%
-scroll of brand weapon
-
-Ten zwój trwale nadaje broni którą trzymasz w ręce zdolność bardziej
-efektywnego wyrządzania krzywdy bliźniemu. Nie zadziała to jeśli broń ta już ma
-jakąś trwałą magiczną markę. Z drugiej strony, jeśli jakiś czar lub efekt nadał
-tej broni tymczasowe markowanie, zostanie ono utrwalone. Marki związane z
-którymś z bogów (Trog: antymagia, Lugonu: zniekształcenie, Kikuubaaqudgha:
-cierpienie, Świetlisty: święty gniew) nie mogą być utrwalone w ten sposób. Zaś
-Xom (chaos) jest, powiedzmy, nie do końca przewidywalny: utrwalenie może się
-powieść, kowadło może spaść z jasnego nieba, albo, któż to wie...
-%%%%
-scroll of curse armour
-
-Ten zwój przeklina jakąś ubraną część uzbrojenia.
-%%%%
-scroll of curse jewellery
-
-Ten zwój przeklina jakiś założony amulet lub pierścień.
-%%%%
-scroll of curse weapon
-
-Ten zwój przeklina trzymaną w dłoni broń.
-%%%%
 scroll of fear
 
 Ten zwój tworzy chwilową iluzję wokół czytającego — wszystkim którzy go widzą
@@ -606,11 +583,6 @@ scroll of random uselessness
 Kolejny głupi żart nudzących się czarodziei — ten zwój może mieć jeden z wielu
 różnych efektów, ale zawsze jest to coś niemal zupełnie bez żadnego
 zastosowania.
-%%%%
-scroll of remove curse
-
-Odczytanie tego zwoju usuwa wszystkie przekleństwa rzucone na przedmioty
-przylegające do twego ciała.
 %%%%
 scroll of summoning
 
@@ -713,7 +685,7 @@ Błogosławiony trójząb uformowany w świętym ogniu, z trzema zębami
 symbolizującymi połączoną potęgę trójcy dobrych bogów. Jest to ulubiona broń
 sług Świetlistego.
 %%%%
-troll leather armour
+troll leather
 
 Zaczarowana zbroja ze skóry trolla. Jest twardsza od zwykłej skórzanej zbroi, a
 także daje nosicielowi część zdolności regeneracji właściwej trollom (chyba że

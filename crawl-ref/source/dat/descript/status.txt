@@ -13,9 +13,7 @@ You can't eat any more for now.
 %%%%
 Fast status
 
-All of your actions are 50% faster. This causes magical contamination over
-time, and may cause dangerous levels of contamination if you were already
-contaminated before gaining this status.
+All of your actions are 50% faster.
 %%%%
 Invis status
 
@@ -35,8 +33,8 @@ teleportation.
 %%%%
 Fly status
 
-You fly above the ground, and are able to cross water and lava or fight above
-shallow water without penalties. Most types of flight will time out – be
+You are flying above the ground, and are able to cross water and lava or fight
+above shallow water without penalties. Most types of flight will time out – be
 careful what you are above when that happens!
 %%%%
 Agi status
@@ -46,8 +44,8 @@ and stealth.
 %%%%
 Brill status
 
-You are unnaturally smart. This provides bonuses to your intelligence,
-spellcasting success, and spellpower.
+You are unnaturally smart, and gain a bonus to the power of your spells as well
+as halving their mana cost (rounding up) and making them easier to cast.
 %%%%
 Might status
 
@@ -61,20 +59,17 @@ temporary regeneration.
 %%%%
 RMsl status
 
-You repel missiles, improving your chance to evade them. This effect, if
-provided by a spell, has a chance to expire with every projectile it repels;
-it otherwise lasts indefinitely.
+You repel missiles, improving your chance to evade them.
 %%%%
 DMsl status
 
-You deflect missiles, greatly improving your chance to evade them. This effect,
-if provided by a spell, has a chance to expire with every projectile it
-deflects; it otherwise lasts indefinitely.
+You deflect missiles, greatly improving your chance to evade them. This effect
+has a chance to expire with every projectile it deflects.
 %%%%
 Touch status
 
-Your unarmed attacks no longer deal damage, but have a chance of confusing
-monsters that they hit.
+Your attacks deal no damage, but have a chance of confusing monsters that they
+hit.
 %%%%
 MR++ status
 
@@ -87,6 +82,11 @@ unable to make most actions other than moving and attacking. The status will
 wear off very quickly unless you are attacking monsters, and when it expires
 you will be slowed and unable to berserk again for a short duration, and may fall
 asleep from exhaustion as well.
+%%%%
+-Berserk status
+
+You are recovering from your berserk rage, and are unable to berserk again for
+a short duration.
 %%%%
 Hungry status
 
@@ -186,6 +186,11 @@ or by breaking line of sight with them.
 -Tele status
 
 You are prevented from teleporting or blinking.
+%%%%
+-Move status
+
+You are prevented from moving, blinking, or teleporting. (You can still take
+other actions.)
 %%%%
 Mark status
 
@@ -322,6 +327,11 @@ You are temporarily invulnerable to harm, but are brought close to death in the
 process and cannot be affected by healing while the effect is active. After the
 spell expires, it cannot be immediately recast.
 %%%%
+-DDoor status
+
+You are still close to death's doorway, and cannot recast Death's Door for a
+short duration.
+%%%%
 Quad status
 
 QUAD DAMAGE!
@@ -366,6 +376,11 @@ Tornado status
 
 You are in the eye of a mighty hurricane. After the tornado fades, it cannot be
 called forth again for a short time.
+%%%%
+-Tornado status
+
+You are surrounded by unstable winds, and cannot recast Tornado for a short
+duration.
 %%%%
 Liquid status
 
@@ -412,7 +427,7 @@ attacks which increase every time you slay a foe in combat.
 %%%%
 Toxic status
 
-You are radiating toxic energy, and will continously inflict poison on all
+You are radiating toxic energy, and will continuously inflict poison on all
 nearby creatures.
 %%%%
 Recite status
@@ -420,6 +435,11 @@ Recite status
 You are reciting Zin's laws to nearby monsters, with a range of effects
 depending on the target. After finishing a recitation, it cannot be repeated
 for a short time.
+%%%%
+-Recite status
+
+You have recently finished reciting Zin's laws, and cannot recite again for a
+short duration.
 %%%%
 rF- status
 
@@ -444,6 +464,11 @@ Dragoncall status
 You are calling forth mighty dragons to attack your foes. Each dragon which
 answers the call will drain your magical energy. After the call ends, it cannot
 be issued again for a short time.
+%%%%
+-Dragoncall status
+
+You have recently called forth dragons, and cannot recast Dragon's Call for a
+short duration.
 %%%%
 Abj status
 
@@ -506,11 +531,6 @@ You are unable to cast spells.
 Channel status
 
 You are channeling magical energy.
-%%%%
-+Cast status
-
-You may cast spells with insufficient reserves of magic, but doing so will
-cause you to briefly lose access to your magic after the spell is cast.
 %%%%
 Spider status
 
@@ -696,13 +716,16 @@ including recasting the spell, will end it.
 Lash status
 
 You are moving at supernatural speed, causing movement actions to become
-instant. Any martial attacks made while moving in this way are increased in
-effectiveness.
+instant. Any martial attacks made while moving in this way deal increased
+damage and never miss.
 %%%%
-Hevn status
+Storm status
 
-Heavenly clouds are boosting your damage and precision. Performing martial
-attacks against multiple enemies prevents the storm from settling.
+You are surrounded by a storm of heavenly clouds. While the storm rages, your
+combat accuracy and damage are substantially increased, and striking enemies
+with martial attacks increases this bonus. The storm weakens over time and
+fades away once the bonus reaches zero. The heavenly clouds prevent
+invisibility, and obscure the vision of those outside the storm.
 %%%%
 SlowM status
 
@@ -710,7 +733,7 @@ Your movement is slowed on this liquid ground.
 %%%%
 Alive status
 
-You can't drink any more for now.
+You are full of blood, and regenerate health quickly.
 %%%%
 Aug status
 
@@ -719,12 +742,14 @@ You receive spellcasting and slaying bonuses that scale with your health.
 Beogh status
 
 You can swear fealty to Beogh, the god of cave orcs, through a nearby priest.
+To do so, press <white>Y</white> on the <white>a</white>bility menu.
 %%%%
 Bloodless status
 
-Your body is entirely devoid of blood. You are are immune to poison and
-negative energy, significantly resist cold, resist torment, and do not
-heal.
+Your body is entirely devoid of blood, reducing your maximum health and
+preventing you from regenerating health when monsters are visible. You are
+immune to poison and negative energy, significantly resist cold, and resist
+rotting and torment.
 %%%%
 Bribe status
 
@@ -755,25 +780,9 @@ Lava status
 
 You are currently flying over lava.
 %%%%
-Near Bloodless status
-
-Your body is almost entirely devoid of blood. You resist poison and
-cold, significantly resist negative engergy, have a slow metabolism, and
-heal slowly.
-%%%%
 Recall status
 
 You are recalling your allies.
-%%%%
-Thirsty status
-
-You are thirsty. You resist poison and cold, significantly resist
-negative engergy, have a slow metabolism, and heal slowly.
-%%%%
-Very Thirsty status
-
-You are very thirsty. You resist poison and cold, significantly resist
-negative engergy, have a slow metabolism, and heal slowly.
 %%%%
 Water status
 {{
@@ -792,4 +801,8 @@ Water status
 -Wiz status
 
 Your control over your magic has been sapped.
+%%%%
+Attr status
+
+Enemies are magically pulled toward you.
 %%%%

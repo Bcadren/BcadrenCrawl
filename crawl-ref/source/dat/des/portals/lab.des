@@ -46,7 +46,7 @@ function lab_intruders(e)
   e.subst("2 : 2:60 3:30 4")
   e.subst("0 : 5:30 678")
   e.item("any weapon w:14 no_pickup / any armour w:14 no_pickup / \
-          any missile w:3 no_pickup / any wand no_pickup / \
+          any wand no_pickup / \
           any scroll no_pickup / any jewellery no_pickup / gold no_pickup w:19")
 end
 }}
@@ -229,7 +229,7 @@ dgn.delayed_decay_extra(_G, 'A', 'dwarf skeleton', 'battleaxe / '
    .. "eveningstar / executioner's axe w:2 / "
    .. 'great mace w:2, helmet good_item / '
    .. 'pair of gloves good_item / pair of boots good_item, '
-   .. 'plate armour / crystal plate armour w:2' )
+   .. 'plate armour / crystal plate w:2' )
 
  -- Elf caster. 4 items.
 dgn.delayed_decay_extra(_G, 'B', 'elf skeleton', 'robe, randbook, '
@@ -237,11 +237,11 @@ dgn.delayed_decay_extra(_G, 'B', 'elf skeleton', 'robe, randbook, '
 
  -- Spriggan stabber. 4 items.
 dgn.delayed_decay_extra(_G, 'C', 'spriggan skeleton', 'dagger good_item / '
-   .. 'quick blade w:1, ration, cloak, randbook disc:hexes / any book' )
+   .. 'tanto w:1, ration, cloak, randbook disc:hexes / any book' )
 
  -- Centaur hunter of Fedhas. 3-4 (stacks of) items.
 dgn.delayed_decay_extra(_G, 'D', 'centaur skeleton', 'shortbow good_item / longbow w:2, '
-   .. 'arrow good_item, ration / nothing, '
+   .. 'ration / nothing, '
    .. 'helmet / centaur barding / pair of gloves' )
 
  -- Dwarven artificer. 3 items.
@@ -268,22 +268,22 @@ dgn.delayed_decay_extra(_G, 'I', 'human skeleton', 'any armour, any weapon, '
  -- Orc fighter. 3 items.
 dgn.delayed_decay_extra(_G, 'J', 'orc skeleton', 'heater shield / scutum w:2, '
    .. 'long sword / eveningstar / broad axe / demon blade, '
-   .. 'plate armour / crystal plate armour w:2' )
+   .. 'plate armour / crystal plate w:2' )
 
  -- Dwarven heavy armour earth elementalist. 3-4 items.
 dgn.delayed_decay_extra(_G, 'K', 'dwarf skeleton', 'plate armour, '
    .. 'randbook disc:earth / any book, staff of earth / any magical staff, '
    .. 'ring of wizardry / any jewellery / nothing w:20' )
 
- -- Halfling warper. 4-5 items.
-dgn.delayed_decay_extra(_G, 'L', 'halfling skeleton', 'tomahawk ego:dispersal / sling bullet, '
+ -- Kobold warper. 4-5 items.
+dgn.delayed_decay_extra(_G, 'L', 'kobold skeleton', 'fustibalus, '
    .. 'randbook disc:translocation / any book, scroll of blinking / '
    .. 'scroll of teleportation / nothing w:45, '
    .. 'robe / leather armour, short sword good_item' )
 
  -- Ogre, maybe an ogre mage of some kind. 4-5 items.
 dgn.delayed_decay_extra(_G, 'M', 'ogre skeleton', 'giant club good_item / '
-   .. 'giant spiked club good_item, robe, large rock, ration, '
+   .. 'giant spiked club good_item, robe, mangonel good_item, ration, '
    .. 'any book / nothing' )
 }}
 MAP
@@ -684,7 +684,7 @@ ENDMAP
 # Baited teleport trap - this is evil!
 NAME:    labyrinth_baited_teleportation_trap
 TAGS:    extra
-KFEAT:   Y = known permanent teleport trap / known zot trap / .
+KFEAT:   Y = permanent teleport trap / zot trap / .
 KITEM:   Y = any good_item
 SHUFFLE: cxv
 WEIGHT:  1
@@ -727,7 +727,7 @@ ENDMAP
 # Maybe it's time to try starting over from someplace else?
 NAME: nicolae_lab_do_over
 TAGS: extra
-KFEAT: t = known teleport trap
+KFEAT: t = teleport trap
 MAP
 .....
 .x.x.

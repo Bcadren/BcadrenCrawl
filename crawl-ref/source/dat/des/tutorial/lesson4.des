@@ -34,11 +34,11 @@ ORIENT:  encompass
 KFEAT:   ABCDEF = .
 COLOUR:  ABCDEFdefg = lightblue
 FTILE:   ABCDEFdefg = tutorial_pad
-ITEM:    randbook numspells:2 spells:magic_dart&mephitic_cloud title:Introduction_to_Spellcasting owner:player
+ITEM:    randbook numspells:2 spells:sting&mephitic_cloud title:Introduction_to_Spellcasting owner:player
 ITEM:    ring of magical power not_cursed
-ITEM:    staff of wizardry not_cursed
+ITEM:    staff of poison not_cursed
 ITEM:    ration
-MONS:    training dummy ; stone q:20
+MONS:    training dummy
 MONS:    bat skeleton, goblin skeleton
 MONS:    rat, goblin
 KMONS:   8 = training dummy hd:3 hp:7
@@ -103,8 +103,8 @@ ORIENT:  encompass
 KFEAT:   ABCDE = .
 COLOUR:  dABCDEe = lightblue
 FTILE:   dABCDEe = tutorial_pad
-ITEM:    scroll of amnesia ident:type
-ITEM:    randbook numspells:1 spells:animate_skeleton title:Necromancy_for_Newbies owner:player
+ITEM:    potion of amnesia ident:type
+ITEM:    randbook numspells:1 spells:animate_dead title:Necromancy_for_Newbies owner:player
 ITEM:    never_decay bat skeleton / never_decay goblin; nothing skeleton
 ITEM:    never_decay ball python skeleton / never_decay jackal skeleton
 ITEM:    heater shield not_cursed

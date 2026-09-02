@@ -191,7 +191,7 @@ corpse
 
 Un cadáver. Puedes descuartizarlo para conseguir trozos de carne comestible.
 %%%%
-crystal plate armour
+crystal plate
 
 Una armadura de cristal, increíblemente pesada, pero extremadamente efectiva.
 %%%%
@@ -546,10 +546,6 @@ Este pergamino revela los alrededores del lector.
 
 Revelará la presencia de puertas secretas, pero no es lo suficientemente
 poderoso para ver más allá de ellas, o en zonas completamente cerradas.
-%%%%
-scroll of remove curse
-
-Leyendo este pergamino remueve maldiciones de objetos que estás usando.
 %%%%
 scroll of teleportation
 

@@ -99,7 +99,7 @@
 #  chance of lava pools instead of water pools (never mixed).
 #
 NAME:   layout_cave_pools
-DEPTH:  D:4-, Depths
+DEPTH:  D, !D:2, Depths
 WEIGHT: 10, 15 (Depths)
 ORIENT: encompass
 TAGS:   overwritable layout allow_dup unrand layout_type_open_caves

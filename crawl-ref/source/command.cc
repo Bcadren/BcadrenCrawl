@@ -26,23 +26,20 @@
 #include "lookup-help.h"
 #include "macro.h"
 #include "message.h"
-#include "output.h"
 #include "prompt.h"
 #include "scroller.h"
 #include "showsymb.h"
-#include "sound.h"
 #include "state.h"
 #include "stringutil.h"
 #include "syscalls.h"
 #include "unicode.h"
 #include "version.h"
 #include "viewchar.h"
-#include "view.h"
 
 using namespace ui;
 
 #ifdef USE_TILE
- #include "tiledef-gui.h"
+ #include "rltiles/tiledef-gui.h"
 #endif
 
 static const char *features[] =
@@ -101,10 +98,7 @@ static string _get_version_features()
     {
         if (you.fully_seeded)
         {
-            result += make_stringf(
-                "Game seed: %" PRIu64 ", levelgen mode: %s",
-                crawl_state.seed, you.deterministic_levelgen
-                                                ? "deterministic" : "classic");
+            result += seed_description();
             if (Version::history_size() > 1)
                 result += " (seed may be affected by game upgrades)";
         }
@@ -216,7 +210,7 @@ static void _print_version()
     auto title_hbox = make_shared<Box>(Widget::HORZ);
 #ifdef USE_TILE
     auto icon = make_shared<Image>();
-    icon->set_tile(tile_def(TILEG_STARTUP_STONESOUP, TEX_GUI));
+    icon->set_tile(tile_def(TILEG_STARTUP_STONESOUP));
     title_hbox->add_child(move(icon));
 #endif
 
@@ -224,7 +218,7 @@ static void _print_version()
     title->set_margin_for_sdl(0, 0, 0, 10);
     title_hbox->add_child(move(title));
 
-    title_hbox->align_cross = Widget::CENTER;
+    title_hbox->set_cross_alignment(Widget::CENTER);
     title_hbox->set_margin_for_crt(0, 0, 1, 0);
     title_hbox->set_margin_for_sdl(0, 0, 20, 0);
     vbox->add_child(move(title_hbox));
@@ -239,10 +233,8 @@ static void _print_version()
     auto popup = make_shared<ui::Popup>(vbox);
 
     bool done = false;
-    popup->on(Widget::slots.event, [&done, &vbox](wm_event ev) {
-        if (ev.type != WME_KEYDOWN)
-            return false;
-        done = !vbox->on_event(ev);
+    popup->on_keydown_event([&](const KeyEvent& ev) {
+        done = !scroller->on_event(ev);
         return true;
     });
 
@@ -252,13 +244,10 @@ static void _print_version()
     tiles.json_write_string("features", feats);
     tiles.json_write_string("changes", changes);
     tiles.push_ui_layout("version", 0);
+    popup->on_layout_pop([](){ tiles.pop_ui_layout(); });
 #endif
 
     ui::run_layout(move(popup), done);
-
-#ifdef USE_TILE_WEB
-    tiles.pop_ui_layout();
-#endif
 }
 
 void list_armour()
@@ -277,11 +266,9 @@ void list_armour()
                  (i == EQ_HELMET)      ? "Helmet " :
                  (i == EQ_GLOVES)      ? "Gloves " :
                  (i == EQ_BODY_ARMOUR) ? "Armour " :
-                 (i == EQ_BOOTS) ?
-                 ((you.species == SP_CENTAUR
-                   || you.species == SP_NAGA) ? "Barding"
-                                              : "Boots  ")
-                                 : "unknown")
+                 (i == EQ_BOOTS)       ? "Boots  " :
+                 (i == EQ_BARDING)     ? "Barding" 
+                                       : "unknown")
              << " : ";
 
         if (you_can_wear(i) == MB_FALSE)
@@ -322,19 +309,22 @@ void list_jewellery()
         int       colour       = MSGCOL_BLACK;
 
         const char *slot =
-                 (i == EQ_LEFT_RING)   ? "Left ring" :
-                 (i == EQ_RIGHT_RING)  ? "Right ring" :
-                 (i == EQ_AMULET)      ? "Amulet" :
-                 (i == EQ_RING_ONE)    ? "1st ring" :
-                 (i == EQ_RING_TWO)    ? "2nd ring" :
-                 (i == EQ_RING_THREE)  ? "3rd ring" :
-                 (i == EQ_RING_FOUR)   ? "4th ring" :
-                 (i == EQ_RING_FIVE)   ? "5th ring" :
-                 (i == EQ_RING_SIX)    ? "6th ring" :
-                 (i == EQ_RING_SEVEN)  ? "7th ring" :
-                 (i == EQ_RING_EIGHT)  ? "8th ring" :
-                 (i == EQ_RING_AMULET) ? "Amulet ring"
-                                       : "unknown";
+                 (i == EQ_LEFT_RING)           ? "Left ring" :
+                 (i == EQ_RIGHT_RING)          ? "Right ring" :
+                 (i == EQ_AMULET)              ? "Amulet" :
+                 (i == EQ_RING_ONE)            ? "1st ring" :
+                 (i == EQ_RING_TWO)            ? "2nd ring" :
+                 (i == EQ_RING_THREE)          ? "3rd ring" :
+                 (i == EQ_RING_FOUR)           ? "4th ring" :
+                 (i == EQ_RING_FIVE)           ? "5th ring" :
+                 (i == EQ_RING_SIX)            ? "6th ring" :
+                 (i == EQ_RING_SEVEN)          ? "7th ring" :
+                 (i == EQ_RING_EIGHT)          ? "8th ring" :
+                 (i == EQ_RING_LEFT_TENDRIL)   ? "left tendril" :
+                 (i == EQ_RING_RIGHT_TENDRIL)  ? "right tendril" :
+                 (i == EQ_FAIRY_JEWEL)         ? "Around core" :
+                 (i == EQ_RING_AMULET)         ? "Amulet ring"
+                                               : "unknown";
 
         string item;
         if (you_can_wear(i, true) == MB_FALSE)
@@ -372,6 +362,7 @@ void list_jewellery()
 static const char *targeting_help_1 =
     "<h>Examine surroundings ('<w>x</w><h>' in main):\n"
     "<w>Esc</w> : cancel (also <w>Space</w>, <w>x</w>)\n"
+    "<w>Ctrl-X</w> : list all things in view\n"
     "<w>Dir.</w>: move cursor in that direction\n"
     "<w>.</w> : move to cursor (also <w>Enter</w>, <w>Del</w>)\n"
     "<w>g</w> : pick up item at cursor\n"
@@ -406,7 +397,7 @@ static const char *targeting_help_wiz =
     "<w>\"</w>: get debugging information about a portal\n"
     "<w>~</w>: polymorph monster to specific type\n"
     "<w>,</w>: bring down the monster to 1 hp\n"
-    "<w>(</w>: place a mimic\n"
+    "<w>Ctrl-(</w>: place a mimic\n"
     "<w>Ctrl-B</w>: banish monster\n"
     "<w>Ctrl-K</w>: kill monster\n"
 ;
@@ -415,7 +406,8 @@ static const char *targeting_help_wiz =
 static const char *targeting_help_2 =
     "<h>Targeting (zap wands, cast spells, etc.):\n"
     "Most keys from examine surroundings work.\n"
-    "Some keys fire at the target. By default,\n"
+    "Some keys fire at the target. <w>Ctrl-X</w> only\n"
+    "lists eligible targets. By default,\n"
     "range is respected and beams don't stop.\n"
     "<w>Enter</w> : fire (<w>Space</w>, <w>Del</w>)\n"
     "<w>.</w> : fire, stop at target\n"
@@ -425,10 +417,10 @@ static const char *targeting_help_2 =
     "<w>:</w> : show/hide beam path\n"
     "<w>Shift-Dir.</w> : fire straight-line beam\n"
     "\n"
-    "<h>Firing or throwing a missile:\n"
-    "<w>(</w> : cycle to next suitable missile.\n"
-    "<w>)</w> : cycle to previous suitable missile.\n"
-    "<w>i</w> : choose from Inventory.\n"
+    "<h>Firing, throwing, spellcasting:\n"
+    "<w>(</w> : cycle to next suitable fire action\n"
+    "<w>)</w> : cycle to previous suitable fire action.\n"
+    "<w>Q</w> : choose fire action.\n"
 ;
 
 struct help_file
@@ -557,6 +549,11 @@ void show_interlevel_travel_depth_help()
 void show_interlevel_travel_altar_help()
 {
     show_specific_help("interlevel-travel.altar.prompt");
+}
+
+void show_annotate_help()
+{
+    show_specific_help("annotate.prompt");
 }
 
 void show_stash_search_help()
@@ -738,10 +735,9 @@ static void _add_formatted_keyhelp(column_composer &cols)
     cols.add_formatted(
             0,
             "<h>Autofight:\n"
-            "<w>Tab</w>       : attack nearest monster,\n"
-            "            moving if necessary\n"
-            "<w>Shift-Tab</w> : attack nearest monster\n"
-            "            without moving\n");
+            "<w>Tab</w>          : attack nearest monster,\n"
+            "               moving if necessary\n"
+            "<w>Shift-Tab</w>, <w>p</w> : fire at nearest monster\n");
 
     cols.add_formatted(
             0,
@@ -801,7 +797,7 @@ static void _add_formatted_keyhelp(column_composer &cols)
                          { CMD_USE_ABILITY });
     _add_command(cols, 0, CMD_CAST_SPELL, "cast spell, abort without targets", 2);
     _add_command(cols, 0, CMD_FORCE_CAST_SPELL, "cast spell, no matter what", 2);
-    _add_command(cols, 0, CMD_DISPLAY_SPELLS, "list all memorized spells", 2);
+    _add_command(cols, 0, CMD_DISPLAY_SPELLS, "list all memorised spells", 2);
     _add_command(cols, 0, CMD_MEMORISE_SPELL, "Memorise a spell from your library", 2);
 
     _add_insert_commands(cols, 0, 2, CMD_SHOUT,
@@ -920,29 +916,22 @@ static void _add_formatted_keyhelp(column_composer &cols)
             "<h>Item Interaction:\n");
 
     _add_command(cols, 1, CMD_INSCRIBE_ITEM, "inscribe item", 2);
-    {
-        const bool vampire = you.species == SP_VAMPIRE;
-        string butcher = vampire ? "bottle blood from"
-                                 : "Chop up";
-        _add_command(cols, 1, CMD_BUTCHER, butcher + " a corpse on floor", 2);
-        string interact = (you.species == SP_VAMPIRE ? "drain corpses"
-                                                     : "Eat food");
-        interact += " (tries floor first)\n";
-        _add_command(cols, 1, CMD_EAT, interact, 2);
-    }
-    _add_command(cols, 1, CMD_FIRE, "Fire next appropriate item", 2);
+    _add_command(cols, 1, CMD_BUTCHER, "Chop up a corpse on floor", 2);
+    _add_command(cols, 1, CMD_EAT, "Eat food (tries floor first)", 2);
+    _add_command(cols, 1, CMD_FIRE, "Fire the currently quivered action", 2);
     _add_command(cols, 1, CMD_THROW_ITEM_NO_QUIVER, "select an item and Fire it", 2);
-    _add_command(cols, 1, CMD_QUIVER_ITEM, "select item slot to be Quivered", 2);
+    _add_command(cols, 1, CMD_QUIVER_ITEM, "select action to be Quivered", 2);
+    _add_command(cols, 1, CMD_SWAP_QUIVER_RECENT, "swap between most recent quiver actions", 2);
     _add_command(cols, 1, CMD_QUAFF, "Quaff a potion", 2);
     _add_command(cols, 1, CMD_READ, "Read a scroll (or book on floor)", 2);
     _add_command(cols, 1, CMD_WIELD_WEAPON, "Wield an item (<w>-</w> for none)", 2);
-    _add_command(cols, 1, CMD_WEAPON_SWAP, "wield item a, or switch to b", 2);
+    _add_command(cols, 1, CMD_WEAPON_SWAP, "switch between wielding item a and b", 2);
     _add_command(cols, 1, CMD_DOUBLE_SWAP, "wield items a and b, or switch to c and d", 2);
 
     _add_insert_commands(cols, 1, "    (use <w>%</w> to assign slots)",
                          { CMD_ADJUST_INVENTORY });
 
-    _add_command(cols, 1, CMD_EVOKE_WIELDED, "eVoke power of wielded item", 2);
+    _add_command(cols, 1, CMD_PRIMARY_ATTACK, "attack with wielded item", 2);
     _add_command(cols, 1, CMD_EVOKE, "eVoke wand and miscellaneous item", 2);
 
     _add_insert_commands(cols, 1, "<w>%</w>/<w>%</w> : Wear or Take off armour",
@@ -1140,7 +1129,7 @@ static formatted_string _col_conv(void (*func)(column_composer &))
     for (const auto& line : cols.formatted_lines())
     {
         contents += line;
-        contents += formatted_string("\n");
+        contents += "\n";
     }
     contents.ops.pop_back();
     return contents;
@@ -1151,7 +1140,7 @@ static int _get_help_section(int section, formatted_string &header_out, formatte
     static map<int, int> hotkeys;
     static map<int, formatted_string> page_text;
     static map<int, string> headers = {
-        {'*', "Manual"}, {'%', "Aptitudes"}, {'^', "Quickstart"},
+        {'*', "Manual"}, {'%', "Aptitudes"},
         {'~', "Macros"}, {'&', "Options"}, {'t', "Tiles"},
         {'?', "Key help"}
     };
@@ -1168,7 +1157,7 @@ static int _get_help_section(int section, formatted_string &header_out, formatte
             ASSERTM(fp, "Failed to open '%s'!", fname.c_str());
             while (fgets(buf, sizeof buf, fp))
             {
-                text += formatted_string(buf);
+                text += string(buf);
                 if (next_is_hotkey && (isaupper(buf[0]) || isadigit(buf[0])))
                 {
                     int hotkey = tolower_safe(buf[0]);

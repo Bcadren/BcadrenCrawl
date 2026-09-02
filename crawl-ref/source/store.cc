@@ -13,6 +13,7 @@
 #include "dlua.h"
 #include "monster.h"
 #include "stringutil.h"
+#include "tag-version.h"
 
 // These tend to be called from tight loops, and C++ method calls don't
 // get optimized away except for LTO -fwhole-program builds, so merely
@@ -684,15 +685,14 @@ CrawlHashTable &CrawlStoreValue::new_table()
 ////////////////////////////////////////////////////////////////
 // Setup a new vector with the given flags and/or type; assert if
 // a vector already exists.
-CrawlVector &CrawlStoreValue::new_vector(store_flags _flags,
-                                         vec_size max_size)
+CrawlVector &CrawlStoreValue::new_vector(store_flags _flags)
 {
-    return new_vector(SV_NONE, flags, max_size);
+    UNUSED(_flags); // XXX: is ignoring the parameter _flags intentional?
+    return new_vector(SV_NONE, flags);
 }
 
 CrawlVector &CrawlStoreValue::new_vector(store_val_type _type,
-                                         store_flags _flags,
-                                         vec_size _max_size)
+                                         store_flags _flags)
 {
 #ifdef DEBUG
     CrawlVector* old_vec = static_cast<CrawlVector*>(val.ptr);
@@ -1609,14 +1609,12 @@ bool CrawlVector::empty() const
     return vec.empty();
 }
 
-CrawlStoreValue& CrawlVector::pop_back()
+void CrawlVector::pop_back()
 {
     ASSERT_VALIDITY();
     ASSERT(!vec.empty());
 
-    CrawlStoreValue& val = vec[vec.size() - 1];
     vec.pop_back();
-    return val;
 }
 
 void CrawlVector::push_back(CrawlStoreValue val)

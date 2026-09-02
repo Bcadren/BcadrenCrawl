@@ -17,6 +17,7 @@
 
 #include "act-iter.h"
 #include "areas.h"
+#include "artefact.h"
 #include "attitude-change.h"
 #include "cloud.h"
 #include "colour.h"
@@ -27,7 +28,6 @@
 #include "english.h"
 #include "externs.h" // INVALID_COORD
 #include "fight.h" // melee_confuse_chance
-#include "food.h"
 #include "god-abil.h"
 #include "hints.h"
 #include "invent.h"
@@ -39,20 +39,24 @@
 #include "macro.h"
 #include "mapmark.h"
 #include "message.h"
+#include "misc.h"
 #include "mon-death.h"
 #include "mon-tentacle.h"
 #include "nearby-danger.h"
 #include "output.h"
 #include "prompt.h"
+#include "religion.h"
 #include "showsymb.h"
 #include "spl-goditem.h"
 #include "stash.h"
 #include "state.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "target.h"
 #include "terrain.h"
 #ifdef USE_TILE
  #include "tileview.h"
+ #include "tile-flags.h"
 #endif
 #include "traps.h"
 #include "travel.h"
@@ -88,11 +92,13 @@ enum LOSSelect
 #ifdef WIZARD
 static void _wizard_make_friendly(monster* m);
 #endif
+static dist _look_around_target(const coord_def &whence);
 static void _describe_oos_feature(const coord_def& where);
 static void _describe_cell(const coord_def& where, bool in_range = true);
 static bool _print_cloud_desc(const coord_def where);
 static bool _print_item_desc(const coord_def where);
 
+static bool _blocked_ray(const coord_def &where);
 static bool _want_target_monster(const monster *mon, targ_mode_type mode,
                                  targeter* hitfunc);
 static bool _find_monster(const coord_def& where, targ_mode_type mode,
@@ -135,6 +141,7 @@ static void _wizard_make_friendly(monster* m)
     if (crawl_state.arena_suspended && att == ATT_FRIENDLY)
         att = ATT_NEUTRAL;
 
+    // BCADNOTE: Consider changing this function around should we need passives for debugging.
     switch (att)
     {
     case ATT_FRIENDLY:
@@ -152,22 +159,20 @@ static void _wizard_make_friendly(monster* m)
         m->attitude = ATT_HOSTILE;
         m->flags &= ~MF_WAS_NEUTRAL;
         break;
+    case ATT_PASSIVE:
     case ATT_HOSTILE:
         m->attitude = ATT_FRIENDLY;
         m->flags |= MF_NO_REWARD;
         break;
     }
     mons_att_changed(m);
-
-    // To update visual branding of friendlies. Only seems capabable
-    // of adding bolding, not removing it, though.
-    viewwindow();
 }
 #endif
 
 dist::dist()
-    : isValid(false), isTarget(false), isEndpoint(false), isCancel(true),
-      choseRay(false), target(), delta(), ray()
+    : isValid(false), isTarget(false), isEndpoint(false), isCancel(false),
+      choseRay(false), interactive(false), target(), delta(), ray(),
+       find_target(false), fire_context(nullptr), cmd_result(CMD_NO_CMD)
 {
 }
 
@@ -180,6 +185,7 @@ bool dist::isMe() const
                || (target.origin() && delta.origin()));
 }
 
+// BCADNOTE: Mainline removed this at some point. Check if we are still using it.
 void dist::confusion_fuzz(int range)
 {
     target   = you.pos();
@@ -189,72 +195,18 @@ void dist::confusion_fuzz(int range)
     choseRay = false;
 }
 
-bool direction_chooser::choose_compass()
+/**
+ * Does this dist object need `target` to be filled in somehow, e.g. with
+ * manual/interactive targeting? Affected by the following three dist fields:
+ *
+ *  `interactive`: force interactive targeting, overrides the other two.
+ *  `find_target`: requests to use the direction chooser default target, allows
+ *                 non-interactive mode. Overrides a value supplied by `target`.
+ *  `target`: supplying a target coord directly allows non-interactive mode.
+ */
+bool dist::needs_targeting() const
 {
-    // Reinitialize moves.
-    moves.isValid       = true;
-    moves.isTarget      = false;
-    moves.isCancel      = false;
-    moves.delta.reset();
-
-    mouse_control mc(MOUSE_MODE_TARGET_DIR);
-
-    behaviour->compass = true;
-
-    do
-    {
-        const command_type key_command = behaviour->get_command();
-
-        if (handle_signals())
-            return false;
-
-#ifdef USE_TILE
-        if (key_command == CMD_TARGET_MOUSE_MOVE)
-            continue;
-        else if (key_command == CMD_TARGET_MOUSE_SELECT)
-        {
-            const coord_def &gc = tiles.get_cursor();
-            if (gc == NO_CURSOR)
-                continue;
-
-            if (!map_bounds(gc))
-                continue;
-
-            coord_def delta = gc - you.pos();
-            if (delta.rdist() > 1)
-            {
-                tiles.place_cursor(CURSOR_MOUSE, gc);
-                delta = tiles.get_cursor() - you.pos();
-                ASSERT(delta.rdist() <= 1);
-            }
-
-            moves.delta = delta;
-            break;
-        }
-#endif
-
-        if (key_command == CMD_TARGET_SELECT)
-        {
-            moves.delta.reset();
-            break;
-        }
-
-        const int i = _targeting_cmd_to_compass(key_command);
-        if (i != -1)
-            moves.delta = Compass[i];
-        else if (key_command == CMD_TARGET_CANCEL)
-        {
-            moves.isCancel = true;
-            moves.isValid = false;
-        }
-    }
-    while (!moves.isCancel && moves.delta.origin());
-
-#ifdef USE_TILE
-    tiles.place_cursor(CURSOR_MOUSE, NO_CURSOR);
-#endif
-
-    return moves.isValid;
+    return interactive || !in_bounds(target) && !find_target;
 }
 
 static int _targeting_cmd_to_compass(command_type command)
@@ -321,7 +273,7 @@ static monster* _get_current_target()
     if (invalid_monster_index(you.prev_targ))
         return nullptr;
 
-    monster* mon = &menv[you.prev_targ];
+    monster* mon = &env.mons[you.prev_targ];
     ASSERT(mon);
     if (mon->alive() && you.can_see(*mon))
         return mon;
@@ -335,6 +287,8 @@ string direction_chooser::build_targeting_hint_string() const
 
     // Hint for 'p' - previous target, and for 'f' - current cell, if
     // applicable.
+    // TODO: currently 'f' works for non-actor targets (features, apport) but
+    // shows nothing here
     const actor*   f_target = targeted_actor();
     const monster* p_target = _get_current_target();
 
@@ -353,12 +307,29 @@ string direction_chooser::build_targeting_hint_string() const
 
 void direction_chooser::print_top_prompt() const
 {
-    if (!top_prompt.empty())
+    if (!show_distance && !top_prompt.empty())
         mprf(MSGCH_PROMPT, "%s", top_prompt.c_str());
+    else if (show_distance) // This probably should be in behavior organization-wise; 
+        //but I couldn't access target() from outside of direction_chooser itself so 
+        //encapsulation-wise it needs to be here, unless adding an accessor just for this purpose.
+    {
+        int loc_ran = grid_distance(you.pos(), target());
+        int dam = 125;
+        if (loc_ran > 5)
+        {
+            dam -= ((loc_ran - 5) * 25);
+            dam = max(dam, 75); // Bu special case
+        }
+        else if (loc_ran < 5)
+            dam -= ((5-loc_ran) * 25);
+        dam = max(25, dam); // just to show it still does damage on self target.
+        mprf(MSGCH_PROMPT, "%s%sRange: %d (%d%%)", top_prompt.c_str(), top_prompt.length() ? ", " : "", loc_ran, dam);
+    }
 }
 
 void direction_chooser::print_key_hints() const
 {
+    // TODO: build this as a vector and insert ,s and \ns in a smarter way
     string prompt = "Press: ? - help";
 
     if (just_looking)
@@ -371,22 +342,34 @@ void direction_chooser::print_key_hints() const
     }
     else
     {
-        const string hint_string = build_targeting_hint_string();
-        switch (restricts)
+        if (moves.fire_context)
+            prompt += moves.fire_context->fire_key_hints() + "\n";
+        string direction_hint = "";
+        if (!behaviour->targeted())
+            direction_hint = "Dir - look around, f - activate";
+        else
         {
-        case DIR_NONE:
-            prompt += ", Shift-Dir - straight line";
-            prompt += hint_string;
-            break;
-        case DIR_TARGET:
-        case DIR_SHADOW_STEP:
-        case DIR_LEAP:
-            prompt += ", Dir - move target cursor";
-            prompt += hint_string;
-            break;
-        case DIR_DIR:
-            break;
+            switch (restricts)
+            {
+            case DIR_NONE:
+                direction_hint = "Shift-Dir - straight line";
+                break;
+            case DIR_TARGET:
+            case DIR_SHADOW_STEP:
+            case DIR_LEAP:
+                direction_hint = "Dir - move target";
+                break;
+            }
         }
+
+        if (direction_hint.size())
+        {
+            if (prompt[prompt.size() - 1] != '\n')
+                prompt += ", ";
+            prompt += direction_hint;
+        }
+        if (behaviour->targeted())
+            prompt += build_targeting_hint_string();
     }
 
     // Display the prompt.
@@ -404,7 +387,6 @@ bool direction_chooser::targets_enemies() const
     switch (mode)
     {
         case TARG_HOSTILE:
-        case TARG_HOSTILE_SUBMERGED:
             return true;
         default:
             return false;
@@ -413,26 +395,25 @@ bool direction_chooser::targets_enemies() const
 
 void direction_chooser::describe_cell() const
 {
+    print_top_prompt();
+    print_key_hints();
+
     if (!you.see_cell(target()))
     {
-        print_top_prompt();
-        print_key_hints();
         // FIXME: make this better integrated.
         _describe_oos_square(target());
     }
     else
     {
-        print_top_prompt();
-        print_key_hints();
         bool did_cloud = false;
         print_target_description(did_cloud);
-        if (just_looking || (show_items_once && !targets_objects()))
+        if (just_looking)
             print_items_description();
         if (just_looking || show_floor_desc)
         {
-            print_floor_description(show_boring_feats);
             if (!did_cloud)
                 _print_cloud_desc(target());
+            print_floor_description();
         }
     }
 
@@ -440,14 +421,14 @@ void direction_chooser::describe_cell() const
 }
 
 #ifndef USE_TILE_LOCAL
-static void _draw_ray_glyph(const coord_def &pos, int colour,
-                            int glych, int mcol)
+static cglyph_t _get_ray_glyph(const coord_def& pos, int colour, int glych,
+                               int mcol)
 {
     if (const monster* mons = monster_at(pos))
     {
         if (mons->alive() && mons->visible_to(&you))
         {
-            glych  = get_cell_glyph(pos).ch;
+            glych = get_cell_glyph(pos).ch;
             colour = mcol;
         }
     }
@@ -456,10 +437,8 @@ static void _draw_ray_glyph(const coord_def &pos, int colour,
         glych = mons_char(you.symbol);
         colour = mcol;
     }
-    const coord_def vp = grid2view(pos);
-    cgotoxy(vp.x, vp.y, GOTO_DNGN);
-    textcolour(real_colour(colour));
-    putwch(glych);
+    return {static_cast<char32_t>(glych),
+            static_cast<unsigned short>(real_colour(colour))};
 }
 #endif
 
@@ -468,7 +447,7 @@ static void _draw_ray_glyph(const coord_def &pos, int colour,
 // These should match tests in show.cc's _update_monster
 static bool _mon_exposed_in_water(const monster* mon)
 {
-    return grd(mon->pos()) == DNGN_SHALLOW_WATER && !mon->airborne()
+    return env.grid(mon->pos()) == DNGN_SHALLOW_WATER && !mon->airborne()
            && !mon->submerged() && !cloud_at(mon->pos());
 }
 
@@ -500,7 +479,14 @@ targeting_behaviour direction_chooser::stock_behaviour;
 
 void direction(dist &moves, const direction_chooser_args& args)
 {
-    direction_chooser(moves, args).choose_direction();
+    // TODO this might break pre-chosen delta targeting, if that ever happens
+    // (currently it looks like isTarget is always set to true)
+    moves.interactive = moves.needs_targeting();
+
+    if (moves.interactive)
+        direction_chooser(moves, args).choose_direction();
+    else
+        direction_chooser(moves, args).noninteractive();
 }
 
 direction_chooser::direction_chooser(dist& moves_,
@@ -510,14 +496,18 @@ direction_chooser::direction_chooser(dist& moves_,
     mode(args.mode),
     range(args.range),
     just_looking(args.just_looking),
+    prefer_farthest(args.prefer_farthest),
+    allow_shift_dir(args.allow_shift_dir),
     self(args.self),
     target_prefix(args.target_prefix),
     top_prompt(args.top_prompt),
     behaviour(args.behaviour),
     show_floor_desc(args.show_floor_desc),
     show_boring_feats(args.show_boring_feats),
+    show_distance (args.show_distance),
     hitfunc(args.hitfunc),
     default_place(args.default_place),
+    renderer(*this),
     unrestricted(args.unrestricted),
     needs_path(args.needs_path)
 {
@@ -526,20 +516,27 @@ direction_chooser::direction_chooser(dist& moves_,
 
     behaviour->just_looking = just_looking;
     behaviour->get_desc_func = args.get_desc_func;
-    if (unrestricted)
-        needs_path = false;
-    else if (hitfunc)
-        needs_path = true;
 
-    show_beam = !just_looking && needs_path;
+    if (unrestricted)
+    {
+        needs_path = false;
+        behaviour->needs_path = MB_MAYBE;
+    }
+    else if (hitfunc)
+    {
+        needs_path = true;
+        behaviour->needs_path = MB_MAYBE; // TODO: can this be relaxed?
+    }
+    if (behaviour->needs_path != MB_MAYBE)
+        needs_path = tobool(behaviour->needs_path, true);
+
+    show_beam = !just_looking && (needs_path || hitfunc);
     need_viewport_redraw = show_beam;
     have_beam = false;
 
     need_text_redraw = true;
     need_cursor_redraw = true;
     need_all_redraw = false;
-
-    show_items_once = false;
 }
 
 class view_desc_proc
@@ -557,81 +554,60 @@ public:
     void nextline() { cgotoxy(1, wherey() + 1); }
 };
 
-// Lists monsters, items, and some interesting features in the player's view.
-// TODO: Allow sorting of items lists.
-void full_describe_view()
+static coord_def _full_describe_menu(vector<monster_info> const &list_mons,
+                                     vector<item_def> const &list_items,
+                                     vector<coord_def> const &list_features,
+                                     string selectverb,
+                                     bool examine_only = false,
+                                     string title = "")
 {
-    vector<monster_info> list_mons;
-    vector<item_def> list_items;
-    vector<coord_def> list_features;
-
-    // Grab all items known (or thought) to be in the stashes in view.
-    for (radius_iterator ri(you.pos(),
-                            you.xray_vision ? LOS_NONE : LOS_DEFAULT); ri; ++ri)
-    {
-        if (feat_stair_direction(grd(*ri)) != CMD_NO_CMD
-            || (feat_is_trap(grd(*ri))))
-        {
-            list_features.push_back(*ri);
-        }
-
-        const int oid = you.visible_igrd(*ri);
-        if (oid == NON_ITEM)
-            continue;
-
-        const vector<item_def> items = item_list_in_stash(*ri);
-
-#ifdef DEBUG_DIAGNOSTICS
-        if (items.empty())
-        {
-            mprf(MSGCH_ERROR, "No items found in stash, but top item is %s",
-                 mitm[oid].name(DESC_PLAIN).c_str());
-            more();
-        }
-#endif
-        list_items.insert(list_items.end(), items.begin(), items.end());
-    }
-
-    // Get monsters via the monster_info, sorted by difficulty.
-    get_monster_info(list_mons);
-
-    if (list_mons.empty() && list_items.empty() && list_features.empty())
-    {
-        mpr("No monsters, items or features are visible.");
-        return;
-    }
-
     InvMenu desc_menu(MF_SINGLESELECT | MF_ANYPRINTABLE
                         | MF_ALLOW_FORMATTING | MF_SELECT_BY_PAGE);
 
-    string title = "";
-    if (!list_mons.empty())
-        title  = "Monsters";
-    if (!list_items.empty())
-    {
-        if (!title.empty())
-            title += "/";
-        title += "Items";
-    }
-    if (!list_features.empty())
-    {
-        if (!title.empty())
-            title += "/";
-        title += "Features";
-    }
+    string title_secondary;
 
-    title = "Visible " + title;
-    string title1 = title + " (select to target/travel, '!' to examine):";
-    title += " (select to examine, '!' to target/travel):";
-
-    desc_menu.set_title(new MenuEntry(title, MEL_TITLE), false);
-    desc_menu.set_title(new MenuEntry(title1, MEL_TITLE));
+    if (title.empty())
+    {
+        if (!list_mons.empty())
+            title  = "Monsters";
+        if (!list_items.empty())
+        {
+            if (!title.empty())
+                title += "/";
+            title += "Items";
+        }
+        if (!list_features.empty())
+        {
+            if (!title.empty())
+                title += "/";
+            title += "Features";
+        }
+        title = "Visible " + title;
+        if (examine_only)
+            title += " (select to examine)";
+        else
+        {
+            title_secondary = title + " (select to examine, '!' to "
+              + selectverb + "):";
+            title += " (select to " + selectverb + ", '!' to examine):";
+        }
+    }
 
     desc_menu.set_tag("pickup");
     // necessary for sorting of the item submenu
     desc_menu.set_type(menu_type::pickup);
-    desc_menu.action_cycle = Menu::CYCLE_TOGGLE;
-    desc_menu.menu_action  = InvMenu::ACT_EXECUTE;
+    desc_menu.set_title(new MenuEntry(title, MEL_TITLE));
+    if (examine_only)
+    {
+        desc_menu.action_cycle = Menu::CYCLE_NONE;
+        desc_menu.menu_action = InvMenu::ACT_EXAMINE;
+    }
+    else
+    {
+        desc_menu.action_cycle = Menu::CYCLE_TOGGLE;
+        desc_menu.menu_action = InvMenu::ACT_EXECUTE;
+        desc_menu.set_title(new MenuEntry(title_secondary, MEL_TITLE), false);
+    }
 
     // Start with hotkey 'a' and count from there.
     menu_letter hotkey;
@@ -644,18 +620,24 @@ void full_describe_view()
             // List monsters in the form
             // (A) An angel (neutral), wielding a glowing long sword
 
-            string prefix = "";
+            ostringstream prefix;
 #ifndef USE_TILE_LOCAL
             cglyph_t g = get_mons_glyph(mi);
             const string col_string = colour_to_str(g.col);
-            prefix = "(<" + col_string + ">"
-                     + (g.ch == '<' ? "<<" : stringize_glyph(g.ch))
-                     + "</" + col_string + ">) ";
+            prefix << "(<" << col_string << ">"
+                     << (g.ch == '<' ? "<<" : stringize_glyph(g.ch))
+                     << "</" << col_string << ">) ";
 #endif
+            string str = "";
 
-            string str = get_monster_equipment_desc(mi, DESC_FULL, DESC_A, true);
-            if (mi.is(MB_MESMERIZING))
-                str += ", keeping you mesmerised";
+            if (const monster * mon = monster_at(mi.pos))
+                str += get_monster_equipment_desc(*mon, DESC_FULL, DESC_A, true);
+
+            if (Options.monster_item_view_coordinates)
+            {
+                const coord_def relpos = mi.pos - you.pos();
+                prefix << "(" << relpos.x << ", " << -relpos.y << ") ";
+            }
 
             if (mi.dam != MDAM_OKAY)
                 str += ", " + mi.damage_desc();
@@ -674,7 +656,7 @@ void full_describe_view()
             for (unsigned int j = 0; j < fss.size(); ++j)
             {
                 if (j == 0)
-                    me = new MonsterMenuEntry(prefix + fss[j].tostring(), &mi, hotkey++);
+                    me = new MonsterMenuEntry(prefix.str() + fss[j].tostring(), &mi, hotkey++);
 #ifndef USE_TILE_LOCAL
                 else
                 {
@@ -704,6 +686,7 @@ void full_describe_view()
             // Show glyphs only for ASCII.
             me->set_show_glyph(true);
 #endif
+            me->set_show_coordinates(Options.monster_item_view_coordinates);
             me->tag = "pickup";
             me->hotkeys[0] = hotkey;
             me->quantity = 2; // Hack to make items selectable.
@@ -716,23 +699,27 @@ void full_describe_view()
     if (!list_features.empty())
     {
         desc_menu.add_entry(new MenuEntry("Features", MEL_SUBTITLE));
-        for (const coord_def c : list_features)
+        for (const coord_def &c : list_features)
         {
-            string desc = "";
+            ostringstream desc;
 #ifndef USE_TILE_LOCAL
             cglyph_t g = get_cell_glyph(c, true);
             const string colour_str = colour_to_str(g.col);
-            desc = "(<" + colour_str + ">";
-            desc += stringize_glyph(g.ch);
-            if (g.ch == '<')
-                desc += '<';
+            desc << "(<" << colour_str << ">";
+            desc << (g.ch == '<' ? "<<" : stringize_glyph(g.ch));
 
-            desc += "</" + colour_str +">) ";
+            desc << "</" << colour_str << ">) ";
 #endif
-            desc += feature_description_at(c, false, DESC_A, false);
+            if (Options.monster_item_view_coordinates)
+            {
+                const coord_def relpos = c - you.pos();
+                desc << "(" << relpos.x << ", " << -relpos.y << ") ";
+            }
+
+            desc << feature_description_at(c, false, DESC_A);
             if (is_unknown_stair(c) || is_unknown_transporter(c))
-                desc += " (not visited)";
-            FeatureMenuEntry *me = new FeatureMenuEntry(desc, c, hotkey);
+                desc << " (not visited)";
+            FeatureMenuEntry *me = new FeatureMenuEntry(desc.str(), c, hotkey);
             me->tag        = "description";
             // Hack to make features selectable.
             me->quantity   = c.x*100 + c.y + 3;
@@ -742,10 +729,8 @@ void full_describe_view()
     }
 
     // Select an item to read its full description, or a monster to read its
-    // e'x'amine description. Toggle with '!' to travel to an item's position
-    // or read a monster's database entry.
-    // (Maybe that should be reversed in the case of monsters.)
-    // For ASCII, the 'x' information may include short database descriptions.
+    // e'x'amine description. Toggle with '!' to return the coordinates to
+    // the caller so that it may perform the promised selectverb
 
     coord_def target(-1, -1);
 
@@ -773,6 +758,7 @@ void full_describe_view()
                 // View database entry.
                 describe_monsters(*m);
                 redraw_screen();
+                update_screen();
                 clear_messages();
             }
             else // ACT_EXECUTE -> view/travel
@@ -781,9 +767,9 @@ void full_describe_view()
         else if (quant == 2)
         {
             // Get selected item.
-            item_def* i = static_cast<item_def*>(sel.data);
+            const item_def* i = static_cast<item_def*>(sel.data);
             if (desc_menu.menu_action == InvMenu::ACT_EXAMINE)
-                describe_item(*i);
+                describe_item_popup(*i);
             else // ACT_EXECUTE -> view/travel
                 target = i->pos;
         }
@@ -803,11 +789,8 @@ void full_describe_view()
     };
     desc_menu.show();
     redraw_screen();
+    update_screen();
 
-    // need to do this after the menu has been closed on console,
-    // since do_look_around() runs its own loop
-    if (target != coord_def(-1, -1))
-        do_look_around(target);
 
 #ifndef USE_TILE_LOCAL
     if (!list_items.empty())
@@ -822,18 +805,105 @@ void full_describe_view()
     tiles.place_cursor(CURSOR_TUTORIAL, NO_CURSOR);
     tiles.clear_text_tags(TAG_TUTORIAL);
 #endif
+    return target;
+}
+
+static void _get_nearby_items(vector<item_def> &list_items,
+                                bool need_path, int range, targeter *hitfunc)
+{
+    // Grab all items known (or thought) to be in the stashes in view.
+    for (radius_iterator ri(you.pos(),
+                            you.xray_vision ? LOS_NONE : LOS_DEFAULT); ri; ++ri)
+    {
+        if (!_is_target_in_range(*ri, range, hitfunc))
+            continue;
+
+        if (need_path && (!you.see_cell(*ri) || _blocked_ray(*ri)))
+            continue;
+
+        const int oid = you.visible_igrd(*ri);
+        if (oid == NON_ITEM)
+            continue;
+
+        const vector<const item_def *> items = item_list_on_square(
+                                                   you.visible_igrd(*ri));
+
+        for (const item_def * item : items)
+            list_items.push_back(*item);
+    }
+}
+
+static void _get_nearby_features(vector<coord_def> &list_features,
+                          bool need_path, int range, targeter *hitfunc)
+{
+    vector <text_pattern> &filters = Options.monster_item_view_features;
+    for (radius_iterator ri(you.pos(),
+                            you.xray_vision ? LOS_NONE : LOS_DEFAULT); ri; ++ri)
+    {
+        if (!_is_target_in_range(*ri, range, hitfunc))
+            continue;
+
+        if (need_path && (!you.see_cell(*ri) || _blocked_ray(*ri)))
+            continue;
+
+        // Do we want to aim at this because its the feature, not because
+        // of a monster. This is a bit of a hack since hitfunc->valid_aim
+        // is monster-aware and monster targets are listed in a different
+        // place.
+        if (hitfunc && !monster_at(*ri))
+            list_features.push_back(*ri);
+        // Not using a targeter, list features according to user preferences.
+        else if (!hitfunc)
+        {
+            if (!filters.empty())
+            {
+                for (const text_pattern &pattern : filters)
+                {
+                    if (pattern.matches(feature_description(env.grid(*ri)))
+                        || feat_stair_direction(env.grid(*ri)) != CMD_NO_CMD
+                           && pattern.matches("stair")
+                        || feat_is_trap(env.grid(*ri))
+                           && pattern.matches("trap"))
+                    {
+                        list_features.push_back(*ri);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Lists monsters, items, and some interesting features in the player's view.
+// TODO: Allow sorting of items lists.
+void full_describe_view()
+{
+    vector<monster_info> list_mons;
+    vector<item_def> list_items;
+    vector<coord_def> list_features;
+    // Get monsters via the monster_info, sorted by difficulty.
+    get_monster_info(list_mons);
+    _get_nearby_items(list_items, false, get_los_radius(), nullptr);
+    _get_nearby_features(list_features, false, get_los_radius(), nullptr);
+
+    if (list_mons.empty() && list_items.empty() && list_features.empty())
+    {
+        mpr("No monsters, items or features are visible.");
+        return;
+    }
+
+    coord_def target = _full_describe_menu(list_mons, list_items,
+                                           list_features, "target/travel");
+
+    // need to do this after the menu has been closed on console,
+    // since do_look_around() runs its own loop
+    if (target != coord_def(-1, -1))
+        do_look_around(target);
 }
 
 void do_look_around(const coord_def &whence)
 {
-    dist lmove;   // Will be initialised by direction().
-    direction_chooser_args args;
-    args.restricts = DIR_TARGET;
-    args.just_looking = true;
-    args.needs_path = false;
-    args.target_prefix = "Here";
-    args.default_place = whence;
-    direction(lmove, args);
+    dist lmove = _look_around_target(you.pos() + whence);
     if (lmove.isValid && lmove.isTarget && !lmove.isCancel
         && !crawl_state.arena_suspended)
     {
@@ -841,23 +911,37 @@ void do_look_around(const coord_def &whence)
     }
 }
 
+bool get_look_position(coord_def *c)
+{
+    dist lmove = _look_around_target(you.pos());
+    if (lmove.isCancel)
+        return false;
+    *c = lmove.target;
+    return true;
+}
+
+static dist _look_around_target(const coord_def &whence)
+{
+    dist lmove;   // Will be initialised by direction().
+    direction_chooser_args args;
+    args.restricts = DIR_TARGET;
+    args.just_looking = true;
+    args.needs_path = false;
+    args.target_prefix = "Here";
+    args.default_place = whence - you.pos();
+    direction(lmove, args);
+    return lmove;
+}
 
 range_view_annotator::range_view_annotator(targeter *range)
 {
     if (range && Options.darken_beyond_range)
-    {
         crawl_state.darken_range = range;
-        viewwindow(false);
-    }
 }
 
 range_view_annotator::~range_view_annotator()
 {
-    if (crawl_state.darken_range)
-    {
-        crawl_state.darken_range = nullptr;
-        viewwindow(false);
-    }
+    crawl_state.darken_range = nullptr;
 }
 
 monster_view_annotator::monster_view_annotator(vector<monster *> *monsters)
@@ -866,6 +950,7 @@ monster_view_annotator::monster_view_annotator(vector<monster *> *monsters)
     {
         crawl_state.flash_monsters = monsters;
         viewwindow(false);
+        update_screen();
     }
 }
 
@@ -876,12 +961,13 @@ monster_view_annotator::~monster_view_annotator()
     {
         crawl_state.flash_monsters = nullptr;
         viewwindow(false);
+        update_screen();
     }
 }
 
 bool direction_chooser::move_is_ok() const
 {
-    if (unrestricted)
+    if (unrestricted || !behaviour->targeted())
         return true;
     if (!moves.isCancel && moves.isTarget)
     {
@@ -905,20 +991,29 @@ bool direction_chooser::move_is_ok() const
                        && Options.allow_self_target
                               == confirm_prompt_type::cancel)
                 {
-                    mprf(MSGCH_EXAMINE_FILTER, "That would be overly suicidal.");
+                    if (moves.interactive)
+                        mprf(MSGCH_EXAMINE_FILTER, "That would be overly suicidal.");
                     return false;
                 }
                 else if (self != confirm_prompt_type::none
                          && Options.allow_self_target
                                 != confirm_prompt_type::none)
                 {
-                    return yesno("Really target yourself?", false, 'n');
+                    // if it needs to be asked, simply disallow it when
+                    // calling in non-interactive mode
+                    if (!moves.interactive)
+                        return false;
+                    return yesno("Really target yourself?", false, 'n',
+                                 true, true, false, nullptr, false);
                 }
             }
 
             if (self == confirm_prompt_type::cancel)
             {
-                mprf(MSGCH_EXAMINE_FILTER, "Sorry, you can't target yourself.");
+                // avoid printing this message when autotargeting -- it doesn't
+                // make much sense
+                if (moves.interactive)
+                    mprf(MSGCH_EXAMINE_FILTER, "Sorry, you can't target yourself.");
                 return false;
             }
         }
@@ -950,7 +1045,7 @@ bool direction_chooser::find_default_monster_target(coord_def& result) const
         return true;
     }
     // If the previous targetted position is at all useful, use it.
-    if (!Options.simple_targeting && hitfunc
+    if (!Options.simple_targeting && hitfunc && !prefer_farthest
         && _find_monster_expl(you.prev_grd_targ, mode, needs_path,
                               range, hitfunc, AFF_YES, AFF_MULTIPLE))
     {
@@ -1096,82 +1191,97 @@ const coord_def& direction_chooser::target() const
 
 void direction_chooser::set_target(const coord_def& new_target)
 {
-    if (restricts == DIR_SHADOW_STEP)
-        valid_shadow_step = hitfunc->has_additional_sites(new_target);
     moves.target = new_target;
 }
 
-static void _draw_ray_cell(coord_def p, coord_def target, aff_type aff)
+#ifdef USE_TILE
+static tileidx_t _tileidx_aff_type(aff_type aff)
 {
- #ifdef USE_TILE
-    tile_place_ray(p, aff);
-#endif
-#ifndef USE_TILE_LOCAL
-    int bcol = BLACK;
-    if (aff < 0)
-        bcol = DARKGREY;
-    else if (aff < AFF_YES)
-        bcol = (p == target) ? RED : MAGENTA;
+    if (aff < AFF_YES)
+        return TILE_RAY_OUT_OF_RANGE;
     else if (aff == AFF_YES)
-        bcol = (p == target) ? LIGHTRED : LIGHTMAGENTA;
+        return TILE_RAY;
     else if (aff == AFF_LANDING)
-        bcol = (p == target) ? LIGHTGREEN : GREEN;
+        return TILE_LANDING;
     else if (aff == AFF_MULTIPLE)
-        bcol = (p == target) ? LIGHTCYAN : CYAN;
+        return TILE_RAY_MULTI;
+    else
+        return 0;
+}
+#endif
+
+#ifndef USE_TILE_LOCAL
+static colour_t _colour_aff_type(aff_type aff, bool target)
+{
+    if (aff < 0)
+        return DARKGREY;
+    else if (aff < AFF_YES)
+        return target ? RED : MAGENTA;
+    else if (aff == AFF_YES)
+        return target ? LIGHTRED : LIGHTMAGENTA;
+    else if (aff == AFF_LANDING)
+        return target ? LIGHTGREEN : GREEN;
+    else if (aff == AFF_MULTIPLE)
+        return target ? LIGHTCYAN : CYAN;
     else
         die("unhandled aff %d", aff);
+}
+#endif
 
-    int mbcol = (p == target) ? bcol : bcol | COLFLAG_REVERSE;
-    _draw_ray_glyph(p, bcol, '*', mbcol);
+static void _draw_ray_cell(screen_cell_t& cell, coord_def p, bool on_target,
+                           aff_type aff)
+{
+#ifdef USE_TILE
+    UNUSED(on_target, p);
+    cell.tile.dngn_overlay[cell.tile.num_dngn_overlay++] =
+        _tileidx_aff_type(aff);
+#endif
+#ifndef USE_TILE_LOCAL
+    const auto bcol = _colour_aff_type(aff, on_target);
+    const auto mbcol = on_target ? bcol : bcol | COLFLAG_REVERSE;
+    const auto cglyph = _get_ray_glyph(p, bcol, '*', mbcol);
+    cell.glyph = cglyph.ch;
+    cell.colour = cglyph.col;
 #endif
 }
 
-void direction_chooser::draw_beam()
+void direction_chooser_renderer::render(crawl_view_buffer& vbuf)
+{
+    if (crawl_state.invisible_targeting)
+        return;
+    m_directn.draw_beam(vbuf);
+    m_directn.highlight_summoner(vbuf);
+}
+
+void direction_chooser::draw_beam(crawl_view_buffer &vbuf)
 {
     if (!show_beam)
-    {
-        viewwindow(
-#ifndef USE_TILE
-            false
-#endif
-            );
         return;
-    }
-
-    // Clear the old beam if necessary.
-    viewwindow(false);
 
     // Use the new API if implemented.
     if (hitfunc)
     {
-        if (!hitfunc->set_aim(target()))
-        {
-#ifdef USE_TILE
-            viewwindow(true, true);
-#endif
+        if (behaviour->targeted() && !hitfunc->set_aim(target()))
             return;
-        }
         const los_type los = hitfunc->can_affect_unseen()
                                             ? LOS_NONE : LOS_DEFAULT;
         for (radius_iterator ri(you.pos(), los); ri; ++ri)
-            if (aff_type aff = hitfunc->is_affected(*ri))
-                _draw_ray_cell(*ri, target(), aff);
+        {
+            aff_type aff = hitfunc->is_affected(*ri);
+            if (aff
+                && (!feat_is_solid(env.grid(*ri)) || hitfunc->can_affect_walls()))
+            {
+                auto& cell = vbuf(grid2view(*ri) - 1);
+                _draw_ray_cell(cell, *ri, *ri == target(), aff);
+            }
+        }
 
-#ifdef USE_TILE
-        viewwindow(true, true);
-#endif
         return;
     }
 
     // If we don't have a new beam to show, we're done.
     if (!have_beam)
-    {
-#ifdef USE_TILE
-        // Clear the old beam if we're not drawing anything else.
-        viewwindow(true, true);
-#endif
         return;
-    }
 
     // We shouldn't ever get a beam to an out-of-LOS target.
     ASSERT(you.see_cell(target()));
@@ -1190,25 +1300,32 @@ void direction_chooser::draw_beam()
             continue;
 
         const bool inrange = in_range(p);
+        auto& cell = vbuf(grid2view(p) - 1);
 #ifdef USE_TILE
-        tile_place_ray(p, inrange ? AFF_YES : AFF_NO);
+        cell.tile.dngn_overlay[cell.tile.num_dngn_overlay++] =
+            inrange ? TILE_RAY : TILE_RAY_OUT_OF_RANGE;
 #endif
 #ifndef USE_TILE_LOCAL
-        const int bcol = inrange ? MAGENTA : DARKGREY;
-        _draw_ray_glyph(p, bcol, '*', bcol | COLFLAG_REVERSE);
+        const auto bcol = inrange ? MAGENTA : DARKGREY;
+        const auto cglyph = _get_ray_glyph(p, bcol, '*', bcol| COLFLAG_REVERSE);
+        cell.glyph = cglyph.ch;
+        cell.colour = cglyph.col;
 #endif
     }
     textcolour(LIGHTGREY);
-#ifdef USE_TILE
-    tile_place_ray(target(), in_range(ray.pos()) ? AFF_YES : AFF_NO);
 
-    // In tiles, we need to refresh the window to get the beam drawn.
-    viewwindow(true, true);
+    // Only draw the ray over the target on tiles.
+#ifdef USE_TILE
+    auto& cell = vbuf(grid2view(target()) - 1);
+    cell.tile.dngn_overlay[cell.tile.num_dngn_overlay++] =
+        in_range(ray.pos()) ? TILE_RAY : TILE_RAY_OUT_OF_RANGE;
 #endif
 }
 
 bool direction_chooser::in_range(const coord_def& p) const
 {
+    if (!behaviour->targeted())
+        return true;
     if (hitfunc)
         return hitfunc->valid_aim(p);
     return range < 0 || grid_distance(p, you.pos()) <= range;
@@ -1225,7 +1342,6 @@ void direction_chooser::object_cycle(int dir)
                              dir > 0 ? LS_FLIPVH : LS_FLIPHV))
     {
         set_target(objfind_pos);
-        show_items_once = true;
     }
     else
         flush_input_buffer(FLUSH_ON_FAILURE);
@@ -1233,6 +1349,8 @@ void direction_chooser::object_cycle(int dir)
 
 void direction_chooser::monster_cycle(int dir)
 {
+    if (prefer_farthest)
+        dir = -dir; // cycle from furthest to closest
     if (_find_square_wrapper(monsfind_pos, dir,
                              bind(_find_monster, placeholders::_1, mode,
                                   needs_path, range, hitfunc),
@@ -1282,16 +1400,20 @@ bool direction_chooser::select(bool allow_out_of_range, bool endpoint)
 {
     const monster* mons = monster_at(target());
 
-    if (restricts == DIR_SHADOW_STEP && !valid_shadow_step)
-        return false;
+    if (restricts == DIR_SHADOW_STEP)
+    {
+        targeter_shadow_step &tgt =
+            *static_cast<targeter_shadow_step*>(hitfunc);
+        if (!tgt.has_additional_sites(target()))
+            return false;
+    }
 
+    // leap and shadow step never allow selecting from past the target point
     if ((restricts == DIR_LEAP
          || restricts == DIR_SHADOW_STEP
          || !allow_out_of_range)
         && !in_range(target()))
     {
-        mprf(MSGCH_EXAMINE_FILTER, "%s",
-             hitfunc? hitfunc->why_not.c_str() : "That is beyond the maximum range.");
         return false;
     }
     moves.isEndpoint = endpoint || (mons && _mon_exposed(mons));
@@ -1319,7 +1441,7 @@ bool direction_chooser::pickup_item()
     unsigned short it = env.igrid(target());
     if (it != NON_ITEM)
     {
-        item = &mitm[it];
+        item = &env.item[it];
         // Check if it appears to be the same item.
         if (!item->is_valid()
             || ii->base_type != item->base_type
@@ -1355,6 +1477,7 @@ bool direction_chooser::handle_signals()
     {
         moves.isValid  = false;
         moves.isCancel = true;
+        moves.cmd_result = CMD_NO_CMD;
 
         mprf(MSGCH_ERROR, "Targeting interrupted by HUP signal.");
         return true;
@@ -1367,8 +1490,13 @@ bool direction_chooser::handle_signals()
 // we'll live with that.
 void direction_chooser::show_initial_prompt()
 {
+    if (crawl_state.invisible_targeting)
+        return;
     behaviour->update_top_prompt(&top_prompt);
     describe_cell();
+    const string err = behaviour ? behaviour->get_error() : "";
+    if (!err.empty())
+        mprf(MSGCH_PROMPT, "%s", err.c_str()); // can this push the prompt one line too tall?
 }
 
 void direction_chooser::print_target_description(bool &did_cloud) const
@@ -1387,16 +1515,17 @@ void direction_chooser::print_target_description(bool &did_cloud) const
 
 string direction_chooser::target_interesting_terrain_description() const
 {
-    const dungeon_feature_type feature = grd(target());
+    const dungeon_feature_type feature = env.grid(target());
 
     // Only features which can make you lose the item are interesting.
     // FIXME: extract the naming logic from here and use
     // feat_has_solid_floor().
     switch (feature)
     {
-    case DNGN_DEEP_WATER: return "water";
-    case DNGN_LAVA:       return "lava";
-    default:              return "";
+    case DNGN_DEEP_SLIMY_WATER: return "slime";
+    case DNGN_DEEP_WATER:       return "water";
+    case DNGN_LAVA:             return "lava";
+    default:                    return "";
     }
 }
 
@@ -1453,7 +1582,7 @@ void direction_chooser::print_target_monster_description(bool &did_cloud) const
         monster_info mi(mon);
         // Only describe the monster if you can actually see it.
         _append_container(suffixes, monster_description_suffixes(mi));
-        text = get_monster_equipment_desc(mi);
+        text = get_monster_equipment_desc(*mon);
     }
     else
         text = "Disturbance";
@@ -1467,7 +1596,7 @@ void direction_chooser::print_target_monster_description(bool &did_cloud) const
     }
 
     mprf(MSGCH_PROMPT, "%s: <lightgrey>%s</lightgrey>",
-         target_prefix ? target_prefix : "Aim",
+         target_prefix ? target_prefix : !behaviour->targeted() ? "Look" : "Aim",
          text.c_str());
 
     // If there's a cloud here, it's been described.
@@ -1492,7 +1621,9 @@ vector<string> direction_chooser::monster_description_suffixes(
 {
     vector<string> suffixes;
 
+    _push_back_if_nonempty(mi.ev_description(true), &suffixes);
     _push_back_if_nonempty(mi.wounds_description(true), &suffixes);
+    _push_back_if_nonempty(mi.tohit_description(true), &suffixes);
     _push_back_if_nonempty(mi.constriction_description(), &suffixes);
     _append_container(suffixes, mi.attributes());
     _append_container(suffixes, _get_monster_desc_vector(mi));
@@ -1521,21 +1652,23 @@ void direction_chooser::print_items_description() const
     if (!in_bounds(target()))
         return;
 
-    const item_def* item = top_item_at(target());
-    if (!item)
+    auto items = item_list_on_square(you.visible_igrd(target()));
+
+    if (items.empty())
         return;
 
-    // Print the first item.
-    mprf(MSGCH_FLOOR_ITEMS, "%s.",
-         menu_colour_item_name(*item, DESC_A).c_str());
-
-    if (multiple_items_at(target()))
-        mprf(MSGCH_FLOOR_ITEMS, "There is something else lying underneath.");
+    if (items.size() == 1)
+    {
+        mprf(MSGCH_FLOOR_ITEMS, "<cyan>Item here:</cyan> %s.",
+             menu_colour_item_name(*items[0], DESC_A).c_str());
+    }
+    else
+        mprf(MSGCH_FLOOR_ITEMS, "<cyan>Items here: </cyan> %s.", item_message(items).c_str());
 }
 
 void direction_chooser::print_floor_description(bool boring_too) const
 {
-    const dungeon_feature_type feat = grd(target());
+    const dungeon_feature_type feat = env.grid(target());
     if (!boring_too && feat == DNGN_FLOOR)
         return;
 
@@ -1545,7 +1678,7 @@ void direction_chooser::print_floor_description(bool boring_too) const
         _debug_describe_feature_at(target());
     else
 #endif
-    mprf(MSGCH_EXAMINE_FILTER, "%s",
+    mprf(MSGCH_EXAMINE_FILTER, "%s.",
          feature_description_at(target(), true).c_str());
 }
 
@@ -1637,6 +1770,8 @@ void direction_chooser::handle_movement_key(command_type key_command,
         const bool unshifted = (shift_direction(key_command) != key_command);
         if (unshifted)
             set_target(target() + delta);
+        else if (!allow_shift_dir)
+            mpr("You can't do that.");
         else
             *loop_done = select_compass_direction(delta);
     }
@@ -1692,6 +1827,7 @@ void direction_chooser::handle_wizard_command(command_type key_command,
         {
             set_hp(1);
             print_stats();
+            update_screen();
         }
         break;
 
@@ -1764,6 +1900,7 @@ void direction_chooser::handle_wizard_command(command_type key_command,
         return;
     }
     redraw_screen();
+    update_screen();
 #endif
 }
 
@@ -1789,11 +1926,7 @@ void direction_chooser::do_redraws()
 
     if (need_viewport_redraw)
     {
-        draw_beam();
-        // draw_beam calls viewwindow(true) at least one in tiles mode, and
-        // viewwindow(false) at least once in console, so the old highlight and
-        // the old beam are both gone here.
-        highlight_summoner();
+        viewwindow(false, false, nullptr, &renderer);
         need_viewport_redraw = false;
     }
 
@@ -1802,7 +1935,6 @@ void direction_chooser::do_redraws()
         msgwin_clear_temporary();
         describe_cell();
         need_text_redraw = false;
-        show_items_once = false;
     }
 
     if (need_cursor_redraw || Options.use_fake_cursor)
@@ -1822,41 +1954,33 @@ coord_def direction_chooser::find_summoner()
 {
     const monster* mon = monster_at(target());
 
-    // Don't leak information about rakshasa mirrored illusions.
-    if (mon && mon->is_summoned() && !mon->has_ench(ENCH_PHANTOM_MIRROR))
-        if (const monster *summ = monster_by_mid(mon->summoner))
+    if (mon && mon->is_summoned()
+        // Don't leak information about rakshasa mirrored illusions.
+        && !mon->has_ench(ENCH_PHANTOM_MIRROR)
+        // Don't leak information about invisible or out-of-los summons.
+        && you.can_see(*mon))
+    {
+        const monster *summ = monster_by_mid(mon->summoner);
+        // Don't leak information about invisible summoners.
+        if (summ && you.can_see(*summ))
             return summ->pos();
+    }
     return INVALID_COORD;
 }
 
-void direction_chooser::highlight_summoner()
+void direction_chooser::highlight_summoner(crawl_view_buffer &vbuf)
 {
     const coord_def summ_loc = find_summoner();
 
     if (summ_loc == INVALID_COORD || !you.see_cell(summ_loc))
         return;
 
+    auto& cell = vbuf(grid2view(summ_loc) - 1);
 #ifdef USE_TILE
-    monster_info* summ_info = env.map_knowledge(summ_loc).monsterinfo();
-
-    if (!summ_info)  // Can happen, e. g. if the summoner is invisible
-        return;
-
-    summ_info->mb.set(MB_HIGHLIGHTED_SUMMONER);
-
-    // The first argument must be false, because otherwise viewwindow would
-    // wipe any beams we might have drawn, and also reset the monster_info we
-    // just altered, before it draws anything.
-    viewwindow(false, true);
-#else
-    char32_t glych  = get_cell_glyph(summ_loc).ch;
-    int col = CYAN;
-    col |= COLFLAG_REVERSE;
-
-    const coord_def vp = grid2view(summ_loc);
-    cgotoxy(vp.x, vp.y, GOTO_DNGN);
-    textcolour(real_colour(col));
-    putwch(glych);
+    cell.tile.is_highlighted_summoner = true;
+#endif
+#if defined(USE_TILE_WEB) || !defined(USE_TILE)
+    cell.colour = CYAN | COLFLAG_REVERSE;
 #endif
 }
 
@@ -1881,11 +2005,46 @@ void direction_chooser::move_to_you()
     moves.delta.reset();
 }
 
+void direction_chooser::full_describe()
+{
+    vector <monster_info> list_mons;
+    vector<item_def> list_items;
+    vector<coord_def> list_features;
+
+    vector <monster *> nearby_mons = get_nearby_monsters(true, false, false,
+                                                         false, true, true,
+                                                         range);
+    for (auto m : nearby_mons)
+        if (_want_target_monster(m, mode, hitfunc))
+            list_mons.push_back(monster_info(m));
+
+    if (targets_objects() || just_looking)
+        _get_nearby_items(list_items, needs_path, range, hitfunc);
+
+    if (hitfunc && hitfunc->can_affect_walls() || just_looking)
+        _get_nearby_features(list_features, needs_path, range, hitfunc);
+
+    if (list_mons.empty() && list_items.empty() && list_features.empty())
+    {
+        mprf(MSGCH_EXAMINE_FILTER, "There are no valid targets to list.");
+        flush_prev_message();
+        return;
+    }
+
+    const coord_def choice =
+        _full_describe_menu(list_mons, list_items, list_features,
+                            just_looking ? "target/travel" : "target");
+
+    if (choice != coord_def(-1, -1))
+        set_target(choice);
+    need_all_redraw = true;
+}
+
 void direction_chooser::describe_target()
 {
     if (!map_bounds(target()) || !env.map_knowledge(target()).known())
         return;
-    full_describe_square(target());
+    full_describe_square(target(), false);
     need_all_redraw = true;
 }
 
@@ -1893,32 +2052,19 @@ void direction_chooser::show_help()
 {
     show_targeting_help();
     redraw_screen();
+    update_screen();
     clear_messages(true);
     need_all_redraw = true;
 }
 
-// Return false if we should continue looping, true if we're done.
-bool direction_chooser::do_main_loop()
+bool direction_chooser::process_command(command_type command)
 {
-    if (handle_signals())
-        return true;
-
-    // This needs to be done every loop iteration.
-    reinitialize_move_flags();
-
-    const coord_def old_target = target();
-    const int key = behaviour->get_key();
-    if (key == CK_REDRAW)
-    {
-        redraw_screen(false);
-        return false;
-    }
-
-    const command_type key_command = behaviour->get_command(key);
-    behaviour->update_top_prompt(&top_prompt);
     bool loop_done = false;
 
-    switch (key_command)
+    // Move flags are volitile, reset them to defaults before each command
+    reinitialize_move_flags();
+
+    switch (command)
     {
     case CMD_TARGET_SHOW_PROMPT: describe_cell(); break;
 
@@ -1983,65 +2129,59 @@ bool direction_chooser::do_main_loop()
 
     case CMD_TARGET_CYCLE_BACK:
         if (!targets_objects())
-        {
             monster_cycle(-1);
-            break;
-        } // else fall-through
-    case CMD_TARGET_OBJ_CYCLE_BACK:    object_cycle(-1);  break;
+        else
+            object_cycle(-1);
+        break;
+
+    case CMD_TARGET_OBJ_CYCLE_BACK:
+        object_cycle(-1);
+        break;
 
     case CMD_TARGET_CYCLE_FORWARD:
         if (!targets_objects())
-        {
             monster_cycle(1);
-            break;
-        } // else fall-through
-    case CMD_TARGET_OBJ_CYCLE_FORWARD: object_cycle(1);  break;
+        else
+            object_cycle(1);
+        break;
+
+    case CMD_TARGET_OBJ_CYCLE_FORWARD:
+        object_cycle(1);
+        break;
 
     case CMD_TARGET_CANCEL:
         loop_done = true;
         moves.isCancel = true;
         break;
 
+    case CMD_TARGET_FULL_DESCRIBE: full_describe(); break;
     case CMD_TARGET_DESCRIBE: describe_target(); break;
     case CMD_TARGET_HELP:     show_help();       break;
 
+    case CMD_TARGET_CYCLE_QUIVER_BACKWARD:
+    case CMD_TARGET_CYCLE_QUIVER_FORWARD:
+    case CMD_TARGET_SELECT_ACTION:
+        if (moves.fire_context)
+        {
+            // because of the somewhat convoluted way in which action selection
+            // is handled, this can only be handled if the direction chooser
+            // has been called via a quiver::action. Otherwise, we ignore these
+            // commands.
+            moves.isValid = false;
+            moves.isCancel = true;
+            moves.cmd_result = static_cast<int>(command);
+            loop_done = true;
+        }
+        break; // otherwise, ignore
+
     default:
         // Some blocks of keys with similar handling.
-        handle_movement_key(key_command, &loop_done);
-        handle_wizard_command(key_command, &loop_done);
+        handle_movement_key(command, &loop_done);
+        handle_wizard_command(command, &loop_done);
         break;
     }
 
-    // Don't allow going out of bounds.
-    if (!crawl_view.in_viewport_g(target()))
-        set_target(old_target);
-
-    if (loop_done)
-    {
-        if (just_looking)
-            return true;
-
-        if (!move_is_ok())
-        {
-            moves.isCancel = true;
-            moves.isValid = false;
-        }
-        return true;
-    }
-
-    // Redraw whatever is necessary.
-    if (old_target != target())
-    {
-        have_beam = show_beam && find_ray(you.pos(), target(), beam,
-                                          opc_solid_see, you.current_vision);
-        need_text_redraw   = true;
-        need_viewport_redraw   = true;
-        need_cursor_redraw = true;
-    }
-    do_redraws();
-
-    // We're not done.
-    return false;
+    return loop_done;
 }
 
 void direction_chooser::finalize_moves()
@@ -2058,16 +2198,183 @@ void direction_chooser::finalize_moves()
 #endif
 }
 
+class UIDirectionChooserView : public ui::Widget
+{
+public:
+    UIDirectionChooserView(direction_chooser& dc) :
+        m_dc(dc), old_target(dc.target())
+    {
+    }
+    ~UIDirectionChooserView() {}
+
+    void _render() override
+    {
+        if (crawl_state.invisible_targeting)
+            return;
+
+#ifndef USE_TILE_LOCAL
+        // do_redraws() only calls viewwindow(); we must first draw the sidebar.
+        redraw_screen(false);
+#endif
+
+        // We always have to redraw the viewport, because ui::redraw() will call
+        // redraw_screen in case the window has been resized.
+        m_dc.need_viewport_redraw = true;
+        m_dc.do_redraws();
+
+#ifdef USE_TILE_LOCAL
+        tiles.render_current_regions();
+        glmanager->reset_transform();
+#endif
+    }
+
+    void _allocate_region() override
+    {
+        _expose();
+    }
+
+    bool on_event(const ui::Event& ev) override
+    {
+        if (ev.type() == ui::Event::Type::KeyDown)
+        {
+            auto key = static_cast<const ui::KeyEvent&>(ev).key();
+            key = unmangle_direction_keys(key, KMC_TARGETING, false);
+
+            const auto command = m_dc.behaviour->get_command(key);
+            // XX a bit ugly to do this here..
+            if (m_dc.behaviour->needs_path != MB_MAYBE)
+            {
+                m_dc.needs_path = tobool(m_dc.behaviour->needs_path, true);
+                m_dc.show_beam = !m_dc.just_looking && m_dc.needs_path;
+                // XX code duplication
+                m_dc.have_beam = m_dc.show_beam
+                                 && find_ray(you.pos(), m_dc.target(), m_dc.beam,
+                                             opc_solid_see, you.current_vision);
+                m_dc.need_text_redraw = true;
+                m_dc.need_viewport_redraw = true;
+                m_dc.need_cursor_redraw = true;
+            }
+
+            string top_prompt = m_dc.top_prompt;
+            m_dc.behaviour->update_top_prompt(&top_prompt);
+
+            if (m_dc.top_prompt != top_prompt)
+            {
+                _expose();
+                m_dc.top_prompt = top_prompt;
+            }
+
+            process_command(command);
+
+            // Flush the input buffer before the next command.
+            if (!crawl_state.is_replaying_keys())
+                flush_input_buffer(FLUSH_BEFORE_COMMAND);
+            return true;
+        }
+
+#ifdef USE_TILE_LOCAL
+        if (ev.type() == ui::Event::Type::MouseMove
+            || ev.type() == ui::Event::Type::MouseDown)
+        {
+            auto wm_event = to_wm_event(static_cast<const ui::MouseEvent&>(ev));
+            tiles.handle_mouse(wm_event);
+            process_command(ev.type() == ui::Event::Type::MouseMove ?
+                                CMD_TARGET_MOUSE_MOVE :
+                                CMD_TARGET_MOUSE_SELECT);
+            return true;
+        }
+#endif
+
+        return false;
+    }
+
+    void process_command(command_type cmd)
+    {
+        // the chooser needs a cursor, but we need to hide it here
+        cursor_control cc(false);
+        bool loop_done = m_dc.process_command(cmd);
+
+        // Don't allow going out of bounds.
+        if (!crawl_view.in_viewport_g(m_dc.target()))
+            m_dc.set_target(old_target);
+
+        if (loop_done)
+        {
+            m_is_alive = false;
+
+            if (!m_dc.just_looking && !m_dc.move_is_ok())
+            {
+                m_dc.moves.isCancel = true;
+                m_dc.moves.isValid = false;
+            }
+            return;
+        }
+
+        // Redraw whatever is necessary.
+        if (old_target != m_dc.target())
+        {
+            m_dc.have_beam = m_dc.show_beam
+                             && find_ray(you.pos(), m_dc.target(), m_dc.beam,
+                                         opc_solid_see, you.current_vision);
+            m_dc.need_text_redraw = true;
+            m_dc.need_viewport_redraw = true;
+            m_dc.need_cursor_redraw = true;
+        }
+
+        if (m_dc.need_viewport_redraw || m_dc.need_cursor_redraw
+            || m_dc.need_text_redraw || m_dc.need_all_redraw)
+        {
+            _expose();
+        }
+
+        old_target = m_dc.target();
+    }
+
+    bool is_alive()
+    {
+        return m_is_alive;
+    }
+
+private:
+    direction_chooser& m_dc;
+    coord_def old_target;
+    bool m_is_alive = true;
+};
+
+void direction_chooser::update_validity()
+{
+    if (!select(false, moves.isEndpoint) || !move_is_ok())
+    {
+        moves.isCancel = true;
+        moves.isValid = false;
+        return;
+    }
+    // select() should handle setting bools appropriately on success
+}
+
+bool direction_chooser::noninteractive()
+{
+    // if target is unset, this will find previous or closest target; if
+    // target is set this will adjust targeting depending on custom
+    // behavior
+    if (moves.find_target)
+        set_target(find_default_target());
+
+    update_validity();
+    finalize_moves();
+    moves.cmd_result = moves.isValid && !moves.isCancel ? CMD_FIRE : CMD_NO_CMD;
+    return moves.cmd_result == CMD_FIRE;
+}
+
 bool direction_chooser::choose_direction()
 {
 #ifdef USE_TILE
     ui::cutoff_point ui_cutoff_point;
 #endif
 
-    if (restricts == DIR_DIR)
-        return choose_compass();
-
+#ifndef USE_TILE_LOCAL
     cursor_control ccon(!Options.use_fake_cursor);
+#endif
     mouse_control mc(needs_path && !just_looking ? MOUSE_MODE_TARGET_PATH
                                                  : MOUSE_MODE_TARGET);
     targeter_smite legacy_range(&you, range, 0, 0, true);
@@ -2082,6 +2389,8 @@ bool direction_chooser::choose_direction()
                                        : find_default_target());
 
     objfind_pos = monsfind_pos = target();
+    if (prefer_farthest && moves.target != you.pos())
+        monster_cycle(1);
 
     // If requested, show the beam on startup.
     if (show_beam)
@@ -2094,18 +2403,30 @@ bool direction_chooser::choose_direction()
         need_viewport_redraw = true;
 
     clear_messages();
-    msgwin_set_temporary(true);
+    msgwin_temporary_mode tmp;
+
     unwind_bool save_more(crawl_state.show_more_prompt, false);
     show_initial_prompt();
     need_text_redraw = false;
 
-    do_redraws();
+    auto directn_view = make_shared<UIDirectionChooserView>(*this);
 
-    while (!do_main_loop())
-        ;
+#ifdef USE_TILE_LOCAL
+    unwind_bool inhibit_rendering(ui::should_render_current_regions, false);
+#endif
 
-    msgwin_set_temporary(false);
+    // TODO: ideally crawl_state.invisible_targeting would suppress the redraws
+    // associated with these ui calls, but I'm not sure of a clean way to make
+    // that work
+    ui::push_layout(directn_view, KMC_TARGETING);
+    directn_view->_queue_allocation();
+    while (directn_view->is_alive() && !handle_signals())
+        ui::pump_events();
+    ui::pop_layout();
+
     finalize_moves();
+    if (moves.isValid && !moves.isCancel)
+        moves.cmd_result = CMD_FIRE;
     return moves.isValid;
 }
 
@@ -2115,14 +2436,14 @@ string get_terse_square_desc(const coord_def &gc)
     const char *unseen_desc = "[unseen terrain]";
 
     if (gc == you.pos())
-        desc = you.xom_name;
+        desc = player_name();
     else if (!map_bounds(gc))
         desc = unseen_desc;
     else if (!you.see_cell(gc))
     {
         if (env.map_knowledge(gc).seen())
         {
-            desc = "[" + feature_description_at(gc, false, DESC_PLAIN, false)
+            desc = "[" + feature_description_at(gc, false, DESC_PLAIN)
                        + "]";
         }
         else
@@ -2132,11 +2453,11 @@ string get_terse_square_desc(const coord_def &gc)
             desc = monster_at(gc)->full_name(DESC_PLAIN);
     else if (you.visible_igrd(gc) != NON_ITEM)
     {
-        if (mitm[you.visible_igrd(gc)].defined())
-            desc = mitm[you.visible_igrd(gc)].name(DESC_PLAIN);
+        if (env.item[you.visible_igrd(gc)].defined())
+            desc = env.item[you.visible_igrd(gc)].name(DESC_PLAIN);
     }
     else
-        desc = feature_description_at(gc, false, DESC_PLAIN, false);
+        desc = feature_description_at(gc, false, DESC_PLAIN);
 
     return desc;
 }
@@ -2149,17 +2470,17 @@ void terse_describe_square(const coord_def &c, bool in_range)
         _describe_cell(c, in_range);
 }
 
+// Get description of the "top" thing in a square; for mouseover text.
 void get_square_desc(const coord_def &c, describe_info &inf)
 {
-    // NOTE: Keep this function in sync with full_describe_square.
-
     const dungeon_feature_type feat = env.map_knowledge(c).feat();
     const cloud_type cloud = env.map_knowledge(c).cloud();
 
     if (const monster_info *mi = env.map_knowledge(c).monsterinfo())
     {
+        monster * mon = monster_at(c);
         // First priority: monsters.
-        string desc = uppercase_first(get_monster_equipment_desc(*mi))
+        string desc = uppercase_first(get_monster_equipment_desc(*mon))
                     + ".\n";
         const string wounds = mi->wounds_description_sentence();
         if (!wounds.empty())
@@ -2189,29 +2510,60 @@ void get_square_desc(const coord_def &c, describe_info &inf)
         inf.body << get_cloud_desc(cloud);
 }
 
+// Show a description of the only thing on a square, or a selection menu with
+// visible things on the square if there are many. For x-v and similar contexts.
+// Used for both in- and out-of-los cells.
 void full_describe_square(const coord_def &c, bool cleanup)
 {
-    // NOTE: Keep this function in sync with get_square_desc.
+    vector<monster_info> list_mons;
+    vector<item_def> list_items;
+    vector<coord_def> list_features;
+    int quantity = 0;
 
-    if (const monster_info *mi = env.map_knowledge(c).monsterinfo())
+    const monster_info *mi = env.map_knowledge(c).monsterinfo();
+    item_def *obj = env.map_knowledge(c).item();
+    const dungeon_feature_type feat = env.map_knowledge(c).feat();
+
+    if (mi)
     {
-        // First priority: monsters.
-        describe_monsters(*mi);
+        list_mons.emplace_back(*mi);
+        ++quantity;
     }
-    else if (item_info *obj = env.map_knowledge(c).item())
+    if (obj)
     {
-        // Second priority: objects.
-        describe_item(*obj);
+        list_items = item_list_in_stash(c);
+        quantity += list_items.size();
+    }
+    // I'm not sure if features should be included. But it seems reasonable to
+    // at least include what full_describe_view shows
+    if (feat_stair_direction(feat) != CMD_NO_CMD || feat_is_trap(feat))
+    {
+        list_features.push_back(c);
+        ++quantity;
+    }
+
+    if (quantity > 1)
+    {
+        _full_describe_menu(list_mons, list_items, list_features, "", true,
+                            you.see_cell(c) ? "What do you want to examine?"
+                                            : "What do you want to remember?");
+    }
+    else if (quantity == 1)
+    {
+        if (mi)
+            describe_monsters(*mi);
+        else if (list_items.size())
+            describe_item(*obj);
+        else
+            describe_feature_wide(c);
     }
     else
-    {
-        // Third priority: features.
         describe_feature_wide(c);
-    }
 
     if (cleanup)
     {
         redraw_screen();
+        update_screen();
         clear_messages();
     }
 }
@@ -2272,14 +2624,11 @@ static bool _mons_is_valid_target(const monster* mon, targ_mode_type mode,
 {
     // Monsters that are no threat to you don't count as monsters.
     if (mode != TARG_EVOLVABLE_PLANTS
-        && !mons_is_threatening(*mon))
+        && !mons_is_threatening(*mon)
+        && !mons_class_is_test(mon->type))
     {
         return false;
     }
-
-    // Don't target submerged monsters.
-    if (mode != TARG_HOSTILE_SUBMERGED && mon->submerged())
-        return false;
 
     // Don't usually target unseen monsters...
     if (!mon->visible_to(&you))
@@ -2297,6 +2646,10 @@ static bool _mons_is_valid_target(const monster* mon, targ_mode_type mode,
 static bool _want_target_monster(const monster *mon, targ_mode_type mode,
                                  targeter* hitfunc)
 {
+    // Sanity.
+    if (mon->type == MONS_NO_MONSTER || !mon->alive())
+        return false;
+        
     if (hitfunc && !hitfunc->affects_monster(monster_info(mon)))
         return false;
     switch (mode)
@@ -2304,7 +2657,6 @@ static bool _want_target_monster(const monster *mon, targ_mode_type mode,
     case TARG_ANY:
         return true;
     case TARG_HOSTILE:
-    case TARG_HOSTILE_SUBMERGED:
         return mons_attitude(*mon) == ATT_HOSTILE;
     case TARG_FRIEND:
         return mon->friendly();
@@ -2329,18 +2681,15 @@ static bool _want_target_monster(const monster *mon, targ_mode_type mode,
     die("Unknown targeting mode!");
 }
 
-#ifdef CLUA_BINDINGS
 static bool _tobool(maybe_bool mb)
 {
     ASSERT(mb != MB_MAYBE);
     return mb == MB_TRUE;
 }
-#endif
 
 static bool _find_monster(const coord_def& where, targ_mode_type mode,
                           bool need_path, int range, targeter *hitfunc)
 {
-#ifdef CLUA_BINDINGS
     {
         coord_def dp = grid2player(where);
         // We could pass more info here.
@@ -2349,7 +2698,6 @@ static bool _find_monster(const coord_def& where, targ_mode_type mode,
         if (x != MB_MAYBE)
             return _tobool(x);
     }
-#endif
 
     // Target the player for friendly and general spells.
     if ((mode == TARG_FRIEND || mode == TARG_ANY) && where == you.pos())
@@ -2382,7 +2730,6 @@ static bool _find_shadow_step_mons(const coord_def& where, targ_mode_type mode,
                                    bool need_path, int range,
                                    targeter *hitfunc)
 {
-#ifdef CLUA_BINDINGS
     {
         coord_def dp = grid2player(where);
         // We could pass more info here.
@@ -2391,7 +2738,6 @@ static bool _find_shadow_step_mons(const coord_def& where, targ_mode_type mode,
         if (x != MB_MAYBE)
             return _tobool(x);
     }
-#endif
 
     // Need a monster to attack; this checks that the monster is a valid target.
     if (!_find_monster(where, mode, need_path, range, hitfunc))
@@ -2400,7 +2746,8 @@ static bool _find_shadow_step_mons(const coord_def& where, targ_mode_type mode,
     if (where == you.pos())
         return false;
 
-    return hitfunc->has_additional_sites(where);
+    targeter_shadow_step &tgt = *static_cast<targeter_shadow_step*>(hitfunc);
+    return tgt.has_additional_sites(where);
 }
 
 static bool _find_monster_expl(const coord_def& where, targ_mode_type mode,
@@ -2409,7 +2756,6 @@ static bool _find_monster_expl(const coord_def& where, targ_mode_type mode,
 {
     ASSERT(hitfunc);
 
-#ifdef CLUA_BINDINGS
     {
         coord_def dp = grid2player(where);
         // We could pass more info here.
@@ -2418,7 +2764,6 @@ static bool _find_monster_expl(const coord_def& where, targ_mode_type mode,
         if (x != MB_MAYBE)
             return _tobool(x);
     }
-#endif
 
     if (!hitfunc->valid_aim(where))
         return false;
@@ -2444,7 +2789,7 @@ static bool _find_monster_expl(const coord_def& where, targ_mode_type mode,
     return false;
 }
 
-static const item_def* const _item_at(const coord_def &where)
+static const item_def* _item_at(const coord_def &where)
 {
     // XXX: are we ever interacting with unseen items, anyway?
     return you.see_cell(where)
@@ -2757,7 +3102,7 @@ static void _describe_oos_feature(const coord_def& where)
     if (!env.map_knowledge(where).seen())
         return;
 
-    string desc = feature_description(env.map_knowledge(where).feat());
+    string desc = feature_description(env.map_knowledge(where).feat()) + ".";
 
     if (!desc.empty())
         mprf(MSGCH_EXAMINE_FILTER, "[%s]", desc.c_str());
@@ -2773,9 +3118,7 @@ vector<dungeon_feature_type> features_by_desc(const base_pattern &pattern)
         for (int i = 0; i < NUM_FEATURES; ++i)
         {
             string fdesc =
-                feature_description(static_cast<dungeon_feature_type>(i));
-            if (fdesc.empty())
-                continue;
+                feature_description(static_cast<dungeon_feature_type>(i)) + ".";
 
             if (pattern.matches(fdesc))
                 features.push_back(dungeon_feature_type(i));
@@ -2784,9 +3127,10 @@ vector<dungeon_feature_type> features_by_desc(const base_pattern &pattern)
     return features;
 }
 
-void describe_floor()
+void describe_floor(const coord_def* pos_ptr)
 {
-    dungeon_feature_type grid = env.map_knowledge(you.pos()).feat();
+    coord_def pos = pos_ptr ? *pos_ptr : you.pos();
+    dungeon_feature_type grid = env.map_knowledge(pos).feat();
 
     const char* prefix = "There is ";
     string feat;
@@ -2806,8 +3150,8 @@ void describe_floor()
         break;
     }
 
-    feat = feature_description_at(you.pos(), true,
-                               DESC_A, false);
+    feat = feature_description_at(pos, true, DESC_A);
+
     if (feat.empty())
         return;
 
@@ -2818,8 +3162,6 @@ void describe_floor()
         return;
 
     mprf(channel, "%s%s here.", prefix, feat.c_str());
-    if (grid == DNGN_ENTER_GAUNTLET)
-        mprf(MSGCH_EXAMINE, "Beware, the minotaur awaits!");
 }
 
 static string _base_feature_desc(dungeon_feature_type grid, trap_type trap)
@@ -2829,6 +3171,12 @@ static string _base_feature_desc(dungeon_feature_type grid, trap_type trap)
 
     if (grid == DNGN_ROCK_WALL && player_in_branch(BRANCH_PANDEMONIUM))
         return "wall of the weird stuff which makes up Pandemonium";
+    if (grid == DNGN_SLIMESHROOM)
+    {
+        if (jiyva_is_dead())
+            return "dead mushroom stump";
+        return "giant mushroom";
+    }
     else if (!is_valid_feature_type(grid))
         return "";
     else
@@ -2838,7 +3186,7 @@ static string _base_feature_desc(dungeon_feature_type grid, trap_type trap)
 
 string feature_description(dungeon_feature_type grid, trap_type trap,
                            const string & cover_desc,
-                           description_level_type dtype, bool add_stop)
+                           description_level_type dtype)
 {
     string desc = _base_feature_desc(grid, trap);
     desc += cover_desc;
@@ -2846,12 +3194,12 @@ string feature_description(dungeon_feature_type grid, trap_type trap,
     if (grid == DNGN_FLOOR && dtype == DESC_A)
         dtype = DESC_THE;
 
-    return thing_do_grammar(dtype, add_stop, feat_is_trap(grid), desc);
+    return thing_do_grammar(dtype, desc);
 }
 
 string raw_feature_description(const coord_def &where)
 {
-    dungeon_feature_type feat = grd(where);
+    dungeon_feature_type feat = env.grid(where);
 
     int mapi = env.level_map_ids(where);
     if (mapi != INVALID_MAP_INDEX)
@@ -2875,7 +3223,7 @@ static bool _interesting_feature(dungeon_feature_type feat)
 #endif
 
 string feature_description_at(const coord_def& where, bool covering,
-                              description_level_type dtype, bool add_stop)
+                              description_level_type dtype)
 {
     dungeon_feature_type grid = env.map_knowledge(where).feat();
     trap_type trap = env.map_knowledge(where).trap();
@@ -2887,12 +3235,14 @@ string feature_description_at(const coord_def& where, bool covering,
 
     if (covering && you.see_cell(where))
     {
+        if (is_snowcovered(where))
+            covering_description = ", blanketed in snow";
         if (is_bloodcovered(where))
-            covering_description = ", spattered with blood";
+            covering_description += ", spattered with blood";
         else if (glowing_mold(where))
-            covering_description = ", covered with glowing mould";
+            covering_description += ", covered with glowing mould";
         else if (is_moldy(where))
-            covering_description = ", covered with mould";
+            covering_description += ", covered with mould";
     }
 
     // FIXME: remove desc markers completely; only Zin walls are left.
@@ -2901,7 +3251,7 @@ string feature_description_at(const coord_def& where, bool covering,
     {
         marker_desc += covering_description;
 
-        return thing_do_grammar(dtype, add_stop, false, marker_desc);
+        return thing_do_grammar(dtype, marker_desc);
     }
 
     if (feat_is_door(grid))
@@ -2964,37 +3314,45 @@ string feature_description_at(const coord_def& where, bool covering,
 
         desc += covering_description;
 
-        return thing_do_grammar(dtype, add_stop, false, desc);
+        return thing_do_grammar(dtype, desc);
     }
 
     switch (grid)
     {
+#if TAG_MAJOR_VERSION == 34
     case DNGN_TRAP_MECHANICAL:
-        return feature_description(grid, trap, covering_description, dtype,
-                                   add_stop);
+#endif
+    case DNGN_TRAP_ARROW:
+    case DNGN_TRAP_SPEAR:
+    case DNGN_TRAP_BLADE:
+    case DNGN_TRAP_NEEDLE:
+    case DNGN_TRAP_BOLT:
+    case DNGN_TRAP_NET:
+    case DNGN_TRAP_PLATE:
+        return feature_description(grid, trap, covering_description, dtype);
     case DNGN_ABANDONED_SHOP:
-        return thing_do_grammar(dtype, add_stop, false, "an abandoned shop");
+        return thing_do_grammar(dtype, "an abandoned shop");
 
     case DNGN_ENTER_SHOP:
-        return shop_name(*shop_at(where)) + (add_stop ? "." : "");
+        return shop_name(*shop_at(where));
 
 #if TAG_MAJOR_VERSION == 34
     case DNGN_ENTER_PORTAL_VAULT:
         // Should have been handled at the top of the function.
-        return thing_do_grammar(
-                   dtype, add_stop, false,
-                   "UNAMED PORTAL VAULT ENTRY");
+        return thing_do_grammar(dtype, "UNAMED PORTAL VAULT ENTRY");
 #endif
 
+    case DNGN_SLIMESHROOM:    // Intentional fallthrough.
+    case DNGN_MANGROVE:       // Intentional fallthrough.
     case DNGN_TREE:
     {
         string desc = "";
         if (env.forest_awoken_until)
             desc += "awoken ";
-        desc += grid == grd(where) ? raw_feature_description(where)
+        desc += grid == env.grid(where) ? raw_feature_description(where)
                                    : _base_feature_desc(grid, trap);
         desc += covering_description;
-        return thing_do_grammar(dtype, add_stop, false, desc);
+        return thing_do_grammar(dtype, desc);
     }
 
     case DNGN_FLOOR:
@@ -3002,31 +3360,26 @@ string feature_description_at(const coord_def& where, bool covering,
             dtype = DESC_THE;
         // fallthrough
     default:
-        const string featdesc = grid == grd(where)
+        const string featdesc = grid == env.grid(where)
                               ? raw_feature_description(where)
                               : _base_feature_desc(grid, trap);
-        return thing_do_grammar(dtype, add_stop, feat_is_trap(grid),
-                                featdesc + covering_description);
+        return thing_do_grammar(dtype, featdesc + covering_description);
     }
 }
 
-static string _describe_monster_weapon(const monster_info& mi, bool ident)
+static string _describe_monster_weapon(const monster & mon, bool ident)
 {
+    const monster_info mi(&mon);
     string desc = "";
     string name1, name2;
-    const item_def *weap = mi.inv[MSLOT_WEAPON].get();
-    const item_def *alt  = mi.inv[MSLOT_ALT_WEAPON].get();
+    const item_def *weap = mon.mslot_item(MSLOT_WEAPON);
+    const item_def *alt  = mon.mslot_item(MSLOT_ALT_WEAPON);
 
     if (weap && (!ident || item_type_known(*weap)))
-    {
-        name1 = weap->name(DESC_A, false, false, true,
-                           false, ISFLAG_KNOW_CURSE);
-    }
+        name1 = weap->name(DESC_A);
+
     if (alt && (!ident || item_type_known(*alt)) && mi.wields_two_weapons())
-    {
-        name2 = alt->name(DESC_A, false, false, true,
-                          false, ISFLAG_KNOW_CURSE);
-    }
+        name2 = alt->name(DESC_A);
 
     if (name1.empty() && !name2.empty())
         name1.swap(name2);
@@ -3035,8 +3388,7 @@ static string _describe_monster_weapon(const monster_info& mi, bool ident)
     {
         item_def dup = *weap;
         ++dup.quantity;
-        name1 = dup.name(DESC_A, false, false, true, true,
-                         ISFLAG_KNOW_CURSE);
+        name1 = dup.name(DESC_A, false, false, true, true);
         name2.clear();
     }
 
@@ -3074,7 +3426,7 @@ static string _stair_destination_description(const coord_def &pos)
         const stair_info *si = linf->get_stair(pos);
         if (si)
             return " " + si->describe();
-        else if (feat_is_stair(grd(pos)))
+        else if (feat_is_stair(env.grid(pos)))
             return " (unknown stair)";
     }
     return "";
@@ -3103,10 +3455,13 @@ static vector<string> _get_monster_behaviour_vector(const monster_info& mi)
 {
     vector<string> descs;
 
-    if (mi.is(MB_SLEEPING) || mi.is(MB_DORMANT))
-        descs.emplace_back(mi.is(MB_CONFUSED) ? "sleepwalking" : "resting");
-    else if (mi.is(MB_FLEEING))
-        descs.emplace_back("fleeing");
+    if ((mi.is(MB_SLEEPING) || mi.is(MB_DORMANT)))
+    {
+        if (mi.is(MB_CONFUSED))
+            descs.emplace_back("sleepwalking");
+        else if (mons_class_flag(mi.type, M_CONFUSED))
+            descs.emplace_back("drifting");
+    }
     else if (mi.attitude == ATT_HOSTILE && (mi.is(MB_UNAWARE) || mi.is(MB_WANDERING)))
         descs.emplace_back("hasn't noticed you");
 
@@ -3118,11 +3473,9 @@ static vector<string> _get_monster_desc_vector(const monster_info& mi)
 {
     vector<string> descs;
 
-    if (mi.is(MB_CLINGING))
-        descs.emplace_back("clinging");
-
-    if (mi.is(MB_MESMERIZING))
-        descs.emplace_back("mesmerising");
+    // BCADDO: Should be in mon-info-flag-name.h too?
+    if (cell_is_solid(mi.pos) && mi_wall_shielded(mi))
+        descs.emplace_back("wall shielded");
 
     _append_container(descs, _get_monster_behaviour_vector(mi));
 
@@ -3135,7 +3488,7 @@ static vector<string> _get_monster_desc_vector(const monster_info& mi)
 
     if (mi.attitude == ATT_FRIENDLY)
         descs.emplace_back("friendly");
-    else if (mi.attitude == ATT_GOOD_NEUTRAL)
+    else if (mi.attitude == ATT_GOOD_NEUTRAL || mi.attitude == ATT_PASSIVE)
         descs.emplace_back("peaceful");
     else if (mi.attitude != ATT_HOSTILE && !mi.is(MB_INSANE))
     {
@@ -3143,37 +3496,17 @@ static vector<string> _get_monster_desc_vector(const monster_info& mi)
         descs.emplace_back("indifferent");
     }
 
-    if (mi.is(MB_SUMMONED))
-        descs.emplace_back("summoned");
-
-    if (mi.is(MB_PERM_SUMMON))
-        descs.emplace_back("durably summoned");
-
-    if (mi.is(MB_SUMMONED_CAPPED))
-        descs.emplace_back("expiring");
-
     if (mi.is(MB_HALOED))
         descs.emplace_back("haloed");
 
     if (mi.is(MB_UMBRAED))
         descs.emplace_back("umbra");
 
-    if (mi.is(MB_POSSESSABLE))
-        descs.emplace_back("possessable"); // FIXME: better adjective
-    else if (mi.is(MB_ENSLAVED))
-        descs.emplace_back("disembodied soul");
-
-    if (mi.is(MB_MIRROR_DAMAGE))
-        descs.emplace_back("reflecting injuries");
-
-    if (mi.is(MB_INNER_FLAME))
-        descs.emplace_back("inner flame");
-
     if (mi.fire_blocker)
     {
         descs.push_back("fire blocked by " // FIXME, renamed features
                         + feature_description(mi.fire_blocker, NUM_TRAPS, "",
-                                              DESC_A, false));
+                                              DESC_A));
     }
 
     return descs;
@@ -3190,6 +3523,12 @@ static string _get_monster_desc(const monster_info& mi)
     {
         text += pronoun + " " + conjugate_verb("are", mi.pronoun_plurality())
                 + " clinging to the wall.\n";
+    }
+
+    if (cell_is_solid(mi.pos) && mi_wall_shielded(mi))
+    {
+        text += pronoun + " " + conjugate_verb("are", mi.pronoun_plurality())
+                + " hiding in the wall.\n";
     }
 
     if (mi.is(MB_MESMERIZING))
@@ -3223,7 +3562,7 @@ static string _get_monster_desc(const monster_info& mi)
         text += pronoun + " " + conjugate_verb("are", mi.pronoun_plurality())
                 + " friendly.\n";
     }
-    else if (mi.attitude == ATT_GOOD_NEUTRAL)
+    else if (mi.attitude == ATT_GOOD_NEUTRAL || mi.attitude == ATT_PASSIVE)
     {
         text += pronoun + " " + conjugate_verb("seem", mi.pronoun_plurality())
                 + " to be peaceful towards you.\n";
@@ -3296,13 +3635,25 @@ static string _get_monster_desc(const monster_info& mi)
                 + " filled with an inner flame.\n";
     }
 
+    if (mi.is(MB_ENTROPIC_BURST))
+    {
+        text += pronoun + " " + conjugate_verb("has", mi.pronoun_plurality())
+            + " swirling chaos right below the skin, ready to burst.\n";
+    }
+
+    if (mi.is(MB_CHAOTIC_INFUSION))
+    {
+        text += pronoun + " " + conjugate_verb("is", mi.pronoun_plurality())
+            + " infused with raw chaos; buffing their spells and attacks.\n";
+    }
+
     if (mi.fire_blocker)
     {
         text += string("Your line of fire to ") + mi.pronoun(PRONOUN_OBJECTIVE)
                 + " is blocked by " // FIXME: renamed features
                 + feature_description(mi.fire_blocker, NUM_TRAPS, "",
                                       DESC_A)
-                + "\n";
+                + ".\n";
     }
 
     text += _mon_enchantments_string(mi);
@@ -3311,10 +3662,11 @@ static string _get_monster_desc(const monster_info& mi)
     return text;
 }
 
-static void _describe_monster(const monster_info& mi)
+static void _describe_monster(const monster& mon)
 {
+    const monster_info mi(&mon);
     // First print type and equipment.
-    string text = uppercase_first(get_monster_equipment_desc(mi)) + ".";
+    string text = uppercase_first(get_monster_equipment_desc(mon)) + ".";
     const string wounds_desc = mi.wounds_description_sentence();
     if (!wounds_desc.empty())
         text += " " + uppercase_first(wounds_desc);
@@ -3332,11 +3684,12 @@ static void _describe_monster(const monster_info& mi)
 // This method is called in two cases:
 // a) Monsters coming into view: "An ogre comes into view. It is wielding ..."
 // b) Monster description via 'x': "An ogre, wielding a club, and wearing ..."
-string get_monster_equipment_desc(const monster_info& mi,
+string get_monster_equipment_desc(const monster& mon,
                                   mons_equip_desc_level_type level,
                                   description_level_type mondtype,
                                   bool print_attitude)
 {
+    const monster_info mi(&mon);
     string desc = "";
     if (mondtype != DESC_NONE)
     {
@@ -3348,25 +3701,17 @@ string get_monster_equipment_desc(const monster_info& mi,
         if (print_attitude)
         {
             vector<string> attributes;
-            if (mi.is(MB_CHARMED))
-                attributes.emplace_back("charmed");
-            else if (mi.attitude == ATT_FRIENDLY)
+            if (mi.attitude == ATT_FRIENDLY)
                 attributes.emplace_back("friendly");
             else if (mi.attitude == ATT_GOOD_NEUTRAL)
                 attributes.emplace_back("peaceful");
+            else if (mi.attitude == ATT_PASSIVE)
+                attributes.emplace_back("passive");
             else if (mi.is(MB_INSANE))
                 attributes.emplace_back("insane");
             else if (mi.attitude != ATT_HOSTILE)
                 attributes.emplace_back("neutral");
-
-            if (mi.is(MB_SUMMONED))
-                attributes.emplace_back("summoned");
-
-            if (mi.is(MB_PERM_SUMMON))
-                attributes.emplace_back("durably summoned");
-
-            if (mi.is(MB_SUMMONED_CAPPED))
-                attributes.emplace_back("expiring");
+            _append_container(attributes, mi.attributes());
 
             string str = comma_separated_line(attributes.begin(),
                                               attributes.end());
@@ -3390,58 +3735,35 @@ string get_monster_equipment_desc(const monster_info& mi,
         }
     }
 
-    string weap = _describe_monster_weapon(mi, level == DESC_IDENTIFIED);
+    string weap = _describe_monster_weapon(mon, level == DESC_IDENTIFIED);
 
-    // Print the rest of the equipment only for full descriptions.
-    if (level == DESC_WEAPON || level == DESC_WEAPON_WARNING)
-        return desc + weap;
+    item_def* mon_arm = mon.mslot_item(MSLOT_ARMOUR);
+    item_def* mon_shd = mon.mslot_item(MSLOT_SHIELD);
+    item_def* mon_qvr = mon.mslot_item(MSLOT_MISSILE);
+    item_def* mon_alt = mon.mslot_item(MSLOT_ALT_WEAPON);
+    item_def* mon_wnd = mon.mslot_item(MSLOT_WAND);
+    item_def* mon_rng = mon.mslot_item(MSLOT_JEWELLERY);
 
-    item_def* mon_arm = mi.inv[MSLOT_ARMOUR].get();
-    item_def* mon_shd = mi.inv[MSLOT_SHIELD].get();
-    item_def* mon_qvr = mi.inv[MSLOT_MISSILE].get();
-    item_def* mon_alt = mi.inv[MSLOT_ALT_WEAPON].get();
-    item_def* mon_wnd = mi.inv[MSLOT_WAND].get();
-    item_def* mon_rng = mi.inv[MSLOT_JEWELLERY].get();
-
-#define no_warn(x) (!item_type_known(*x) || !item_is_branded(*x))
-    // For Ashenzari warnings, we only care about ided and branded stuff.
+#define uninteresting(x) (x && !item_is_branded(*x) && !is_artefact(*x))
+    // For "comes into view" msgs, only care about branded stuff and artefacts
     if (level == DESC_IDENTIFIED)
     {
-        if (mon_arm && no_warn(mon_arm))
-            mon_arm = 0;
-        if (mon_shd && no_warn(mon_shd))
-            mon_shd = 0;
-        if (mon_qvr && no_warn(mon_qvr))
-            mon_qvr = 0;
-        if (mon_rng && no_warn(mon_rng))
-            mon_rng = 0;
-        if (mon_alt && (!item_type_known(*mon_alt)
-                        || mon_alt->base_type == OBJ_WANDS))
-        {
-            mon_alt = 0;
-        }
+        if (uninteresting(mon_arm))
+            mon_arm = nullptr;
+        if (uninteresting(mon_shd))
+            mon_shd = nullptr;
+        if (uninteresting(mon_qvr))
+            mon_qvr = nullptr;
+        if (uninteresting(mon_rng))
+            mon_rng = nullptr;
+        if (uninteresting(mon_alt) && mon_alt->base_type != OBJ_WANDS)
+            mon_alt = nullptr;
     }
+#undef uninteresting
 
     // _describe_monster_weapon already took care of this
     if (mi.wields_two_weapons())
         mon_alt = 0;
-
-    const bool mon_has_wand = mi.props.exists("wand_known") && mon_wnd;
-    const bool mon_carry = mon_alt || mon_has_wand;
-
-    // Print the rest of the equipment only for full descriptions.
-    if (level == DESC_WEAPON || level == DESC_WEAPON_WARNING)
-    {
-        if (mon_has_wand)
-        {
-            if (weap.empty())
-                return desc + " wielding " + mon_wnd->name(DESC_A);
-            else
-                return desc + weap + " and " + mon_wnd->name(DESC_A);
-        }
-        else
-            return desc + weap;
-    }
 
     vector<string> item_descriptions;
 
@@ -3453,6 +3775,13 @@ string get_monster_equipment_desc(const monster_info& mi,
         item_descriptions.push_back(weap.substr(1)); // strip leading space
     }
 
+    if (mon_wnd)
+    {
+        const string wnd_desc = make_stringf("brandishing a %s",
+                                             mon_wnd->name(DESC_DBNAME).c_str());
+        item_descriptions.push_back(wnd_desc);
+    }
+
     if (mon_arm)
     {
         const string armour_desc = make_stringf("wearing %s",
@@ -3462,7 +3791,8 @@ string get_monster_equipment_desc(const monster_info& mi,
 
     if (mon_shd)
     {
-        const string shield_desc = make_stringf("wearing %s",
+        const string shield_desc = make_stringf("w%sing %s",
+                                                is_hybrid(mon_shd->sub_type) ? "ield" : "ear",
                                                 mon_shd->name(DESC_A).c_str());
         item_descriptions.push_back(shield_desc);
     }
@@ -3481,25 +3811,10 @@ string get_monster_equipment_desc(const monster_info& mi,
         item_descriptions.push_back(qvr_desc);
     }
 
-    if (mon_carry)
+    if (mon_alt)
     {
-        string carried_desc = "carrying ";
-
-        if (mon_alt)
-        {
-            carried_desc += mon_alt->name(DESC_A);
-            if (mon_has_wand)
-                carried_desc += " and ";
-        }
-
-        if (mon_has_wand)
-        {
-            if (mi.props["wand_known"])
-                carried_desc += mon_wnd->name(DESC_A);
-            else
-                carried_desc += "a wand";
-        }
-
+        const string carried_desc = make_stringf("carrying %s", 
+                                                 mon_alt->name(DESC_A).c_str());
         item_descriptions.push_back(carried_desc);
     }
 
@@ -3552,10 +3867,10 @@ static bool _print_item_desc(const coord_def where)
     if (targ_item == NON_ITEM)
         return false;
 
-    string name = menu_colour_item_name(mitm[targ_item], DESC_A);
+    string name = menu_colour_item_name(env.item[targ_item], DESC_A);
     mprf(MSGCH_FLOOR_ITEMS, "You see %s here.", name.c_str());
 
-    if (mitm[ targ_item ].link != NON_ITEM)
+    if (env.item[ targ_item ].link != NON_ITEM)
         mprf(MSGCH_FLOOR_ITEMS, "There is something else lying underneath.");
 
     return true;
@@ -3577,7 +3892,7 @@ static void _debug_describe_feature_at(const coord_def &where)
     string height_desc;
     if (env.heightmap)
         height_desc = make_stringf(" (height: %d)", (*env.heightmap)(where));
-    const dungeon_feature_type feat = grd(where);
+    const dungeon_feature_type feat = env.grid(where);
 
     string vault;
     const int map_index = env.level_map_ids(where);
@@ -3593,7 +3908,7 @@ static void _debug_describe_feature_at(const coord_def &where)
     }
 
     char32_t ch = get_cell_glyph(where).ch;
-    dprf("(%d,%d): %s - %s (%d/%s)%s%s%s%s map: %x",
+    dprf("(%d,%d): %s - %s. (%d/%s)%s%s%s%s map: %x",
          where.x, where.y,
          ch == '<' ? "<<" : stringize_glyph(ch).c_str(),
          feature_desc.c_str(),
@@ -3639,7 +3954,7 @@ static void _describe_cell(const coord_def& where, bool in_range)
 #endif
 
         monster_info mi(mon);
-        _describe_monster(mi);
+        _describe_monster(*mon);
 
         if (!in_range)
         {
@@ -3652,7 +3967,7 @@ static void _describe_cell(const coord_def& where, bool in_range)
 #endif
 
 #if defined(DEBUG_DIAGNOSTICS) && defined(WIZARD)
-        debug_stethoscope(mgrd(where));
+        debug_stethoscope(env.mgrid(where));
 #endif
         if (crawl_state.game_is_hints() && hints_monster_interesting(mon))
         {
@@ -3690,7 +4005,7 @@ static void _describe_cell(const coord_def& where, bool in_range)
     }
     else
     {
-        dungeon_feature_type feat = grd(where);
+        dungeon_feature_type feat = env.grid(where);
 
         if (_interesting_feature(feat))
         {
@@ -3722,7 +4037,7 @@ static void _describe_cell(const coord_def& where, bool in_range)
 // targeting_behaviour
 
 targeting_behaviour::targeting_behaviour(bool look_around)
-    : just_looking(look_around), compass(false)
+    : just_looking(look_around), needs_path(MB_MAYBE)
 {
 }
 
@@ -3730,22 +4045,8 @@ targeting_behaviour::~targeting_behaviour()
 {
 }
 
-int targeting_behaviour::get_key()
-{
-    if (!crawl_state.is_replaying_keys())
-        flush_input_buffer(FLUSH_BEFORE_COMMAND);
-
-    flush_prev_message();
-    msgwin_got_input();
-    return unmangle_direction_keys(getchm(KMC_TARGETING), KMC_TARGETING,
-                                   false);
-}
-
 command_type targeting_behaviour::get_command(int key)
 {
-    if (key == -1)
-        key = get_key();
-
     command_type cmd = key_to_command(key, KMC_TARGETING);
     if (cmd >= CMD_MIN_TARGET && cmd < CMD_TARGET_PREV_TARGET)
         return cmd;

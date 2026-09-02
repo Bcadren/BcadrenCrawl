@@ -42,6 +42,9 @@ void practise_casting(spell_type spell, bool success)
 
         skill_type skill = spell_type2skill(bit);
 
+        if (skill == SK_EVOCATIONS)
+            continue;
+
         disc.push_back(skill);
     }
 
@@ -109,6 +112,7 @@ static bool _check_train_dodging(int amount)
 void practise_sneaking(bool invis)
 {
     if (!x_chance_in_y(_armour_mass(), 1000)
+        && !you.attribute[ATTR_SHADOWS]
             // If invisible, training happens much more rarely.
         && (!invis && one_chance_in(25) || one_chance_in(100)))
     {
@@ -122,7 +126,7 @@ void practise_waiting()
     if (one_chance_in(6) && _check_train_armour(1))
         return; // Armour trained in check_train_armour
 
-    if (you.berserk())
+    if (you.berserk() || you.attribute[ATTR_SHADOWS])
         return;
 
     // Exercise stealth skill:
@@ -178,14 +182,6 @@ void practise_launching(const item_def &weapon)
 {
     if (coinflip()) // XXX: arbitrary; test and revise
         _practise_weapon_use(weapon);
-}
-
-/// Skill training when the player throws a projectile at a monster.
-void practise_throwing(missile_type mi_type)
-{
-    if (mi_type == MI_STONE && coinflip())
-        return;
-    exercise(SK_THROWING, 1);
 }
 
 /// Skill training when the player stabs an vulnerable monster for extra dam.

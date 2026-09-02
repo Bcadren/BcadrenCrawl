@@ -5,6 +5,13 @@
 
 #pragma once
 
+#include <map>
+
+#include "coord-def.h"
+
+using std::pair;
+
+class monster;
 struct bolt;
 
 class MonsterActionQueueCompare
@@ -26,10 +33,12 @@ bool mons_can_move_towards_target(const monster* mon);
 bool monster_swaps_places(monster* mon, const coord_def& delta,
                           bool takes_time = true, bool apply_effects = true);
 
-bool handle_throw(monster* mons, bolt &beem, bool teleport, bool check_only);
+bool handle_throw(monster* mons, bolt &beem,
+                  spell_type call_spell = SPELL_NO_SPELL, bool check_only = false);
 
 void handle_monsters(bool with_noise = false);
-void handle_monster_move(monster* mon);
+void handle_monster_move(monster* mon, int tries = 0);
+void move_constrictor(actor * constrictee, const coord_def& delta);
 
 void queue_monster_for_action(monster* mons);
 

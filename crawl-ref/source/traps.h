@@ -5,8 +5,12 @@
 
 #pragma once
 
+#include <vector>
+
 #include "enum.h"
 #include "trap-type.h"
+
+using std::vector;
 
 #define NEWLY_TRAPPED_KEY "newly_trapped"
 
@@ -22,23 +26,24 @@ void free_stationary_net(int item_index);
 
 int get_trapping_net(const coord_def& where, bool trapped = true);
 const char* held_status(actor *act = nullptr);
-bool monster_caught_in_net(monster* mon, actor *agent);
+bool monster_caught_in_net(monster* mon);
 bool player_caught_in_net();
 void clear_trapping_net();
 void check_net_will_hold_monster(monster* mon);
 vector<coord_def> find_golubria_on_level();
 
-dungeon_feature_type trap_category(trap_type type);
+dungeon_feature_type trap_feature(trap_type type) IMMUTABLE;
 
 void destroy_trap(const coord_def& pos);
 trap_def* trap_at(const coord_def& where);
 trap_type get_trap_type(const coord_def& where);
 
 bool is_valid_shaft_level();
-level_id generic_shaft_dest(coord_def pos, bool known);
+level_id generic_shaft_dest();
+void     handle_items_on_shaft(const coord_def& where);
 
 int       trap_rate_for_place();
-trap_type random_trap_for_place();
+trap_type random_trap_for_place(bool dispersal_ok = true);
 trap_type random_vault_trap();
 
 int count_traps(trap_type ttyp);

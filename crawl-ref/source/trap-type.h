@@ -1,5 +1,7 @@
 #pragma once
 
+#include "tag-version.h"
+
 enum trap_type
 {
 #if TAG_MAJOR_VERSION == 34
@@ -8,7 +10,7 @@ enum trap_type
     TRAP_ARROW,
     TRAP_SPEAR,
 #if TAG_MAJOR_VERSION > 34
-    TRAP_DISPERSAL,
+    TRAP_CONGREGATION,
     TRAP_TELEPORT,
 #endif
     TRAP_TELEPORT_PERMANENT,
@@ -27,7 +29,7 @@ enum trap_type
     TRAP_TELEPORT,
     TRAP_SHADOW,
     TRAP_SHADOW_DORMANT,
-    TRAP_DISPERSAL,
+    TRAP_CONGREGATION,
 #endif
     NUM_TRAPS,
     TRAP_MAX_REGULAR = TRAP_SHAFT,

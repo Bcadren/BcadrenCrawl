@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include "activity-interrupt-type.h"
 #include "command-type.h"
 #include "enum.h"
@@ -12,6 +14,27 @@
 #include "mpr.h"
 #include "operation-types.h"
 #include "seen-context-type.h"
+
+using std::vector;
+
+class interrupt_block
+{
+public:
+    interrupt_block(bool block = true) {
+        m_block = block;
+        if (block)
+            ++interrupts_blocked;
+    }
+    ~interrupt_block() {
+        if (m_block)
+            --interrupts_blocked;
+    }
+
+    static bool blocked() { return interrupts_blocked > 0; }
+private:
+    bool m_block;
+    static int interrupts_blocked;
+};
 
 class monster;
 struct ait_hp_loss;
@@ -199,10 +222,9 @@ public:
 
     /**
      *@return true if the delay involves using the item in this way (and
-     * therefore the item should not be messed with). If item is nullptr,
-     * returns whether the delay type ever uses items in this way.
+     * therefore the item should not be messed with).
      */
-    virtual bool is_being_used(const item_def* /*item*/, operation_types /*oper*/) const
+    virtual bool is_being_used(const item_def& /*item*/) const
     {
         return false;
     }
@@ -238,6 +260,42 @@ public:
     {
         return "armour_on";
     }
+
+    bool is_being_used(const item_def& item) const override
+    {
+        return &item == &armour;
+    }
+};
+
+class SubsumptionDelay : public Delay
+{
+    item_def& item;
+    bool was_prompted = false;
+
+    void start() override;
+
+    void tick() override
+    {
+        mprf(MSGCH_MULTITURN_ACTION, "You continue subsuming %s.", item.name(DESC_YOUR).c_str());
+    }
+
+    void finish() override;
+public:
+    SubsumptionDelay(int dur, item_def& it) :
+        Delay(dur), item(it)
+    { }
+
+    bool try_interrupt() override;
+
+    const char* name() const override
+    {
+        return "subsume";
+    }
+
+    bool is_being_used(const item_def& item_) const override
+    {
+        return &item_ == &item;
+    }
 };
 
 class ArmourOffDelay : public Delay
@@ -267,6 +325,44 @@ public:
     {
         return "armour_on";
     }
+
+    bool is_being_used(const item_def& item) const override
+    {
+        return &item == &armour;
+    }
+};
+
+class EjectionDelay : public Delay
+{
+    item_def& item;
+    bool was_prompted = false;
+
+    void start() override;
+
+    void tick() override
+    {
+        mprf(MSGCH_MULTITURN_ACTION, "You continue ejecting %s from your cytoplasm.", item.name(DESC_THE).c_str());
+    }
+
+    bool invalidated() override;
+
+    void finish() override;
+public:
+    EjectionDelay(int dur, item_def& it) :
+        Delay(dur), item(it)
+    { }
+
+    bool try_interrupt() override;
+
+    const char* name() const override
+    {
+        return "eject";
+    }
+
+    bool is_being_used(const item_def& item0) const override
+    {
+        return &item == &item0;
+    }
 };
 
 class JewelleryOnDelay : public Delay
@@ -284,6 +380,11 @@ public:
     const char* name() const override
     {
         return "jewellery_on";
+    }
+
+    bool is_being_used(const item_def& item) const override
+    {
+        return &item == &jewellery;
     }
 };
 
@@ -331,9 +432,9 @@ public:
         return true;
     }
 
-    bool is_being_used(const item_def* item, operation_types oper) const override
+    bool is_being_used(const item_def& item) const override
     {
-        return oper == OPER_BUTCHER && (!item || &corpse == item);
+        return &corpse == &item;
     }
 
     const char* name() const override
@@ -361,9 +462,9 @@ public:
         return true;
     }
 
-    bool is_being_used(const item_def* item, operation_types oper) const override
+    bool is_being_used(const item_def& item) const override
     {
-        return oper == OPER_BUTCHER && (!item || &corpse == item);
+        return &corpse == &item;
     }
 
     const char* name() const override
@@ -460,6 +561,11 @@ public:
     {
         return "drop_item";
     }
+
+    bool is_being_used(const item_def& item_) const override
+    {
+        return &item_ == &item;
+    }
 };
 
 struct SelItem;
@@ -537,6 +643,9 @@ class BaseRunDelay : public Delay
     virtual bool want_move() const = 0;
     virtual bool want_clear_messages() const = 0;
     virtual command_type move_cmd() const = 0;
+
+protected:
+    bool unsafe_once = false;
 
 public:
     bool is_run() const override
@@ -632,8 +741,10 @@ class TravelDelay : public BaseRunDelay
 
     command_type move_cmd() const override;
 public:
-    TravelDelay() : BaseRunDelay()
-    { }
+    TravelDelay(bool unsafe) : BaseRunDelay()
+    {
+        unsafe_once = unsafe;
+    }
 
     const char* name() const override
     {
@@ -742,6 +853,11 @@ public:
     {
         return "blurry_vision";
     }
+
+    bool is_being_used(const item_def& item) const override
+    {
+        return &item == &scroll;
+    }
 };
 
 void push_delay(shared_ptr<Delay> delay);
@@ -760,7 +876,7 @@ shared_ptr<Delay> current_delay();
 void handle_delay();
 
 bool is_being_drained(const item_def &item);
-bool is_being_butchered(const item_def &item, bool just_first = true);
+bool is_being_butchered(const item_def &item);
 bool is_vampire_feeding();
 bool player_stair_delay();
 bool already_learning_spell(int spell = -1);

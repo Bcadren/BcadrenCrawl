@@ -116,10 +116,8 @@ public:
 
     CrawlHashTable &new_table();
 
-    CrawlVector &new_vector(store_flags flags,
-                            vec_size max_size = VEC_MAX_SIZE);
-    CrawlVector &new_vector(store_val_type type, store_flags flags = 0,
-                            vec_size max_size = VEC_MAX_SIZE);
+    CrawlVector &new_vector(store_flags flags);
+    CrawlVector &new_vector(store_val_type type, store_flags flags = 0);
 
     bool           &get_bool();
     char           &get_byte();
@@ -336,7 +334,7 @@ public:
 
     // NOTE: push_back() and insert() have val passed by value rather
     // than by reference so that conversion constructors will work.
-    CrawlStoreValue& pop_back();
+    void             pop_back();
     void             push_back(CrawlStoreValue val);
     void insert(const vec_size index, CrawlStoreValue val);
 

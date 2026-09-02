@@ -12,6 +12,7 @@
 #include "act-iter.h"
 #include "areas.h"
 #include "art-enum.h"
+#include "attack.h"
 #include "coordit.h"
 #include "dgn-event.h"
 #include "english.h"
@@ -31,6 +32,7 @@
 #include "religion.h"
 #include "spl-damage.h"
 #include "state.h"
+#include "stringutil.h"
 #include "terrain.h"
 #include "transform.h"
 #include "traps.h"
@@ -76,14 +78,13 @@ void player::moveto(const coord_def &c, bool clear_net)
     crawl_view.set_player_at(c);
     set_position(c);
 
-    clear_invalid_constrictions();
     end_searing_ray();
 }
 
 bool player::move_to_pos(const coord_def &c, bool clear_net, bool /*force*/)
 {
     actor *target = actor_at(c);
-    if (!target || target->submerged())
+    if (!target)
     {
         moveto(c, clear_net);
         return true;
@@ -92,8 +93,8 @@ bool player::move_to_pos(const coord_def &c, bool clear_net, bool /*force*/)
 }
 
 void player::apply_location_effects(const coord_def &oldpos,
-                                    killer_type killer,
-                                    int killernum)
+                                    killer_type /*killer*/,
+                                    int /*killernum*/)
 {
     moveto_location_effects(env.grid(oldpos));
 }
@@ -126,9 +127,15 @@ bool player::swimming() const
     return in_water() && can_swim();
 }
 
-bool player::submerged() const
+bool player::submerged(bool mt) const
 {
-    return false;
+    if (mt)
+        return mount_submerged();
+
+    if (you.can_water_walk() && !player_likes_water())
+        return false;
+
+    return actor::submerged();
 }
 
 bool player::floundering() const
@@ -138,13 +145,14 @@ bool player::floundering() const
 
 bool player::extra_balanced() const
 {
-    const dungeon_feature_type grid = grd(pos());
-    return species == SP_GREY_DRACONIAN
-              || form == transformation::tree
+    const dungeon_feature_type grid = env.grid(pos());
+    return form == transformation::tree
               || you.attribute [ATTR_ROOTED]
               || grid == DNGN_SHALLOW_WATER
                   && (species == SP_NAGA // tails, not feet
-                      || body_size(PSIZE_BODY) >= SIZE_LARGE)
+                      || body_size(PSIZE_BODY) >= SIZE_LARGE
+                      || you.wearing_ego(EQ_BOOTS, SPARM_STURDY)
+                      || char_class == JOB_NAGA)
                   && form_keeps_mutations();
 }
 
@@ -185,15 +193,72 @@ size_type player::body_size(size_part_type psize, bool base) const
     }
 }
 
-int player::damage_type(int)
+int player::damage_type(int attack_number)
 {
-    if (const item_def* wp = weapon())
+    if (const item_def* wp = weapon(attack_number))
+    {
+        if (weapon_has_flag(wp->sub_type, WPNF_SPIKY)
+            && x_chance_in_y(spiky_odds(item_attack_skill(*wp)), 100000))
+        {
+            return DAM_CRIT;
+        }
+
+        return get_damage_type(*wp);
+    }
+
+    // Thrown items handled elsewhere this is just Unarmed.
+    switch (you.form)
+    {
+    case transformation::blade_hands:
+        return DAM_SLICE;
+    case transformation::fungus:
+    case transformation::wisp:
+        return DAM_FORCE;
+    case transformation::pig:
+        return DAM_PIERCE;
+    case transformation::scorpion:
+        if (attack_number > 1)
+            return DAM_PIERCE;
+        return DAM_SLICE;
+    default:
+        break; // Dragon form handled by the claws check rest are close to normal form for UC.
+    }
+
+    if (attack_number > 1)
+    {
+        switch (you.mount)
+        {
+        default:
+            return DAM_BLUDGEON;
+        case mount_type::drake:
+        case mount_type::hydra:
+        case mount_type::spider:
+            return DAM_PIERCE;
+        case mount_type::slime:
+            return DAM_BLUDGEON;
+        }
+    }
+
+    if (has_usable_claws())
+    {
+        if (get_mutation_level(MUT_PAWS))
+            return DAM_PIERCE;
+        if (has_claws() > 1 || wearing(EQ_GLOVES, ARM_CLAW, true, false))
+            return DAM_SLICE;
+    }
+
+    return DAM_BLUDGEON;
+}
+
+int player::vorpal_type(int attack_number)
+{
+    if (const item_def* wp = weapon(attack_number))
         return get_vorpal_type(*wp);
     else if (form == transformation::blade_hands)
         return DVORP_SLICING;
     else if (has_usable_claws())
         return DVORP_CLAWING;
-    else if (has_usable_tentacles())
+    else if (has_tentacles())
         return DVORP_TENTACLE;
 
     return DVORP_CRUSHING;
@@ -204,8 +269,31 @@ int player::damage_type(int)
  */
 brand_type player::damage_brand(int which_attack)
 {
-    equipment_type slot; 
-    
+    if (which_attack < 0)
+        return random_choose(SPWPN_ACID, SPWPN_ANTIMAGIC, SPWPN_CHAOS, SPWPN_DRAINING, SPWPN_ELECTROCUTION, SPWPN_VENOM, SPWPN_VAMPIRISM);
+
+    if (you.mounted() && which_attack >= 2)
+    {
+        switch (you.mount)
+        {
+        default:
+        case mount_type::hydra:
+            return SPWPN_NORMAL;
+        case mount_type::drake:
+            return SPWPN_FREEZING;
+        case mount_type::slime:
+            return SPWPN_ACID;
+        case mount_type::spider:
+        {
+            if (you.duration[DUR_ENSNARE])
+                return SPWPN_PROTECTION; // Hack-alert.
+            return SPWPN_VENOM;
+        }
+        }
+    }
+
+    equipment_type slot;
+
     if (which_attack == 0)
         slot = EQ_WEAPON0;
     if (which_attack == 1)
@@ -224,6 +312,17 @@ brand_type player::damage_brand(int which_attack)
 
     if (duration[DUR_CONFUSING_TOUCH])
         return SPWPN_CONFUSE;
+
+    if (you.wearing(EQ_GLOVES, ARM_CLAW, true, false) && !melded[EQ_GLOVES])
+        return get_weapon_brand(inv[equip[EQ_GLOVES]]);
+
+    if (you.form == transformation::scorpion)
+    { 
+        if (which_attack < 2)
+            return SPWPN_PROTECTION; // Used in a Hack.
+        else if (which_attack == 2)
+            return SPWPN_NORMAL;
+    }
 
     return get_form()->get_uc_brand();
 }
@@ -249,41 +348,34 @@ random_var player::attack_delay(const item_def *projectile, bool rescale) const
     const int DELAY_SCALE = 20;
 
     // Old Version Applies when a Single Weapon is used (this Weap being that weapon).
-    item_def * weap;
+    item_def * weap = nullptr;
+    bool lantern_penalty = false;
 
-    if (projectile && is_launched(this, weap0, weap1, *projectile) == launch_retval::THROWN)
+    if (weap0 && weap0->is_type(OBJ_MISCELLANY, MISC_LANTERN_OF_SHADOWS))
+        lantern_penalty = true;
+
+    if (weap1 && weap1->is_type(OBJ_MISCELLANY, MISC_LANTERN_OF_SHADOWS))
+        lantern_penalty = true;
+
+    const bool single_uc = (!weap0 || !weap1);
+
+    if (weap0 && !is_weapon(*weap0))
+        weap0 = nullptr;
+
+    if (weap1 && !is_weapon(*weap1))
+        weap1 = nullptr;
+
+    const int g = you.equip[EQ_GLOVES];
+    const item_def *glove = g != -1 ? &you.inv[g] : nullptr;
+    const bool UCspeed = (glove && glove->is_type(OBJ_ARMOURS, ARM_CLAW) && (get_weapon_brand(*glove) == SPWPN_SPEED));
+
+    // UC; 5 unless speed claws, then 3.
+    if (!projectile && !weap0 && !weap1)
     {
-        // Thrown weapons use 10 + projectile damage to determine base delay.
-        const skill_type wpn_skill = SK_THROWING;
-        const int projectile_delay = 10 + property(*projectile, PWPN_DAMAGE) / 2;
-        attk_delay = random_var(projectile_delay);
-        attk_delay -= div_rand_round(random_var(you.skill(wpn_skill, 10)),
-                                     DELAY_SCALE);
-
-        // apply minimum to weapon skill modification
-        attk_delay = rv::max(attk_delay,
-                random_var(FASTEST_PLAYER_THROWING_SPEED));
-    }
-
-    // UC; now always 5.
-    else if (!projectile && !weap0 && !weap1)
-    {
-        attk_delay = random_var(5);
-    }
-
-    // Thrown Weapons. (Left Alone for Now).
-    else if (projectile && is_launched(this, weap0, weap1, *projectile) == launch_retval::THROWN)
-    {
-        // Thrown weapons use 10 + projectile damage to determine base delay.
-        const skill_type wpn_skill = SK_THROWING;
-        const int projectile_delay = 10 + property(*projectile, PWPN_DAMAGE) / 2;
-        attk_delay = random_var(projectile_delay);
-        attk_delay -= div_rand_round(random_var(you.skill(wpn_skill, 10)),
-            DELAY_SCALE);
-
-        // apply minimum to weapon skill modification
-        attk_delay = rv::max(attk_delay,
-            random_var(FASTEST_PLAYER_THROWING_SPEED));
+        if (UCspeed)
+            attk_delay = random_var(3);
+        else
+            attk_delay = random_var(5);
     }
 
     // Dual Wielding Version
@@ -307,21 +399,20 @@ random_var player::attack_delay(const item_def *projectile, bool rescale) const
 
         else
         {
-            const int skill0 = min(you.skill(wpn_skill0, 10), 10 * (4 + weapon_min_delay_skill(*weap0)));
-            const int skill1 = min(you.skill(wpn_skill1, 10), 10 * (4 + weapon_min_delay_skill(*weap1)));
-            attk_delay -= div_rand_round(random_var((skill0 + skill1) / 2), DELAY_SCALE);
+            const int skill0 = min(you.skill(wpn_skill0, 10), 15 * weapon_min_delay_skill(*weap0));
+            const int skill1 = min(you.skill(wpn_skill1, 10), 15 * weapon_min_delay_skill(*weap1));
+            attk_delay -= div_rand_round(random_var(skill0 + skill1), DELAY_SCALE);
         }
 
         if (weap0->base_type == OBJ_WEAPONS && get_weapon_brand(*weap0) == SPWPN_SPEED)
-            attk_delay = div_rand_round(attk_delay * 8, 10);
+            attk_delay = div_rand_round(attk_delay * 4, 5);
         if (weap1->base_type == OBJ_WEAPONS && get_weapon_brand(*weap1) == SPWPN_SPEED)
-            attk_delay = div_rand_round(attk_delay * 8, 10);
+            attk_delay = div_rand_round(attk_delay * 4, 5);
     }
 
     // The old version; only changed to accommodate shield/weapon hybrids.
     else
     {
-
         if (weap0 && !weap1) // Single Melee Weapon (either 2H or with Offhand Punch)
             weap = weap0;
 
@@ -331,7 +422,7 @@ random_var player::attack_delay(const item_def *projectile, bool rescale) const
         else if (weap0 && projectile && projectile->launched_by(*weap0)) // Ranged
             weap = weap0;
 
-        else if (is_range_weapon(*weap0) && is_melee_weapon(*weap1)) // Melee weapon and Ranged weapon (only melee used)
+        else if (weap0 && weap1 && is_range_weapon(*weap0) && is_melee_weapon(*weap1)) // Melee weapon and Ranged weapon (only melee used)
             weap = weap1;
 
         const skill_type wpn_skill = item_attack_skill(*weap);
@@ -356,13 +447,24 @@ random_var player::attack_delay(const item_def *projectile, bool rescale) const
             if (get_weapon_brand(*weap) == SPWPN_SPEED)
                 attk_delay = div_rand_round(attk_delay * 2, 3);
         }
+
+        if (single_uc && UCspeed)
+            attk_delay = div_rand_round(attk_delay * 4, 5);
     }
 
     // At the moment it never gets this low anyway.
     attk_delay = rv::max(attk_delay, random_var(3));
 
+    if (lantern_penalty)
+        attk_delay = div_rand_round(attk_delay * 5, 4);
+
     if (you.duration[DUR_CLUMSY])
         attk_delay = attk_delay * 2;
+        
+    if (you.drowning())
+        attk_delay = div_rand_round(attk_delay * 7, 4);
+    else if (floundering() || liquefied_ground() && you.duration[DUR_LIQUEFYING] == 0 || you.in_lava())
+        attk_delay = div_rand_round(attk_delay * 11, 8);
 
     if (you.duration[DUR_FINESSE])
     {
@@ -396,46 +498,57 @@ item_def *player::slot_item(equipment_type eq, bool include_melded) const
 // Returns the item in the player's weapon slot.
 item_def *player::weapon(int which_attack) const
 {
-    if (which_attack < 1)
+    if (which_attack == 0)
     {
         if (melded[EQ_WEAPON0])
             return nullptr;
 
         return slot_item(EQ_WEAPON0, false);
     }
-    else
+    else if (which_attack == 1)
     {
         if (melded[EQ_WEAPON1])
             return nullptr;
 
         return slot_item(EQ_WEAPON1, false);
-
     }
+    else
+        return nullptr;
 }
 
 // Give hands required to wield weapon.
 hands_reqd_type player::hands_reqd(const item_def &item, bool base) const
 {
-    if (species == SP_FORMICID)
+    if (species == SP_OCTOPODE || you.get_mutation_level(MUT_MULTIARM) || you.get_mutation_level(MUT_ARM_MORPH))
         return HANDS_ONE;
     else
         return actor::hands_reqd(item, base);
 }
 
 bool player::can_wield(const item_def& item, bool ignore_curse,
-                       bool ignore_brand, bool ignore_shield,
+                       bool ignore_brand, bool /*ignore_shield*/,
                        bool ignore_transform) const
 {
+    int bound_hands = 0;
+
+    if (!ignore_curse)
+    {
+        if ((equip[EQ_WEAPON0] != -1) && inv[equip[EQ_WEAPON0]].soul_bound())
+            bound_hands++;
+
+        if ((equip[EQ_WEAPON1] != -1) && inv[equip[EQ_WEAPON1]].soul_bound())
+            bound_hands++;
+
+        if (bound_hands == 2)
+            return false;
+    }
+
     // Unassigned means unarmed combat.
     const bool two_handed = item.base_type == OBJ_UNASSIGNED
                             || hands_reqd(item) == HANDS_TWO;
 
-    if (two_handed && (
-        (!ignore_shield && shield())
-        || get_mutation_level(MUT_MISSING_HAND)))
-    {
+    if (two_handed && (get_mutation_level(MUT_MISSING_HAND) || bound_hands == 1))
         return false;
-    }
 
     return could_wield(item, ignore_brand, ignore_transform);
 }
@@ -452,8 +565,7 @@ bool player::can_wield(const item_def& item, bool ignore_curse,
 bool player::could_wield(const item_def &item, bool ignore_brand,
                          bool ignore_transform, bool quiet) const
 {
-    // Most non-weapon objects can be wielded, though there's rarely a point
-    if (species == SP_FELID)
+    if (species == SP_FELID || species == SP_FAIRY)
     {
         if (!quiet)
             mpr("You can't use weapons.");
@@ -461,7 +573,7 @@ bool player::could_wield(const item_def &item, bool ignore_brand,
     }
 
     if (item.base_type != OBJ_WEAPONS && item.base_type != OBJ_SHIELDS
-        && item.base_type != OBJ_STAVES)
+        && item.base_type != OBJ_STAVES && !item.is_type(OBJ_MISCELLANY, MISC_LANTERN_OF_SHADOWS))
     {
         if (!quiet)
             mpr("You can't wield that.");
@@ -470,28 +582,15 @@ bool player::could_wield(const item_def &item, bool ignore_brand,
 
     const size_type bsize = body_size(PSIZE_TORSO, ignore_transform);
     // Small species wielding large weapons...
-    if (!is_weapon_wieldable(item, bsize))
+    if (!is_weapon_wieldable(item, bsize) && !you.get_mutation_level(MUT_ARM_MORPH))
     {
         if (!quiet)
         {
-            if (you.body_size(PSIZE_TORSO,true) < SIZE_MEDIUM)
+            if (you.body_size(PSIZE_TORSO, true) <= SIZE_MEDIUM)
                 mpr("That's too large for you to wield.");
             else
                 mpr("That's too small for you to wield.");
         }
-        return false;
-    }
-
-    if (get_mutation_level(MUT_MISSING_HAND)
-        && you.hands_reqd(item) == HANDS_TWO)
-    {
-        return false;
-    }
-
-    if (you.char_class == JOB_DEMONSPAWN && item.base_type == OBJ_WEAPONS && get_weapon_brand(item) == SPWPN_SILVER)
-    {
-        if (!quiet)
-            mpr("The silver starts to burn your flesh as you try to hold it.");
         return false;
     }
 
@@ -502,6 +601,25 @@ bool player::could_wield(const item_def &item, bool ignore_brand,
             mpr("This weapon is holy and will not allow you to wield it.");
         return false;
     }
+
+    if (!ignore_brand && species_is_orcish(you.species) && !you_worship(GOD_BEOGH)
+        && is_weapon(item) && (get_weapon_brand(item) == SPWPN_ORC_SLAYING))
+    {
+        if (!quiet)
+            mpr("You feel strangely suicidal. You cannot use this weapon without following Beogh.");
+        return false;
+    }
+
+    if (!ignore_brand && (you.char_class == JOB_DEMONSPAWN) && is_weapon(item)
+        && (get_weapon_brand(item) == SPWPN_SILVER) && !you.wearing_ego(EQ_GLOVES, SPARM_WIELDING))
+    {
+        if (!quiet)
+            mpr("The silver starts to burn your flesh as you try to hold it.");
+        return false;
+    }
+
+    if (get_mutation_level(MUT_MISSING_HAND) && you.hands_reqd(item) == HANDS_TWO)
+        return false;
 
     return true;
 }
@@ -578,7 +696,7 @@ static string _hand_name_singular()
     if (you.has_usable_claws())
         return "claw";
 
-    if (you.has_usable_tentacles())
+    if (you.has_tentacles())
         return "tentacle";
 
     return "hand";
@@ -616,19 +734,19 @@ static string _foot_name_singular(bool *can_plural)
     if (!get_form()->foot_name.empty())
         return get_form()->foot_name;
 
-    if (you.get_mutation_level(MUT_HOOVES) >= 3)
+    if (you.get_mutation_level(MUT_HOOVES))
         return "hoof";
 
-    if (you.has_usable_talons())
+    if (you.has_talons())
         return "talon";
 
-    if (you.has_usable_tentacles())
+    if (you.has_tentacles())
     {
         *can_plural = false;
         return "tentacles";
     }
 
-    if (you.species == SP_NAGA)
+    if (you.species == SP_NAGA || you.char_class == JOB_NAGA)
     {
         *can_plural = false;
         return "underbelly";
@@ -679,13 +797,17 @@ string player::arm_name(bool plural, bool *can_plural) const
     string str = "arm";
 
     if (species_is_draconian(you.species) || species == SP_NAGA)
-        adj = "scaled";
+        adj = "scaly";
     else if (species == SP_TENGU)
         adj = "feathered";
-    else if (species == SP_MUMMY || you.char_class == JOB_MUMMY)
+    else if (you.undead_state() == US_GHOST)
+        adj = "spectral";
+    else if (char_class == JOB_MUMMY)
         adj = "bandage-wrapped";
     else if (species == SP_OCTOPODE)
         str = "tentacle";
+    else if (char_class == JOB_NAGA)
+        adj = "scaly";
 
     if (form == transformation::lich)
         adj = "bony";
@@ -710,44 +832,23 @@ string player::arm_name(bool plural, bool *can_plural) const
  */
 string player::unarmed_attack_name() const
 {
-    string default_name = "Nothing wielded";
+    string default_name = "Fists";
 
     if (has_usable_claws(true))
     {
         if (species == SP_FELID)
             default_name = "Teeth and claws";
+        else if (species == SP_LIGNIFITE)
+            default_name = "Thorns";
+        else if (species == SP_OCTOPODE)
+            default_name = "Teeth";
         else
             default_name = "Claws";
     }
-    else if (has_usable_tentacles(true))
+    else if (has_tentacles(true))
         default_name = "Tentacles";
 
-    return get_form()->get_uc_attack_name(default_name);
-}
-
-bool player::fumbles_attack()
-{
-    bool did_fumble = false;
-
-    // Fumbling in shallow water.
-    if (floundering() || liquefied_ground() || you.in_lava())
-    {
-        if (x_chance_in_y(3, 8))
-        {
-            mpr("Your unstable footing causes you to fumble your attack.");
-            did_fumble = true;
-        }
-        if (floundering())
-            learned_something_new(HINT_FUMBLING_SHALLOW_WATER);
-    }
-
-    if (you.drowning())
-    {
-        mpr("You can't attack effectively from deep water.");
-        did_fumble = true;
-    }
-
-    return did_fumble;
+    return make_stringf("%s (%d)", get_form()->get_uc_attack_name(default_name).c_str(), player_base_unarmed(false));
 }
 
 void player::attacking(actor *other, bool ranged)
@@ -767,8 +868,7 @@ void player::attacking(actor *other, bool ranged)
     if (ranged || mons_is_firewood(*(monster*) other))
         return;
 
-    const int chance = pow(3, get_mutation_level(MUT_BERSERK) - 1);
-    if (has_mutation(MUT_BERSERK) && x_chance_in_y(chance, 100))
+    if (has_mutation(MUT_BERSERK) && one_chance_in(5))
         go_berserk(false);
     if ((have_passive(passive_t::berserkitis) || player_under_penance(GOD_TROG)) && x_chance_in_y(you.piety, 2500))
         go_berserk(false);
@@ -858,7 +958,7 @@ bool player::go_berserk(bool intentional, bool potion)
 
     you.berserk_penalty = 0;
 
-    you.redraw_quiver = true; // Account for no firing.
+    quiver::set_needs_redraw();
 
     if (player_equip_unrand(UNRAND_ZEALOT_SWORD))
         for (monster_near_iterator mi(you.pos(), LOS_NO_TRANS); mi; ++mi)
@@ -934,11 +1034,14 @@ bool player::antimagic_susceptible() const
 
 bool player::is_web_immune() const
 {
-    // Spider form
-    if (form == transformation::spider)
+    // Spider mount
+    if (you.mounted() && you.mount == mount_type::spider
+        || you.get_mutation_level(MUT_INSUBSTANTIAL)
+        || you.get_mutation_level(MUT_SLIME) >= 3
+        || you.get_mutation_level(MUT_OOZOMORPH))
+    {
         return true;
-    else if (you.get_mutation_level(MUT_GHOST) == 1)
-        return true;
+    }
     else
         return false;
 }
@@ -946,8 +1049,8 @@ bool player::is_web_immune() const
 bool player::shove(const char* feat_name)
 {
     for (distance_iterator di(pos()); di; ++di)
-        if (in_bounds(*di) && !actor_at(*di) && !is_feat_dangerous(grd(*di))
-            && can_pass_through_feat(grd(*di)))
+        if (in_bounds(*di) && !actor_at(*di) && !is_feat_dangerous(env.grid(*di))
+            && can_pass_through_feat(env.grid(*di)))
         {
             moveto(*di);
             if (*feat_name)

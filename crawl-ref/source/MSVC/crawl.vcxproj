@@ -452,6 +452,7 @@ perl.exe "util/gen-cflg.pl" compflag.h "&lt;UNKNOWN&gt;" "&lt;UNKNOWN&gt;"
     <ClCompile Include="..\branch.cc" />
     <ClCompile Include="..\butcher.cc" />
     <ClCompile Include="..\chardump.cc" />
+	<ClCompile Include="..\chaos.cc" />
     <ClCompile Include="..\cio.cc" />
     <ClCompile Include="..\cloud.cc" />
     <ClCompile Include="..\clua.cc" />
@@ -582,6 +583,8 @@ perl.exe "util/gen-cflg.pl" compflag.h "&lt;UNKNOWN&gt;" "&lt;UNKNOWN&gt;"
     <ClCompile Include="..\melee-attack.cc" />
     <ClCompile Include="..\mon-death.cc" />
     <ClCompile Include="..\mon-ench.cc" />
+	<ClCompile Include="..\mount.cc" />
+    <ClCompile Include="..\mon-explode.cc" />
     <ClCompile Include="..\movement.cc" />
     <ClCompile Include="..\ng-setup.cc" />
     <ClCompile Include="..\ng-wanderer.cc" />
@@ -710,6 +713,7 @@ perl.exe "util/gen-cflg.pl" compflag.h "&lt;UNKNOWN&gt;" "&lt;UNKNOWN&gt;"
     <ClCompile Include="..\rltiles\tiledef-wall.cc" />
     <ClCompile Include="..\rot.cc" />
     <ClCompile Include="..\scroller.cc" />
+    <ClInclude Include="..\season.cc" />
     <ClCompile Include="..\shopping.cc" />
     <ClCompile Include="..\shout.cc" />
     <ClCompile Include="..\show.cc" />
@@ -852,6 +856,7 @@ perl.exe "util/gen-cflg.pl" compflag.h "&lt;UNKNOWN&gt;" "&lt;UNKNOWN&gt;"
     <ClInclude Include="..\bloodspatter.h" />
     <ClInclude Include="..\book-data.h" />
     <ClInclude Include="..\book-type.h" />
+    <ClInclude Include="..\branch-data-json.h" />
     <ClInclude Include="..\branch-data.h" />
     <ClInclude Include="..\branch-type.h" />
     <ClInclude Include="..\branch.h" />
@@ -859,6 +864,7 @@ perl.exe "util/gen-cflg.pl" compflag.h "&lt;UNKNOWN&gt;" "&lt;UNKNOWN&gt;"
     <ClInclude Include="..\butcher.h" />
     <ClInclude Include="..\caction-type.h" />
     <ClInclude Include="..\canned-message-type.h" />
+	<ClInclude Include="..\chaos.h" />
     <ClInclude Include="..\char-set-type.h" />
     <ClInclude Include="..\chardump.h" />
     <ClInclude Include="..\cio.h" />
@@ -1041,6 +1047,7 @@ perl.exe "util/gen-cflg.pl" compflag.h "&lt;UNKNOWN&gt;" "&lt;UNKNOWN&gt;"
     <ClInclude Include="..\mon-death.h" />
     <ClInclude Include="..\mon-ench.h" />
     <ClInclude Include="..\mon-enum.h" />
+    <ClInclude Include="..\mon-explode.h" />
     <ClInclude Include="..\mon-flags.h" />
     <ClInclude Include="..\mon-gear.h" />
     <ClInclude Include="..\mon-grow.h" />
@@ -1063,6 +1070,7 @@ perl.exe "util/gen-cflg.pl" compflag.h "&lt;UNKNOWN&gt;" "&lt;UNKNOWN&gt;"
     <ClInclude Include="..\monster-type.h" />
     <ClInclude Include="..\monster.h" />
     <ClInclude Include="..\montravel-target-type.h" />
+	<ClInclude Include="..\mount.h" />
     <ClInclude Include="..\movement.h" />
     <ClInclude Include="..\mpr.h" />
     <ClInclude Include="..\msvc.h" />
@@ -1137,6 +1145,7 @@ perl.exe "util/gen-cflg.pl" compflag.h "&lt;UNKNOWN&gt;" "&lt;UNKNOWN&gt;"
     <ClInclude Include="..\screen-mode.h" />
     <ClInclude Include="..\scroller.h" />
     <ClInclude Include="..\SDLMain.h" />
+    <ClInclude Include="..\season.h" />
     <ClInclude Include="..\seen-context-type.h" />
     <ClInclude Include="..\sense-type.h" />
     <ClInclude Include="..\shop-type.h" />

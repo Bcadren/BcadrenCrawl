@@ -71,9 +71,7 @@ void formatted_scroller::scroll_to_end()
 int formatted_scroller::show()
 {
     auto vbox = make_shared<Box>(Widget::VERT);
-#ifdef USE_TILE_LOCAL
-    vbox->align_cross = Widget::Align::CENTER;
-#endif
+    vbox->set_cross_alignment(Widget::Align::STRETCH);
 
     if (!m_title.empty())
     {
@@ -81,7 +79,12 @@ int formatted_scroller::show()
         title->set_text(m_title);
         title->set_margin_for_crt(0, 0, 1, 0);
         title->set_margin_for_sdl(0, 0, 20, 0);
-        vbox->add_child(move(title));
+        auto title_hbox = make_shared<Box>(Widget::HORZ);
+#ifdef USE_TILE_LOCAL
+        title_hbox->set_main_alignment(Widget::Align::CENTER);
+#endif
+        title_hbox->add_child(move(title));
+        vbox->add_child(move(title_hbox));
     }
 
 #ifdef USE_TILE_LOCAL
@@ -115,10 +118,8 @@ int formatted_scroller::show()
 
     m_contents_dirty = false;
     bool done = false;
-    popup->on(Widget::slots.event, [&done, &text, this](wm_event ev) {
-        if (ev.type != WME_KEYDOWN)
-            return false; // allow default event handling
-        m_lastch = ev.key.keysym.sym;
+    popup->on_keydown_event([&done, &text, this](const KeyEvent& ev) {
+        m_lastch = ev.key();
         done = !process_key(m_lastch);
         if (m_contents_dirty)
         {
@@ -153,6 +154,7 @@ int formatted_scroller::show()
     tiles.json_write_string("more", m_more.to_colour_string());
     tiles.json_write_bool("start_at_end", m_flags & FS_START_AT_END);
     tiles.push_ui_layout("formatted-scroller", 2);
+    popup->on_layout_pop([](){ tiles.pop_ui_layout(); });
 #endif
 
     if (m_flags & FS_START_AT_END)
@@ -167,10 +169,6 @@ int formatted_scroller::show()
 
     ui::run_layout(move(popup), done);
     open_scrollers.pop_back();
-
-#ifdef USE_TILE_WEB
-    tiles.pop_ui_layout();
-#endif
 
     return m_lastch;
 }

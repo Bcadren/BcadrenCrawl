@@ -5,6 +5,7 @@
 
 #include "AppHdr.h"
 
+#include "mpr.h"
 #include "show.h"
 
 #include "areas.h"
@@ -19,10 +20,10 @@
 #include "libutil.h"
 #include "map-knowledge.h"
 #include "mon-place.h"
-#include "options.h"
 #include "state.h"
+#include "tag-version.h"
 #include "terrain.h"
-#include "tiledef-main.h"
+#include "rltiles/tiledef-main.h"
 #ifdef USE_TILE
  #include "tileview.h"
 #endif
@@ -111,7 +112,7 @@ static void _update_feat_at(const coord_def &gp)
     if (!you.see_cell(gp))
         return;
 
-    dungeon_feature_type feat = grd(gp);
+    dungeon_feature_type feat = env.grid(gp);
     unsigned colour = env.grid_colours(gp);
     trap_type trap = TRAP_UNASSIGNED;
     if (feat_is_trap(feat))
@@ -167,6 +168,9 @@ static void _update_feat_at(const coord_def &gp)
     if (is_bloodcovered(gp))
         env.map_knowledge(gp).flags |= MAP_BLOODY;
 
+    if (is_snowcovered(gp))
+        env.map_knowledge(gp).flags |= MAP_SNOWY;
+
     if (is_moldy(gp))
     {
         env.map_knowledge(gp).flags |= MAP_MOLDY;
@@ -218,6 +222,7 @@ static show_item_type _item_to_show_code(const item_def &item)
     case OBJ_DETECTED:   return SHOW_ITEM_DETECTED;
     case OBJ_RUNES:      return SHOW_ITEM_RUNE;
     case OBJ_SHIELDS:    return SHOW_ITEM_SHIELDS;
+    case OBJ_MANUALS:    return SHOW_ITEM_MANUALS;
     default:             return SHOW_ITEM_ORB; // bad item character
     }
 }
@@ -232,10 +237,10 @@ void update_item_at(const coord_def &gp, bool detected, bool wizard)
 
     if (you.see_cell(gp) || wizard)
     {
-        const int item_grid = wizard ? igrd(gp) : you.visible_igrd(gp);
+        const int item_grid = wizard ? env.igrid(gp) : you.visible_igrd(gp);
         if (item_grid == NON_ITEM)
             return;
-        eitem = mitm[item_grid];
+        eitem = env.item[item_grid];
 
         // monster(mimic)-owned items have link = NON_ITEM+1+midx
         if (eitem.link > NON_ITEM)
@@ -280,22 +285,22 @@ static void _update_cloud(cloud_struct& cloud)
 static void _check_monster_pos(const monster* mons)
 {
     int s = mons->mindex();
-    ASSERT(mgrd(mons->pos()) == s);
+    ASSERT(env.mgrid(mons->pos()) == s);
 
     // [rob] The following in case asserts aren't enabled.
-    // [enne] - It's possible that mgrd and mons->x/y are out of
+    // [enne] - It's possible that env.mgrid and mons->x/y are out of
     // sync because they are updated separately. If we can see this
-    // monster, then make sure that the mgrd is set correctly.
-    if (mgrd(mons->pos()) != s)
+    // monster, then make sure that the env.mgrid is set correctly.
+    if (env.mgrid(mons->pos()) != s)
     {
         // If this mprf triggers for you, please note any special
         // circumstances so we can track down where this is coming
         // from.
         mprf(MSGCH_ERROR, "monster %s (%d) at (%d, %d) was "
-             "improperly placed. Updating mgrd.",
+             "improperly placed. Updating env.mgrid.",
              mons->name(DESC_PLAIN, true).c_str(), s,
              mons->pos().x, mons->pos().y);
-        mgrd(mons->pos()) = s;
+        env.mgrid(mons->pos()) = s;
     }
 }
 
@@ -318,7 +323,7 @@ static bool _valid_invisible_spot(const coord_def &where, const monster* mons)
     if (mons_at && mons_at != mons)
         return false;
 
-    if (monster_habitable_grid(mons, grd(where)))
+    if (monster_habitable_grid(mons, env.grid(where)))
         return true;
 
     return false;
@@ -449,13 +454,9 @@ static void _update_monster(monster* mons)
     if (!you.turn_is_over)
         mons->went_unseen_this_turn = false;
 
-    // Being submerged is not the same as invisibility.
-    if (mons->submerged())
-        return;
-
     // Ripple effect?
     // Should match directn.cc's _mon_exposed
-    if (grd(gp) == DNGN_SHALLOW_WATER
+    if (env.grid(gp) == DNGN_SHALLOW_WATER
             && !mons->airborne()
             && !cloud_at(gp)
         || cloud_at(gp) && is_opaque_cloud(cloud_at(gp)->type)
@@ -486,7 +487,7 @@ static void _update_monster(monster* mons)
 }
 
 /**
- * Update map knowledge and set the map tiles at a location.
+ * Updates the map knowledge at a location.
  * @param gp      The location to update.
  * @param layers  The information layers to display.
 **/
@@ -499,10 +500,9 @@ void show_update_at(const coord_def &gp, layers_type layers)
     else
         env.map_knowledge(gp).clear_monster();
     // The sequence is grid, items, clouds, monsters.
+    // XX it actually seems to be grid monsters clouds items??
     _update_feat_at(gp);
 
-    // If there's items on the boundary (shop inventory),
-    // we don't show them.
     if (in_bounds(gp))
     {
         if (layers & LAYER_MONSTERS)
@@ -521,13 +521,6 @@ void show_update_at(const coord_def &gp, layers_type layers)
         if (layers & LAYER_ITEMS)
             update_item_at(gp);
     }
-
-#ifdef USE_TILE
-    tile_draw_map_cell(gp, true);
-#endif
-#ifdef USE_TILE_WEB
-    tiles.mark_for_redraw(gp);
-#endif
 }
 
 void show_init(layers_type layers)
@@ -543,6 +536,8 @@ void show_init(layers_type layers)
         }
         return;
     }
+
+    ASSERT(you.on_current_level);
 
     vector <coord_def> update_locs;
     for (radius_iterator ri(you.pos(), you.xray_vision ? LOS_NONE : LOS_DEFAULT); ri; ++ri)

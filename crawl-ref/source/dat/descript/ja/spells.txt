@@ -751,7 +751,7 @@ Summon Fire Elementals spell
 
 この呪文は一体または複数の火の精霊を召喚する。
 %%%%
-Summon Hell Beast spell
+Summon helvityr spell
 
 ゲリュオンは彼の角笛を使い、致命的な悪魔の獣人を召喚し、
 あなたにけしかけることができる。

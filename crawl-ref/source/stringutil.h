@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include "config.h"
 #include "libutil.h" // always_true
 
@@ -13,6 +15,8 @@
 #else
 size_t strlcpy(char *dst, const char *src, size_t n);
 #endif
+
+using std::vector;
 
 string lowercase_string(const string &s);
 string &lowercase(string &s);
@@ -38,6 +42,7 @@ string make_stringf(PRINTF(0, ));
 bool strip_suffix(string &s, const string &suffix);
 
 string replace_all(string s, const string &tofind, const string &replacement);
+string replace_verb(string s, bool plural);
 
 string replace_all_of(string s, const string &tofind, const string &replacement);
 

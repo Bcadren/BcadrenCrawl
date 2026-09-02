@@ -21,13 +21,14 @@
 #endif
 
 #include "artefact.h"
+#include "attack.h"
 #include "art-enum.h"
 #include "beam.h"
 #include "chardump.h"
 #include "cloud.h"
 #include "colour.h"
+#include "coordit.h"
 #include "delay.h"
-#include "describe.h"
 #include "dgn-event.h"
 #include "end.h"
 #include "env.h"
@@ -35,16 +36,12 @@
 #include "files.h"
 #include "fineff.h"
 #include "god-abil.h"
-#include "god-conduct.h"
 #include "god-passive.h"
 #include "hints.h"
 #include "hiscores.h"
 #include "invent.h"
-#include "item-name.h"
 #include "item-prop.h"
-#include "items.h"
 #include "libutil.h"
-#include "macro.h"
 #include "message.h"
 #include "mgen-data.h"
 #include "mon-death.h"
@@ -63,13 +60,12 @@
 #include "religion.h"
 #include "shopping.h"
 #include "shout.h"
-#include "skills.h"
 #include "spl-clouds.h"
-#include "spl-other.h"
 #include "spl-selfench.h"
 #include "state.h"
 #include "stringutil.h"
 #include "teleport.h"
+#include "terrain.h"
 #include "transform.h"
 #include "traps.h"
 #include "tutorial.h"
@@ -100,205 +96,12 @@ void maybe_melt_player_enchantments(beam_type flavour, int damage)
     }
 }
 
-int check_your_resists(int hurted, beam_type flavour, string source,
-                       bolt *beam, bool doEffects)
+static bool _maybe_unravel (int strength)
 {
-    int original = hurted;
-
-    dprf("checking resistance: flavour=%d", flavour);
-
-    string kaux = "";
-    if (beam)
-    {
-        source = beam->get_source_name();
-        kaux = beam->name;
-    }
-
-    if (doEffects)
-        maybe_melt_player_enchantments(flavour, hurted);
-
-    switch (flavour)
-    {
-    case BEAM_WATER:
-        hurted = resist_adjust_damage(&you, flavour, hurted);
-        if (!hurted && doEffects)
-            mpr("You shrug off the wave.");
-        break;
-
-    case BEAM_STEAM:
-        hurted = resist_adjust_damage(&you, flavour, hurted);
-        if (hurted < original && doEffects)
-            canned_msg(MSG_YOU_RESIST);
-        else if (hurted > original && doEffects)
-        {
-            mpr("The steam scalds you terribly!");
-            xom_is_stimulated(200);
-        }
-        break;
-
-    case BEAM_FIRE:
-        hurted = resist_adjust_damage(&you, flavour, hurted);
-        if (hurted < original && doEffects)
-            canned_msg(MSG_YOU_RESIST);
-        else if (hurted > original && doEffects)
-        {
-            mpr("The fire burns you terribly!");
-            xom_is_stimulated(200);
-        }
-        break;
-
-    case BEAM_DAMNATION:
-        break; // sucks to be you (:
-
-    case BEAM_MAGIC_CANDLE:
-        hurted = 0;
-        you.backlight();
-        break;
-
-    case BEAM_WAND_HEALING:
-        if (hurted && you.hp < you.hp_max)
-            mpr("Your wounds heal themselves!");
-        you.heal(hurted);
-        hurted = 0;
-        break;
-
-    case BEAM_COLD:
-        hurted = resist_adjust_damage(&you, flavour, hurted);
-        if (hurted < original && doEffects)
-            canned_msg(MSG_YOU_RESIST);
-        else if (hurted > original && doEffects)
-        {
-            mpr("You feel a terrible chill!");
-            xom_is_stimulated(200);
-        }
-        break;
-
-    case BEAM_ELECTRICITY:
-        hurted = resist_adjust_damage(&you, flavour, hurted);
-
-        if (hurted < original && doEffects)
-            canned_msg(MSG_YOU_RESIST);
-        break;
-
-    case BEAM_POISON:
-        hurted = resist_adjust_damage(&you, flavour, hurted);
-
-        if (doEffects)
-        {
-            // Ensure that we received a valid beam object before proceeding.
-            // See also melee-attack.cc:_print_resist_messages() which cannot be
-            // used with this beam type (as it does not provide a valid beam).
-            ASSERT(beam);
-            int pois = div_rand_round(beam->damage.num * beam->damage.size, 3);
-            pois = 3 + random_range(pois * 2 / 3, pois * 4 / 3);
-            poison_player(pois, source, kaux);
-
-            if (player_res_poison() > 0)
-                canned_msg(MSG_YOU_RESIST);
-        }
-
-        break;
-
-    case BEAM_POISON_ARROW:
-        if (doEffects)
-        {
-            // Ensure that we received a valid beam object before proceeding.
-            // See also melee-attack.cc:_print_resist_messages() which cannot be
-            // used with this beam type (as it does not provide a valid beam).
-            ASSERT(beam);
-            int pois = div_rand_round(beam->damage.num * beam->damage.size, 3);
-            pois = 3 + random_range(pois * 2 / 3, pois * 4 / 3);
-
-            const int resist = player_res_poison();
-            poison_player((resist ? pois / 2 : pois), source, kaux, true);
-        }
-
-        hurted = resist_adjust_damage(&you, flavour, hurted);
-        if (hurted < original && doEffects)
-            canned_msg(MSG_YOU_PARTIALLY_RESIST);
-        break;
-
-    case BEAM_NEG:
-        hurted = resist_adjust_damage(&you, flavour, hurted);
-
-        if (doEffects)
-        {
-            // drain_player handles the messaging here
-            drain_player(min(75, 35 + original * 2 / 3), true);
-        }
-        break;
-
-    case BEAM_ICE:
-    case BEAM_FREEZE:
-        hurted = resist_adjust_damage(&you, flavour, hurted);
-
-        if (hurted < original && doEffects)
-            canned_msg(MSG_YOU_PARTIALLY_RESIST);
-        else if (hurted > original && doEffects)
-        {
-            mpr("You feel a painful chill!");
-            xom_is_stimulated(200);
-        }
-        break;
-
-    case BEAM_LAVA:
-        hurted = resist_adjust_damage(&you, flavour, hurted);
-
-        if (hurted < original && doEffects)
-            canned_msg(MSG_YOU_PARTIALLY_RESIST);
-        else if (hurted > original && doEffects)
-        {
-            mpr("The lava burns you terribly!");
-            xom_is_stimulated(200);
-        }
-        break;
-
-    case BEAM_ENSNARE:
-        ensnare(&you, hurted);
-        hurted = 0;
-        break;
-
-    case BEAM_ACID:
-        hurted = resist_adjust_damage(&you, flavour, hurted);
-        if (hurted < original && doEffects)
-            canned_msg(MSG_YOU_RESIST);
-        break;
-
-    case BEAM_MIASMA:
-        if (you.res_rotting())
-        {
-            if (doEffects)
-                canned_msg(MSG_YOU_RESIST);
-            hurted = 0;
-        }
-        break;
-
-    case BEAM_HOLY:
-    {
-        hurted = resist_adjust_damage(&you, flavour, hurted);
-        if (hurted < original && doEffects)
-            canned_msg(MSG_YOU_RESIST);
-        else if (hurted > original && doEffects)
-        {
-            mpr("You writhe in agony!");
-            xom_is_stimulated(200);
-        }
-        break;
-    }
-
-    case BEAM_AIR:
-    {
-        // Airstrike.
-        if (you.airborne())
-            hurted += hurted / 2;
-        break;
-    }
-
-    default:
-        break;
-    }                           // end switch
-
-    return hurted;
+    int sk_boost = div_rand_round(you.skill(SK_CHARMS), 3);
+    if (x_chance_in_y(strength, 3 + sk_boost))
+        return true;
+    return false;
 }
 
 /**
@@ -325,7 +128,7 @@ void expose_player_to_element(beam_type flavour, int strength, bool slow_cold_bl
     dprf("expose_player_to_element, strength %i, flavor %i, slow_cold_blooded is %i", strength, flavour, slow_cold_blooded);
     qazlal_element_adapt(flavour, strength);
 
-    if (flavour == BEAM_COLD && slow_cold_blooded
+    if (( flavour == BEAM_COLD || flavour == BEAM_FREEZE) && slow_cold_blooded
         && you.get_mutation_level(MUT_COLD_BLOODED)
         && you.res_cold() <= 0 && coinflip())
     {
@@ -338,6 +141,81 @@ void expose_player_to_element(beam_type flavour, int strength, bool slow_cold_bl
         you.duration[DUR_LIQUID_FLAMES] = 0;
         you.props.erase("sticky_flame_source");
         you.props.erase("sticky_flame_aux");
+    }
+
+    lose_staff_shield(flavour, strength);
+}
+
+void lose_staff_shield(beam_type flavour, int strength)
+{
+    if (player_staff_shielding())
+    {
+        bool remove = false;
+        ASSERT(you.staff());
+        switch (you.staff()->sub_type)
+        {
+        case STAFF_FIRE:
+            if ((flavour == BEAM_COLD || flavour == BEAM_FREEZE) && _maybe_unravel(strength))
+            {
+                mprf(MSGCH_WARN, "The cold freezes and breaks your ball of floating magma.");
+                remove = true;
+            }
+            if (flavour == BEAM_WATER && _maybe_unravel(strength))
+            {
+                mprf(MSGCH_WARN, "The water puts out and breaks your ball of floating magma.");
+                remove = true;
+            }
+            break;
+        case STAFF_COLD:
+            if ((flavour == BEAM_FIRE || flavour == BEAM_STICKY_FLAME || flavour == BEAM_LAVA
+                || flavour == BEAM_STEAM) && _maybe_unravel(strength))
+            {
+                mprf(MSGCH_WARN, "The heat melts your disk of icy vapour.");
+                remove = true;
+            }
+            break;
+        case STAFF_EARTH:
+            if (flavour == BEAM_ELECTRICITY && _maybe_unravel(strength))
+            {
+                mprf(MSGCH_WARN, "The electricity magnitizes and disperses your curtain of metal fragments.");
+                remove = true;
+            }
+            break;
+        case STAFF_AIR:
+            remove = false;
+            break;
+        case STAFF_TRANSMUTATION:
+            if (flavour == BEAM_ACID && _maybe_unravel(strength * 2))
+            {
+                mprf(MSGCH_WARN, "The acid dissolves your mass of fleshy tendrils.");
+                remove = true;
+            }
+            if ((flavour == BEAM_POISON || flavour == BEAM_POISON_ARROW) && _maybe_unravel(strength))
+            {
+                mprf(MSGCH_WARN, "The poison shrinks your mass of fleshy tendrils away.");
+                remove = true;
+            }
+            if (flavour == BEAM_MIASMA && _maybe_unravel(strength))
+            {
+                mprf(MSGCH_WARN, "Your mass of fleshy tendrils rot away.");
+                remove = true;
+            }
+            break;
+        case STAFF_POISON:
+        case STAFF_DEATH:
+        default:
+            break;
+        }
+        if (flavour == BEAM_UNRAVELLING && _maybe_unravel(strength))
+        {
+            mprf(MSGCH_WARN, "Your staff's shield comes unraveled.");
+            remove = true;
+        }
+        if (remove)
+        {
+            you.increase_duration(DUR_STFSHIELD_COOLDOWN, 5 + strength, 50);
+            you.redraw_armour_class = true;
+        }
     }
 }
 
@@ -383,6 +261,7 @@ void lose_level()
     // In case of intrinsic ability changes.
     tiles.layout_statcol();
     redraw_screen();
+    update_screen();
 #endif
 
     xom_is_stimulated(200);
@@ -406,7 +285,7 @@ bool drain_player(int power, bool announce_full, bool ignore_protection)
     if (crawl_state.disables[DIS_AFFLICTIONS])
         return false;
 
-    const int protection = ignore_protection ? 0 : player_prot_life();
+    const int protection = (ignore_protection && player_prot_life() > 0) ? 0 : player_prot_life();
 
     if (protection == 3)
     {
@@ -422,9 +301,12 @@ bool drain_player(int power, bool announce_full, bool ignore_protection)
         power /= (protection * 2);
     }
 
+    if (protection < 0)
+        power = div_rand_round(power * 3, 2);
+
     if (power > 0)
     {
-        mpr("You feel drained.");
+        mprf("You feel %sdrained.", protection < 0 ? "severely " : "");
         xom_is_stimulated(15);
 
         you.attribute[ATTR_XP_DRAIN] += power;
@@ -551,6 +433,32 @@ static void _maybe_ru_retribution(int dam, mid_t death_source)
     }
 }
 
+static void _maybe_spawn_rats(int dam, kill_method_type death_type)
+{
+    if (dam <= 0
+        || death_type == KILLED_BY_POISON
+        || !player_equip_unrand(UNRAND_RATSKIN_CLOAK))
+    {
+        return;
+    }
+
+    // chance rises linearly with damage taken, up to 50% at half hp.
+    const int capped_dam = min(dam, you.hp_max / 2);
+    if (!x_chance_in_y(capped_dam, you.hp_max))
+        return;
+
+    monster_type mon = coinflip() ? MONS_HELL_RAT : MONS_SEWER_RAT;
+
+    mgen_data mg(mon, BEH_FRIENDLY, you.pos(), MHITYOU);
+    mg.flags |= MG_FORCE_BEH; // don't mention how much it hates you before it appears
+    if (monster *m = create_monster(mg))
+    {
+        m->add_ench(mon_enchant(ENCH_FAKE_ABJURATION, 3));
+        mprf("%s scurries out from under your cloak.", m->name(DESC_A).c_str());
+        check_lovelessness(*m);
+    }
+}
+
 static void _maybe_spawn_monsters(int dam, kill_method_type death_type,
                                   mid_t death_source)
 {
@@ -651,6 +559,45 @@ static void _powered_by_pain(int dam)
     }
 }
 
+static void _tiamat_retribution(int dam, bool fiery)
+{
+    if (have_passive(passive_t::bahamut_tiamat_passive)
+        && you.props.exists(BAHAMUT_TIAMAT_CHOICE0_KEY)
+        && !you.props[BAHAMUT_TIAMAT_CHOICE0_KEY].get_bool())
+    {
+        if (fiery)
+            dam *= 2;
+
+        apply_pity(dam);
+
+        if (dam < (you.hp_max / 20))
+            return;
+
+        bool already_haste = you.duration[DUR_HASTE];
+
+        if (x_chance_in_y(dam * 3, you.hp_max))
+        {
+            if (haste_player(25 + random2(dam), false, false))
+                mprf(MSGCH_DURATION, "%sTiamat %s.", fiery ? "Your cold-blood boils as " : "", 
+                    already_haste ? "extends your haste" : "quickens your movements" );
+        }
+    }
+}
+
+static void _boil_protoplasm(int dam, bool fiery)
+{
+    if (!fiery || you.get_mutation_level(MUT_PROTOPLASM) < 3)
+        return;
+
+    if (x_chance_in_y(dam * 6, you.hp_max))
+    {
+        mpr("Your protoplasm boils!");
+        for (adjacent_iterator ai(you.pos(), false); ai; ++ai)
+            if (!cell_is_solid(*ai) && !cloud_at(*ai))
+                place_cloud(CLOUD_STEAM, *ai, you.experience_level / 3 + random2(dam), &you, 2);
+    }
+}
+
 static void _maybe_fog(int dam)
 {
     const int minpiety = have_passive(passive_t::hit_smoke)
@@ -681,8 +628,8 @@ static void _maybe_fog(int dam)
 
 static void _deteriorate(int dam)
 {
-    if (x_chance_in_y(you.get_mutation_level(MUT_DETERIORATION), 4)
-        && dam > you.hp_max / 10)
+    if (x_chance_in_y(you.get_mutation_level(MUT_DETERIORATION), 2)
+        && dam > you.hp_max / 20)
     {
         mprf(MSGCH_WARN, "Your body deteriorates!");
         lose_stat(STAT_RANDOM, 1);
@@ -717,6 +664,10 @@ static int _wielding_reduction(artefact_prop_type type)
  **/
 static void _maybe_corrode()
 {
+
+    if (player_res_acid() >= 3)
+        return;
+
     int corrosion_sources = you.scan_artefacts(ARTP_CORRODE);
     corrosion_sources += _wielding_reduction(ARTP_CORRODE);
     int degree = binomial(corrosion_sources, 3);
@@ -745,7 +696,7 @@ static void _place_player_corpse(bool explode)
     define_monster(dummy); // assumes player_mons is not a zombie
     dummy.position = you.pos();
     dummy.props["always_corpse"] = true;
-    dummy.mname = you.xom_name;
+    dummy.mname = player_name();
     dummy.set_hit_dice(you.experience_level);
     if (explode)
         dummy.flags &= MF_EXPLODE_KILL;
@@ -827,9 +778,10 @@ static bool _is_damage_threatening (int damage_fraction_of_hp)
  *  @param aux what did they do it with?
  *  @param see_source whether the attacker was visible to you
  *  @param death_source_name the attacker's name if it is already dead.
+ *  @param fiery increased haste chance from Tiamat
  */
 void ouch(int dam, kill_method_type death_type, mid_t source, const char *aux,
-          bool see_source, const char *death_source_name)
+          bool see_source, const char *death_source_name, bool fiery)
 {
     ASSERT(!crawl_state.game_is_arena());
     if (you.duration[DUR_TIME_STEP])
@@ -843,6 +795,9 @@ void ouch(int dam, kill_method_type death_type, mid_t source, const char *aux,
     // Multiply damage if amulet of harm is in play
     if (dam != INSTANT_DEATH)
         dam = _apply_extra_harm(dam, source);
+
+    if (dam != 0 && dam != INSTANT_DEATH && you.species == SP_FAIRY)
+        dam = 1;
 
     if (can_shave_damage() && dam != INSTANT_DEATH
         && death_type != KILLED_BY_POISON)
@@ -986,8 +941,11 @@ void ouch(int dam, kill_method_type death_type, mid_t source, const char *aux,
             _yred_mirrors_injury(dam, source);
             _maybe_ru_retribution(dam, source);
             _maybe_spawn_monsters(dam, death_type, source);
+            _maybe_spawn_rats(dam, death_type);
             _maybe_fog(dam);
             _powered_by_pain(dam);
+            _tiamat_retribution(dam, fiery);
+            _boil_protoplasm(dam, fiery);
             if (sanguine_armour_valid())
                 activate_sanguine_armour();
             if (death_type != KILLED_BY_POISON)
@@ -1039,7 +997,7 @@ void ouch(int dam, kill_method_type death_type, mid_t source, const char *aux,
             death_type = KILLED_BY_XOM;
     }
     // Xom may still try to save your life.
-    else if (xom_saves_your_life(death_type, aux))
+    else if (xom_saves_your_life(death_type))
         return;
 
 #if defined(WIZARD) || defined(DEBUG)
@@ -1108,6 +1066,14 @@ void ouch(int dam, kill_method_type death_type, mid_t source, const char *aux,
 
         canned_msg(MSG_YOU_DIE);
         xom_death_message((kill_method_type) se.get_death_type());
+
+        if (delete_all_mutations("reincarnation", true))
+        {
+            mprf(MSGCH_MUTATION, "Your unnatural mutations reset as you form a new body.");
+            if (you_worship(GOD_JIYVA) && you.has_mutation(MUT_SLIME))
+                mprf(MSGCH_GOD, "Your slimy mutations transfer seamlessly through the grace of %s.", god_name_jiyva(true).c_str());
+        }
+
         more();
 
         _place_player_corpse(death_type == KILLED_BY_DISINT);
@@ -1138,15 +1104,13 @@ int actor_to_death_source(const actor* agent)
 
 int timescale_damage(const actor *act, int damage)
 {
-    if (damage < 0)
-        damage = 0;
     // Can we have a uniform player/monster speed system yet?
     if (act->is_player())
         return div_rand_round(damage * you.time_taken, BASELINE_DELAY);
     else
     {
         const monster *mons = act->as_monster();
-        const int speed = mons->speed > 0? mons->speed : BASELINE_DELAY;
+        const int speed = mons->speed > 0 ? mons->speed : BASELINE_DELAY;
         return div_rand_round(damage * BASELINE_DELAY, speed);
     }
 }

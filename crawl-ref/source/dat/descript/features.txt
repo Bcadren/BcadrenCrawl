@@ -17,7 +17,7 @@ A glowing golden altar of the Shining One
 An altar to the Shining One, made from the purest gold and almost blinding in
 its radiance.
 %%%%
-A shattered altar of Ashenzari
+A splintered altar of Ashenzari
 
 A crystal altar which shattered to pieces when Ashenzari was cursed. There is
 still a great power remaining within it: a dark aura holds the shards in
@@ -26,6 +26,13 @@ mid-explosion, suspended in time and space much like the god they herald.
 A roughly hewn altar of Beogh
 
 An altar to Beogh, unmistakably roughly hewn by orcish artisans.
+%%%%
+An ornate altar of Bahamut and Tiamat
+
+A divided altar to the twin gods Bahamut and Tiamat. Bahamut's half is of 
+solid gold and grandiose features; representing Bahamut's call of self-improvement. 
+Tiamat's half shifts and scintillates in the light; representing Tiamat's call 
+to constantly adapt and never stop changing.
 %%%%
 A snail-covered altar of Cheibriados
 
@@ -60,6 +67,11 @@ A viscous altar of Jiyva
 
 A slimy, ever-shifting altar to Jiyva. You're not sure what it's made from, and
 you don't really want to know.
+%%%%
+A ruined plinth
+
+The ruins of an altar to Jiyva. The plinth is intact; but on top there is only 
+a pile of salt and ash.
 %%%%
 An ancient bone altar of Kikubaaqudgha
 
@@ -114,7 +126,7 @@ giants and covered with bloodstains.
 %%%%
 A hide-covered altar of Uskayaw
 
-An altar to Uskayaw the Reveler. It appears to be hollow and covered in a hide,
+An altar to Uskayaw the Reveller. It appears to be hollow and covered in a hide,
 giving it a resonant surface. Carvings on the side depict grouped figures that
 could be dancing or loving or fighting.
 %%%%
@@ -139,7 +151,7 @@ are expected to be, and glowing gently.
 %%%%
 An ornate altar of the Wu Jian Council
 
-An red and gold altar to the Wu Jian Council. Sharp slivers of steel drift
+A red and gold altar to the Wu Jian Council. Sharp slivers of steel drift
 through the quiet air surrounding it.
 %%%%
 ########################################################################
@@ -173,6 +185,24 @@ through it; other creatures can wade through it slowly. Non-swimmers will
 occasionally fail to attack in melee when wading through shallow water,
 although large creatures are able to keep their balance and avoid fumbling.
 %%%%
+A toxic bog
+
+A filthy pool of poisonous, waist-deep sludge. Wading or swimming through the
+sludge will damage and poison any creature, even those resistant to poison.
+Those well-adapted to water can swim through it; other creatures can wade
+through it slowly. Non-swimmers will occasionally fail to attack in melee when
+wading through shallow water, although large creatures are able to keep their
+balance and avoid fumbling.
+%%%%
+A quagmire
+
+A pool of chaos residue. Wading or swimming through the pool of these chaotic
+secretions will damage any creature; with random chaos effects throughout.
+Those well-adapted to water can swim through it; other creatures can wade
+through it slowly. Non-swimmers will occasionally fail to attack in melee when
+wading through shallow water, although large creatures are able to keep their
+balance and avoid fumbling.
+%%%%
 The open sea
 
 An expanse of endless wind and waves, with not a lighthouse in sight. Anyone
@@ -202,10 +232,22 @@ A translucent stone wall
 A harder obstacle than rock walls. Only the mightiest magic can shatter stone
 walls. It has been imbued with arcane magics which render it translucent.
 %%%%
+A translucent runed stone wall
+
+A harder obstacle than rock walls. Only the mightiest magic can shatter stone
+walls. It has been marked with runes that block creatures from crossing it and 
+been imbued with arcane magics which render it translucent.
+%%%%
 A translucent unnaturally hard rock wall
 
 A wall imbued with magic that not only makes it indestructible but also makes
 it translucent like glass.
+%%%%
+A translucent aluminium wall
+
+A wall of lightweight nearly transparent metal, created throuh advanced alchemy; 
+a rare sight. Like other metals, its among the toughest walls and will ground
+even magical bolts of lightning.
 %%%%
 A stone wall
 
@@ -248,15 +290,46 @@ A tree
 
 A large tree. While in most places the dim light of the dungeon is not bright
 enough to sustain large plants, there are spots where, with the grace of
-Fedhas, trees as big as those on the surface can grow underground. It is
-susceptible to bolts of lightning and to sufficiently intense sources of fire.
+Fedhas, trees as big as those on the surface can grow underground.
+%%%%
+A dead mushroom stump
+
+Stump left when a mushroom died and crumbled away.
+%%%%
+An awoken dead mushroom stump
+
+A stump of a dead mushroom revived and awoken by magic. It seems angry and full 
+of loss. It lashes out out at any adjacent enemies of the creature who awoke
+it.
+%%%%
+A giant mushroom
+
+A fruiting body sprouted from a pool of slime mould. Seems to grow on the fertile
+earth of the pits of slime quite well; though what died here to make the ground
+fertile enough to support such growth is a mystery.
+%%%%
+An awoken giant mushroom
+
+A giant mushroom that has been enchanted to grant it some limited motility,
+allowing it to lash out out at any adjacent enemies of the creature who awoke
+it.
 %%%%
 An awoken tree
 
 A large tree that has been enchanted to grant it some limited motility,
 allowing it to lash out out at any adjacent enemies of the creature who awoke
-it. It is susceptible to bolts of lightning and to sufficiently intense sources
-of fire.
+it.
+%%%%
+A mangrove
+
+This tree is specially adapted for growing in swampy conditions.
+While in most places the dim light of the dungeon is not bright
+enough to sustain large plants, there are spots where, with the grace of
+Fedhas, trees as big as those on the surface can grow underground.
+%%%%
+An awoken mangrove
+
+<An awoken tree>
 %%%%
 An awoken autumnal tree
 
@@ -280,7 +353,7 @@ A shop that has been abandoned.
 %%%%
 An orcish idol
 
-An idol of the orc god Beogh.
+An idol of the orc god Beogh. Destroying it is likely to incur Beogh's wrath.
 %%%%
 An iron grate
 
@@ -631,10 +704,10 @@ A bolt trap
 A well-concealed hole containing a crossbow-like contraption with a
 self-loading mechanism.
 %%%%
-A dispersal trap
+A congregation trap
 
-Anyone stepping on this trap will translocate themself and anyone else in view
-to a new location nearby. Hostile monsters may trigger this trap, but your
+Anyone stepping on this trap will pull creatures from up to two screens away into 
+random locations near the trap. Hostile monsters may trigger this trap, but your
 allies will avoid stepping on it.
 %%%%
 A mechanical trap
@@ -647,8 +720,8 @@ A mechanical contraption that shoots poisoned needles.
 %%%%
 A net trap
 
-A large concealed net hanging from the dungeon's ceiling, rigged to fall onto
-anyone who steps beneath it.
+A large concealed net laucher hanging from the dungeon's ceiling, enchanted to 
+launch infinite nets upon anyone who steps beneath it.
 %%%%
 A pressure plate
 
@@ -906,7 +979,8 @@ A solid gold statue of a saint.
 %%%%
 A silver wall
 
-A wall made of pure silver.
+A wall made of pure silver. Zin's power prevents monsters from passing through 
+pure silver.
 %%%%
 An obsidian
 

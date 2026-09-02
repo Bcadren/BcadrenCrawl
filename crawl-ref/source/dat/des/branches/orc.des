@@ -24,7 +24,7 @@ ENDMAP
 NAME: david_orc_1_choice
 TAGS: orc_entry
 MONS: orc, warg / orc priest / orc warrior, orc warrior / orc
-ITEM: % / scroll of teleportation / scroll of remove curse
+ITEM: % / scroll of teleportation / scroll of bless item
 ITEM: % / w:2 * / scroll of blinking / scroll of fear
 SHUFFLE: %1
 ORIENT: float
@@ -873,7 +873,7 @@ TAGS:    no_item_gen no_monster_gen transparent
 DEPTH:   Orc
 KMONS:   1 = orc high priest / orc sorcerer
 KMONS:   2 = orc knight
-KMONS:   3 = orc warrior / orc ; arbalest . bolt . spear | hand axe | mace
+KMONS:   3 = orc warrior / orc ; arbalest . spear | hatchet | mace
 KMONS:   4 = orc priest / orc / nothing
 KMONS:   5 = orc wizard / nothing
 KMONS:   6 = ogre / two-headed ogre / troll / deep troll / ogre mage / nothing
@@ -903,10 +903,10 @@ NAME:   mines_bat_river
 TAGS:   no_item_gen no_monster_gen no_pool_fixup
 DEPTH:  Orc
 MONS:   bat
-MONS:   generate_awake orc ; shortbow ego:molten | shortbow ego:freezing | shortbow ego:vorpal . arrow q:10
+MONS:   generate_awake orc ; shortbow ego:molten | shortbow ego:freezing | shortbow ego:vorpal
 NSUBST: . = 2:2 / 2:c
 NSUBST: c = *: 2 .
-KITEM:  d = arrow q:1
+KITEM:  d = scroll of random uselessness
 NSUBST: b = 3:1 / 10:d / 4:e / *: .:20 1:1 d:2 e:2
 : dgn.delayed_decay(_G, 'e', 'bat corpse')
 SHUFFLE: ABC
@@ -938,7 +938,7 @@ NAME:   rock_pile
 TAGS:   no_item_gen no_monster_gen transparent
 DEPTH:  Orc
 MONS:   orc ; hunting sling . stone q:30
-KITEM:  d = w:3 stone / w:1 large rock q:1
+KITEM:  d = gold q:1
 SUBST:  a = .:4 b
 NSUBST: b = 6:1 / *:d
 SUBST:  1 = 1 .
@@ -1100,7 +1100,7 @@ SUBST: X = 'xx, ' = .:5 d:4 ^:1
 : if you.depth() == dgn.br_depth(you.branch()) then
 SUBST: ^ = .:5 d:4
 : end
-KITEM: d = stone q:1 / large rock q:1 w:3 / gold q:1 w:3
+KITEM: d = gold q:1
 KFEAT: ^ = shaft trap
 MAP
    xxx.
@@ -1119,7 +1119,7 @@ TAGS: no_item_gen no_trap_gen luniq_orc_cave
 DEPTH: Orc
 SUBST: B = b'
 NSUBST: ' = d / '
-KITEM: d = nothing w:48 / crystal ball of energy w:1 / crystal plate armour w:1
+KITEM: d = nothing w:48 / crystal ball of energy w:1 / crystal plate w:1
 MAP
  xxxxxxxx
 xx....xxxx
@@ -1296,9 +1296,9 @@ ENDMAP
 NAME: nicolae_orc_rockfall
 TAGS: transparent extra decor no_item_gen
 DEPTH: Orc
-: dgn.delayed_decay_extra(_G, 'o', 'orc corpse', 'stone q:1 / nothing, large rock q:1')
-KITEM: r = stone q:1 / nothing w:5 / large rock q:1 w:3
-KITEM: R = stone q:1 / stone q:2 / large rock q:1 w:5
+: dgn.delayed_decay_extra(_G, 'o', 'orc corpse', 'gold q:1')
+KITEM: r = gold q:1
+KITEM: R = gold q:1
 MAP
  .....
 ..rrr..
@@ -1477,10 +1477,10 @@ NAME:    st_orc_rangers
 TAGS:    no_rotate no_item_gen no_monster_gen no_pool_fixup transparent
 PLACE:   Orc:$
 ORIENT:  float
-MONS:    orc warrior w:1 ; arbalest . bolt . halberd | war axe | morningstar /\
-         orc w:10 ; arbalest . bolt . trident | hand axe | mace
-MONS:    orc warrior ; arbalest . bolt . glaive | broad axe | battleaxe | great mace
-MONS:    orc knight ; arbalest . bolt . glaive | broad axe | great mace
+MONS:    orc warrior w:1 ; arbalest . halberd | war axe | morningstar /\
+         orc w:10 ; arbalest . trident | hatchet | mace
+MONS:    orc warrior ; arbalest . glaive | broad axe | battleaxe | great mace
+MONS:    orc knight ; arbalest . glaive | broad axe | great mace
 MONS:    orc warrior
 MONS:    centaur w:20 / centaur warrior w:1 / nothing w:21
 SUBST:   3 = 23
@@ -1720,7 +1720,7 @@ MONS: nothing w:20 / fungus
 SUBST: . = ..4
 NSUBST: 3 = 5:3 / 1:I / 4:P / *:.
 SUBST: P = .4
-: if is_validating() then
+: if is_validating() or dgn.persist.grunt_orc_gardens_store == nil then
 KFEAT: A = any shop
 : else
 : kfeat("A = " .. dgn.persist.grunt_orc_gardens_store)

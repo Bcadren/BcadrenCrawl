@@ -16,7 +16,7 @@
 
 const char * const standard_plural_qualifiers[] =
 {
-    " of ", " labeled ", nullptr
+    " of ", " labelled ", nullptr
 };
 
 bool is_vowel(const char32_t chr)
@@ -63,7 +63,7 @@ string pluralise(const string &name, const char * const qualifiers[],
             return name.substr(0, name.length() - 2) + "i";
     }
     else if (ends_with(name, "larva") || ends_with(name, "antenna")
-             || ends_with(name, "hypha"))
+             || ends_with(name, "hypha") || ends_with(name, "noma"))
     {
         return name + "e";
     }
@@ -91,6 +91,11 @@ string pluralise(const string &name, const char * const qualifiers[],
         else
             return name.substr(0, name.length() - 1) + "ies";
     }
+    else if (ends_with(name, "ffe"))
+    {
+        // exception for giraffes
+        return name.substr(0, name.length()) + "s";
+    }
     else if (ends_with(name, "fe"))
     {
         // knife -> knives
@@ -101,6 +106,34 @@ string pluralise(const string &name, const char * const qualifiers[],
         // staff -> staves
         return name.substr(0, name.length() - 2) + "ves";
     }
+    // Welsh plurization rules for Demon names.
+    else if (ends_with(name, "wr"))
+        return name.substr(0, name.length() - 1) + "ys";
+    else if (ends_with(name, "och") || ends_with(name, "ol")
+        || ends_with(name, "darth") || ends_with(name, "dd")
+        || ends_with(name, "dod") || ends_with(name, "lrug"))
+    {
+        return name.substr(0, name.length()) + "ion";
+    }
+    else if (ends_with(name, "dio") || ends_with(name, "sit"))
+        return name.substr(0, name.length() - 1) + "au";
+    else if (ends_with(name, "raul"))
+        return name.substr(0, name.length() - 3) + "euliaid";
+    else if (ends_with(name, "wca") || ends_with(name, "rhy"))
+        return name.substr(0, name.length() - 1) + "od";
+    else if (ends_with(name, "ringu"))
+        return name.substr(0, name.length() - 1) + "ar";
+    else if (ends_with(name, "fl") || ends_with(name, "ordth")
+        || ends_with(name, "xec"))
+    {
+        return name.substr(0, name.length()) + "ar";
+    }
+    else if (ends_with(name, "vlerk"))
+        return name.substr(0, name.length()) + "e";
+    else if (ends_with(name, "us"))
+        return name.substr(0, name.length() - 2) + "ae";
+    else if (ends_with(name, "tyr"))
+        return name.substr(0, name.length());
     else if (ends_with(name, "f") && !ends_with(name, "ff"))
     {
         // elf -> elves, but not hippogriff -> hippogrives.
@@ -117,7 +150,8 @@ string pluralise(const string &name, const char * const qualifiers[],
              || ends_with(name, "tengu")    || ends_with(name, "sheep")
              || ends_with(name, "swine")    || ends_with(name, "efreet")
              || ends_with(name, "jiangshi") || ends_with(name, "raiju")
-             || ends_with(name, "meliai"))
+             || ends_with(name, "meliai")   || ends_with(name, "trout")
+             || ends_with(name, "tanto"))
     {
         return name;
     }
@@ -127,10 +161,11 @@ string pluralise(const string &name, const char * const qualifiers[],
         // To handle cockroaches, sphinxes, and bushes.
         return name + "es";
     }
-    else if (ends_with(name, "simulacrum") || ends_with(name, "eidolon"))
+    else if (ends_with(name, "simulacrum") || ends_with(name, "eidolon") || ends_with(name, "scutum"))
     {
         // simulacrum -> simulacra (correct Latin pluralisation)
         // also eidolon -> eidola (correct Greek pluralisation)
+        // also scutum -> scuta (correct Latin pluralisation)
         return name.substr(0, name.length() - 2) + "a";
     }
     else if (ends_with(name, "djinni"))
@@ -265,11 +300,12 @@ string conjugate_verb(const string &verb, bool plural)
 static const char * const _pronoun_declension[][NUM_PRONOUN_CASES] =
 {
     // subj  poss    refl        obj
-    { "it",  "its",  "itself",   "it"  }, // neuter
-    { "he",  "his",  "himself",  "him" }, // masculine
-    { "she", "her",  "herself",  "her" }, // feminine
-    { "you", "your", "yourself", "you" }, // 2nd person
-    { "they", "their", "themself", "them" }, // neutral
+    {    "it",   "its",    "itself",    "it"  }, // neuter
+    {    "he",   "his",   "himself",    "him" }, // masculine
+    {   "she",   "her",   "herself",    "her" }, // feminine
+    {   "you",  "your",  "yourself",    "you" }, // 2nd person
+    {  "they", "their",  "themself",   "them" }, // neutral
+    { "sklee", "skler", "sklerself",  "sklim" }, // weird, used by some panlords
 };
 
 const char *decline_pronoun(gender_type gender, pronoun_type variant)
@@ -396,15 +432,8 @@ string apply_description(description_level_type desc, const string &name,
     }
 }
 
-string thing_do_grammar(description_level_type dtype, bool add_stop,
-                        bool force_article, string desc)
+string thing_do_grammar(description_level_type dtype, string desc)
 {
-    if (add_stop && !ends_with(desc, ".") && !ends_with(desc, "!")
-        && !ends_with(desc, "?"))
-    {
-        desc += ".";
-    }
-
     // Avoid double articles.
     if (starts_with(desc, "the ") || starts_with(desc, "The ")
         || starts_with(desc, "a ") || starts_with(desc, "A ")
@@ -415,7 +444,7 @@ string thing_do_grammar(description_level_type dtype, bool add_stop,
             dtype = DESC_PLAIN;
     }
 
-    if (dtype == DESC_PLAIN || (!force_article && isupper(desc[0])))
+    if (dtype == DESC_PLAIN || isupper(desc[0]))
         return desc;
 
     switch (dtype)
@@ -431,7 +460,7 @@ string thing_do_grammar(description_level_type dtype, bool add_stop,
     }
 }
 
-string get_desc_quantity(const int quant, const int total, string whose)
+string get_desc_quantity(const int quant, const int total, const string &whose)
 {
     if (total == quant)
         return uppercase_first(whose);

@@ -17,6 +17,14 @@ A blade trap
 Vous voyez le tranchant d'une énorme lame de faux cachée dans une fente ; il y
 a probablement un contrepoids qui agit comme un pendule.
 %%%%
+A mangrove
+
+Cet arbre est spécialement adapté pour pousser dans des conditions
+marécageuses. Ses branches sont trop entrelacées pour voir au travers.
+
+Bien trop grand pour être abattus à la hache, il est sensible à la foudre et à
+des sources de feux suffisamment intenses.
+%%%%
 A bloodstained altar of Trog
 
 Un autel à Trog le Furieux, grossièrement taillé par ce qui semble être des
@@ -272,7 +280,7 @@ A shadowy altar of Dithmenos
 
 Cet autel de Dithmenos le Ténébreux semble absorber la lumière des environs.
 %%%%
-A shattered altar of Ashenzari
+A splintered altar of Ashenzari
 
 Cet autel de cristal s'est brisé lorsque que Ashenzari fut maudit. Néanmoins,
 une force est encore à l'œuvre ici : une sombre aura maintiens les éclats en

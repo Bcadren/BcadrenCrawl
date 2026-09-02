@@ -41,6 +41,7 @@
 #include "spl-book.h"
 #include "state.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "terrain.h"
 #include "tilepick-p.h"
 #include "travel.h"
@@ -171,7 +172,7 @@ static void _fill_newgame_choice_for_hints(newgame_def& choice, hints_types type
     choice.job = _get_hints_job(type);
     // easiest choice for fighters
     choice.weapon = choice.job == JOB_HUNTER ? WPN_SHORTBOW
-                                                : WPN_HAND_AXE;
+                                             : WPN_HAND_AXE;
 }
 
 // Hints mode selection screen and choice.
@@ -183,7 +184,7 @@ void pick_hints(newgame_def& choice)
     auto prompt_ui = make_shared<Text>(formatted_string::parse_string(prompt));
 
     auto vbox = make_shared<Box>(Box::VERT);
-    vbox->align_cross = Widget::Align::STRETCH;
+    vbox->set_cross_alignment(Widget::Align::STRETCH);
     vbox->add_child(prompt_ui);
 
     auto main_items = make_shared<OuterMenu>(true, 1, 3);
@@ -198,7 +199,7 @@ void pick_hints(newgame_def& choice)
 
 #ifdef USE_TILE_LOCAL
         auto hbox = make_shared<Box>(Box::HORZ);
-        hbox->align_cross = Widget::Align::CENTER;
+        hbox->set_cross_alignment(Widget::Align::CENTER);
         dolls_data doll;
         newgame_def tng = choice;
         _fill_newgame_choice_for_hints(tng, static_cast<hints_types>(i));
@@ -228,24 +229,20 @@ void pick_hints(newgame_def& choice)
     auto sub_items = make_shared<OuterMenu>(false, 1, 2);
     vbox->add_child(sub_items);
 
-    int keyn;
+    bool cancelled = false;
     bool done = false;
-    auto menu_item_activated = [&](int id) {
+    vbox->on_activate_event([&](const ActivateEvent& event) {
+        const auto button = static_pointer_cast<MenuButton>(event.target());
+        int id = button->id;
         if (id == CK_ESCAPE)
-        {
-            keyn = CK_ESCAPE;
-            done = true;
-            return;
-        }
+            return done = cancelled = true;
         else if (id == '*')
             id = random2(HINT_TYPES_NUM);
         Hints.hints_type = id;
         _fill_newgame_choice_for_hints(choice, static_cast<hints_types>(id));
-        done = true;
-    };
+        return done = true;
+    });
 
-    main_items->on_button_activated = menu_item_activated;
-    sub_items->on_button_activated = menu_item_activated;
     main_items->linked_menus[2] = sub_items;
     sub_items->linked_menus[0] = main_items;
 
@@ -268,32 +265,14 @@ void pick_hints(newgame_def& choice)
 
     auto popup = make_shared<ui::Popup>(vbox);
 
-    popup->on(Widget::slots.event, [&](wm_event ev) {
-        if (ev.type != WME_KEYDOWN)
-            return false;
-        keyn = ev.key.keysym.sym;
-        if (keyn == 'X')
-            return done = true;
-        // Random choice.
-        if (keyn == '+' || keyn == '!' || keyn == '#')
-            ev.key.keysym.sym = '*';
-        return false;
-    });
     ui::run_layout(move(popup), done);
 
-    switch (keyn)
+    if (cancelled)
     {
-    CASE_ESCAPE
 #ifdef USE_TILE_WEB
         tiles.send_exit_reason("cancel");
 #endif
         game_ended(game_exit::abort);
-    case 'X':
-#ifdef USE_TILE_WEB
-        tiles.send_exit_reason("cancel");
-#endif
-        end(0);
-        return;
     }
 }
 
@@ -425,12 +404,10 @@ void hints_starting_screen()
 #endif
 
     bool done = false;
-    prompt_ui->on(Widget::slots.event, [&](wm_event ev)  {
-        return done = ev.type == WME_KEYDOWN;
-    });
+    auto popup = make_shared<ui::Popup>(prompt_ui);
+    popup->on_keydown_event([&](const KeyEvent&) { return done = true; });
 
     mouse_control mc(MOUSE_MODE_MORE);
-    auto popup = make_shared<ui::Popup>(prompt_ui);
     ui::run_layout(move(popup), done);
 }
 
@@ -737,9 +714,6 @@ void taken_new_item(object_class_type item_type)
     case OBJ_ARMOURS:
         learned_something_new(HINT_SEEN_ARMOUR);
         break;
-    case OBJ_MISSILES:
-        learned_something_new(HINT_SEEN_MISSILES);
-        break;
     case OBJ_MISCELLANY:
         learned_something_new(HINT_SEEN_MISC);
         break;
@@ -773,7 +747,6 @@ void hints_gained_new_skill(skill_type skill)
     case SK_EVOCATIONS:
     case SK_DODGING:
     case SK_SHIELDS:
-    case SK_THROWING:
     case SK_SPELLCASTING:
     {
         mprf(MSGCH_TUTORIAL, "%s", get_skill_description(skill).c_str());
@@ -798,7 +771,7 @@ void hints_gained_new_skill(skill_type skill)
     // Melee skills.
     case SK_SHORT_BLADES:
     case SK_LONG_BLADES:
-    case SK_AXES:
+    case SK_AXES_HAMMERS:
     case SK_WHIPS_FLAILS:
     case SK_POLEARMS:
     case SK_MACES_STAVES:
@@ -1033,7 +1006,7 @@ void hints_first_item(const item_def &item)
 
 static string _describe_portal(const coord_def &gc)
 {
-    const dungeon_feature_type feat = grd(gc);
+    const dungeon_feature_type feat = env.grid(gc);
     string text;
 
     // For the sake of completeness, though it's very unlikely that a
@@ -1131,9 +1104,6 @@ static bool _tutorial_interesting(hints_event_type event)
     case HINT_HEALING_POTIONS:
     case HINT_GAINED_SPELLCASTING:
     case HINT_FUMBLING_SHALLOW_WATER:
-#if TAG_MAJOR_VERSION == 34
-    case HINT_MEMORISE_FAILURE:
-#endif
     case HINT_SPELL_MISCAST:
     case HINT_CLOUD_WARNING:
     case HINT_ANIMATE_CORPSE_SKELETON:
@@ -1356,7 +1326,7 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
             else
             {
                 text << "That <console>";
-                string glyph = glyph_to_tagstr(get_item_glyph(mitm[i]));
+                string glyph = glyph_to_tagstr(get_item_glyph(env.item[i]));
                 const string::size_type found = glyph.find("%");
                 if (found != string::npos)
                     glyph.replace(found, 1, "percent");
@@ -1364,7 +1334,7 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
                 text << "</console>is a corpse.";
 #ifdef USE_TILE
                 tiles.place_cursor(CURSOR_TUTORIAL, gc);
-                tiles.add_text_tag(TAG_TUTORIAL, mitm[i].name(DESC_A), gc);
+                tiles.add_text_tag(TAG_TUTORIAL, env.item[i].name(DESC_A), gc);
 #endif
             }
         }
@@ -1625,7 +1595,7 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
         {
             tiles.place_cursor(CURSOR_TUTORIAL, gc);
             string altar = "An altar to ";
-            altar += god_name(feat_altar_god(grd(gc)));
+            altar += god_name(feat_altar_god(env.grid(gc)));
             tiles.add_text_tag(TAG_TUTORIAL, altar, gc);
         }
 #endif
@@ -2105,7 +2075,8 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
         text << "Mutations can be obtained from several sources, among them "
                 "potions, spell miscasts, and overuse of strong enchantments "
                 "like invisibility. The gods Zin and Jiyva will cure your "
-                "mutations. Check your mutations with <w>%</w>.";
+                "mutations, but otherwise, your only recourse is to potions "
+                "of cure mutation. Check your mutations with <w>%</w>.";
         cmd.push_back(CMD_DISPLAY_MUTATIONS);
         break;
 
@@ -2672,6 +2643,7 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
 
     case HINT_YOU_SILENCE:
         redraw_screen();
+        update_screen();
         text << "While you are silenced, you cannot cast spells, read scrolls "
                 "or use divine invocations. The same is true for any monster "
                 "within the effect radius. The field of silence (recognizable "
@@ -2739,10 +2711,6 @@ void learned_something_new(hints_event_type seen_what, coord_def gc)
              << "to have a look at your skills and manage their training.";
         cmd.push_back(CMD_DISPLAY_SKILLS);
         break;
-#if TAG_MAJOR_VERSION == 34
-    case HINT_MEMORISE_FAILURE: // lmao
-        break;
-#endif
     case HINT_FUMBLING_SHALLOW_WATER:
         text << "Fighting in shallow water will sometimes cause you to slip "
                 "and fumble your attack. If possible, try to fight on "
@@ -2988,33 +2956,6 @@ static string _hints_abilities(const item_def& item)
     return str;
 }
 
-static string _hints_throw_stuff(const item_def &item)
-{
-    string result;
-
-    result  = "To do this, type <w>%</w> to fire, then ";
-    if (item.slot)
-    {
-        result += "<w>";
-        result += item.slot;
-        result += "</w> for";
-    }
-    else
-    {
-        // you don't have this/these stuff(s) at present
-        result += "select ";
-    }
-    result += (item.quantity > 1 ? "these" : "this");
-    result += " ";
-    result += item_base_name(item);
-    result += (item.quantity > 1? "s" : "");
-    result += ". You'll ";
-    result += _hints_target_mode();
-
-    insert_commands(result, { CMD_FIRE });
-    return result;
-}
-
 // num_old_talents describes the number of activatable abilities you had
 // before putting on this item.
 void check_item_hint(const item_def &item, unsigned int num_old_talents)
@@ -3092,7 +3033,7 @@ string hints_describe_item(const item_def &item)
 
                 // Maybe this is a launching weapon?
                 if (is_range_weapon(item))
-                    best_wpskill = best_skill(SK_SLINGS, SK_THROWING);
+                    best_wpskill = SK_SLINGS;
                 else
                     best_wpskill = best_skill(SK_SHORT_BLADES, SK_MACES_STAVES);
 
@@ -3159,51 +3100,6 @@ string hints_describe_item(const item_def &item)
             Hints.hints_events[HINT_SEEN_WEAPON] = false;
             break;
         }
-        case OBJ_MISSILES:
-            if (is_throwable(&you, item))
-            {
-                ostr << item.name(DESC_YOUR)
-                     << " can be <w>%</w>ired without the use of a launcher. ";
-                ostr << _hints_throw_stuff(item);
-                cmd.push_back(CMD_FIRE);
-            }
-            else if (is_launched(&you, you.weapon(0), you.weapon(1), item) == launch_retval::LAUNCHED)
-            {
-                ostr << "As you're already wielding the appropriate launcher, "
-                        "you can simply ";
-#ifdef USE_TILE
-                ostr << "<w>left mouse click</w> on the monster you want "
-                        "to hit while pressing the <w>Shift key</w>. "
-                        "Alternatively, you can <w>left mouse click</w> on "
-                        "this tile of the ammo you want to fire, and then "
-                        "<w>left mouse click</w> on the monster you want "
-                        "to hit.\n\n"
-
-                        "To launch this ammo using the keyboard, you can "
-                        "simply ";
-#endif
-
-                ostr << "<w>%</w>ire "
-                     << (item.quantity > 1 ? "these" : "this")
-                     << " " << item.name(DESC_BASENAME)
-                     << (item.quantity > 1? "s" : "")
-                     << ". You'll ";
-                ostr << _hints_target_mode();
-                cmd.push_back(CMD_FIRE);
-            }
-            else
-            {
-                ostr << "To shoot "
-                     << (item.quantity > 1 ? "these" : "this")
-                     << " " << item.name(DESC_BASENAME)
-                     << (item.quantity > 1? "s" : "")
-                     << ", first you need to <w>%</w>ield an appropriate "
-                        "launcher.";
-                cmd.push_back(CMD_WIELD_WEAPON);
-            }
-            Hints.hints_events[HINT_SEEN_MISSILES] = false;
-            break;
-
         case OBJ_ARMOURS:
         {
             bool wearable = true;
@@ -3378,10 +3274,9 @@ string hints_describe_item(const item_def &item)
 
             if (item_known_cursed(item))
             {
-                ostr << "\nA cursed piece of jewellery will cling to its "
-                        "unfortunate wearer's neck or fingers until the curse "
-                        "is finally lifted when he or she reads a scroll of "
-                        "remove curse.";
+                ostr << "\nA cursed piece of jewellery will stick to its "
+                        "wearer when equipped, and cannot be removed until "
+                        "you read a scroll of remove curse.";
             }
             if (gives_resistance(item))
             {
@@ -3417,22 +3312,19 @@ string hints_describe_item(const item_def &item)
             Hints.hints_events[HINT_SEEN_POTION] = false;
             break;
 
+        case OBJ_MANUALS:
+            ostr << "A manual can greatly help you in training a skill. "
+                "As long as you are carrying it, the skill in "
+                "question will be trained more efficiently and will "
+                "level up faster.";
+            cmd.push_back(CMD_READ);
+            break;
+
         case OBJ_BOOKS:
-            if (item.sub_type == BOOK_MANUAL)
-            {
-                ostr << "A manual can greatly help you in training a skill. "
-                        "As long as you are carrying it, the skill in "
-                        "question will be trained more efficiently and will "
-                        "level up faster.";
-                cmd.push_back(CMD_READ);
-            }
-            else // It's a spellbook!
-            {
-                ostr << "\nIt's a book, you can pick it up to add its "
-                        "spells to your spell library. (View your spell "
-                        " library with <w>%</w>";
-                cmd.push_back(CMD_MEMORISE_SPELL);
-            }
+            ostr << "\nIt's a book, you can pick it up to add its "
+                    "spells to your spell library. (View your spell "
+                    " library with <w>%</w>";
+            cmd.push_back(CMD_MEMORISE_SPELL);
             ostr << "\n";
             Hints.hints_events[HINT_SEEN_SPBOOK] = false;
             break;
@@ -3525,7 +3417,7 @@ bool hints_pos_interesting(int x, int y)
 {
     return cloud_at(coord_def(x, y))
            || _water_is_disturbed(x, y)
-           || _hints_feat_interesting(grd[x][y]);
+           || _hints_feat_interesting(env.grid[x][y]);
 }
 
 static bool _hints_feat_interesting(dungeon_feature_type feat)
@@ -3554,7 +3446,7 @@ string hints_describe_pos(int x, int y)
 
 static void _hints_describe_feature(int x, int y, ostringstream& ostr)
 {
-    const dungeon_feature_type feat = grd[x][y];
+    const dungeon_feature_type feat = env.grid[x][y];
     const coord_def            where(x, y);
 
     if (!ostr.str().empty())
@@ -3565,6 +3457,7 @@ static void _hints_describe_feature(int x, int y, ostringstream& ostr)
     switch (feat)
     {
     case DNGN_ORCISH_IDOL:
+    case DNGN_SARCOPHAGUS:
     case DNGN_GRANITE_STATUE:
         ostr << "It's just a harmless statue - or is it?\nEven if not "
                 "a danger by themselves, statues often mark special "
@@ -3572,9 +3465,19 @@ static void _hints_describe_feature(int x, int y, ostringstream& ostr)
         break;
 
     case DNGN_TRAP_TELEPORT:
+    case DNGN_TRAP_TELEPORT_PERMANENT:
     case DNGN_TRAP_ALARM:
     case DNGN_TRAP_ZOT:
+#if TAG_MAJOR_VERSION == 34
     case DNGN_TRAP_MECHANICAL:
+#endif
+    case DNGN_TRAP_ARROW:
+    case DNGN_TRAP_SPEAR:
+    case DNGN_TRAP_BLADE:
+    case DNGN_TRAP_NEEDLE:
+    case DNGN_TRAP_BOLT:
+    case DNGN_TRAP_NET:
+    case DNGN_TRAP_PLATE:
         ostr << "These nasty constructions can cause a range of "
                 "unpleasant effects. You won't be able to avoid "
                 "tripping traps by flying over them; their magic "
@@ -3781,7 +3684,8 @@ static void _hints_describe_cloud(int x, int y, ostringstream& ostr)
     {
         ostr << "probably dangerous, and you should stay out of it if you "
                 "can. ";
-    } else
+    }
+    else
     {
         ostr << "currently harmless, but that could change at some point. "
                 "Check the overview screen (<w>%</w>) to view your "
@@ -3816,7 +3720,7 @@ static bool _water_is_disturbed(int x, int y)
     const coord_def c(x,y);
     const monster* mon = monster_at(c);
 
-    if (!mon || grd(c) != DNGN_SHALLOW_WATER || !you.see_cell(c))
+    if (!mon || env.grid(c) != DNGN_SHALLOW_WATER || !you.see_cell(c))
         return false;
 
     return !mon->visible_to(&you) && !mon->airborne();
@@ -3959,9 +3863,9 @@ string hints_describe_monster(const monster_info& mi, bool has_stat_desc)
 
 void hints_observe_cell(const coord_def& gc)
 {
-    if (feat_is_escape_hatch(grd(gc)))
+    if (feat_is_escape_hatch(env.grid(gc)))
         learned_something_new(HINT_SEEN_ESCAPE_HATCH, gc);
-    else if (feat_is_branch_entrance(grd(gc)))
+    else if (feat_is_branch_entrance(env.grid(gc)))
         learned_something_new(HINT_SEEN_BRANCH, gc);
     else if (is_feature('>', gc))
         learned_something_new(HINT_SEEN_STAIRS, gc);
@@ -3969,19 +3873,19 @@ void hints_observe_cell(const coord_def& gc)
         learned_something_new(HINT_SEEN_ALTAR, gc);
     else if (is_feature('^', gc))
         learned_something_new(HINT_SEEN_TRAP, gc);
-    else if (feat_is_runed(grd(gc)))
+    else if (feat_is_door(env.grid(gc)) && feat_is_runed(env.grid(gc)))
         learned_something_new(HINT_SEEN_RUNED_DOOR, gc);
-    else if (feat_is_door(grd(gc)))
+    else if (feat_is_door(env.grid(gc)))
         learned_something_new(HINT_SEEN_DOOR, gc);
-    else if (grd(gc) == DNGN_ENTER_SHOP)
+    else if (env.grid(gc) == DNGN_ENTER_SHOP)
         learned_something_new(HINT_SEEN_SHOP, gc);
-    else if (feat_is_portal_entrance(grd(gc)))
+    else if (feat_is_portal_entrance(env.grid(gc)))
         learned_something_new(HINT_SEEN_PORTAL, gc);
 
     const int it = you.visible_igrd(gc);
     if (it != NON_ITEM)
     {
-        const item_def& item(mitm[it]);
+        const item_def& item(env.item[it]);
 
         if (Options.feature_item_brand != CHATTR_NORMAL
             && (is_feature('>', gc) || is_feature('<', gc)))

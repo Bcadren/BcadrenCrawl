@@ -7,25 +7,27 @@
 
 #include "describe-spells.h"
 
-#include "cio.h"
+#include "colour.h"
 #include "delay.h"
 #include "describe.h"
 #include "english.h"
 #include "externs.h"
 #include "invent.h"
 #include "libutil.h"
-#include "macro.h"
 #include "menu.h"
 #include "mon-book.h"
 #include "mon-cast.h"
+#include "mon-project.h" // iood_damage
 #include "monster.h" // SEEN_SPELLS_KEY
-#include "prompt.h"
 #include "religion.h"
 #include "shopping.h"
 #include "spl-book.h"
+#include "spl-damage.h"
 #include "spl-util.h"
+#include "spl-zap.h"
 #include "stringutil.h"
 #include "state.h"
+#include "tag-version.h"
 #include "tileweb.h"
 #include "unicode.h"
 #ifdef USE_TILE
@@ -327,7 +329,10 @@ spellset monster_spellset(const monster_info &mi)
     for (auto book_flag : book_flags)
         _monster_spellbooks(mi, book_flag, books);
 
-    ASSERT(books.size());
+    // BCADNOTE: Loosened Assert.
+    if (!books.size())
+        return {};
+
     return books;
 }
 
@@ -396,32 +401,6 @@ static int _spell_colour(spell_type spell, const item_def* const source_item)
 }
 
 /**
- * List the name(s) of the school(s) the given spell is in.
- *
- * XXX: This is almost certainly duplicating something somewhere. Also, it's
- * pretty ugly.
- *
- * @param spell     The spell in question.
- * @return          A '/'-separated list of spellschool names.
- */
-static string _spell_schools(spell_type spell)
-{
-    string schools;
-
-    for (const auto school_flag : spschools_type::range())
-    {
-        if (!spell_typematch(spell, school_flag))
-            continue;
-
-        if (!schools.empty())
-            schools += "/";
-        schools += spelltype_long_name(school_flag);
-    }
-
-    return schools;
-}
-
-/**
  * Should spells from the given source be listed in two columns instead of
  * one?
  *
@@ -466,11 +445,10 @@ vector<pair<spell_type,char>> map_chars_to_spells(const spellset &spells,
     return ret;
 }
 
-static string _range_string(const spell_type &spell, const monster_info *mon_owner, int hd)
+static string _range_string(const spell_type &spell, const monster_info *mon_owner)
 {
     auto flags = get_spell_flags(spell);
-    int pow = mons_power_for_hd(spell, hd);
-    int range = spell_range(spell, pow, false);
+    int range = mi_spell_range(spell, mon_owner);
     const bool has_range = mon_owner
                         && range > 0
                         && !testbits(flags, spflag::selfench);
@@ -482,6 +460,128 @@ static string _range_string(const spell_type &spell, const monster_info *mon_own
                     && grid_distance(you.pos(), mon_owner->pos) <= range;
     const char *range_col = in_range ? "lightred" : "lightgray";
     return make_stringf("(<%s>%d</%s>)", range_col, range, range_col);
+}
+
+static dice_def _spell_damage(spell_type spell, int hd)
+{
+    switch (spell)
+    {
+        case SPELL_WATERSTRIKE:
+            return waterstrike_damage(hd);
+        case SPELL_IOOD:
+            return iood_damage(hd*7, 8, false);
+        case SPELL_PAIN:
+            hd *= 12;
+        default:
+            break;
+    }
+
+    const zap_type zap = spell_to_zap(spell);
+    if (zap == NUM_ZAPS)
+        return dice_def(0,0);
+
+    dice_def retval = zap_damage(zap, hd, true, false);
+
+    switch (spell)
+    {
+    case SPELL_DISPEL_UNDEAD:
+        retval.size = min(40, retval.size);
+        break;
+    default:
+        break;
+    }
+
+    return retval;
+}
+
+static colour_t _spell_colour(spell_type spell)
+{
+    switch (spell)
+    {
+    case SPELL_CHAIN_LIGHTNING:
+        return LIGHTCYAN;
+    default:
+        break;
+    }
+
+    const zap_type zap = spell_to_zap(spell);
+    if (zap == NUM_ZAPS)
+        return COL_UNKNOWN;
+    colour_t retval = zap_colour(zap);
+
+    switch (retval)
+    {
+    case BLACK:
+    case DARKGRAY:
+        return RED;
+    default:
+        break;
+    }
+
+    return retval;
+}
+
+static string _colourize(string base, colour_t col)
+{
+    if (col < NUM_TERM_COLOURS)
+    {
+        const string col_name = colour_to_str(col);
+        return make_stringf("<%s>%s</%s>",
+                            col_name.c_str(), base.c_str(), col_name.c_str());
+    }
+    string out = make_stringf("%c", base[0]);
+    for (int i = 1; i < (int)base.length() - 1; i++)
+    {
+        const int term_col = element_colour(col, false, you.pos());
+        const string col_name = colour_to_str(term_col);
+        out += "<" + col_name + ">" + base[i] + "</" + col_name + ">";
+    }
+    out += base[base.length() - 1];
+    return out;
+}
+
+static string _effect_string(spell_type spell, const monster_info *mon_owner)
+{
+    if (!mon_owner)
+        return "";
+
+    const int hd = mon_owner->spell_hd(spell);
+    if (!hd)
+        return "";
+
+    if (testbits(get_spell_flags(spell), spflag::MR_check))
+    {
+        // MR chances only make sense vs a player
+        if (!crawl_state.need_save
+#ifndef DEBUG_DIAGNOSTICS
+            || mon_owner->attitude == ATT_FRIENDLY
+#endif
+            )
+        {
+            return "";
+        }
+        if (you.immune_to_hex(spell))
+            return "(immune)";
+        if (spell == SPELL_PAIN)
+        {
+            const dice_def pdam = _spell_damage(spell, hd);
+
+            string s = make_stringf("(%dd%d)", pdam.num, pdam.size);
+            return make_stringf("%s(%d%%)", s.c_str(), hex_chance(spell, hd));
+        }
+        return make_stringf("(%d%%)", hex_chance(spell, hd));
+    }
+
+    if (spell == SPELL_CHAIN_LIGHTNING)
+        return make_stringf("(%s)", desc_chain_lightning_dam(hd).c_str());
+
+    const dice_def dam = _spell_damage(spell, hd);
+    if (dam.num == 0 || dam.size == 0)
+        return "";
+    string mult = "";
+    if (spell == SPELL_MARSHLIGHT)
+        mult = "2x";
+    return make_stringf("(%s%dd%d)", mult.c_str(), dam.num, dam.size);
 }
 
 /**
@@ -510,7 +610,7 @@ static void _describe_book(const spellbook_contents &book,
     if (source_item)
     {
         description.cprintf(
-            "\n Spells                           Type                      Level");
+            "\n Spells                           Type                      Level       Known");
     }
     description.cprintf("\n");
 
@@ -518,7 +618,6 @@ static void _describe_book(const spellbook_contents &book,
     const bool doublecolumn = _list_spells_doublecolumn(source_item);
 
     bool first_line_element = true;
-    const int hd = mon_owner ? mon_owner->spell_hd() : 0;
     for (auto spell : book.spells)
     {
         description.cprintf(" ");
@@ -535,32 +634,50 @@ static void _describe_book(const spellbook_contents &book,
         const char spell_letter = entry != spell_map.end()
                                             ? entry->second : ' ';
 
-        string range_str = _range_string(spell, mon_owner, hd);
+        const string range_str = _range_string(spell, mon_owner);
+        string effect_str = _effect_string(spell, mon_owner);
 
-        string hex_str = "";
+        const int effect_len = effect_str.length();
+        const int range_len = range_str.empty() ? 0 : 3;
+        const int effect_range_space = effect_len && range_len ? 1 : 0;
+        const int chop_len = 29 - effect_len - range_len - effect_range_space;
 
-        if (hd > 0 && crawl_state.need_save
-#ifndef DEBUG_DIAGNOSTICS
-            && mon_owner->attitude != ATT_FRIENDLY
-#endif
-            && testbits(get_spell_flags(spell), spflag::MR_check))
+        if (effect_len &&
+            (!testbits(get_spell_flags(spell), spflag::MR_check)
+                || spell == SPELL_PAIN))
         {
-            if (you.immune_to_hex(spell))
-                hex_str = "(immune)";
-            else
-                hex_str = make_stringf("(%d%%)", hex_chance(spell, hd));
+            effect_str = _colourize(effect_str, _spell_colour(spell));
         }
 
-        int hex_len = hex_str.length(), range_len = range_str.empty() ? 0 : 3;
-        int hex_range_space = hex_len && range_len ? 1 : 0;
+        string spell_name = mi_spell_title(spell, mon_owner);
+        const bool chaos = mi_chaos_chance(spell, mon_owner);
+
+        if (chop_len < (int)spell_name.length())
+        {
+            // Special cases
+            switch (spell)
+            {
+            case SPELL_LEHUDIBS_CRYSTAL_SPEAR:
+                if (!chaos)
+                    spell_name = "Crystal Spear";
+                break;
+            case SPELL_IOOD:
+                if (!chaos)
+                    spell_name = "Icy Sphere";
+                else
+                    spell_name = "Chaos Sphere";
+                break;
+            default:
+                break;
+            }
+        }
 
         description += formatted_string::parse_string(
                 make_stringf("%c - %s%s%s%s", spell_letter,
-                chop_string(spell_title(spell),
-                            29 - hex_len - range_len - hex_range_space).c_str(),
-                hex_str.c_str(),
-                hex_range_space ? " " : "",
-                range_str.c_str()));
+                             chop_string(spell_name, chop_len).c_str(),
+                             effect_str.c_str(),
+                             effect_range_space ? " " : "",
+                             range_str.c_str()));
 
         // only display type & level for book spells
         if (doublecolumn)
@@ -574,15 +691,17 @@ static void _describe_book(const spellbook_contents &book,
             continue;
         }
 
-        string schools =
-#if TAG_MAJOR_VERSION == 34
-            source_item->base_type == OBJ_RODS ? "Evocations"
-                                               :
-#endif
-                         _spell_schools(spell);
-        description.cprintf("%s%d\n",
+        string schools = spell_schools_string(spell);
+
+        string known = "";
+        if (!mon_owner) {
+            known = you.spell_library[spell] ? "         yes" : "          no";
+        }
+
+        description.cprintf("%s%d%s\n",
                             chop_string(schools, 30).c_str(),
-                            spell_difficulty(spell));
+                            spell_difficulty(spell),
+                            known.c_str());
     }
 
     // are we halfway through a column?
@@ -619,12 +738,13 @@ static void _write_book(const spellbook_contents &book,
 {
     tiles.json_open_object();
     tiles.json_write_string("label", book.label);
-    const int hd = mon_owner ? mon_owner->spell_hd() : 0;
     tiles.json_open_array("spells");
+
     for (auto spell : book.spells)
     {
+        const int hd = mon_owner ? mon_owner->spell_hd(spell) : 0;
         tiles.json_open_object();
-        tiles.json_write_string("title", spell_title(spell));
+        tiles.json_write_string("title", mi_spell_title(spell, mon_owner));
         tiles.json_write_int("colour", _spell_colour(spell, source_item));
         tiles.json_write_name("tile");
         tiles.write_tileidx(tileidx_spell(spell));
@@ -635,25 +755,16 @@ static void _write_book(const spellbook_contents &book,
         const char spell_letter = entry != spell_map.end() ? entry->second : ' ';
         tiles.json_write_string("letter", string(1, spell_letter));
 
-        string range_str = _range_string(spell, mon_owner, hd);
+        string effect_str = _effect_string(spell, mon_owner);
+        if (!testbits(get_spell_flags(spell), spflag::MR_check) || spell == SPELL_PAIN)
+            effect_str = _colourize(effect_str, _spell_colour(spell));
+        tiles.json_write_string("effect", effect_str);
+
+        string range_str = _range_string(spell, mon_owner);
         if (range_str.size() > 0)
             tiles.json_write_string("range_string", range_str);
 
-        if (hd > 0 && crawl_state.need_save
-#ifndef DEBUG_DIAGNOSTICS
-            && mon_owner->attitude != ATT_FRIENDLY
-#endif
-            && (get_spell_flags(spell) & spflag::MR_check))
-        {
-            if (you.immune_to_hex(spell))
-                tiles.json_write_string("hex_chance", "immune");
-            else
-                tiles.json_write_string("hex_chance",
-                        make_stringf("%d%%", hex_chance(spell, hd)));
-        }
-
-        string schools = (source_item && source_item->base_type == OBJ_RODS) ?
-                "Evocations" : _spell_schools(spell);
+        string schools = spell_schools_string(spell);
         tiles.json_write_string("schools", schools);
         tiles.json_write_int("level", spell_difficulty(spell));
         tiles.json_close_object();

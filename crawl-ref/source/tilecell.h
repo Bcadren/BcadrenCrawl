@@ -2,6 +2,7 @@
 #pragma once
 
 #include "map-cell.h"
+#include "tag-version.h"
 
 enum halo_type
 {
@@ -28,6 +29,7 @@ struct packed_cell
 
     bool is_highlighted_summoner;
     bool is_bloody;
+    char is_snowy;
     bool is_silenced;
     char halo;
     bool is_moldy;
@@ -35,6 +37,7 @@ struct packed_cell
     bool is_sanctuary;
     bool is_liquefied;
     bool mangrove_water;
+    bool mushroom_slime;
     bool awakened_forest;
     uint8_t orb_glow;
     char blood_rotation;
@@ -50,11 +53,11 @@ struct packed_cell
     bool operator !=(const packed_cell &other) const { return !(*this == other); }
 
     packed_cell() : num_dngn_overlay(0), fg(0), bg(0), cloud(0),
-                    is_highlighted_summoner(false), is_bloody(false),
+                    is_highlighted_summoner(false), is_bloody(false), is_snowy(0),
                     is_silenced(false), halo(HALO_NONE), is_moldy(false),
                     glowing_mold(false), is_sanctuary(false), is_liquefied(false),
-                    mangrove_water(false), awakened_forest(false), orb_glow(0),
-                    blood_rotation(0), old_blood(false), travel_trail(0),
+                    mangrove_water(false), mushroom_slime(false), awakened_forest(false), 
+                    orb_glow(0), blood_rotation(0), old_blood(false), travel_trail(0),
                     quad_glow(false), disjunct(false)
 #if TAG_MAJOR_VERSION == 34
                     , heat_aura(false)
@@ -67,6 +70,7 @@ struct packed_cell
                                         map_knowledge(c->map_knowledge),
                                         is_highlighted_summoner(c->is_highlighted_summoner),
                                         is_bloody(c->is_bloody),
+                                        is_snowy(c->is_snowy),
                                         is_silenced(c->is_silenced),
                                         halo(c->halo),
                                         is_moldy(c->is_moldy),
@@ -74,6 +78,7 @@ struct packed_cell
                                         is_sanctuary(c->is_sanctuary),
                                         is_liquefied(c->is_liquefied),
                                         mangrove_water(c->mangrove_water),
+                                        mushroom_slime(c->mushroom_slime),
                                         awakened_forest(c->awakened_forest),
                                         orb_glow(c->orb_glow),
                                         blood_rotation(c->blood_rotation),

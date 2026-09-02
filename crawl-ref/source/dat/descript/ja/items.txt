@@ -243,7 +243,7 @@ corpse
 
 これは死体だ。あなたはこれを捌いて食用の肉片を作ることができる。
 %%%%
-crystal plate armour
+crystal plate
 
 信じ難いほどの重さだが、極めて防御力の高い結晶質の鎧だ。
 %%%%
@@ -581,10 +581,6 @@ scroll of random uselessness
 この巻き物は何らかの機能を持っているかのように振る舞い、 uselessness of this
 scroll by the sense of achievement you get from getting it to work at all.
 %%%%
-scroll of remove curse
-
-この巻物を読み上げると、あなたの装備中のアイテムから呪いが取り除かれる。
-%%%%
 scroll of teleportation
 
 この巻物を読み上げると、あなたは無作為な地点に転送される。
@@ -663,7 +659,7 @@ trishula
 ３つの聖なる神々の力が一体になったことを象徴する３点を持つ。
 これは輝けるものの従者が好む武器だ。
 %%%%
-troll leather armour
+troll leather
 
 よく見かけるトロルのゴワゴワでコブ状の皮から作られた鎧だ。
 これはかなり遅い速度だが不思議にも着用者の肉体を再生する（すでにトロルでなければ）。

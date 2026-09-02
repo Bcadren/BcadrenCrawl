@@ -300,7 +300,7 @@ skin of Zhor
 
 La peau puante d'un animal étrange.
 %%%%
-salamander hide armour
+salamander hide
 
 Une armure de cuir confectionné avec la peau d'une salamandre.
 %%%%
@@ -475,7 +475,7 @@ Lorsque vous tenez cette hache, votre esprit ne semble plus entièrement le
 votre. Votre corps commence à présenter une force au-delà de ses capacités, et
 vos mouvements deviennent guidé par Makhleb.
 %%%%
-moon troll leather armour
+moon troll leather
 
 Cette armure aurait été créé par l'enchantement de la peau d'un troll dont
 l'espèce est désormais éteinte. Que cette armure soit véritablement un vestige

@@ -233,7 +233,7 @@ corpse
 
 Ruumis. Voit teurastaa sen tuottaaksesi syömäkelpoisia lihakimpaleita.
 %%%%
-crystal plate armour
+crystal plate
 
 Uskomattoman raskas mutta äärimmäisen tehokas kristallipanssari.
 %%%%

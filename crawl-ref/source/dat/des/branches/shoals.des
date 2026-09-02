@@ -568,7 +568,7 @@ ENDMAP
 NAME: nicolae_shoals_arrival_archipelago
 DEPTH: Shoals
 SHUFFLE: {[(<, abc, def
-SUBST: ade:@, bcf:W
+SUBST: a:@, de:., bcf:W
 MAP
      wwwwb
     www...b
@@ -959,8 +959,8 @@ ORIENT: float
 SHUFFLE: 1Ww / 2DD
 MONS: merfolk, faun
 MONS: merfolk impaler ; demon trident good_item | trident good_item . gold
-MONS: satyr ; fustibalus good_item . sling bullet good_item . gold / \
-      satyr ; longbow good_item . arrow good_item . gold
+MONS: satyr ; fustibalus good_item . gold / \
+      satyr ; longbow good_item . gold
 COLOUR:   c = white
 COLOUR:   1234'D = cyan
 FTILE:    1234'D+WwG = floor_pebble_cyan
@@ -1401,6 +1401,19 @@ MAP
     .-www-.
     .c---c.
     .......
+ENDMAP
+
+NAME:   nzn_prometheus_bound
+DEPTH:  Shoals
+MONS:   patrolling harpy
+KITEM:  e = book of fire ident:all
+KPROP:  nd = bloody
+KFEAT:  n = iron_grate
+: dgn.delayed_decay(_G, 'd', 'demigod corpse')
+MAP
+ 1e1
+xndnx
+ @1@
 ENDMAP
 
 ##############################################################################

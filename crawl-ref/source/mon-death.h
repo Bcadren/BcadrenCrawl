@@ -5,6 +5,10 @@
 
 #pragma once
 
+#include "item-def.h"
+#include "killer-type.h"
+#include "tag-version.h"
+
 #define ORIG_MONSTER_KEY "orig_monster_key"
 #define ELVEN_ENERGIZE_KEY "elven_twin_energize"
 #define ELVEN_IS_ENERGIZED_KEY "elven_twin_is_energized"
@@ -12,6 +16,9 @@
 #define OLD_DUVESSA_ENERGIZE_KEY "duvessa_berserk"
 #define OLD_DOWAN_ENERGIZE_KEY "dowan_upgrade"
 #endif
+
+class actor;
+class monster;
 
 #define MONSTER_DIES_LUA_KEY "monster_dies_lua_key"
 
@@ -42,12 +49,13 @@ item_def* mounted_kill(monster* daddy, monster_type mc, killer_type killer,
 item_def* place_monster_corpse(const monster& mons, bool silent,
                                                     bool force = false);
 
+void activate_ballistomycetes(monster* mons, const coord_def& origin,
+    bool player_kill);
 void monster_cleanup(monster* mons);
-void setup_spore_explosion(bolt & beam, const monster& origin);
 void record_monster_defeat(const monster* mons, killer_type killer);
 void unawaken_vines(const monster* mons, bool quiet);
 int mummy_curse_power(monster_type type);
-void fire_monster_death_event(monster* mons, killer_type killer, int i, bool polymorph);
+void fire_monster_death_event(monster* mons, killer_type killer, bool polymorph);
 void heal_flayed_effect(actor* act, bool quiet = false, bool blood_only = false);
 void end_flayed_effect(monster* ghost);
 

@@ -53,11 +53,11 @@ hellion
 
 Uno spaventoso demone, ricoperto da fiamme infernali.
 %%%%
-hellwing
+vlerk
 
 Un ripugnante demone scheletrico, con ali di antica pelle secca.
 %%%%
-ice devil
+rypuiwel
 
 Un demone dalle dimensioni di un uomo, ricoperto da ghiaccio scintillante.
 %%%%

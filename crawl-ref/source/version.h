@@ -5,7 +5,7 @@
 
 #pragma once
 
-#define CRAWL "Dungeon Crawl Stone Soup"
+#define CRAWL "BcadrenCrawl: Boulder Brew"
 
 enum rel_type
 {

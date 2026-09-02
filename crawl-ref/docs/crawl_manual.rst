@@ -238,8 +238,8 @@ Place
   will read "Dungeon:1" for a new character.
 
 Noise
-  This is a colored bar indicating the loudness of noise that you heard on your
-  last turn. The color provides a rough guide to how far away the noise it
+  This is a coloured bar indicating the loudness of noise that you heard on your
+  last turn. The colour provides a rough guide to how far away the noise it
   indicates might be audible. If the bar is gray, the sound is less likely to
   be audible outside of your line of sight (at least in an open area); if it is
   yellow, the sound is likely to be audible outside of your line of sight; and
@@ -438,8 +438,8 @@ commands and shortcuts in level-map mode, or press 'G?' or 'X?' within the game.
 
 Another use of autotravel is exploration: 'o' makes your character move to the
 nearest unexplored area. Note that this algorithm does not attempt any
-optimisation by default. By manual exploration you can save turns, but auto-explore
-will usually save real time.
+optimisation by default. By manual exploration you can save turns, but
+auto-explore will usually save real time.
 
 Stashes and Searching
 ========================================
@@ -658,17 +658,17 @@ adventures, how they are displayed, and what commands there are to use them:
 
 =======  =============  ================================================
 )        weapons        (use 'w'ield)
-(        missiles       (use 'f'ire)
+(        missiles       (use 'f'ire or 'F'ire, 'Q' to quiver)
 [        armour         (use 'W'ear and 'T'ake off)
 %        food           (use 'e'at; also 'c'hop up corpses)
 ?        scrolls        (use 'r'ead)
 !        potions        (use 'q'uaff)
-/        wands          (use 'V' to evoke)
+/        wands          (use 'V' to evoke, 'Q' to quiver)
 =        rings          (use 'P'ut on and 'R'emove)
 "        amulets        (use 'P'ut on and 'R'emove)
-\|        staves         (use 'w'ield)
-:        spellbooks     (use 'M'emorise and 'z'ap)
-}        miscellaneous  (use 'V' for evoking from the inventory)
+\|       staves         (use 'w'ield)
+:        spellbooks     (use 'M'emorise and 'z'ap, 'Q' to quiver)
+}        miscellaneous  (use 'V' to evoke, 'Q' to quiver)
 $        gold           (use 'g' to pick up)
 =======  =============  ================================================
 
@@ -785,23 +785,17 @@ require you to wield an appropriate device to inflict worthwhile damage. Upon
 impact, missiles may become destroyed. The chance for this to occur depends on
 the type of missile.
 
-The 'f' command fires or throws a missile. The default missile to be fired or
-thrown (your "quiver") is displayed on the main screen beneath your wielded
-weapon. The quivered item will always be what Crawl thinks is most likely to be
-what you want. Thus it will either be an item you previously chose and fired
-(with 'f') or directly quivered (with 'Q'), or the item in your inventory that
-ranks highest in fire_order - if there are several of similar order, the one
-with the lowest inventory slot is chosen.
+The 'F' and 'f' commands can be used to fire or throws a missile. For launchers,
+the default ammo to be fired is shown next to your launcher, or optionally in
+the main "quiver" display below your launcher. Ammo (as well as many other
+items, spells, and abilities) can fill this quiver as well.
 
 See Appendix `5. Inscriptions`_ for inscriptions which let you fine-tune the
 list of items to choose from. See also the Missiles section of
 options_guide.txt.
 
-The firing interface also allows you to manually select an item to throw with
-'i'; but it may not be very effective if you lack the correct launcher.
-
 Use the '(', ')' to cycle through your quiver without firing, and 'Q' to choose
-the quivered item from a list. If you would like to choose something to fire
+a quivered item from a list. If you would like to choose something to fire
 without inserting it into the quiver use 'F' instead.
 
 The interface for shooting or throwing things is also used for evoking wands and
@@ -898,6 +892,9 @@ wand is used, the wand is destroyed.
 Wands are aimed in the same way as missile weapons, and you can release the
 power of a wand by evoking it with 'V'. See section I for targeting.
 
+Wands can be 'Q'uivered in order to shoot via the autofire or 'f'ire
+interface, like spells and ammo
+
 =" Rings and Amulets
 ========================================
 
@@ -948,6 +945,9 @@ about having retrieved ten or even fifteen runes through their strength and
 cunning, but most scholars on the subject of Zot agree that such a thing is
 probably impossible in the first place, and secondly would be a meaningless
 achievement in any regard.
+
+Miscellany can often be 'Q'uivered in order to shoot via the autofire or 'f'ire
+interface, like spells and ammo
 
 $ Gold
 ========================================
@@ -1013,12 +1013,17 @@ from spells). Pressing 'II' (or 'I!') displays the relative hunger costs of your
 spells. The hunger cost is approximately proportional to the square of the
 number of # marks in this display.
 
-You activate a memorised spell by pressing 'z' (for Zap). Use 'I' to display a
-list of all memorised spells without actually casting one. The spells available
-are labelled with letters; you are free to change this labelling with the '='
-command. You can assign both lowercase and uppercase letters to spells. Some
-spells, for example most damage dealing ones, require a target. See the next
-section for details on how to target.
+There are two ways to activate memorized spells: by "quivering" them and using
+the fire interface, or directlyby pressing 'z' (for Zap). To choose a spell
+for the quiver, use 'Q', or '(' and ')' to cycle among possible actions. Press
+'f' to enter the targeting interface, or shift-tab / 'p' to autofire a
+quivered spell at the nearest monster.
+
+Use 'I' to display a list of all memorised spells without actually casting one.
+The spells available are labelled with letters; you are free to change this
+labelling with the '=' command. You can assign both lowercase and uppercase
+letters to spells. Some spells, for example most damage dealing ones, require a
+target. See the next section for details on how to target.
 
 Most spells have caps on their effects: no matter how intelligent and proficient
 you are, there is a limit to the damage you can achieve with a Magic Dart. In
@@ -1031,8 +1036,8 @@ a while (resulting in a waste of magic and possibly dangerous side-effects).
 Your chance of failing to cast a spell properly depends on your skills, your
 intelligence, the level of the spell and whether you are wearing heavy armour.
 The chance of miscasting a spell is displayed on the spell screen, and coloured
-based on potential severity (with yellow representing a moderate chance, and red
-representing a severe chance).
+based on severity (yellow for moderate damage, light red for major
+damage, red for extreme damage, and magenta for potentially lethal damage).
 
 Be careful of magic-using enemies! Some of them can use magic just as well as
 you, if not better, and often use it intelligently.
@@ -1090,7 +1095,9 @@ faith (use the 'a' command - but most gods resent being scorned). Further detail
 can be seen with '!' while in the '^' screen.
 
 To use any powers which your god deems you fit for, access the abilities menu
-via the 'a' command; god-given abilities are listed as invocations.
+via the 'a' command; god-given abilities are listed as invocations. Many god
+abilities can be 'Q'uivered in order to trigger via the 'f'ire or autofire
+interface.
 
 Depending on background, some characters start out religious; others have to
 pray at an altar to dedicate themselves to a life of servitude. There are altars
@@ -1130,11 +1137,11 @@ Mutations from magical contamination are almost always harmful. Mutations can
 also be caused by specific potions or by spells cast by powerful enemies found
 deep in the dungeon.
 
-It is more difficult to get rid of bad mutations than to get one. Using potions
-of mutations will remove a number of your current mutations, but will give you
-more mutations. These might be better to your taste. However, the only sure-fire
-ways is to join the gods Zin or Jiyva, each of whom provides some remedy against
-mutations.
+It is much more difficult to get rid of bad mutations than to get one. A lucky
+mutation attempt can actually remove mutations. However, the only sure-fire ways
+are to quaff a potion of cure mutation, which will attempt to remove one or more
+random mutations, or to join the gods Zin or Jivya, each of whom provides some
+remedy against mutations.
 
 Demonspawn are a special case. Characters of this species get certain special
 mutations as they gain levels; these are listed in cyan. They are permanent and
@@ -1182,10 +1189,10 @@ Stone Soup's homepage is at:
   http://crawl.develz.org
 
 Use this page for direct links to downloads of the most recent version. You can
-also submit bug reports there at https://crawl.develz.org/mantis. Be sure to
-make sure that your bug isn't already in the list. Feature requests should be
-posted on the official forum or the development wiki on crawl.develz.org
-instead.
+also submit bug reports there at https://crawl.develz.org/mantis if you have an
+account, or on the Github issue tracker at:
+
+  https://github.com/crawl/crawl/issues
 
 The history of Crawl is somewhat convoluted: Crawl was created in 1995 by Linley
 Henzell. Linley based Crawl loosely on Angband and NetHack, but avoided several
@@ -1779,7 +1786,7 @@ Vampires (Vp)
 Demigods (Dg)
   Demigods are mortals with some divine or angelic ancestry, however distant;
   they can be created by a number of processes, including magical experiments
-  and the time-honoured practice of interplanar miscegenation.
+  and the time-honoured practise of interplanar miscegenation.
 
   Demigods look more or less like members of their mortal part's species, but
   have excellent attributes (Str, Int, Dex) and are extremely robust; they can
@@ -2032,7 +2039,7 @@ though usually excel at neither. They start with a book of spells, and usually
 with some way of defending themselves.
 
 Skalds
-  Formidable warriors in their own rights, Skalds practice a form of augmenting
+  Formidable warriors in their own rights, Skalds practise a form of augmenting
   battle magic that is either chanted or sung. Unique to the highlands in which
   they originate, these spells and formulae are second nature: they can either
   inspire greatness in themselves and their allies, or fear in the hearts of
@@ -2047,16 +2054,16 @@ Transmuters
   and a robe.
 
 Warpers
-  Warpers specialise in translocation magic, and are experts in traveling long
+  Warpers specialise in translocation magic, and are experts in travelling long
   distances and positioning themselves precisely and use this to their advantage
   in melee or missile combat. They start with a scroll of blinking, the Book of
-  Spatial Translocations, some dispersal tomahawks, a simple weapon of thier
+  Spatial Translocations, some dispersal tomahawks, a simple weapon of their
   choice, and leather armour.
 
 Arcane Marksmen
   Arcane Marksmen are Hunters who use debilitating spells to assist their ranged
   attacks. They are particularly good at keeping their enemies at a distance.
-  They begin the game with a the Book of Debilitation, a ranged weapon of their
+  They begin the game with the Book of Debilitation, a ranged weapon of their
   choice, and a robe.
 
 Enchanters
@@ -2263,7 +2270,7 @@ Shields
   Affects the amount of protection you gain by using a shield, and the degree to
   which it hinders you. For most races, 5/15/25 skill is enough to mitigate the
   encumbrance of bucklers/shields/large shields respectively, though larger
-  races need less skill and and smaller races more.
+  races need less skill and smaller races more.
 
 Invocations
   Affects your ability to call on your god for aid. Those skilled at Invocations
@@ -2310,8 +2317,8 @@ Shift-direction or / direction
 o
   Auto-explore. Setting the option explore_greedy to true makes auto-explore run
   to interesting items (those that get picked up automatically) or piles
-  (checking the contents). Autoexploration will open doors on its own except if
-  you set travel_open_doors to false.
+  (checking the contents). Autoexploration will open doors on its own unless
+  you set travel_open_doors to avoid or approach.
 
 G or Ctrl-G
   Interlevel travel (to arbitrary dungeon levels or waypoints). Remembers old
@@ -2359,6 +2366,8 @@ Ctrl-direction or * direction
 ;
   Examine occupied tile and auto-pickup eligible items. Can also be used to pick
   up only part of a stack with no other item on the same square.
+  When a monster is present the first press of ; will only examine the tile
+  and a second press of ; will pick up all auto-pickup eligible items.
 
 x
   Examine surroundings, see below. Has '?' help.
@@ -2374,12 +2383,11 @@ Ctrl-O
   Show dungeon overview (branches, shops, etc.).
 
 !
-  Annotate current level. You can enter any text. This annotation is then listed
-  in the dungeon overview (Ctrl-O) and also shown whenever you enter that level
-  again. If you use this command when standing on a staircase, you may also
-  annotate the level that staircase leads to. Should your annotation contain an
-  exclamation mark (!), you will be prompted before entering the level. An empty
-  string clears annotations.
+  Annotate a level. You can annotate any level of a branch of which you have
+  found the entrance. You can enter any text. This annotation is then listed in
+  the dungeon overview (Ctrl-O) and also shown whenever you enter that level
+  again. Should your annotation contain an exclamation mark (!), you will be
+  prompted before entering the level. An empty string clears annotations.
 
 Character information
 --------------------------------------
@@ -2433,8 +2441,28 @@ I
   the command @, A, a). This is a highly condensed conglomeration of [, ", E, ^,
   @, A, a, $ on a single screen. Pressing the key of a displayed item views it.
 
-Other game-playing commands
+Other game-playing commands: quivers, spells, etc
 ----------------------------------------
+
+Q
+  Quiver an item, spell, or ability from a menu.
+
+( and )
+  Cycle quiver to next/previous suitable action (item, spell, ability).
+
+f
+  Fire currently quivered action. If some monster is in sight and the action
+  takes a target, either the last target or the nearest monster will be
+  automatically targeted. If the action does not take a target, the display
+  will typically show an area of effect. Pressing f again shoots.
+
+Tab
+  Autofight: Attack the nearest monster with your current weapon. If the
+  nearest monster is not in range, by default, this will move towards it.
+
+Shift-tab, p
+  Autofire: Fire a quivered action; if this action takes a target, it will fire
+  at the nearest monster.
 
 z
   Cast a spell. Should the spell demand monsters as targets but there are none
@@ -2537,19 +2565,9 @@ Item interaction (inventory)
   Inscriptions`_. You can also inscribe items when viewing them by pressing
   their slot key in the inventory.
 
-f
-  Fire quivered missile. If some monster is in sight, either the last target or
-  the nearest monster will be automatically targeted. Pressing f again shoots.
-
 F
   Directly choose an item and fire. Contrary to fi this does not change the
   quiver.
-
-( and )
-  Cycle quiver to next/previous suitable missile, respectively.
-
-Q
-  Quiver item from a menu.
 
 q
   Quaff a potion.
@@ -2571,8 +2589,9 @@ w
   Wield item a, or switch to b.
 
 v
-  Evoke power of wielded item. Also used to attack non-adjacent monsters with
-  a polearm.
+  Targeted attacks with your primary weapon, including attacking non-adjacent
+  monsters with a polearm, or firing a wielded launcher (regardless of the
+  state of the main quiver).
 
 V
   Evoke an item from the inventory. This includes using wands.
@@ -2860,10 +2879,9 @@ f
   Toggle display of the beam path.
 
 ( and )
-  These two commands allow you to change ammunition while targeting. The choice
-  is subject to the fire_order option. Usually, you change missiles according
-  to your launcher; i.e. when wielding a bow, ( and ) will cycle through all
-  stacks of arrows in your inventory.
+  When 'f'iring, these two commands allow you to cycle between quiverable
+  actions (items, spells, abilities). When wielding a launcher, these options
+  will include ammo for that launcher.
 
 Shift-direction
   Fire straight in that direction.

@@ -31,7 +31,7 @@ static inline void tile_new_level(bool first_time)
 // Set the default type of walls and floors.
 void tile_init_default_flavour();
 // Get the default types of walls and floors
-void tile_default_flv(branch_type br, int depth, tile_flavour &flv);
+void tile_default_flv(branch_type br, tile_flavour &flv);
 // Clear the per-cell wall and floor flavours.
 void tile_clear_flavour(const coord_def &p);
 void tile_clear_flavour();
@@ -44,11 +44,10 @@ void tile_init_flavour(const coord_def &gc, const int domino = -1);
 void tile_floor_halo(dungeon_feature_type target, tileidx_t tile);
 
 // Tile view related
+void tile_draw_map_cells();
 void tile_draw_floor();
 void tile_reset_fg(const coord_def &gc);
 void tile_reset_feat(const coord_def &gc);
-void tile_place_ray(const coord_def &gc, aff_type in_range);
-void tile_draw_rays(bool reset_count);
 void tile_draw_map_cell(const coord_def &gc, bool foreground_only = false);
 void tile_wizmap_terrain(const coord_def &gc);
 

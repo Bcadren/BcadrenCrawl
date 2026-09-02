@@ -581,7 +581,12 @@ function dgn.place_maps(parameters)
 
   local function map_error(name)
     -- this prefix string is used in map_def::run_hook
-    error("Failed to place map '" .. name .. "'")
+    local e = "Failed to place map '" .. name .. "'"
+    local last_error = dgn.last_builder_error()
+    if last_error and #last_error > 0 then
+      e = e .. "; last builder error: " .. last_error
+    end
+    error(e)
   end
 
   for i = 1, n_times do
@@ -640,23 +645,21 @@ end
 -- List of useful scrolls, with some reasonable weights.
 -- When changing the list or the weights, please keep the total weight at 1000.
 dgn.good_scrolls = [[
-    w:85  scroll of teleportation no_pickup /
-    w:38  scroll of teleportation no_pickup q:2 /
-    w:20  scroll of teleportation no_pickup q:3 /
-    w:85  scroll of fog no_pickup /
-    w:33  scroll of fog no_pickup q:2 /
-    w:85  scroll of remove curse no_pickup /
-    w:38  scroll of remove curse no_pickup q:2 /
-    w:95  scroll of enchantment no_pickup /
-    w:38  scroll of enchantment no_pickup q:2 /
-    w:54  scroll of blinking no_pickup /
-    w:22  scroll of blinking no_pickup q:2 /
+    w:95  scroll of teleportation no_pickup /
+    w:48  scroll of teleportation no_pickup q:2 /
+    w:30  scroll of teleportation no_pickup q:3 /
+    w:95  scroll of fog no_pickup /
+    w:43  scroll of fog no_pickup q:2 /
+    w:105 scroll of enchantment no_pickup /
+    w:48  scroll of enchantment no_pickup q:2 /
+    w:64  scroll of blinking no_pickup /
+    w:30  scroll of blinking no_pickup q:2 /
     w:54  scroll of enchantment no_pickup /
     w:22  scroll of enchantment no_pickup q:2 /
     w:33  scroll of magic mapping no_pickup /
     w:22  scroll of magic mapping no_pickup q:2 /
-    w:33  scroll of amnesia no_pickup /
-    w:18  scroll of amnesia no_pickup q:2 /
+    w:33  potion of amnesia no_pickup /
+    w:18  potion of amnesia no_pickup q:2 /
     w:33  scroll of holy word no_pickup q:1 /
     w:22  scroll of holy word no_pickup q:2 /
     w:33  scroll of silence no_pickup q:1 /
@@ -664,7 +667,7 @@ dgn.good_scrolls = [[
     w:11  scroll of acquirement no_pickup q:1 /
     w:4   scroll of acquirement no_pickup q:2 /
     w:1   scroll of acquirement no_pickup q:3 /
-    w:11  scroll of brand weapon no_pickup q:1 /
+    w:16  scroll of bless item no_pickup q:1 /
     w:22  scroll of torment no_pickup q:1 /
     w:22  scroll of vulnerability no_pickup /
 	w:54  scroll of attention no_pickup
@@ -684,7 +687,7 @@ dgn.loot_scrolls = [[
     w:15  scroll of summoning /
     w:8   scroll of magic mapping /
     w:15  scroll of enchantment /
-    w:5   scroll of brand weapon /
+    w:5   scroll of bless item /
     w:2   scroll of acquirement
     ]]
 
@@ -702,7 +705,7 @@ dgn.loot_potions = [[
     w:2   potion of experience
     ]]
 
--- Some definitions for all types of auxiliary armor.
+-- Some definitions for all types of auxiliary armour.
 dgn.aux_armour = "cloak / scarf / helmet / hat / pair of gloves " ..
     "/ pair of boots"
 
@@ -713,6 +716,60 @@ dgn.good_aux_armour = "cloak good_item / scarf / helmet good_item " ..
 -- Scarves excluded since they can't be randart.
 dgn.randart_aux_armour = "cloak randart / helmet randart / hat randart " ..
     "/ pair of gloves randart / pair of boots randart"
+
+-- Make an item definition that will randomly choose from combinations of the
+-- given tables of weighted item types and optional egos.
+--
+-- @param items     A table with weapon names as keys and weights as values.
+-- @param egos      An optional table with ego names as keys and weights as
+--                  values.
+-- @param args      An optional string of arguments to use on every item entry.
+--                  Should not have leading or trailing whitespace.
+-- @param separator An optional separator to use between the item entries.
+--                  Defaults to '/', which is appropriate for ITEM statements.
+--                  Use '|' if making item statements for use with MONS.
+-- @returns A string containing the item definition.
+function random_item_def(items, egos, args, separator)
+    args = args ~= nil and " " .. args or ""
+    separator = separator ~= nil and separator or '/'
+    local item_def
+    items_list = util.sorted_weight_table(items)
+
+    for i, item_pair in ipairs(items_list) do
+        iname = item_pair[1]
+        iweight = item_pair[2]
+        -- If we have egos, define an item spec with all item+ego
+        -- combinations, each with weight scaled by item rarity and ego
+        -- rarity.
+        if egos ~= nil then
+            egos_list = util.sorted_weight_table(egos)
+            for j, ego_pair in ipairs(egos_list) do
+                ename = ego_pair[1]
+                eweight = ego_pair[2]
+                if (not iname:find("demon") or ename ~= "holy_wrath")
+                   and (not iname:find("quick blade") or ename ~= "speed") then
+                    def = iname .. args .. " ego:" .. ename .. " w:" ..
+                          math.floor(iweight * eweight)
+                    if item_def == nil then
+                         item_def = def
+                    else
+                         item_def = item_def .. " " .. separator .. " " .. def
+                    end
+                end
+            end
+        -- No egos, so define item spec with all item combinations, each with
+        -- weight scaled by item rarity.
+        else
+            def = iname .. args .. " w:" .. iweight
+            if item_def == nil then
+                 item_def = def
+            else
+                 item_def = item_def .. " " .. separator .. " " .. def
+            end
+        end
+    end
+    return item_def
+end
 
 -- Returns true if point1 is inside radius(X, point2).
 function dgn.point_in_radius(point1, point2, radius)

@@ -14,9 +14,9 @@
 __BUGGY
 
 # This line should never get displayed to the user, even if
-# monster_shout() in shout.cc detects buggy behavior,
+# monster_shout() in shout.cc detects buggy behaviour,
 # so showing this line would itself be a bug.
-SOUND:You hear doubly buggy behavior!
+SOUND:You hear doubly buggy behaviour!
 %%%%
 __SHOUT
 
@@ -113,6 +113,14 @@ SOUND:You hear a chilling moan.
 __MOAN seen
 
 SOUND:@The_monster@ gives a chilling moan.
+%%%%
+__GIBBERING unseen
+
+SOUND:You hear an incomprehensible gibbering.
+%%%%
+__GIBBERING seen
+
+SOUND:@The_monster@ gibbers incessantly.
 %%%%
 __GURGLE unseen
 
@@ -324,7 +332,7 @@ glowing orange brain
 
 VISUAL:@The_monster@ turns @possessive@ attention towards you.
 %%%%
-# Iron imps, shadow imps and white imps copy imps.
+# haearbwcas, cysgobwcas and gwybwcas copy imps.
 imp
 
 # Shout one half the time, taunt the other half.
@@ -336,15 +344,15 @@ moth of wrath
 
 VISUAL:@The_monster@'s fur bristles in rage as it notices you.
 %%%%
-iron imp
+haearbwca
 
 @imp@
 %%%%
-shadow imp
+cysgobwca
 
 @imp@
 %%%%
-white imp
+gwybwca
 
 @imp@
 ####################################

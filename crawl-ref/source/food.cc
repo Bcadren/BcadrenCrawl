@@ -33,9 +33,9 @@
 #include "nearby-danger.h"
 #include "notes.h"
 #include "options.h"
-#include "output.h"
 #include "religion.h"
 #include "rot.h"
+#include "prompt.h"
 #include "state.h"
 #include "stepdown.h"
 #include "stringutil.h"
@@ -44,20 +44,15 @@
 #include "xom.h"
 
 static void _describe_food_change(int hunger_increment);
-static bool _vampire_consume_corpse(item_def& corpse);
 static void _heal_from_food(int hp_amt);
 
-void make_hungry(int hunger_amount, bool suppress_msg,
-                 bool magic)
+void make_hungry(int hunger_amount, bool suppress_msg)
 {
     if (crawl_state.disables[DIS_HUNGER])
         return;
 
     if (you_foodless())
         return;
-
-    if (magic)
-        hunger_amount = calc_hunger(hunger_amount);
 
     if (hunger_amount == 0 && !suppress_msg)
         return;
@@ -120,19 +115,18 @@ void set_hunger(int new_hunger_level, bool suppress_msg)
 
 bool you_foodless(bool temp)
 {
-    if (you.undead_state(temp) == US_UNDEAD || you.undead_state(temp) == US_GHOST)
-        return true;
-    else
+    switch (you.undead_state(temp))
+    {
+    case US_ALIVE:
+    case US_HUNGRY_DEAD:
         return false;
+    default:
+        return true;
+    }
 }
 
 bool prompt_eat_item(int slot)
 {
-    // There's nothing in inventory that a vampire can 'e', and floor corpses
-    // are handled by prompt_eat_chunks.
-    if (you.species == SP_VAMPIRE)
-        return false;
-
     item_def* item = nullptr;
     if (slot == -1)
     {
@@ -172,8 +166,7 @@ static bool _eat_check(bool check_hunger = true, bool silent = false,
     {
         if (!silent)
         {
-            mprf("You're too full to %s anything.",
-                 you.species == SP_VAMPIRE ? "drain" : "eat");
+            mpr("You're too full to eat anything.");
             crawl_state.zero_turns_taken();
         }
         return false;
@@ -197,9 +190,6 @@ bool eat_food(int slot)
             return false;
     }
 
-    if (you.species == SP_VAMPIRE)
-        mpr("There's nothing here to drain!");
-
     return prompt_eat_item(slot);
 }
 
@@ -207,8 +197,6 @@ static string _how_hungry()
 {
     if (you.hunger_state > HS_SATIATED)
         return "full";
-    else if (you.species == SP_VAMPIRE)
-        return "thirsty";
     else if (you.species == SP_TENGU)
         return "peckish";
     return "hungry";
@@ -242,28 +230,6 @@ bool food_change(bool initial)
         if (newstate < HS_SATIATED)
             interrupt_activity(activity_interrupt::hungry);
 
-        if (you.species == SP_VAMPIRE)
-        {
-            const undead_form_reason form_reason = lifeless_prevents_form();
-            if (form_reason == UFR_GOOD)
-            {
-                if (newstate == HS_ENGORGED && is_vampire_feeding()) // Alive
-                {
-                    print_stats();
-                    mpr("You can't stomach any more blood right now.");
-                }
-            }
-            else if (you.duration[DUR_TRANSFORMATION])
-            {
-                print_stats();
-                mprf(MSGCH_WARN,
-                     "Your blood-%s body can't sustain your transformation.",
-                     form_reason == UFR_TOO_DEAD ? "deprived" : "filled");
-                you.duration[DUR_TRANSFORMATION] = 1; // end at end of turn
-                // could maybe end immediately, but that makes me nervous
-            }
-        }
-
         if (!initial)
         {
             string msg = "You ";
@@ -275,10 +241,7 @@ bool food_change(bool initial)
                 break;
 
             case HS_STARVING:
-                if (you.species == SP_VAMPIRE)
-                    msg += "feel devoid of blood!";
-                else
-                    msg += "are starving!";
+                msg += "are starving!";
 
                 mprf(MSGCH_FOOD, less_hungry, "%s", msg.c_str());
 
@@ -287,10 +250,7 @@ bool food_change(bool initial)
                 break;
 
             case HS_NEAR_STARVING:
-                if (you.species == SP_VAMPIRE)
-                    msg += "feel almost devoid of blood!";
-                else
-                    msg += "are near starving!";
+                msg += "are near starving!";
 
                 mprf(MSGCH_FOOD, less_hungry, "%s", msg.c_str());
 
@@ -416,7 +376,7 @@ int prompt_eat_chunks(bool only_auto)
 
     // If we *know* the player can eat chunks, doesn't have the gourmand
     // effect and isn't hungry, don't prompt for chunks.
-    if (you.species != SP_VAMPIRE && you.hunger_state > _max_chunk_state())
+    if (you.hunger_state > _max_chunk_state())
         return 0;
 
     bool found_valid = false;
@@ -424,15 +384,7 @@ int prompt_eat_chunks(bool only_auto)
 
     for (stack_iterator si(you.pos(), true); si; ++si)
     {
-        if (you.species == SP_VAMPIRE)
-        {
-            if (si->base_type != OBJ_CORPSES || si->sub_type != CORPSE_BODY)
-                continue;
-
-            if (!mons_has_blood(si->mon_type))
-                continue;
-        }
-        else if (si->base_type != OBJ_FOOD
+        if (si->base_type != OBJ_FOOD
                  || si->sub_type != FOOD_CHUNK
                  || is_bad_food(*si))
         {
@@ -447,10 +399,6 @@ int prompt_eat_chunks(bool only_auto)
     for (auto &item : you.inv)
     {
         if (!item.defined())
-            continue;
-
-        // Vampires can't eat anything in their inventory.
-        if (you.species == SP_VAMPIRE)
             continue;
 
         if (item.base_type != OBJ_FOOD || item.sub_type != FOOD_CHUNK)
@@ -477,10 +425,10 @@ int prompt_eat_chunks(bool only_auto)
             const bool bad = is_bad_food(*item);
 
             // Allow undead to use easy_eat, but not auto_eat, since the player
-            // might not want to drink blood as a vampire and might want to save
-            // chunks as a ghoul. Ghouls can auto_eat if they have rotted hp.
+            // might want to save chunks as a ghoul. Ghouls can auto_eat if
+            // they have rotted hp.
             const bool no_auto = you.undead_state()
-                && !(you.species == SP_GHOUL && player_rotted());
+                && !(you.get_mutation_level(MUT_ROTTING_BODY) && player_rotted());
 
             // If this chunk is safe to eat, just do so without prompting.
             if (easy_eat && !bad && i_feel_safe() && !(only_auto && no_auto))
@@ -488,12 +436,9 @@ int prompt_eat_chunks(bool only_auto)
             else if (only_auto)
                 return 0;
             else
-            {
-                mprf(MSGCH_PROMPT, "%s %s%s? (ye/n/q)",
-                     (you.species == SP_VAMPIRE ? "Drink blood from" : "Eat"),
-                     ((item->quantity > 1) ? "one of " : ""),
-                     item_name.c_str());
-            }
+                mprf(MSGCH_PROMPT, "Eat %s%s? (ye/n/q)",
+                    ((item->quantity > 1) ? "one of " : ""),
+                    item_name.c_str());
 
             int keyin = autoeat ? 'y' : toalower(getchm(KMC_CONFIRM));
             switch (keyin)
@@ -512,9 +457,7 @@ int prompt_eat_chunks(bool only_auto)
                 {
                     if (autoeat)
                     {
-                        mprf("%s %s%s.",
-                             (you.species == SP_VAMPIRE ? "Drinking blood from"
-                                                        : "Eating"),
+                        mprf("Eating %s%s.",
                              ((item->quantity > 1) ? "one of " : ""),
                              item_name.c_str());
                     }
@@ -536,7 +479,7 @@ static const char *_chunk_flavour_phrase(bool likes_chunks)
 {
     const char *phrase = "tastes terrible.";
 
-    if (you.species == SP_GHOUL)
+    if (you.get_mutation_level(MUT_ROTTING_BODY))
         phrase = "tastes great!";
     else if (likes_chunks)
         phrase = "tastes great.";
@@ -628,7 +571,7 @@ mon_intel_type corpse_intelligence(const item_def &corpse)
 
 // Never called directly - chunk_effect values must pass
 // through food:determine_chunk_effect() first. {dlb}:
-static void _eat_chunk(item_def& food)
+static bool _eat_chunk(item_def& food)
 {
     const corpse_effect_type chunk_effect = determine_chunk_effect(food);
 
@@ -641,7 +584,7 @@ static void _eat_chunk(item_def& food)
     {
     case CE_CLEAN:
     {
-        if (you.species == SP_GHOUL)
+        if (you.get_mutation_level(MUT_ROTTING_BODY))
         {
             suppress_msg = true;
             const int hp_amt = 1 + random2avg(5 + you.experience_level, 3);
@@ -653,6 +596,28 @@ static void _eat_chunk(item_def& food)
         break;
     }
 
+    case CE_MUTAGENIC:
+    {
+        if (!crawl_state.disables[DIS_CONFIRMATIONS]
+            && !yesno("Really eat mutagenic meat?", true, 0))
+        {
+            canned_msg(MSG_OK);
+            break;
+        }
+
+        mprf("This raw flesh tastes peculiar.");
+        mprf(MSGCH_MUTATION, "You feel strange...");
+        if (!one_chance_in(3))
+        {
+            mutation_type mut = one_chance_in(4) ? RANDOM_BAD_MUTATION
+                                                 : RANDOM_MUTATION;
+            mutate(mut, "mutagenic meat");
+        }
+        do_eat = true;
+        break;
+    }
+
+    case CE_DIVINE:
     case CE_NOXIOUS:
     case CE_NOCORPSE:
         mprf(MSGCH_ERROR, "This flesh (%d) tastes buggy!", chunk_effect);
@@ -666,31 +631,30 @@ static void _eat_chunk(item_def& food)
         if (!suppress_msg)
             _chunk_nutrition_message(nutrition);
     }
+
+    return do_eat;
 }
 
 bool eat_item(item_def &food)
 {
     if (food.is_type(OBJ_CORPSES, CORPSE_BODY))
     {
-        if (you.species != SP_VAMPIRE)
-            return false;
-
-        if (_vampire_consume_corpse(food))
-        {
-            count_action(CACT_EAT, -1); // subtype Corpse
-            you.turn_is_over = true;
-            return true;
-        }
+        // BCADDO: Come back here when you want to goldify food.
 
         return false;
     }
 
-    mprf("You eat %s%s.", food.quantity > 1 ? "one of " : "",
-                          food.name(DESC_THE).c_str());
 
     if (food.sub_type == FOOD_CHUNK)
-        _eat_chunk(food);
-    else
+    {
+        if (!_eat_chunk(food))
+            return false;
+    }
+
+    mprf("You eat %s%s.", food.quantity > 1 ? "one of " : "",
+        food.name(DESC_THE).c_str());
+
+    if (food.sub_type != FOOD_CHUNK)
     {
         int value = food_value(food);
         ASSERT(value > 0);
@@ -713,13 +677,16 @@ bool eat_item(item_def &food)
 
 bool is_bad_food(const item_def &food)
 {
-    return is_forbidden_food(food) || is_noxious(food);
+    return is_forbidden_food(food) || is_noxious(food) || is_mutagenic(food);
 }
 
 // Returns true if a food item (or corpse) is totally inedible.
 bool is_noxious(const item_def &food)
 {
     if (food.base_type != OBJ_FOOD && food.base_type != OBJ_CORPSES)
+        return false;
+
+    if (food.is_type(OBJ_FOOD, FOOD_RATION))
         return false;
 
     return determine_chunk_effect(food) == CE_NOXIOUS;
@@ -744,19 +711,28 @@ bool is_inedible(const item_def &item, bool temp)
         if (item.sub_type == CORPSE_SKELETON)
             return true;
 
-        if (you.species == SP_VAMPIRE)
-        {
-            if (!mons_has_blood(item.mon_type))
-                return true;
-        }
-        else
-        {
-            item_def chunk = item;
-            chunk.base_type = OBJ_FOOD;
-            chunk.sub_type  = FOOD_CHUNK;
-            if (is_inedible(chunk, temp))
-                return true;
-        }
+        item_def chunk = item;
+        chunk.base_type = OBJ_FOOD;
+        chunk.sub_type  = FOOD_CHUNK;
+        if (is_inedible(chunk, temp))
+            return true;
+    }
+
+    return false;
+}
+
+bool is_mutagenic(const item_def &item)
+{
+    if (item.is_type(OBJ_FOOD, FOOD_CHUNK))
+        return determine_chunk_effect(item) == CE_MUTAGENIC;
+
+    if (item.is_type(OBJ_CORPSES, CORPSE_BODY))
+    {
+        item_def chunk = item;
+        chunk.base_type = OBJ_FOOD;
+        chunk.sub_type = FOOD_CHUNK;
+        if (is_mutagenic(chunk))
+            return true;
     }
 
     return false;
@@ -771,21 +747,8 @@ bool is_preferred_food(const item_def &food)
     if (you_foodless())
         return false;
 
-    // Vampires don't really have a preferred food type, but they really
-    // like blood potions.
-    if (you.species == SP_VAMPIRE)
-        return is_blood_potion(food);
-
-    if (you.species == SP_GHOUL)
+    if (you.get_mutation_level(MUT_ROTTING_BODY))
         return food.is_type(OBJ_FOOD, FOOD_CHUNK);
-
-#if TAG_MAJOR_VERSION == 34
-    if (food.is_type(OBJ_POTIONS, POT_PORRIDGE)
-        && item_type_known(food))
-    {
-        return you.get_mutation_level(MUT_CARNIVOROUS) == 0;
-    }
-#endif
 
     return false;
 }
@@ -835,14 +798,10 @@ bool can_eat(const item_def &food, bool suppress_msg, bool check_hunger,
     if (is_noxious(food))
         FAIL("It is completely inedible.");
 
-    if (you.species == SP_VAMPIRE)
-    {
-        if (food.is_type(OBJ_CORPSES, CORPSE_BODY))
-            return true;
+    if (you.has_mutation(MUT_ROTTING_BODY) && !food.is_type(OBJ_FOOD, FOOD_CHUNK))
+        FAIL("You crave only raw flesh!");
 
-        FAIL("Blech - you need blood!")
-    }
-    else if (food.base_type == OBJ_CORPSES)
+    if (food.base_type == OBJ_CORPSES)
         return false;
 
     if (food_is_meaty(food))
@@ -883,7 +842,7 @@ corpse_effect_type determine_chunk_effect(const item_def &carrion)
 
 /**
  * Determine the 'effective' chunk type for a given input for the player.
- * E.g., ghouls/vampires treat rotting and poisonous chunks as normal chunks.
+ * E.g., ghouls treat rotting and poisonous chunks as normal chunks.
  *
  * @param chunktype     The actual chunk type.
  * @return              A chunk type corresponding to the effect eating a chunk
@@ -893,9 +852,13 @@ corpse_effect_type determine_chunk_effect(corpse_effect_type chunktype)
 {
     switch (chunktype)
     {
+    case CE_MUTAGENIC:
     case CE_NOXIOUS:
-        if (you.species == SP_GHOUL || you.species == SP_VAMPIRE)
+        if (you.get_mutation_level(MUT_ROTTING_BODY))
             chunktype = CE_CLEAN;
+        break;
+    case CE_DIVINE:
+        chunktype = CE_NOXIOUS;
         break;
 
     default:
@@ -905,6 +868,7 @@ corpse_effect_type determine_chunk_effect(corpse_effect_type chunktype)
     return chunktype;
 }
 
+/* BCADDO: This one for Goldifying food too.
 static bool _vampire_consume_corpse(item_def& corpse)
 {
     ASSERT(you.species == SP_VAMPIRE);
@@ -927,7 +891,7 @@ static bool _vampire_consume_corpse(item_def& corpse)
     lessen_hunger(food_value, false);
 
     // this will never matter :)
-    if (mons_genus(mons_type) == MONS_ORC)
+    if (monster_class_is_orcish(mons_type))
         did_god_conduct(DID_DESECRATE_ORCISH_REMAINS, 2);
     if (mons_class_holiness(mons_type) & MH_HOLY)
         did_god_conduct(DID_DESECRATE_HOLY_REMAINS, 2);
@@ -941,7 +905,7 @@ static bool _vampire_consume_corpse(item_def& corpse)
         dec_mitm_item_quantity(corpse.index(), 1);
 
     return true;
-}
+} */
 
 static void _heal_from_food(int hp_amt)
 {
@@ -964,7 +928,7 @@ int you_max_hunger()
         return HUNGER_DEFAULT;
 
     // Ghouls can never be full or above.
-    if (you.species == SP_GHOUL)
+    if (you.get_mutation_level(MUT_ROTTING_BODY))
         return hunger_threshold[HS_SATIATED];
 
     return hunger_threshold[HS_ENGORGED];
@@ -976,7 +940,7 @@ int you_min_hunger()
     if (you_foodless())
         return HUNGER_DEFAULT;
 
-    // Vampires can never starve to death. Ghouls will just rot much faster.
+    // Ghouls will just rot much faster.
     if (you.undead_state() != US_ALIVE)
         return (HUNGER_FAINTING + HUNGER_STARVING) / 2; // midpoint
 
@@ -984,18 +948,35 @@ int you_min_hunger()
 }
 
 // General starvation penalties (such as inability to use spells/abilities and
-// reduced accuracy) don't apply to bloodless vampires or starving ghouls.
+// reduced accuracy) don't apply to starving ghouls.
 bool apply_starvation_penalties()
 {
     return you.hunger_state <= HS_STARVING && !you_min_hunger();
 }
 
+static item_def* _get_emergency_food()
+{
+    // Look for food on floor
+    for (stack_iterator si(you.pos(), true); si; ++si)
+    {
+        if (can_eat(*si, true))
+            return &*si;
+    }
+
+    // Look in inventory
+    auto it = find_if(begin(you.inv), end(you.inv),
+                      [](const item_def& inv_item) -> bool
+                          {
+                              return can_eat(inv_item, true);
+                          });
+    if (it != end(you.inv))
+        return &*it;
+
+    return nullptr;
+}
+
 void handle_starvation()
 {
-    // Don't faint or die while eating.
-    if (current_delay() && current_delay()->is_being_used(nullptr, OPER_EAT))
-        return;
-
     if (!you_foodless() && you.hunger <= HUNGER_FAINTING)
     {
         if (!you.cannot_act() && one_chance_in(40))
@@ -1012,18 +993,12 @@ void handle_starvation()
 
         if (you.hunger <= 0 && !you.duration[DUR_DEATHS_DOOR])
         {
-            auto it = find_if(begin(you.inv), end(you.inv),
-                [](const item_def& food) -> bool
-                {
-                    return can_eat(food, true);
-                });
-            if (it != end(you.inv))
+            if (item_def* emergency_food = _get_emergency_food())
             {
                 mpr("As you are about to starve, you manage to eat something.");
-                eat_item(*it);
+                eat_item(*emergency_food);
                 return;
             }
-
             mprf(MSGCH_FOOD, "You have starved to death.");
             ouch(INSTANT_DEATH, KILLED_BY_STARVATION);
             if (!you.pending_revival) // if we're still here...
@@ -1045,18 +1020,8 @@ string hunger_cost_string(const int hunger)
     if (you_foodless())
         return "N/A";
 
-#ifdef WIZARD
-    if (you.wizard)
-        return to_string(hunger);
-#endif
+    const int min = hunger * 4 / 5;
+    const int max = div_round_up(hunger * 6, 5);
 
-    const int numbars = hunger_bars(hunger);
-
-    if (numbars > 0)
-    {
-        return string(numbars, '#')
-               + string(ARRAYSZ(hunger_breakpoints) - numbars, '.');
-    }
-    else
-        return "None";
+    return make_stringf("%d-%d", min, max);
 }

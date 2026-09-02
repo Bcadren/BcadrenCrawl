@@ -8,7 +8,7 @@
 #include "libutil.h"
 #include "random.h"
 #include "tile-inventory-flags.h"
-#include "tiledef-icons.h"
+#include "rltiles/tiledef-icons.h"
 #include "tilefont.h"
 #include "tiles-build-specific.h"
 
@@ -91,7 +91,7 @@ void GridRegion::draw_desc(const char *desc)
     m_tag_font->render_string(x, y, formatted_string(desc, WHITE));
 }
 
-bool GridRegion::place_cursor(MouseEvent &event, unsigned int &item_idx)
+bool GridRegion::place_cursor(wm_mouse_event &event, unsigned int &item_idx)
 {
     int cx, cy;
     if (!mouse_pos(event.px, event.py, cx, cy))
@@ -109,7 +109,7 @@ bool GridRegion::place_cursor(MouseEvent &event, unsigned int &item_idx)
         return false;
     }
 
-    if (event.event != MouseEvent::PRESS)
+    if (event.event != wm_mouse_event::PRESS)
         return false;
 
     item_idx = cursor_index();

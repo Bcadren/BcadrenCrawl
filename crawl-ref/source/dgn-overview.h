@@ -29,6 +29,7 @@ void set_level_exclusion_annotation(string str,
 void clear_level_exclusion_annotation(level_id li = level_id::current());
 void set_unique_annotation(monster* mons,
                            const level_id level = level_id::current());
+void kill_dissolution();
 void remove_unique_annotation(monster* mons);
 
 string get_level_annotation(level_id li = level_id::current(),
@@ -37,8 +38,8 @@ string get_level_annotation(level_id li = level_id::current(),
 
 bool level_annotation_has(string str, level_id li = level_id::current());
 
-void annotate_level();
-void do_annotate(level_id& li);
+void annotate_level(level_id li);
+void do_annotate();
 void clear_level_annotations(level_id li);
 
 class writer;

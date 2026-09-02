@@ -1,5 +1,7 @@
 #pragma once
 
+#include "tag-version.h"
+
 enum cloud_type
 {
     CLOUD_NONE,
@@ -36,6 +38,11 @@ enum cloud_type
     CLOUD_XOM_TRAIL,
     CLOUD_SALT,
     CLOUD_GOLD_DUST,
+    CLOUD_CHAOSNADO,
+    CLOUD_FLAME,
+    CLOUD_EPHEMERAL,
+    CLOUD_BLOOD,
+    CLOUD_ROT,
     NUM_CLOUD_TYPES,
 
     // Random per-square.

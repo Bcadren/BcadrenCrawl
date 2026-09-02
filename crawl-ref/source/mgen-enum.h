@@ -1,5 +1,7 @@
 #pragma once
 
+#include "enum.h"
+
 enum band_type
 {
     BAND_NO_BAND                = 0,
@@ -31,7 +33,7 @@ enum band_type
     BAND_BALRUG,
     BAND_CACODEMON,
     BAND_EXECUTIONER,
-    BAND_HELLWING,
+    BAND_vlerk,
     BAND_DEEP_ELF_KNIGHT,
     BAND_DEEP_ELF_HIGH_PRIEST,
     BAND_KOBOLD_DEMONOLOGIST,
@@ -55,7 +57,7 @@ enum band_type
     BAND_PANDEMONIUM_LORD,
     BAND_HARPIES,
     BAND_ILSUIW,
-    BAND_AZRAEL,
+    BAND_MAALIK,
     BAND_DUVESSA,
     BAND_KHUFU,
     BAND_GOLDEN_EYE,
@@ -113,6 +115,15 @@ enum band_type
     BAND_SALTLINGS,
     BAND_DANCING_WEAPONS,
     BAND_MOLTEN_GARGOYLES,
+    BAND_GRUM,
+    BAND_BALLOON,
+    BAND_BLOWFLIES,
+    BAND_GIRAFFES,
+    BAND_SWAMP_BUTTERFLY,
+    BAND_CHAOS_BUTTERFLY,
+    BAND_CYSTS,
+    BAND_LUMPS,
+    BAND_TROUT,
     NUM_BANDS                   // always last
 };
 
@@ -129,6 +140,7 @@ enum proximity_type   // proximity to player to create monster
     PROX_CLOSE_TO_PLAYER,
     PROX_AWAY_FROM_PLAYER,
     PROX_AWAY_FROM_STAIRS,
+    PROX_AWAY_FROM_ENTRANCE,
 };
 
 enum mgen_flag

@@ -3,6 +3,7 @@
 #include "actor.h"
 
 #include "coord.h"
+#include "monster.h"
 #include "los-type.h"
 #include "losglobal.h"
 #include "state.h"
@@ -14,10 +15,16 @@ bool actor::observable() const
 
 bool actor::see_cell(const coord_def &p) const
 {
+    UNUSED(p);
+    return false; // Always overwritten.
+}
+
+bool monster::see_cell(const coord_def &p) const
+{
     if (!in_bounds(pos()))
         return false; // actor is off the map
 
-    return cell_see_cell(pos(), p, LOS_DEFAULT);
+    return cell_see_cell(pos(), p, LOS_MONSTER);
 }
 
 bool player::see_cell(const coord_def &p) const
@@ -30,7 +37,7 @@ bool player::see_cell(const coord_def &p) const
         return false; // A non-arena player at (0,0) can't see anything.
     if (xray_vision)
         return (pos() - p).rdist() <= current_vision;
-    return actor::see_cell(p);
+    return cell_see_cell(pos(), p, LOS_DEFAULT);
 }
 
 bool actor::can_see(const actor &target) const

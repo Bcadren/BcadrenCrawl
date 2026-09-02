@@ -16,13 +16,11 @@
 #include "mon-transit.h" // untag_followers() in duration-data
 #include "mutation.h"
 #include "options.h"
-#include "orb.h" // orb_limits_translocation in fill_status_info
-#include "player-equip.h"
 #include "player-stats.h"
 #include "random.h" // for midpoint_msg.offset() in duration-data
 #include "religion.h"
 #include "spl-summoning.h" // NEXT_DOOM_HOUND_KEY in duration-data
-#include "spl-transloc.h"
+#include "spl-transloc.h" // for you_teleport_now() in duration-data
 #include "spl-wpnench.h" // for _end_weapon_brand() in duration-data
 #include "stringutil.h"
 #include "throw.h"
@@ -155,16 +153,27 @@ static bool _fill_inf_from_ddef(duration_type dur, status_info& inf)
 static void _describe_airborne(status_info& inf);
 static void _describe_glow(status_info& inf);
 static void _describe_hunger(status_info& inf);
+static void _describe_tentacles(status_info& inf);
 static void _describe_regen(status_info& inf);
 static void _describe_rotting(status_info& inf);
 static void _describe_sickness(status_info& inf);
 static void _describe_speed(status_info& inf);
-static void _describe_poison(status_info& inf);
+static void _describe_poison(status_info& inf, bool mount);
 static void _describe_transform(status_info& inf);
 static void _describe_stat_zero(status_info& inf, stat_type st);
 static void _describe_terrain(status_info& inf);
 static void _describe_missiles(status_info& inf);
 static void _describe_invisible(status_info& inf);
+
+static int _mount_status_iterate(int statuses, status_info& inf)
+{
+    statuses--;
+    if (statuses <= 0)
+        inf.light_text += ")";
+    else
+        inf.light_text += ", ";
+    return statuses;
+}
 
 bool fill_status_info(int status, status_info& inf)
 {
@@ -206,9 +215,126 @@ bool fill_status_info(int status, status_info& inf)
         }
         break;
 
+    case STATUS_RECEIVE_CORPSES:
+        if (you.attribute[ATTR_KIKU_CORPSE])
+        {
+            inf.light_colour = god_colour(GOD_KIKUBAAQUDGHA);
+            inf.light_text   = "+Corpse";
+            inf.short_text   = "open crypt";
+            inf.long_text    = "You are calling on Kikubaaqudgha for supplemental "
+                               "corpses.";
+        }
+        break;
+
     case DUR_CORROSION:
         inf.light_text = make_stringf("Corr (%d)",
                           (-4 * you.props["corrosion_amount"].get_int()));
+        break;
+    
+    case DUR_MOUNTED:
+    {
+        inf.long_text = make_stringf("You are mounted upon a %s", you.mount_name().c_str()).c_str();
+        switch (you.mount)
+        {
+        case mount_type::none:
+            inf.light_colour = RED;
+            inf.long_text = inf.short_text = inf.light_text = "buggy mount";
+            break;
+        case mount_type::drake:
+            inf.light_colour = LIGHTCYAN;
+            inf.short_text = "drake mount";
+            inf.light_text = "drake";
+            break;
+        case mount_type::hydra:
+            inf.light_colour = GREEN;
+            inf.short_text = "hydra mount";
+            inf.light_text = "hydra";
+            break;
+        case mount_type::slime:
+            inf.light_colour = LIGHTGREEN;
+            inf.short_text = "slime mount";
+            inf.light_text = "slime";
+            break;
+        case mount_type::spider:
+            inf.light_colour = BROWN;
+            inf.short_text = "spider mount";
+            inf.light_text = "spider";
+            break;
+        }
+
+        int statuses = mount_statuses();
+        statuses += you.submerged(true);
+
+        if (statuses > 0)
+        {
+            inf.light_text += " (";
+            if (you.submerged(true))
+            {
+                inf.light_text += "subm";
+                _mount_status_iterate(statuses, inf);
+            }
+            if (you.duration[DUR_MOUNT_BREATH])
+            {
+                inf.light_text += "breath";
+                _mount_status_iterate(statuses, inf);
+            }
+            if (you.duration[DUR_ENSNARE])
+            {
+                inf.light_text += "web";
+                _mount_status_iterate(statuses, inf);
+            }
+            if (you.duration[DUR_MOUNT_POISONING])
+            {
+                inf.light_text += "pois";
+                _mount_status_iterate(statuses, inf);
+            }
+            if (you.duration[DUR_MOUNT_SLOW])
+            {
+                inf.light_text += "slow";
+                _mount_status_iterate(statuses, inf);
+            }
+            if (you.duration[DUR_MOUNT_CORROSION])
+            {
+                inf.light_text += make_stringf("Corr [%d]", (-4 * you.props["mount_corrosion_amount"].get_int()));
+                _mount_status_iterate(statuses, inf);
+            }
+            if (you.duration[DUR_MOUNT_DRAINING])
+            {
+                inf.light_text += "drain";
+                _mount_status_iterate(statuses, inf);
+            }
+            if (you.duration[DUR_MOUNT_WRETCHED])
+            {
+                inf.light_text += "mutat";
+                _mount_status_iterate(statuses, inf);
+            }
+            if (you.duration[DUR_MOUNT_PETRIFYING])
+            {
+                inf.light_text += "petr";
+                _mount_status_iterate(statuses, inf);
+            }
+            if (you.duration[DUR_MOUNT_PETRIFIED])
+            {
+                inf.light_text += "PETR";
+                _mount_status_iterate(statuses, inf);
+            }
+            if (you.duration[DUR_MOUNT_BARBS])
+            {
+                inf.light_text += "barbs";
+                _mount_status_iterate(statuses, inf);
+            }
+            if (you.duration[DUR_MOUNT_FROZEN])
+            {
+                inf.light_text += "ice";
+                _mount_status_iterate(statuses, inf);
+            }
+        }
+    }
+        break;
+
+    case DUR_FLAYED:
+        inf.light_text = make_stringf("Flay (%d)",
+                          (-1 * you.props["flay_damage"].get_int()));
         break;
 
     case DUR_NO_POTIONS:
@@ -276,6 +402,10 @@ bool fill_status_info(int status, status_info& inf)
         _describe_hunger(inf);
         break;
 
+    case STATUS_TENTACLE:
+        _describe_tentacles(inf);
+        break;
+
     case STATUS_REGENERATION:
         // DUR_REGENERATION + some vampire and non-healing stuff
         _describe_regen(inf);
@@ -295,7 +425,7 @@ bool fill_status_info(int status, status_info& inf)
 
     case STATUS_LIQUEFIED:
     {
-        if (you.liquefied_ground())
+        if (you.liquefied_ground() && you.duration[DUR_LIQUEFYING] == 0)
         {
             inf.light_colour = BROWN;
             inf.light_text   = "SlowM";
@@ -340,7 +470,8 @@ bool fill_status_info(int status, status_info& inf)
     }
 
     case DUR_POISONING:
-        _describe_poison(inf);
+    case DUR_MOUNT_POISONING:
+        _describe_poison(inf, status == DUR_MOUNT_POISONING);
         break;
 
     case DUR_POWERED_BY_DEATH:
@@ -430,6 +561,16 @@ bool fill_status_info(int status, status_info& inf)
         }
         break;
 
+    case STATUS_SKELETON:
+        if (you.attribute[ATTR_SKELETON] > 0)
+        {
+            inf.light_colour = WHITE;
+            inf.light_text   = "Skeleton";
+            inf.short_text   = "skeletal uprising";
+            inf.long_text    = "Skeletons rise behind you as you walk.";
+        }
+        break;
+
     case STATUS_SERPENTS_LASH:
         if (you.attribute[ATTR_SERPENTS_LASH] > 0)
         {
@@ -443,15 +584,12 @@ bool fill_status_info(int status, status_info& inf)
         break;
 
     case STATUS_HEAVENLY_STORM:
-        if (you.attribute[ATTR_HEAVENLY_STORM] > 0)
+        if (you.props.exists(WU_JIAN_HEAVENLY_STORM_KEY))
         {
             inf.light_colour = WHITE;
             inf.light_text
-               = make_stringf("Storm (%u)",
-                              you.attribute[ATTR_HEAVENLY_STORM]);
-            inf.short_text = "heavenly storm";
-            inf.long_text = "Heavenly clouds are increasing your damage and "
-                             "accuracy.";
+                = make_stringf("Storm (%d)",
+                               you.props[WU_JIAN_HEAVENLY_STORM_KEY].get_int());
         }
         break;
 
@@ -460,6 +598,15 @@ bool fill_status_info(int status, status_info& inf)
             = make_stringf("Slay (%u)",
                            you.props[SONG_OF_SLAYING_KEY].get_int());
         break;
+
+
+    case DUR_DRAGON_CALL:
+    {
+        int turns = you.attribute[ATTR_NEXT_DRAGON_TIME] / 10;
+        int aut = you.attribute[ATTR_NEXT_DRAGON_TIME] % 10;
+        inf.light_text = make_stringf("dragon's call (%d.%d)", turns, aut);
+        break;
+    }
 
     case STATUS_BEOGH:
         if (env.level_state & LSTATE_BEOGH && can_convert_to_beogh())
@@ -492,6 +639,23 @@ bool fill_status_info(int status, status_info& inf)
             inf.short_text   = "engulfed (cannot breathe)";
             inf.long_text    = "You are engulfed in water and unable to "
                                 "breathe.";
+            inf.light_colour = RED;
+        }
+        break;
+
+    case DUR_AIR_HOLD:
+        inf.light_text = "Envelop";
+        if (you.is_unbreathing())
+        {
+            inf.short_text = "enveloped";
+            inf.long_text = "You are enveloped in some kind of gas.";
+            inf.light_colour = DARKGREY;
+        }
+        else
+        {
+            inf.short_text = "enveloped (cannot breathe)";
+            inf.long_text = "You are enveloped in toxic gas and unable to "
+                "breathe.";
             inf.light_colour = RED;
         }
         break;
@@ -671,7 +835,7 @@ bool fill_status_info(int status, status_info& inf)
     {
         const item_def* weapon = you.weapon();
 
-        if (weapon && item_attack_skill(*weapon) == SK_AXES)
+        if (weapon && item_attack_skill(*weapon) == SK_AXES_HAMMERS)
             inf.light_colour = DARKGREY;
 
         break;
@@ -696,11 +860,6 @@ bool fill_status_info(int status, status_info& inf)
         if (player_has_orb())
         {
             inf.light_colour = LIGHTMAGENTA;
-            inf.light_text = "Orb";
-        }
-        else if (orb_limits_translocation())
-        {
-            inf.light_colour = MAGENTA;
             inf.light_text = "Orb";
         }
 
@@ -730,16 +889,45 @@ bool fill_status_info(int status, status_info& inf)
     return true;
 }
 
+static void _describe_tentacles(status_info& inf)
+{
+    if (!you.has_tentacles())
+        return;
+
+    int tent = you.usable_tentacles();
+
+    switch (tent)
+    {
+    default:
+        inf.light_colour = GREEN;
+        break;
+    case 3:
+    case 2:
+        inf.light_colour = YELLOW;
+        break;
+    case 1:
+        inf.light_colour = LIGHTRED;
+        break;
+    case 0:
+        inf.light_colour = RED;
+        break;
+    }
+
+    inf.light_text = make_stringf("%d limb%s", tent, tent > 1 ? "s" : "");
+}
+
 static void _describe_hunger(status_info& inf)
 {
-    const bool vamp = (you.species == SP_VAMPIRE);
+    if (you_foodless(false))
+        return;
+
     const bool kenku = (you.species == SP_TENGU);
 
     switch (you.hunger_state)
     {
     case HS_ENGORGED:
-        inf.light_colour = (vamp ? GREEN : LIGHTGREEN);
-        inf.light_text   = (vamp ? "Alive" : "Engorged");
+        inf.light_colour = LIGHTGREEN;
+        inf.light_text   = "Engorged";
         break;
     case HS_VERY_FULL:
         inf.light_colour = GREEN;
@@ -751,30 +939,37 @@ static void _describe_hunger(status_info& inf)
         break;
     case HS_HUNGRY:
         inf.light_colour = YELLOW;
-        inf.light_text   = (vamp ? "Thirsty" : kenku ? "Peckish" : "Hungry");
+        inf.light_text   = (kenku ? "Peckish" : "Hungry");
         break;
     case HS_VERY_HUNGRY:
         inf.light_colour = YELLOW;
-        inf.light_text   = (vamp ? "Awfully Thirsty" : kenku ? "Quite Peckish" : "Very Hungry");
+        inf.light_text   = (kenku ? "Quite Peckish" : "Very Hungry");
         break;
     case HS_NEAR_STARVING:
         inf.light_colour = YELLOW;
-        inf.light_text   = (vamp ? "Near Bloodless" : kenku ? "Ravenously Peckish" : "Near Starving");
+        inf.light_text   = (kenku ? "Ravenously Peckish" : "Near Starving");
         break;
     case HS_STARVING:
         inf.light_colour = LIGHTRED;
-        inf.light_text   = (vamp ? "Bloodless" : "Starving");
-        inf.short_text   = (vamp ? "bloodless" : "starving");
+        inf.light_text   = "Starving";
+        inf.short_text   = "starving";
         break;
     case HS_FAINTING:
         inf.light_colour = RED;
-        inf.light_text   = (vamp ? "Bloodless" : "Fainting");
-        inf.short_text   = (vamp ? "bloodless" : "fainting");
+        inf.light_text   = "Fainting";
+        inf.short_text   = "fainting";
         break;
-    case HS_SATIATED: // no status light
+    case HS_SATIATED:
+        inf.light_colour = DARKGRAY;
+        inf.light_text   = "Sated";
     default:
         break;
     }
+
+    inf.light_text += make_stringf(" (%d)", you.hunger);
+
+    if (you_foodless(true))
+        inf.light_colour = LIGHTGRAY;
 }
 
 static void _describe_glow(status_info& inf)
@@ -793,7 +988,7 @@ static void _describe_glow(status_info& inf)
         inf.light_colour = LIGHTGREY;
     else
         inf.light_colour = DARKGREY;
-    inf.light_text = "Contam";
+    inf.light_text = make_stringf("Contam (%d)", you.magic_contamination);
 
     /// Mappings from contamination levels to descriptions.
     static const string contam_adjectives[] =
@@ -803,9 +998,9 @@ static void _describe_glow(status_info& inf)
         "slightly ",
         "",
         "heavily ",
-        "very heavily ",
-        "very very heavily ", // this is silly but no one will ever see it
-        "impossibly ",        // (likewise)
+        "thoroughly ",
+        "massively ",
+        "impossibly ",
     };
     ASSERT(signed_cont >= 0);
 
@@ -819,9 +1014,6 @@ static void _describe_regen(status_info& inf)
     const bool regen = (you.duration[DUR_REGENERATION] > 0
                         || you.duration[DUR_TROGS_HAND] > 0);
     const bool no_heal = !player_regenerates_hp();
-    // Does vampire hunger level affect regeneration rate significantly?
-    const bool vampmod = !no_heal && !regen && you.species == SP_VAMPIRE
-                         && you.hunger_state != HS_SATIATED;
 
     if (regen)
     {
@@ -852,35 +1044,39 @@ static void _describe_regen(status_info& inf)
         }
         _mark_expiring(inf, dur_expiring(DUR_REGENERATION));
     }
-    else if (vampmod)
-    {
-        if (you.disease)
-            inf.short_text = "recuperating";
-        else
-            inf.short_text = "regenerating";
-
-        if (you.hunger_state < HS_SATIATED)
-            inf.short_text += " slowly";
-        else
-            inf.short_text += " quickly";
-    }
 }
 
-static void _describe_poison(status_info& inf)
+static void _describe_poison(status_info& inf, bool mount)
 {
-    int pois_perc = (you.hp <= 0) ? 100
+    int pois_perc;
+    if (mount)
+        pois_perc = (you.mount_hp <= 0) ? 100
+                  : ((you.mount_hp - max(0, mount_poison_survival())) * 100 / you.mount_hp);
+    else
+    {
+        pois_perc = (you.hp <= 0) ? 100
                                   : ((you.hp - max(0, poison_survival())) * 100 / you.hp);
-    inf.light_colour = (player_res_poison(false) >= 3
-                         ? DARKGREY : _bad_ench_colour(pois_perc, 35, 100));
-    inf.light_text   = "Pois";
+    }
+    
     const string adj =
          (pois_perc >= 100) ? "lethally" :
          (pois_perc > 65)   ? "seriously" :
          (pois_perc > 35)   ? "quite"
                             : "mildly";
-    inf.short_text   = adj + " poisoned"
-        + make_stringf(" (%d -> %d)", you.hp, poison_survival());
-    inf.long_text    = "You are " + inf.short_text + ".";
+    if (mount)
+    {
+        inf.short_text = adj + " poisoned mount";
+        inf.long_text = "Your mount is " + inf.short_text + ".";
+    }
+    else
+    {
+        inf.light_colour = (player_res_poison(false) >= 3
+            ? DARKGREY : _bad_ench_colour(pois_perc, 35, 100));
+        inf.light_text = "Pois";
+        inf.short_text = adj + " poisoned"
+            + make_stringf(" (%d -> %d)", you.hp, poison_survival());
+        inf.long_text = "You are " + inf.short_text + ".";
+    }
 }
 
 static void _describe_speed(status_info& inf)
@@ -931,7 +1127,7 @@ static void _describe_airborne(status_info& inf)
 
 static void _describe_rotting(status_info& inf)
 {
-    if (you.species == SP_GHOUL)
+    if (you.get_mutation_level(MUT_ROTTING_BODY))
     {
         inf.short_text = "rotting";
         inf.long_text = "Your flesh is rotting";
@@ -985,9 +1181,7 @@ static void _describe_transform(status_info& inf)
     inf.short_text = form->get_long_name();
     inf.long_text = form->get_description();
 
-    const bool vampbat = (you.species == SP_VAMPIRE
-                          && you.form == transformation::bat);
-    const bool expire  = dur_expiring(DUR_TRANSFORMATION) && !vampbat;
+    const bool expire  = dur_expiring(DUR_TRANSFORMATION);
 
     inf.light_colour = _dur_colour(GREEN, expire);
     _mark_expiring(inf, expire);
@@ -1010,7 +1204,7 @@ static void _describe_stat_zero(status_info& inf, stat_type st)
 
 static void _describe_terrain(status_info& inf)
 {
-    switch (grd(you.pos()))
+    switch (env.grid(you.pos()))
     {
     case DNGN_SHALLOW_WATER:
         inf.light_colour = LIGHTBLUE;
@@ -1019,6 +1213,14 @@ static void _describe_terrain(status_info& inf)
     case DNGN_DEEP_WATER:
         inf.light_colour = BLUE;
         inf.light_text = "Water";
+        break;
+    case DNGN_SLIMY_WATER:
+        inf.light_colour = LIGHTGREEN;
+        inf.light_text = "Slime";
+        break;
+    case DNGN_DEEP_SLIMY_WATER:
+        inf.light_colour = GREEN;
+        inf.light_text = "Slime";
         break;
     case DNGN_LAVA:
         inf.light_colour = RED;
@@ -1035,21 +1237,24 @@ static void _describe_missiles(status_info& inf)
     if (!level)
         return;
 
-    if (level > 1)
+    if (level > 2)
     {
-        bool perm = false;
-        inf.light_colour = perm ? WHITE : LIGHTMAGENTA;
+        inf.light_colour = LIGHTGREEN;
+        inf.light_text = "DMsl+";
+        inf.short_text = "devour missiles";
+        inf.long_text = "You devour missiles.";
+
+    }
+    else if (level > 1)
+    {
+        inf.light_colour = LIGHTMAGENTA;
         inf.light_text   = "DMsl";
         inf.short_text   = "deflect missiles";
         inf.long_text    = "You deflect missiles.";
     }
     else
     {
-        bool perm = you.get_mutation_level(MUT_DISTORTION_FIELD) == 3
-                    || you.wearing_ego(EQ_ALL_ARMOUR, SPARM_REPULSION)
-                    || you.scan_artefacts(ARTP_RMSL)
-                    || have_passive(passive_t::upgraded_storm_shield);
-        inf.light_colour = perm ? WHITE : LIGHTBLUE;
+        inf.light_colour = WHITE;
         inf.light_text   = "RMsl";
         inf.short_text   = "repel missiles";
         inf.long_text    = "You repel missiles.";

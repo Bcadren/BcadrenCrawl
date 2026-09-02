@@ -13,7 +13,6 @@
 #include "cluautil.h"
 #include "colour.h"
 #include "coord.h"
-#include "enum.h"
 #include "env.h"
 #include "food.h"
 #include "invent.h"
@@ -21,16 +20,15 @@
 #include "item-status-flag-type.h"
 #include "items.h"
 #include "item-use.h"
-#include "l-defs.h"
 #include "libutil.h"
 #include "mon-util.h"
+#include "mpr.h"
 #include "output.h"
 #include "player.h"
 #include "prompt.h"
 #include "shopping.h"
 #include "skills.h"
 #include "spl-book.h"
-#include "spl-summoning.h"
 #include "spl-util.h"
 #include "stash.h"
 #include "stringutil.h"
@@ -39,10 +37,16 @@
 struct item_wrapper
 {
     item_def *item;
-    bool temp; // Does item need to be freed when the wrapper is GCed?
+    bool temp; // whether `item` is being memory managed by this object or
+               // elsewhere; if true, will be deleted on gc.
     int turn;
 
-    bool valid() const { return turn == you.num_turns; }
+    bool valid(lua_State *ls) const
+    {
+        // TODO: under what circumstances will dlua actually need to deal with
+        // wrapped items that were created on a different turn?
+        return item && (!CLua::get_vm(ls).managed_vm || turn == you.num_turns);
+    }
 };
 
 void clua_push_item(lua_State *ls, item_def *item)
@@ -67,7 +71,7 @@ item_def *clua_get_item(lua_State *ls, int ndx)
 {
     item_wrapper *iwrap =
         clua_get_userdata<item_wrapper>(ls, ITEM_METATABLE, ndx);
-    if (CLua::get_vm(ls).managed_vm && !iwrap->valid())
+    if (!iwrap->valid(ls))
         luaL_error(ls, "Invalid item");
     return iwrap->item;
 }
@@ -76,9 +80,9 @@ void lua_push_floor_items(lua_State *ls, int link)
 {
     lua_newtable(ls);
     int index = 0;
-    for (; link != NON_ITEM; link = mitm[link].link)
+    for (; link != NON_ITEM; link = env.item[link].link)
     {
-        clua_push_item(ls, &mitm[link]);
+        clua_push_item(ls, &env.item[link]);
         lua_rawseti(ls, -2, ++index);
     }
 }
@@ -100,11 +104,10 @@ static void _lua_push_inv_items(lua_State *ls = nullptr)
 }
 
 #define IDEF(name)                                                      \
-    static int l_item_##name(lua_State *ls, item_def *item,             \
-                             const char *attr)                         \
+    static int l_item_##name(lua_State *ls, item_def *item)             \
 
 #define IDEFN(name, closure)                    \
-    static int l_item_##name(lua_State *ls, item_def *item, const char *attrs) \
+    static int l_item_##name(lua_State *ls, item_def *item) \
     {                                                                   \
         clua_push_item(ls, item);                                            \
         lua_pushcclosure(ls, l_item_##closure, 1);                      \
@@ -319,7 +322,7 @@ static int l_item_do_subtype(lua_State *ls)
     // existing scripts.
     if (item->base_type == OBJ_ARMOURS)
         s = item_slot_name(get_armour_slot(*item));
-    else if (item_type_known(*item))
+    else if (item_type_known(*item) || item->base_type == OBJ_WEAPONS)
     {
         // must keep around the string until we call lua_pushstring
         saved = sub_type_string(*item);
@@ -766,6 +769,16 @@ IDEF(hands)
 
     int hands = you.hands_reqd(*item) == HANDS_TWO ? 2 : 1;
     lua_pushnumber(ls, hands);
+
+    return 1;
+}
+
+IDEF(shield)
+{
+    if (!item || !item->defined())
+        return 0;
+    
+    lua_pushboolean(ls, is_shield(*item) && !is_hybrid(item->sub_type));
 
     return 1;
 }
@@ -1389,18 +1402,22 @@ static int l_item_equipped_at(lua_State *ls)
     return 1;
 }
 
-/*** Get the Item we should fire by default.
- * @treturn Item|nil returns nil if there is no default quiver item
+/*** Get the ammo Item we should fire by default.
+ * @treturn Item|nil returns nil if something other than ammo is quivered
  * @function fired_item
  */
 static int l_item_fired_item(lua_State *ls)
 {
-    int q = you.m_quiver.get_fire_item();
+    const auto a = quiver::get_primary_action();
+    if (!a->is_valid() || !a->is_enabled())
+        return 0;
+
+    const int q = a->get_item();
 
     if (q < 0 || q >= ENDOFPACK)
         return 0;
 
-    if (q != -1 && !fire_warn_if_impossible(true))
+    if (q != -1)
         clua_push_item(ls, &you.inv[q]);
     else
         lua_pushnil(ls);
@@ -1523,16 +1540,73 @@ static int l_item_shopping_list(lua_State *ls)
     return 1;
 }
 
+/*** See the items offered by acquirement.
+ * Only works when the acquirement menu is active.
+ * @treturn array|nil An array of @{Item} objects or nil if not acquiring.
+ * @function shop_inventory
+ */
+static int l_item_acquirement_items(lua_State *ls)
+{
+    if (!you.props.exists(ACQUIRE_ITEMS_KEY))
+        return 0;
+
+    auto &acq_items = you.props[ACQUIRE_ITEMS_KEY].get_vector();
+
+    lua_newtable(ls);
+
+    int index = 0;
+    for (const item_def &item : acq_items)
+    {
+        _clua_push_item_temp(ls, item);
+        lua_rawseti(ls, -2, ++index);
+    }
+
+    return 1;
+}
+
+/*** Fire an item in inventory at a target, either an evokable or a throwable
+ * ammo. This will work for launcher ammo, but only if the launcher is wielded.
+ * Some evokables (e.g. artefact weapons) may also need to be wielded.
+ *
+ * @tparam number the item's slot
+ * @tparam[opt=0] number x coordinate
+ * @tparam[opt=0] number y coordinate
+ * @tparam[opt=false] boolean if true, aim at the target; if false, shoot past it
+ * @tparam[opt=false] boolean whether to allow fumble throwing of non-activatable items
+ * @treturn boolean whether an action took place
+ */
+static int l_item_fire(lua_State *ls)
+{
+    if (you.turn_is_over)
+        return 0;
+    const int slot = luaL_safe_checkint(ls, 1);
+
+    if (slot < 0 || slot > ENDOFPACK || !you.inv[slot].defined())
+    {
+        luaL_argerror(ls, 1,
+                        make_stringf("Invalid item slot: %d", slot).c_str());
+        return 0;
+    }
+    PLAYERCOORDS(c, 2, 3);
+    dist target;
+    target.target = c;
+    target.isEndpoint = lua_toboolean(ls, 4); // can be nil
+    const bool force = lua_toboolean(ls, 5); // can be nil
+    quiver::slot_to_action(slot, force)->trigger(target);
+    PLUARET(boolean, you.turn_is_over);
+}
+
 struct ItemAccessor
 {
     const char *attribute;
-    int (*accessor)(lua_State *ls, item_def *item, const char *attr);
+    int (*accessor)(lua_State *ls, item_def *item);
 };
 
 static ItemAccessor item_attrs[] =
 {
     { "artefact",          l_item_artefact },
     { "branded",           l_item_branded },
+    { "shield",            l_item_shield },
     { "god_gift",          l_item_god_gift },
     { "fully_identified",  l_item_fully_identified },
     { "plus",              l_item_plus },
@@ -1605,7 +1679,7 @@ static int item_get(lua_State *ls)
 
     for (const ItemAccessor &ia : item_attrs)
         if (!strcmp(attr, ia.attribute))
-            return ia.accessor(ls, iw, attr);
+            return ia.accessor(ls, iw);
 
     return 0;
 }
@@ -1623,14 +1697,19 @@ static const struct luaL_reg item_lib[] =
     { "get_items_at",      l_item_get_items_at },
     { "shop_inventory",    l_item_shop_inventory },
     { "shopping_list",     l_item_shopping_list },
+    { "acquirement_items", l_item_acquirement_items },
+    { "fire",              l_item_fire },
     { nullptr, nullptr },
 };
 
 static int _delete_wrapped_item(lua_State *ls)
 {
     item_wrapper *iw = static_cast<item_wrapper*>(lua_touserdata(ls, 1));
-    if (iw && iw->temp)
+    if (iw && iw->temp && iw->item)
+    {
         delete iw->item;
+        iw->item = nullptr;
+    }
     return 0;
 }
 

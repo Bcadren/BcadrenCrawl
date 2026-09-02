@@ -9,11 +9,99 @@
 %corpse 1
 %back_sdir misc/blood
 
+### Holies
+%sdir mon/holy
+
+## Angelic Beings ('A')
+%back blood_ichor blood_ichor1 blood_ichor2 blood_ichor3 blood_ichor4
+angel CORPSE_ANGEL
+cherub CORPSE_CHERUB
+seraph CORPSE_SERAPH
+daeva CORPSE_DAEVA
+%sdir mon/undead
+profane_servitor CORPSE_PROFANE_SERVITOR
+
+## Eyes ('G')
+%sdir mon/holy
+ophan CORPSE_OPHAN
+
+### Spiritual Beings ('R')
+%sdir mon/demons
+efreet CORPSE_EFREET
+rakshasa CORPSE_RAKSHASA
+
+### Demons
+%sdir mon/demons
+
+## First Tier ('1')
+cacodemon CORPSE_CACODEMON
+brimstone_fiend CORPSE_RHUDDGOCH
+ice_fiend CORPSE_VETRIFL
+tzitzimitl CORPSE_TZITZIMITL
+hell_sentinel CORPSE_GWARCHODWR
+executioner CORPSE_OXARMORDTH
+mon/unique/ignacio CORPSE_IGNACIO
+
+## Second Tier ('2')
+shadow_demon CORPSE_CYSGODOL
+green_death CORPSE_GWYRDD
+blizzard_demon CORPSE_CENYSUS
+balrug CORPSE_BALRUG
+titivilus CORPSE_TITIVILUS
+hell_beast CORPSE_HELVITYR
+hellion CORPSE_HELLION
+reaper CORPSE_REAPER
+lorocyproca CORPSE_LOROCYPROCA
+tormentor CORPSE_POENYDIO
+
+## Third Tier ('3')
+sun_demon CORPSE_STURNULOS
+soul_eater CORPSE_SAELNEYTANDI
+smoke_demon CORPSE_MYGDARTH
+neqoxec CORPSE_NEQOXEC
+ynoxinul CORPSE_YNOXINUL
+sixfirhy CORPSE_SIXFIRHY
+
+## Fourth Tier ('4')
+rust_devil CORPSE_TAERINGU
+orange_demon CORPSE_NYCHDOD
+red_devil CORPSE_CYTHRAUL
+hellwing CORPSE_VLERK
+ice_devil CORPSE_RYPUIWEL
+
+## Fifth Tier ('5')
+crimson_imp CORPSE_LLAIBWCA
+quasit CORPSE_QUASIT
+white_imp CORPSE_GWYBWCA
+ufetubus CORPSE_UFETUBUS
+iron_imp CORPSE_HAEARBWCA
+shadow_imp CORPSE_CYSGOBWA
+
+# Abominations ('X')
+%sdir mon/aberrations
+tentacled_monstrosity CORPSE_TENTACLED_MONSTROSITY
+orb_guardian CORPSE_ORB_GUARDIAN
+gammafunk CORPSE_GAMMAFUNK
+
+# Demon Lords ('&')
+%sdir mon/panlord
+pandemonium_lord CORPSE_PANDEMONIUM_LORD
+%sdir mon/unique
+antaeus CORPSE_ANTAEUS
+mnoleg CORPSE_MNOLEG
+lom_lobon CORPSE_LOM_LOBON
+cerebov_swordless CORPSE_CEREBOV
+gloorx_vloq CORPSE_GLOORX_VLOQ
+geryon CORPSE_GERYON
+dispater CORPSE_DISPATER
+asmodeus CORPSE_ASMODEUS
+ereshkigal CORPSE_ERESHKIGAL
+
 ### Animals
 %sdir mon/animals
 
 ## Insects ('a')
-%back blood_green blood_green1 blood_green2 blood_green3 blood_green4
+%back blood_blue blood_blue1 blood_blue2 blood_blue3 blood_blue4
 giant_cockroach CORPSE_GIANT_COCKROACH
 worker_ant CORPSE_WORKER_ANT
 soldier_ant CORPSE_SOLDIER_ANT
@@ -24,12 +112,27 @@ queen_ant CORPSE_QUEEN_ANT
 bat CORPSE_BAT
 caustic_shrike CORPSE_CAUSTIC_SHRIKE
 shard_shrike CORPSE_SHARD_SHRIKE
+swooping_magpie CORPSE_SWOOPING_MAGPIE
+%back blood_ichor blood_ichor1 blood_ichor2 blood_ichor3 blood_ichor4
+bennu CORPSE_BENNU
+
+## Beetles ('B')
+%sdir mon/undead
+%back blood_green blood_green1 blood_green2 blood_green3 blood_green4
+death_scarab CORPSE_DEATH_SCARAB
+%sdir mon/animals
+%back blood_blue blood_blue1 blood_blue2 blood_blue3 blood_blue4
+boulder_beetle CORPSE_BOULDER_BEETLE
+boring_beetle CORPSE_BORING_BEETLE
+giant_mite CORPSE_GIANT_MITE
 
 ## Hounds and hogs ('h')
+%back blood_puddle_red blood_puddle_red1 blood_puddle_red2 blood_puddle_red3 blood_puddle_red4
 jackal CORPSE_JACKAL
 hound CORPSE_HOUND
 howler CORPSE_HOWLER_MONKEY
 warg CORPSE_WARG
+war_dog CORPSE_WAR_DOG
 wolf CORPSE_WOLF
 hog CORPSE_HOG
 hell_hound CORPSE_HELL_HOUND
@@ -38,6 +141,9 @@ raiju CORPSE_RAIJU
 hell_hog CORPSE_HELL_HOG
 black_bear CORPSE_BLACK_BEAR
 polar_bear CORPSE_POLAR_BEAR
+%back blood_ichor blood_ichor1 blood_ichor2 blood_ichor3 blood_ichor4
+holy_swine CORPSE_HOLY_SWINE
+%back blood_puddle_red blood_puddle_red1 blood_puddle_red2 blood_puddle_red3 blood_puddle_red4
 %sdir player/felids
 cat1 CORPSE_FELID
 %sdir mon/animals
@@ -49,7 +155,25 @@ iguana CORPSE_IGUANA
 basilisk CORPSE_BASILISK
 komodo_dragon CORPSE_KOMODO_DRAGON
 
+## Chameleons (';')
+chameleon CORPSE_CHAMELEON
+chameleon1
+chameleon2
+chameleon3
+chameleon4
+chameleon5
+chameleon6
+chameleon7
+chameleon8
+
+## Mummies ('M')
+%sdir mon/undead
+%back blood_sand blood_sand1 blood_sand2 blood_sand3 blood_sand4
+mummy CORPSE_MUMMY
+
 ## Rodents ('r')
+%sdir mon/animals
+%back blood_puddle_red blood_puddle_red1 blood_puddle_red2 blood_puddle_red3 blood_puddle_red4
 rat CORPSE_RAT
 quokka CORPSE_QUOKKA
 green_rat CORPSE_GREEN_RAT
@@ -58,7 +182,7 @@ porcupine CORPSE_PORCUPINE
 %sdir mon/animals
 
 ## Spiders and insects ('s')
-%back blood_green blood_green1 blood_green2 blood_green3 blood_green4
+%back blood_blue blood_blue1 blood_blue2 blood_blue3 blood_blue4
 scorpion CORPSE_SCORPION
 emperor_scorpion CORPSE_EMPEROR_SCORPION
 tarantella CORPSE_TARANTELLA
@@ -66,6 +190,7 @@ jumping_spider CORPSE_JUMPING_SPIDER
 wolf_spider CORPSE_WOLF_SPIDER
 redback CORPSE_REDBACK
 orb_spider CORPSE_ORB_SPIDER
+amblypygi CORPSE_CEILING_CRAWLER
 %sdir mon/demons
 demonic_crawler CORPSE_DEMONIC_CRAWLER
 
@@ -76,8 +201,10 @@ crocodile CORPSE_CROCODILE
 alligator CORPSE_ALLIGATOR
 snapping_turtle CORPSE_SNAPPING_TURTLE
 alligator_snapping_turtle CORPSE_ALLIGATOR_SNAPPING_TURTLE
+%back blood_blue blood_blue1 blood_blue2 blood_blue3 blood_blue4
 fire_crab CORPSE_FIRE_CRAB
 ghost_crab CORPSE_GHOST_CRAB
+plutonium_crab CORPSE_PLUTONIUM_CRAB
 %sdir mon/abyss
 apocalypse_crab CORPSE_APOCALYPSE_CRAB
 %sdir mon/animals
@@ -86,7 +213,10 @@ apocalypse_crab CORPSE_APOCALYPSE_CRAB
 %back blood_green blood_green1 blood_green2 blood_green3 blood_green4
 worm CORPSE_WORM
 ../aquatic/swamp_worm CORPSE_SWAMP_WORM
+../aquatic/lava_worm CORPSE_LAVA_WORM
 tyrant_leech CORPSE_TYRANT_LEECH
+rock_worm CORPSE_ROCK_WORM
+%back blood_blue blood_blue1 blood_blue2 blood_blue3 blood_blue4
 torpor_snail CORPSE_TORPOR_SNAIL
 elephant_slug CORPSE_ELEPHANT_SLUG
 dart_slug CORPSE_DART_SLUG
@@ -99,6 +229,10 @@ hornet CORPSE_HORNET
 spark_wasp CORPSE_SPARK_WASP
 ghost_moth CORPSE_GHOST_MOTH
 moth_of_wrath CORPSE_MOTH_OF_WRATH
+sphinxmoth CORPSE_SPHINX_MOTH
+giant_firefly CORPSE_GIANT_FIREFLY
+giant_blowfly CORPSE_GIANT_BLOWFLY
+chaos_butterfly CORPSE_CHAOS_BUTTERFLY
 %sdir mon/demihumanoids
 meliai CORPSE_MELIAI
 
@@ -107,12 +241,13 @@ meliai CORPSE_MELIAI
 %back blood_puddle_red blood_puddle_red1 blood_puddle_red2 blood_puddle_red3 blood_puddle_red4
 electric_eel CORPSE_ELECTRIC_EEL
 lava_snake CORPSE_LAVA_SNAKE
+shark CORPSE_SHARK
+slimehead CORPSE_SLIMEHEAD
+rainbow_trout CORPSE_RAINBOW_TROUT
+giant_goldfish CORPSE_GIANT_GOLDFISH
+%back blood_blue blood_blue1 blood_blue2 blood_blue3 blood_blue4
 kraken_head CORPSE_KRAKEN /*'x'*/
-%back blood_green blood_green1 blood_green2 blood_green3 blood_green4
-
-## Beetles ('B')
-%sdir mon/undead
-death_scarab CORPSE_DEATH_SCARAB
+jellyfish CORPSE_JELLYFISH
 
 ## Frogs ('F')
 %sdir mon/animals
@@ -120,6 +255,7 @@ death_scarab CORPSE_DEATH_SCARAB
 bullfrog CORPSE_BULLFROG
 blink_frog CORPSE_BLINK_FROG
 spiny_frog CORPSE_SPINY_FROG
+goliath_frog CORPSE_GOLIATH_FROG
 
 ## Snakes ('S')
 ball_python CORPSE_BALL_PYTHON
@@ -129,6 +265,9 @@ water_moccasin CORPSE_WATER_MOCCASIN
 anaconda CORPSE_ANACONDA
 sea_snake CORPSE_SEA_SNAKE
 shock_serpent CORPSE_SHOCK_SERPENT
+mana_viper CORPSE_MANA_VIPER
+mana_cobra CORPSE_MANA_COBRA
+blood_boa CORPSE_BLOOD_BOA
 
 ## Yaks, sheep and elephants ('Y')
 dream_sheep CORPSE_DREAM_SHEEP
@@ -139,6 +278,7 @@ elephant_dire CORPSE_DIRE_ELEPHANT
 elephant_demonic CORPSE_HELLEPHANT
 catoblepas CORPSE_CATOBLEPAS
 sky_beast CORPSE_SKY_BEAST
+giraffe CORPSE_GIRAFFE
 %sdir mon/holy
 apis CORPSE_APIS
 
@@ -164,6 +304,7 @@ elves/elf CORPSE_ELF
 goblin CORPSE_GOBLIN
 hobgoblin CORPSE_HOBGOBLIN
 gnoll CORPSE_GNOLL
+boggart_no_ring CORPSE_BOGGART
 
 ## Spriggans ('i')
 spriggans/spriggan CORPSE_SPRIGGAN
@@ -179,8 +320,9 @@ wind_drake CORPSE_WIND_DRAKE
 ## Merfolk ('m')
 mon/demihumanoids/merfolk/merfolk_water CORPSE_MERFOLK
 %sdir mon/humanoids
-dryad CORPSE_DRYAD
+dryad CORPSE_KAEL
 water_nymph CORPSE_WATER_NYMPH
+dryad CORPSE_DRYAD
 
 ## Rotting monsters ('n')
 %back blood_green blood_green1 blood_green2 blood_green3 blood_green4
@@ -204,13 +346,11 @@ killer_klown_purple
 killer_klown_red
 killer_klown_yellow
 mon/demihumanoids/entropy_weaver CORPSE_ENTROPY_WEAVER
-%back blood_green blood_green1 blood_green2 blood_green3 blood_green4
 %sdir mon/amorphous
 shapeshifter CORPSE_SHAPESHIFTER
 glowing_shapeshifter CORPSE_GLOWING_SHAPESHIFTER
 
 ## Dwarves ('q')
-%back blood_puddle_red blood_puddle_red1 blood_puddle_red2 blood_puddle_red3 blood_puddle_red4
 %sdir mon/humanoids
 dwarf CORPSE_DWARF
 deep_dwarf CORPSE_DEEP_DWARF
@@ -256,15 +396,23 @@ storm_dragon CORPSE_STORM_DRAGON
 golden_dragon CORPSE_GOLDEN_DRAGON
 shadow_dragon CORPSE_SHADOW_DRAGON
 mon/holy/pearl_dragon CORPSE_PEARL_DRAGON
+%sdir mon/unique
+%back blood_ichor blood_ichor1 blood_ichor2 blood_ichor3 blood_ichor4
+serpent_of_hell-geh CORPSE_SERPENT_OF_HELL_GEH
+serpent_of_hell-coc CORPSE_SERPENT_OF_HELL_COC
+serpent_of_hell-dis CORPSE_SERPENT_OF_HELL_DIS
+serpent_of_hell-tar CORPSE_SERPENT_OF_HELL_TAR
 
 ## Hybrids ('H')
 %sdir mon/animals
 %back blood_puddle_red blood_puddle_red1 blood_puddle_red2 blood_puddle_red3 blood_puddle_red4
 hippogriff CORPSE_HIPPOGRIFF
+griffon MONS_GRYPHON
 manticore CORPSE_MANTICORE
 %sdir mon/demihumanoids
 harpy CORPSE_HARPY
 minotaur CORPSE_MINOTAUR
+fenstrider_witch CORPSE_FENSTRIDER_WITCH
 sphinx CORPSE_SPHINX
 tengu CORPSE_TENGU
 mon/unique/arachne_staveless CORPSE_ARACHNE
@@ -293,17 +441,81 @@ troll CORPSE_TROLL
 iron_troll CORPSE_IRON_TROLL
 deep_troll CORPSE_DEEP_TROLL
 
+## Vampires ('V')
+%sdir mon/undead
+vampire CORPSE_VAMPIRE
+%back blood_green blood_green1 blood_green2 blood_green3 blood_green4
+jiangshi CORPSE_JIANGSHI
+
 ## Cephalopods ('x')
 %sdir player
+%back blood_blue blood_blue1 blood_blue2 blood_blue3 blood_blue4
 base/octopode1 CORPSE_OCTOPODE
+%sdir mon/animals
+bunyip CORPSE_BUNYIP
 
 ## Draconians ('d')
+%sdir player
 %back blood_puddle_red blood_puddle_red1 blood_puddle_red2 blood_puddle_red3 blood_puddle_red4
 %start
 %compose drcwing/drcwing_black
 %compose base/draconian_black_m
 %compose drchead/drchead_black
 %finish CORPSE_DRACONIAN_BLACK
+
+%start
+%compose drcwing/drcwing_pink
+%compose base/draconian_pink_m
+%compose drchead/drchead_pink
+%finish CORPSE_DRACONIAN_PINK
+
+%start
+%compose drcwing/drcwing_pearl
+%compose base/draconian_pearl_m
+%compose drchead/drchead_pearl
+%finish CORPSE_DRACONIAN_PEARL
+
+%start
+%compose drcwing/drcwing_platinum
+%compose base/draconian_platinum_m
+%compose drchead/drchead_platinum
+%finish CORPSE_DRACONIAN_PLATINUM
+
+%start
+%compose drcwing/drcwing_magenta
+%compose base/draconian_magenta_m
+%compose drchead/drchead_magenta
+%finish CORPSE_DRACONIAN_MAGENTA
+
+%start
+%compose drcwing/drcwing_scintillating
+%compose base/draconian_scintillating_m
+%compose drchead/drchead_scintillating
+%finish CORPSE_DRACONIAN_SCINTILLATING
+
+%start
+%compose drcwing/drcwing_blood
+%compose base/draconian_blood_m
+%compose drchead/drchead_blood
+%finish CORPSE_DRACONIAN_BLOOD
+
+%start
+%compose drcwing/drcwing_olive
+%compose base/draconian_olive_m
+%compose drchead/drchead_olive
+%finish CORPSE_DRACONIAN_OLIVE
+
+%start
+%compose drcwing/drcwing_gold
+%compose base/draconian_gold_m
+%compose drchead/drchead_gold
+%finish CORPSE_DRACONIAN_GOLDEN
+
+%start
+%compose drcwing/drcwing_blue
+%compose base/draconian_blue_m
+%compose drchead/drchead_blue
+%finish CORPSE_DRACONIAN_BLUE
 
 %start
 %compose drcwing/drcwing_brown
@@ -318,16 +530,16 @@ base/octopode1 CORPSE_OCTOPODE
 %finish CORPSE_DRACONIAN_GREEN
 
 %start
-%compose drcwing/drcwing_grey
-%compose base/draconian_gray_f
-%compose drchead/drchead_grey
-%finish CORPSE_DRACONIAN_GREY
+%compose drcwing/drcwing_silver
+%compose base/draconian_silver_f
+%compose drchead/drchead_silver
+%finish CORPSE_DRACONIAN_SILVER
 
 %start
-%compose drcwing/drcwing_pale
-%compose base/draconian_pale_f
-%compose drchead/drchead_pale
-%finish CORPSE_DRACONIAN_PALE
+%compose drcwing/drcwing_cyan
+%compose base/draconian_cyan_f
+%compose drchead/drchead_cyan
+%finish CORPSE_DRACONIAN_CYAN
 
 %start
 %compose drcwing/drcwing_purple
@@ -348,10 +560,10 @@ base/octopode1 CORPSE_OCTOPODE
 %finish CORPSE_DRACONIAN_WHITE
 
 %start
-%compose drcwing/drcwing_yellow
-%compose base/draconian_gold_f
-%compose drchead/drchead_yellow
-%finish CORPSE_DRACONIAN_YELLOW
+%compose drcwing/drcwing_lime
+%compose base/draconian_lime_f
+%compose drchead/drchead_lime
+%finish CORPSE_DRACONIAN_LIME
 
 # Demonspawn ('6')
 %sdir mon/humanoids/demonspawn

@@ -19,5 +19,7 @@ enum operation_types
     OPER_QUIVER   = 'Q',
     OPER_ATTACK   = 'a',
     OPER_BUTCHER  = 'c',
+    OPER_SUBSUME  = 's',
+    OPER_EJECT    = 'E',
     OPER_ANY      = 0,
 };

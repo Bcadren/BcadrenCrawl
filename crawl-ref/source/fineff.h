@@ -10,13 +10,15 @@
 #include "mon-util.h"
 #include "mgen-data.h"
 
+struct bolt;
+
 class final_effect
 {
 public:
     virtual ~final_effect() {}
 
     virtual bool mergeable(const final_effect &a) const = 0;
-    virtual void merge(const final_effect &a)
+    virtual void merge(const final_effect &)
     {
     }
 
@@ -240,6 +242,41 @@ protected:
     mon_attitude_type attitude;
 };
 
+enum class iflame
+{
+    none = 0,            // should be left as 0
+    normal,
+    chaos,
+};
+
+class explosion_fineff : public final_effect
+{
+public:
+    // One explosion at a time, please.
+    bool mergeable(const final_effect &) const override { return false; }
+    void fire() override;
+
+    static void schedule(bolt &beam, string boom, string sanct,
+                         iflame inner_flame, const actor* flame_agent)
+    {
+        final_effect::schedule(new explosion_fineff(beam, boom, sanct,
+                                                    inner_flame, flame_agent));
+    }
+protected:
+    explosion_fineff(const bolt &beem, string boom, string sanct,
+                     iflame flame, const actor* agent)
+        : final_effect(0, 0, coord_def()), beam(beem),
+          boom_message(boom), sanctuary_message(sanct),
+          inner_flame(flame), flame_agent(agent)
+    {
+    }
+    bolt beam;
+    string boom_message;
+    string sanctuary_message;
+    iflame inner_flame;
+    const actor* flame_agent;
+};
+
 // A fineff that triggers a daction; otherwise the daction
 // occurs immediately (and then later) -- this might actually
 // be too soon in some cases.
@@ -301,7 +338,7 @@ class bennu_revive_fineff : public final_effect
 {
 public:
     // Each trigger is from the death of a different bennu---no merging.
-    bool mergeable(const final_effect &a) const override { return false; }
+    bool mergeable(const final_effect &) const override { return false; }
     void fire() override;
 
     static void schedule(coord_def pos, int revives, beh_type attitude,
@@ -323,25 +360,26 @@ protected:
 class infestation_death_fineff : public final_effect
 {
 public:
-    bool mergeable(const final_effect &a) const override { return false; }
+    bool mergeable(const final_effect &) const override { return false; }
     void fire() override;
 
-    static void schedule(coord_def pos, const string &name)
+    static void schedule(coord_def pos, const string &name, monster_type spawn_type)
     {
-        final_effect::schedule(new infestation_death_fineff(pos, name));
+        final_effect::schedule(new infestation_death_fineff(pos, name, spawn_type));
     }
 protected:
-    infestation_death_fineff(coord_def pos, const string &_name)
-        : final_effect(0, 0, pos), name(_name)
+    infestation_death_fineff(coord_def pos, const string &_name, monster_type _spawn_type)
+        : final_effect(0, 0, pos), name(_name), spawn_type(_spawn_type)
     {
     }
     string name;
+    monster_type spawn_type;
 };
 
 class make_derived_undead_fineff : public final_effect
 {
 public:
-    bool mergeable(const final_effect &a) const override { return false; }
+    bool mergeable(const final_effect &) const override { return false; }
     void fire() override;
 
     static void schedule(coord_def pos, mgen_data mg, int xl,
@@ -365,7 +403,7 @@ protected:
 class mummy_death_curse_fineff : public final_effect
 {
 public:
-    bool mergeable(const final_effect &a) const override { return false; }
+    bool mergeable(const final_effect &) const override { return false; }
     void fire() override;
 
     static void schedule(const actor * attack, string name, killer_type killer, int pow)
@@ -374,9 +412,12 @@ public:
     }
 protected:
     mummy_death_curse_fineff(const actor * attack, string _name, killer_type _killer, int _pow)
-        : final_effect(attack, 0, coord_def()), name(_name), killer(_killer), pow(_pow)
+        : final_effect(fixup_attacker(attack), 0, coord_def()), name(_name),
+          killer(_killer), pow(_pow)
     {
     }
+    const actor *fixup_attacker(const actor *a);
+
     string name;
     killer_type killer;
     int pow;

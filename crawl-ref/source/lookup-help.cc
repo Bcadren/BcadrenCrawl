@@ -19,14 +19,12 @@
 #include "decks.h"
 #include "describe.h"
 #include "describe-god.h"
-#include "describe-spells.h"
 #include "directn.h"
 #include "english.h"
 #include "enum.h"
 #include "env.h"
 #include "god-menu.h"
 #include "item-prop.h"
-#include "item-status-flag-type.h"
 #include "item-name.h"
 #include "items.h"
 #include "libutil.h" // map_find
@@ -39,20 +37,19 @@
 #include "output.h"
 #include "prompt.h"
 #include "religion.h"
+#include "rltiles/tiledef-main.h"
 #include "skills.h"
-#include "stringutil.h"
 #include "spl-book.h"
 #include "spl-util.h"
+#include "stringutil.h"
+#include "tag-version.h"
 #include "terrain.h"
-#ifdef USE_TILE
 #include "tile-flags.h"
-#include "tiledef-main.h"
 #include "tilepick.h"
 #include "tileview.h"
-#endif
 #include "ui.h"
-#include "view.h"
 #include "viewchar.h"
+#include "view.h"
 
 
 typedef vector<string> (*keys_by_glyph)(char32_t showchar);
@@ -412,14 +409,14 @@ static vector<string> _get_skill_keys()
     return names;
 }
 
-static bool _monster_filter(string key, string body)
+static bool _monster_filter(string key, string /*body*/)
 {
     const monster_type mon_num = _mon_by_name(key);
     return mons_class_flag(mon_num, M_CANT_SPAWN)
            || mons_is_tentacle_segment(mon_num);
 }
 
-static bool _spell_filter(string key, string body)
+static bool _spell_filter(string key, string /*body*/)
 {
     if (!strip_suffix(key, "spell"))
         return true;
@@ -435,17 +432,17 @@ static bool _spell_filter(string key, string body)
     return false;
 }
 
-static bool _item_filter(string key, string body)
+static bool _item_filter(string key, string /*body*/)
 {
     return item_kind_by_name(key).base_type == OBJ_UNASSIGNED;
 }
 
-static bool _feature_filter(string key, string body)
+static bool _feature_filter(string key, string /*body*/)
 {
     return feat_by_desc(key) == DNGN_UNSEEN;
 }
 
-static bool _card_filter(string key, string body)
+static bool _card_filter(string key, string /*body*/)
 {
     lowercase(key);
 
@@ -461,7 +458,7 @@ static bool _card_filter(string key, string body)
     return true;
 }
 
-static bool _ability_filter(string key, string body)
+static bool _ability_filter(string key, string /*body*/)
 {
     lowercase(key);
 
@@ -471,7 +468,7 @@ static bool _ability_filter(string key, string body)
     return !string_matches_ability_name(key);
 }
 
-static bool _status_filter(string key, string body)
+static bool _status_filter(string key, string /*body*/)
 {
     return !strip_suffix(lowercase(key), " status");
 }
@@ -529,10 +526,7 @@ static void _recap_feat_keys(vector<string> &keys)
         if (type == DNGN_ENTER_SHOP)
             keys[i] = "A shop";
         else
-        {
-            keys[i] = feature_description(type, NUM_TRAPS, "", DESC_A,
-                                          false);
-        }
+            keys[i] = feature_description(type, NUM_TRAPS, "", DESC_A);
     }
 }
 
@@ -625,7 +619,6 @@ static MenuEntry* _monster_menu_gen(char letter, const string &str,
 static MenuEntry* _item_menu_gen(char letter, const string &str, string &key)
 {
     MenuEntry* me = _simple_menu_gen(letter, str, key);
-#ifdef USE_TILE
     item_def item;
     item_kind kind = item_kind_by_name(key);
     get_item_by_name(&item, key.c_str(), kind.base_type);
@@ -633,9 +626,8 @@ static MenuEntry* _item_menu_gen(char letter, const string &str, string &key)
     tileidx_t idx = tileidx_item(get_item_info(item));
     tileidx_t base_item = tileidx_known_base_item(idx);
     if (base_item)
-        me->add_tile(tile_def(base_item, TEX_DEFAULT));
-    me->add_tile(tile_def(idx, TEX_DEFAULT));
-#endif
+        me->add_tile(tile_def(base_item));
+    me->add_tile(tile_def(idx));
     return me;
 }
 
@@ -647,14 +639,12 @@ static MenuEntry* _feature_menu_gen(char letter, const string &str, string &key)
     MenuEntry* me = new MenuEntry(str, MEL_ITEM, 1, letter);
     me->data = &key;
 
-#ifdef USE_TILE
     const dungeon_feature_type feat = feat_by_desc(str);
     if (feat)
     {
         const tileidx_t idx = tileidx_feature_base(feat);
-        me->add_tile(tile_def(idx, get_dngn_tex(idx)));
+        me->add_tile(tile_def(idx));
     }
-#endif
 
     return me;
 }
@@ -662,7 +652,7 @@ static MenuEntry* _feature_menu_gen(char letter, const string &str, string &key)
 /**
  * Generate a ?/G menu entry. (ref. _simple_menu_gen()).
  */
-static MenuEntry* _god_menu_gen(char letter, const string &str, string &key)
+static MenuEntry* _god_menu_gen(char /*letter*/, const string &/*str*/, string &key)
 {
     return new GodMenuEntry(str_to_god(key));
 }
@@ -674,11 +664,9 @@ static MenuEntry* _ability_menu_gen(char letter, const string &str, string &key)
 {
     MenuEntry* me = _simple_menu_gen(letter, str, key);
 
-#ifdef USE_TILE
     const ability_type ability = ability_by_name(str);
     if (ability != ABIL_NON_ABILITY)
-        me->add_tile(tile_def(tileidx_ability(ability), TEX_GUI));
-#endif
+        me->add_tile(tile_def(tileidx_ability(ability)));
 
     return me;
 }
@@ -689,9 +677,7 @@ static MenuEntry* _ability_menu_gen(char letter, const string &str, string &key)
 static MenuEntry* _card_menu_gen(char letter, const string &str, string &key)
 {
     MenuEntry* me = _simple_menu_gen(letter, str, key);
-#ifdef USE_TILE
-    me->add_tile(tile_def(TILE_MISC_CARD, TEX_DEFAULT));
-#endif
+    me->add_tile(tile_def(TILE_MISC_CARD));
     return me;
 }
 
@@ -703,10 +689,8 @@ static MenuEntry* _spell_menu_gen(char letter, const string &str, string &key)
     MenuEntry* me = _simple_menu_gen(letter, str, key);
 
     const spell_type spell = spell_by_name(str);
-#ifdef USE_TILE
     if (spell != SPELL_NO_SPELL)
-        me->add_tile(tile_def(tileidx_spell(spell), TEX_GUI));
-#endif
+        me->add_tile(tile_def(tileidx_spell(spell)));
     me->colour = is_player_spell(spell) ? WHITE
                                         : DARKGREY; // monster-only
 
@@ -720,10 +704,8 @@ static MenuEntry* _skill_menu_gen(char letter, const string &str, string &key)
 {
     MenuEntry* me = _simple_menu_gen(letter, str, key);
 
-#ifdef USE_TILE
     const skill_type skill = str_to_skill_safe(str);
-    me->add_tile(tile_def(tileidx_skill(skill, TRAINING_ENABLED), TEX_GUI));
-#endif
+    me->add_tile(tile_def(tileidx_skill(skill, TRAINING_ENABLED)));
 
     return me;
 }
@@ -738,9 +720,7 @@ static MenuEntry* _branch_menu_gen(char letter, const string &str, string &key)
     const branch_type branch = branch_by_shortname(str);
     int hotkey = branches[branch].travel_shortcut;
     me->hotkeys = {hotkey, tolower_safe(hotkey)};
-#ifdef USE_TILE
-    me->add_tile(tile_def(tileidx_branch(branch), TEX_FEAT));
-#endif
+    me->add_tile(tile_def(tileidx_branch(branch)));
 
     return me;
 }
@@ -761,13 +741,11 @@ static MenuEntry* _cloud_menu_gen(char letter, const string &str, string &key)
     fake_cloud.decay = 1000;
     me->colour = element_colour(get_cloud_colour(fake_cloud));
 
-#ifdef USE_TILE
     cloud_info fake_cloud_info;
     fake_cloud_info.type = cloud;
     fake_cloud_info.colour = me->colour;
-    const tileidx_t idx = tileidx_cloud(fake_cloud_info) & ~TILE_FLAG_FLYING;
-    me->add_tile(tile_def(idx, TEX_DEFAULT));
-#endif
+    const tileidx_t idx = tileidx_cloud(fake_cloud_info);
+    me->add_tile(tile_def(idx));
 
     return me;
 }
@@ -855,7 +833,8 @@ void LookupType::display_keys(vector<string> &key_list) const
             desc_menu.add_entry(_monster_menu_gen(letter,
                                                   key_to_menu_str(key),
                                                   monster_list[i]));
-        } else
+        }
+        else
             desc_menu.add_entry(make_menu_entry(letter, key));
     }
 
@@ -946,17 +925,14 @@ static int _describe_key(const string &key, const string &suffix,
     inf.quote = getQuoteString(key);
 
     const string desc = getLongDescription(key);
-    const int width = min(80, get_number_of_cols());
 
     inf.body << desc << extra_info;
-
-    string title = key;
-    strip_suffix(title, suffix);
-    title = uppercase_first(title);
-    linebreak_string(footer, width - 1);
-
+    inf.title = [&]() {
+        string title = key;
+        strip_suffix(title, suffix);
+        return uppercase_first(title);
+    }();
     inf.footer = footer;
-    inf.title  = title;
 
     return show_description(inf, tile);
 }
@@ -1006,7 +982,7 @@ static int _describe_monster(const string &key, const string &suffix,
     // Avoid slime creature being described as "buggy"
     if (mi.type == MONS_SLIME_CREATURE)
         mi.slime_size = 1;
-    return describe_monsters(mi, true, footer);
+    return describe_monsters(mi, footer);
 }
 
 
@@ -1019,7 +995,7 @@ static int _describe_monster(const string &key, const string &suffix,
  * @return          The keypress the user made to exit.
  */
 static int _describe_spell(const string &key, const string &suffix,
-                             string footer)
+                             string /*footer*/)
 {
     const string spell_name = key.substr(0, key.size() - suffix.size());
     const spell_type spell = spell_by_name(spell_name, true);
@@ -1029,7 +1005,7 @@ static int _describe_spell(const string &key, const string &suffix,
 }
 
 static int _describe_skill(const string &key, const string &suffix,
-                             string footer)
+                             string /*footer*/)
 {
     const string skill_name = key.substr(0, key.size() - suffix.size());
     const skill_type skill = skill_from_name(skill_name.c_str());
@@ -1038,7 +1014,7 @@ static int _describe_skill(const string &key, const string &suffix,
 }
 
 static int _describe_ability(const string &key, const string &suffix,
-                             string footer)
+                             string /*footer*/)
 {
     const string abil_name = key.substr(0, key.size() - suffix.size());
     const ability_type abil = ability_by_name(abil_name.c_str());
@@ -1061,7 +1037,7 @@ static int _describe_card(const string &key, const string &suffix,
     const card_type card = name_to_card(card_name);
     ASSERT(card != NUM_CARDS);
 #ifdef USE_TILE
-    tile_def tile = tile_def(TILE_MISC_CARD, TEX_DEFAULT);
+    tile_def tile = tile_def(TILE_MISC_CARD);
     return _describe_key(key, suffix, footer, which_decks(card) + "\n", &tile);
 #else
     return _describe_key(key, suffix, footer, which_decks(card) + "\n");
@@ -1085,8 +1061,8 @@ static int _describe_cloud(const string &key, const string &suffix,
 #ifdef USE_TILE
     cloud_info fake_cloud_info;
     fake_cloud_info.type = cloud;
-    const tileidx_t idx = tileidx_cloud(fake_cloud_info) & ~TILE_FLAG_FLYING;
-    tile_def tile = tile_def(idx, TEX_DEFAULT);
+    const tileidx_t idx = tileidx_cloud(fake_cloud_info);
+    tile_def tile = tile_def(idx);
     return _describe_key(key, suffix, footer, extra_cloud_info(cloud), &tile);
 #else
     return _describe_key(key, suffix, footer, extra_cloud_info(cloud));
@@ -1102,17 +1078,18 @@ static int _describe_cloud(const string &key, const string &suffix,
  * @return          The keypress the user made to exit.
  */
 static int _describe_item(const string &key, const string &suffix,
-                           string footer)
+                           string /*footer*/)
 {
+    const string item_name = key.substr(0, key.size() - suffix.size());
     item_def item;
-    if (!get_item_by_exact_name(item, key.c_str()))
+    if (!get_item_by_exact_name(item, item_name.c_str()))
         die("Unable to get item %s by name", key.c_str());
-    describe_item(item);
+    describe_item_popup(item);
     return 0;
 }
 
 static int _describe_feature(const string &key, const string &suffix,
-                             string footer)
+                             string /*footer*/)
 {
     const string feat_name = key.substr(0, key.size() - suffix.size());
     const dungeon_feature_type feat = feat_by_desc(feat_name);
@@ -1244,12 +1221,8 @@ static int _describe_branch(const string &key, const string &suffix,
             + "\n\n"
             + branch_rune_desc(branch, false);
 
-#ifdef USE_TILE
-    tile_def tile = tile_def(tileidx_branch(branch), TEX_FEAT);
+    tile_def tile = tile_def(tileidx_branch(branch));
     return _describe_key(key, suffix, footer, info, &tile);
-#else
-    return _describe_key(key, suffix, footer, info);
-#endif
 }
 
 /// All types of ?/ queries the player can enter.
@@ -1402,19 +1375,15 @@ static int _lookup_prompt()
 #endif
         auto prompt_ui =
                 make_shared<ui::Text>(formatted_string::parse_string(prompt));
+        auto popup = make_shared<ui::Popup>(prompt_ui);
         bool done = false;
 
-        prompt_ui->on(ui::Widget::slots.event, [&](wm_event ev) {
-            if (ev.type == WME_KEYDOWN)
-            {
-                ch = ev.key.keysym.sym;
-                done = true;
-            }
-            return done;
+        popup->on_keydown_event([&](const ui::KeyEvent& ev) {
+            ch = ev.key();
+            return done = true;
         });
 
         mouse_control mc(MOUSE_MODE_MORE);
-        auto popup = make_shared<ui::Popup>(prompt_ui);
         ui::run_layout(move(popup), done);
     }
     else
@@ -1501,6 +1470,7 @@ void keyhelp_query_descriptions()
     while (true)
     {
         redraw_screen();
+        update_screen();
 
         if (!response.empty())
             mprf(MSGCH_PROMPT, "%s", response.c_str());
@@ -1513,5 +1483,6 @@ void keyhelp_query_descriptions()
     }
 
     viewwindow();
+    update_screen();
     mpr("Okay, then.");
 }

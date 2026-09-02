@@ -21,12 +21,13 @@
 #include "env.h"
 #include "food.h"
 #include "fprop.h"
+#include "god-passive.h"
 #include "monster.h"
 #include "mon-pathfind.h"
-#include "mon-place.h"
 #include "mon-tentacle.h"
 #include "player.h"
 #include "player-stats.h"
+#include "religion.h"
 #include "stringutil.h"
 #include "state.h"
 #include "terrain.h"
@@ -82,8 +83,7 @@ static bool _mons_has_path_to_player(const monster* mon, bool want_move = false)
     // direct path to you "safe" just because it would be too stupid to
     // track you that far out-of-sight. Use a factor of 2 for smarter
     // creatures as a safety margin.
-    if (range > 0)
-        mp.set_range(max(LOS_RADIUS, range * 2));
+    mp.set_range(max(LOS_RADIUS, range * 2));
 
     if (mp.init_pathfind(mon, you.pos(), true, false, true))
         return true;
@@ -100,13 +100,18 @@ bool mons_can_hurt_player(const monster* mon, const bool want_move)
     //        It should, for the purposes of i_feel_safe. [rob]
     // It also always returns true for sleeping monsters, but that's okay
     // for its current purposes. (Travel interruptions and tension.)
-    if (_mons_has_path_to_player(mon, want_move))
+    //
+    // This also doesn't account for explosion radii, which is a false positive
+    // for a player waiting near (but not in range of) their own fulminant
+    // prism
+    if (_mons_has_path_to_player(mon, want_move) || mons_blows_up(*mon))
         return true;
 
     // Even if the monster can not actually reach the player it might
     // still use some ranged form of attack.
     if (you.see_cell_no_trans(mon->pos())
-        && mons_has_ranged_attack(*mon))
+        && (mons_has_ranged_attack(*mon)
+            || mons_has_ranged_spell(*mon, false, true)))
     {
         return true;
     }
@@ -114,14 +119,14 @@ bool mons_can_hurt_player(const monster* mon, const bool want_move)
     return false;
 }
 
-
-
 // Returns true if a monster can be considered safe regardless
 // of distance.
 static bool _mons_is_always_safe(const monster *mon)
 {
-    return mon->wont_attack()
+    return (mon->wont_attack() && !mons_blows_up(*mon))
            || mon->type == MONS_BUTTERFLY
+           || mon->type == MONS_JELLYFISH
+           || mon->type == MONS_GIANT_BLOWFLY
            || (mon->type == MONS_BALLISTOMYCETE
                && !mons_is_active_ballisto(*mon));
 }
@@ -143,9 +148,9 @@ bool mons_is_safe(const monster* mon, const bool want_move,
                            // Only seen through glass walls or within water?
                            // Assuming that there are no water-only/lava-only
                            // monsters capable of throwing or zapping wands.
-                           || !mons_can_hurt_player(mon, want_move)));
+                           || !mons_can_hurt_player(mon, want_move))
+                    || mon->attitude == ATT_PASSIVE);
 
-#ifdef CLUA_BINDINGS
     if (consider_user_options)
     {
         bool moving = you_are_delayed()
@@ -164,7 +169,6 @@ bool mons_is_safe(const monster* mon, const bool want_move,
             is_safe = result;
         }
     }
-#endif
 
     return is_safe;
 }
@@ -194,13 +198,12 @@ vector<monster* > get_nearby_monsters(bool want_move,
     vector<monster* > mons;
 
     // Sweep every visible square within range.
-    for (radius_iterator ri(you.pos(), range, C_SQUARE, you.xray_vision ? LOS_NONE : LOS_DEFAULT); ri; ++ri)
+    for (radius_iterator ri(you.pos(), range, C_SQUARE, LOS_DEFAULT); ri; ++ri)
     {
         if (monster* mon = monster_at(*ri))
         {
             if (mon->alive()
                 && (!require_visible || mon->visible_to(&you))
-                && !mon->submerged()
                 && (!dangerous_only || !mons_is_safe(mon, want_move,
                                                      consider_user_options,
                                                      check_dist)))
@@ -265,6 +268,72 @@ bool i_feel_safe(bool announce, bool want_move, bool just_monsters,
                 mprf(MSGCH_WARN, "You're standing next to a slime covered wall!");
 
             return false;
+        }
+
+        if (!you.permanent_flight())
+        {
+            if ((env.grid(you.pos()) == DNGN_SLIMY_WATER || env.grid(you.pos()) == DNGN_DEEP_SLIMY_WATER) && !you_worship(GOD_JIYVA))
+            {
+                if (announce)
+                {
+                    if (you.airborne())
+                        mprf(MSGCH_WARN, "The terrain you're above will be dangerous once your flight expires!");
+                    else
+                        mprf(MSGCH_WARN, "You're standing in acidic ooze!");
+                }
+                return false;
+            }
+
+            if (feat_is_lava(env.grid(you.pos())))
+            {
+                if (announce)
+                {
+                    if (you.airborne())
+                        mprf(MSGCH_WARN, "The terrain you're above will be dangerous once your flight expires!");
+                    else if (you.species != SP_MOLTEN_GARGOYLE)
+                        mprf(MSGCH_WARN, "You're standing in boiling hot magma!");
+                }
+                return false;
+            }
+
+            if ((env.grid(you.pos()) == DNGN_DEEP_WATER || env.grid(you.pos()) == DNGN_DEEP_SLIMY_WATER) 
+                && !you.can_swim(true) && !you.can_water_walk())
+            {
+                if (announce)
+                {
+                    if (you.airborne())
+                        mprf(MSGCH_WARN, "The terrain you're above will be dangerous once your flight expires!");
+                    else if (you.can_swim())
+                        mprf(MSGCH_WARN, "You won't be able to swim when your %s expires!", you.mounted() ? "mount" : "form");
+                    else
+                        mprf(MSGCH_WARN, "You're struggling to keep your head above water!");
+                }
+                return false;
+            }
+
+            if (env.grid(you.pos()) == DNGN_TOXIC_BOG)
+            {
+                if (announce)
+                {
+                    if (you.airborne())
+                        mprf(MSGCH_WARN, "The terrain you're above will be dangerous once your flight expires!");
+                    else
+                        mprf(MSGCH_WARN, "You're standing in a festering bog!");
+                }
+                return false;
+            }
+
+            if (env.grid(you.pos()) == DNGN_QUAGMIRE)
+            {
+                if (announce)
+                {
+                    if (you.airborne())
+                        mprf(MSGCH_WARN, "The terrain you're above will be dangerous once your flight expires!");
+                    else
+                        mprf(MSGCH_WARN, "You're standing in a chaotic quagmire!");
+                }
+                return false;
+            }
         }
     }
 
@@ -342,7 +411,7 @@ static void _monster_threat_values(double *general, double *highest,
         if (mi->friendly())
             continue;
 
-        const int xp = exper_value(**mi);
+        const int xp = mon_exper_value(**mi);
         const double log_xp = log((double)xp);
         sum += log_xp;
         if (xp > highest_xp)
@@ -386,7 +455,7 @@ void bring_to_safety()
         pos.x = random2(GXM);
         pos.y = random2(GYM);
         if (!in_bounds(pos)
-            || grd(pos) != DNGN_FLOOR
+            || env.grid(pos) != DNGN_FLOOR
             || cloud_at(pos)
             || monster_at(pos)
             || env.pgrid(pos) & FPROP_NO_TELE_INTO
@@ -398,7 +467,7 @@ void bring_to_safety()
         }
 
         for (adjacent_iterator ai(pos); ai; ++ai)
-            if (grd(*ai) == DNGN_SLIMY_WALL)
+            if (env.grid(*ai) == DNGN_SLIMY_WALL)
             {
                 tries++;
                 continue;
@@ -447,19 +516,21 @@ void revive()
     you.attribute[ATTR_FLIGHT_UNCANCELLABLE] = 0;
     you.attribute[ATTR_XP_DRAIN] = 0;
     you.attribute[ATTR_SERPENTS_LASH] = 0;
-    you.attribute[ATTR_HEAVENLY_STORM] = 0;
     you.attribute[ATTR_WALL_JUMP_READY] = 0;
     you.los_noise_level = 0;
     you.los_noise_last_turn = 0; // silence in death
-    if (you.duration[DUR_SCRYING])
-        you.xray_vision = false;
+    
+    if (you.duration[DUR_HEAVENLY_STORM])
+        wu_jian_end_heavenly_storm();
 
+    // TODO: this doesn't seem to call any duration end effects?
     for (int dur = 0; dur < NUM_DURATIONS; dur++)
         if (dur != DUR_GOURMAND && dur != DUR_PIETY_POOL)
             you.duration[dur] = 0;
 
     update_vision_range(); // in case you had darkness cast before
     you.props["corrosion_amount"] = 0;
+    you.props["mount_corrosion_amount"] = 0;
     you.props.erase(SAP_MAGIC_KEY);
 
     unrot_hp(9999);

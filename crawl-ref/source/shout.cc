@@ -12,15 +12,14 @@
 #include "act-iter.h"
 #include "areas.h"
 #include "artefact.h"
-#include "art-enum.h"
 #include "branch.h"
+#include "coordit.h"
 #include "database.h"
 #include "directn.h"
 #include "english.h"
 #include "env.h"
 #include "exercise.h"
 #include "ghost.h"
-#include "god-abil.h"
 #include "hints.h"
 #include "item-status-flag-type.h"
 #include "jobs.h"
@@ -30,6 +29,7 @@
 #include "mon-behv.h"
 #include "mon-place.h"
 #include "mon-poly.h"
+#include "mon-tentacle.h"
 #include "prompt.h"
 #include "religion.h"
 #include "state.h"
@@ -41,9 +41,7 @@
 static noise_grid _noise_grid;
 static void _actor_apply_noise(actor *act,
                                const coord_def &apparent_source,
-                               int noise_intensity_millis,
-                               const noise_t &noise,
-                               int noise_travel_distance);
+                               int noise_intensity_millis);
 
 /// By default, what databse lookup key corresponds to each shout type?
 static const map<shout_type, string> default_msg_keys = {
@@ -60,6 +58,7 @@ static const map<shout_type, string> default_msg_keys = {
     { S_SCREECH,        "__SCREECH" },
     { S_BUZZ,           "__BUZZ" },
     { S_MOAN,           "__MOAN" },
+    { S_GIBBERING,      "__GIBBERING" }, 
     { S_GURGLE,         "__GURGLE" },
     { S_CROAK,          "__CROAK" },
     { S_GROWL,          "__GROWL" },
@@ -223,25 +222,6 @@ void monster_shout(monster* mons, int shout)
 
         strip_channel_prefix(message, channel);
 
-        // Monster must come up from being submerged if it wants to shout.
-        // XXX: this code is probably unreachable now?
-        if (mons->submerged())
-        {
-            if (!mons->del_ench(ENCH_SUBMERGED))
-            {
-                // Couldn't unsubmerge.
-                return;
-            }
-
-            if (you.can_see(*mons))
-            {
-                mons->seen_context = SC_FISH_SURFACES;
-
-                // Give interrupt message before shout message.
-                handle_seen_interrupt(mons);
-            }
-        }
-
         if (channel != MSGCH_TALK_VISUAL || you.can_see(*mons))
         {
             // Otherwise it can move away with no feedback.
@@ -398,7 +378,7 @@ void item_noise(const item_def &item, actor &act, string msg, int loudness)
     msg = replace_all(msg, "@weapon@", item.name(DESC_BASENAME));
 
     // replace references to player name and god
-    msg = replace_all(msg, "@player_name@", you.xom_name);
+    msg = replace_all(msg, "@player_name@", player_name());
     msg = replace_all(msg, "@player_god@",
                       you_worship(GOD_NO_GOD) ? "atheism"
                       : god_name(you.religion, coinflip()));
@@ -467,8 +447,8 @@ static void _set_friendly_foes(bool allow_patrol = false)
             mi->behaviour = BEH_SEEK;
             mi->patrol_point = coord_def(0, 0);
         }
-        mi->foe = (allow_patrol && mi->is_patrolling() ? MHITNOT
-                                                         : you.pet_target);
+        mi->foe = (allow_patrol && mi->is_patrolling() ? int{MHITNOT}
+                                                       : you.pet_target);
     }
 }
 
@@ -532,7 +512,7 @@ static int _issue_orders_prompt()
         string previous;
         if (_can_target_prev())
         {
-            const monster* target = &menv[you.prev_targ];
+            const monster* target = &env.mons[you.prev_targ];
             if (target->alive() && you.can_see(*target))
                 previous = "   p - Attack previous target.";
         }
@@ -703,13 +683,30 @@ void issue_orders()
     if (!_issue_order(keyn, mons_targd))
         return;
 
-    you.turn_is_over = true;
     you.pet_target = mons_targd;
     // Allow patrolling for "Stop fighting!" and "Wait here!"
     _set_friendly_foes(keyn == 's' || keyn == 'w');
 
     if (mons_targd != MHITNOT && mons_targd != MHITYOU)
         mpr("Attack!");
+}
+
+/// If the player has the shout mutation, maybe shout at newly-seen monsters.
+void maybe_trigger_shoutitus(const vector<monster*> monsters)
+{
+    if (!you.get_mutation_level(MUT_SHOUTITUS))
+        return;
+
+    for (const monster* mon : monsters)
+    {
+        if (!mons_is_tentacle_or_tentacle_segment(mon->type)
+            && !mons_is_conjured(mon->type)
+            && one_chance_in(10))
+        {
+            yell(mon);
+            return;
+        }
+    }
 }
 
 /**
@@ -728,7 +725,8 @@ void yell(const actor* mon)
     {
         if (mon)
         {
-            if (you.paralysed() || you.duration[DUR_WATER_HOLD] || you.drowning())
+            if (you.paralysed() || you.duration[DUR_WATER_HOLD] 
+                || you.duration[DUR_AIR_HOLD] || you.drowning())
             {
                 mprf("You feel a strong urge to %s, but "
                      "you are unable to make a sound!",
@@ -749,16 +747,47 @@ void yell(const actor* mon)
 
     if (mon)
     {
-        mprf("You %s%s at %s!",
-             shout_verb.c_str(),
-             you.duration[DUR_RECITE] ? " your recitation" : "",
+        string msg = getShoutString("__DEMON_TAUNT");
+
+        if (!msg.empty())
+        {
+            string foe_genus = mons_type_name(mons_genus(mon->type), DESC_PLAIN);
+
+            // Let's use the insults for player ghouls for various undead.
+            if (bool(mon->holiness() & MH_UNDEAD) && !mon->is_insubstantial()
+                && !(mon->type == MONS_SIMULACRUM))
+            {
+                foe_genus = "ghoul";
+            }
+
+            msg = replace_all(msg, "@The_monster@", "You");
+            msg = replace_all(msg, "@says@", shout_verb);
+
+            // Replace with species specific insults.
+            if (msg.find("@species_insult_") != string::npos)
+            {
+                msg = replace_all(msg, "@species_insult_adj1@",
+                    get_species_insult(foe_genus, "adj1"));
+                msg = replace_all(msg, "@species_insult_adj2@",
+                    get_species_insult(foe_genus, "adj2"));
+                msg = replace_all(msg, "@species_insult_noun@",
+                    get_species_insult(foe_genus, "noun"));
+            }
+        }
+
+        mprf(MSGCH_SOUND, "%s at %s!",
+             msg.c_str(),
              mon->name(DESC_THE).c_str());
     }
+
     else
     {
-        mprf(MSGCH_SOUND, "You %s%s!",
-             shout_verb.c_str(),
-             you.berserk() ? " wildly" : " for attention");
+        if (you.species == SP_FAIRY)
+            mprf(MSGCH_SOUND, "\"Hey, listen!\" you exclaim.");
+        else
+            mprf(MSGCH_SOUND, "You %s%s!",
+                 shout_verb.c_str(),
+                 you.berserk() ? " wildly" : " for attention");
     }
 
     noisy(noise_level, you.pos());
@@ -913,11 +942,52 @@ void check_monsters_sense(sense_type sense, int range, const coord_def& where)
     }
 }
 
+// BCADNOTE: Why is this in Shout?
+static void _maybe_spawn_sharks(const coord_def& where)
+{
+    if (you.where_are_you != BRANCH_SHOALS
+        || you.pos() != where
+        || !feat_is_water(env.grid(where)))
+        return;
+
+    int water_count = 0;
+    for (adjacent_iterator ai(where); ai; ++ai)
+    {
+        if (feat_is_water(env.grid(*ai)) && !actor_at(*ai))
+            water_count++;
+    }
+
+    if (water_count > 4 && x_chance_in_y(water_count, 240))
+    {
+        int shark_count = 3 + random2(2);
+
+        while (shark_count > 0)
+        {
+            for (adjacent_iterator ai(where); ai; ++ai)
+            {
+                if (feat_is_water(env.grid(*ai)) && x_chance_in_y(shark_count, water_count + 1))
+                {
+                    mgen_data mg(MONS_SHARK, BEH_HOSTILE, *ai, MHITYOU, MG_FORCE_BEH | MG_AUTOFOE);
+                    if (monster *mons = create_monster(mg))
+                        mons->move_to_pos(*ai);
+
+                    water_count--;
+                    shark_count--;
+                }
+            }
+        }
+
+        mprf(MSGCH_DANGER, "%s", "Sharks are drawn to the smell of your your blood in the water!");
+    }
+}
+
 void blood_smell(int strength, const coord_def& where)
 {
     const int range = strength;
     dprf("blood stain at (%d, %d), range of smell = %d",
          where.x, where.y, range);
+
+    _maybe_spawn_sharks(where);
 
     check_monsters_sense(SENSE_SMELL_BLOOD, range, where);
 }
@@ -929,7 +999,7 @@ void blood_smell(int strength, const coord_def& where)
 // Permarock walls are assumed to completely kill noise.
 static int _noise_attenuation_millis(const coord_def &pos)
 {
-    const dungeon_feature_type feat = grd(pos);
+    const dungeon_feature_type feat = env.grid(pos);
 
     if (feat_is_permarock(feat))
         return NOISE_ATTENUATION_COMPLETE;
@@ -1034,7 +1104,7 @@ void noise_grid::propagate_noise()
         const vector<coord_def> &perimeter(noise_perimeter[circ_index]);
         vector<coord_def> &next_perimeter(noise_perimeter[!circ_index]);
         ++travel_distance;
-        for (const coord_def p : perimeter)
+        for (const coord_def &p : perimeter)
         {
             const noise_cell &cell(cells(p));
 
@@ -1042,8 +1112,7 @@ void noise_grid::propagate_noise()
             {
                 apply_noise_effects(p,
                                     cell.noise_intensity_millis,
-                                    noises[cell.noise_id],
-                                    travel_distance - 1);
+                                    noises[cell.noise_id]);
 
                 const int attenuation = _noise_attenuation_millis(p);
                 // If the base noise attenuation kills the noise, go no farther:
@@ -1128,8 +1197,7 @@ bool noise_grid::propagate_noise_to_neighbour(int base_attenuation,
 
 void noise_grid::apply_noise_effects(const coord_def &pos,
                                      int noise_intensity_millis,
-                                     const noise_t &noise,
-                                     int noise_travel_distance)
+                                     const noise_t &noise)
 {
     if (you.pos() == pos)
     {
@@ -1139,8 +1207,7 @@ void noise_grid::apply_noise_effects(const coord_def &pos,
         // because the type is correct here.
 
         _actor_apply_noise(&you, noise.noise_source,
-                           noise_intensity_millis, noise,
-                           noise_travel_distance);
+                           noise_intensity_millis);
 
         // The next bit stores noise heard at the player's position for
         // display in the HUD. A more interesting (and much more complicated)
@@ -1167,8 +1234,7 @@ void noise_grid::apply_noise_effects(const coord_def &pos,
             const coord_def perceived_position =
                 noise_perceived_position(mons, pos, noise);
             _actor_apply_noise(mons, perceived_position,
-                               noise_intensity_millis, noise,
-                               noise_travel_distance);
+                               noise_intensity_millis);
             ++affected_actor_count;
         }
     }
@@ -1185,15 +1251,15 @@ void noise_grid::apply_noise_effects(const coord_def &pos,
 //  - If the cells cannot see each other, calculate a noise source as follows:
 //
 //    Calculate a noise centroid between the noise source and the observer,
-//    weighted to the noise source if the noise has traveled in a straight line,
+//    weighted to the noise source if the noise has travelled in a straight line,
 //    weighted toward the observer the more the noise has deviated from a
 //    straight line.
 //
-//    Fuzz the centroid by the extra distance the noise has traveled over
+//    Fuzz the centroid by the extra distance the noise has travelled over
 //    the straight line distance. This is where the observer will think the
 //    noise originated.
 //
-//    Thus, if the noise has traveled in a straight line, the observer
+//    Thus, if the noise has travelled in a straight line, the observer
 //    will know the exact origin, 100% of the time, even if the
 //    observer is all the way across the level.
 coord_def noise_grid::noise_perceived_position(actor *act,
@@ -1245,7 +1311,7 @@ coord_def noise_grid::noise_perceived_position(actor *act,
 #ifdef DEBUG_NOISE_PROPAGATION
     dprf(DIAG_NOISE, "[NOISE] Noise perceived by %s at (%d,%d) "
          "centroid (%d,%d) source (%d,%d) "
-         "heard at (%d,%d), distance: %d (traveled %d)",
+         "heard at (%d,%d), distance: %d (travelled %d)",
          act->name(DESC_PLAIN, true).c_str(),
          final_perceived_point.x, final_perceived_point.y,
          noise_centroid.x, noise_centroid.y,
@@ -1340,7 +1406,7 @@ void noise_grid::write_noise_grid(FILE *outf) const
             if (you.pos() == coord_def(x, y))
                 write_cell(outf, p, '@');
             else
-                write_cell(outf, p, get_feature_def(grd[x][y]).symbol());
+                write_cell(outf, p, get_feature_def(env.grid[x][y]).symbol());
         }
         fprintf(outf, "<br>\n");
     }
@@ -1361,13 +1427,11 @@ void noise_grid::dump_noise_grid(const string &filename) const
 
 static void _actor_apply_noise(actor *act,
                                const coord_def &apparent_source,
-                               int noise_intensity_millis,
-                               const noise_t &noise,
-                               int noise_travel_distance)
+                               int noise_intensity_millis)
 {
 #ifdef DEBUG_NOISE_PROPAGATION
     dprf(DIAG_NOISE, "[NOISE] Actor %s (%d,%d) perceives noise (%d) "
-         "from (%d,%d), real source (%d,%d), distance: %d, noise traveled: %d",
+         "from (%d,%d), real source (%d,%d), distance: %d, noise travelled: %d",
          act->name(DESC_PLAIN, true).c_str(),
          act->pos().x, act->pos().y,
          noise_intensity_millis,
@@ -1395,7 +1459,7 @@ static void _actor_apply_noise(actor *act,
         // linear from p(0) = 100 to p(R) = 10. This replaces a version that
         // was 100% from 0 to 3, and 0% outward.
         //
-        // behavior around the old breakpoint for R=8: p(3) = 66, p(4) = 55.
+        // behaviour around the old breakpoint for R=8: p(3) = 66, p(4) = 55.
 
         const int player_distance = grid_distance(apparent_source, you.pos());
         const int alert_prob = max(player_distance * -90 / LOS_RADIUS + 100, 0);

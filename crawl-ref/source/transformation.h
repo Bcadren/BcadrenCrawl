@@ -1,9 +1,11 @@
 #pragma once
 
+#include "tag-version.h"
+
 enum class transformation
 {
     none,
-    spider,
+    scorpion,
     blade_hands,
     statue,
     ice_beast,

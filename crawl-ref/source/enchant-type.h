@@ -1,5 +1,7 @@
 #pragma once
 
+#include "tag-version.h"
+
 // This list must match the enchant_names array in mon-ench.cc
 // Enchantments that imply other enchantments should come first
 // to avoid timeout message confusion. Currently:
@@ -16,9 +18,7 @@ enum enchant_type
     ENCH_CONFUSION,
     ENCH_INVIS,
     ENCH_POISON,
-#if TAG_MAJOR_VERSION == 34
-    ENCH_ROT,
-#endif
+    ENCH_SEAL,
     ENCH_SUMMON,
     ENCH_ABJ,
     ENCH_MAGIC_CANDLE,
@@ -28,7 +28,9 @@ enum enchant_type
     ENCH_SHAPESHIFTER,
     ENCH_TP,
     ENCH_SLEEP_WARY,
+#if TAG_MAJOR_VERSION == 34
     ENCH_SUBMERGED,
+#endif
     ENCH_SHORT_LIVED,
     ENCH_PARALYSIS,
     ENCH_SICK,
@@ -36,8 +38,8 @@ enum enchant_type
     ENCH_SLEEPY,         //   Monster can't wake until this wears off.
 #endif
     ENCH_HELD,           //   Caught in a net.
+    ENCH_WAND_COOLDOWN,
 #if TAG_MAJOR_VERSION == 34
-    ENCH_OLD_BATTLE_FRENZY,
     ENCH_TEMP_PACIF,
 #endif
     ENCH_PETRIFYING,
@@ -45,23 +47,17 @@ enum enchant_type
     ENCH_LOWERED_MR,
     ENCH_SOUL_RIPE,
     ENCH_SLOWLY_DYING,
-#if TAG_MAJOR_VERSION == 34
-    ENCH_EAT_ITEMS,
-#endif
+    ENCH_CIGOTUVI,
     ENCH_AQUATIC_LAND,   // Water monsters lose hp while on land.
     ENCH_SPORE_PRODUCTION,
-#if TAG_MAJOR_VERSION == 34
-    ENCH_SLOUCH,
-#endif
+    ENCH_NOCORPSE,
     ENCH_SWIFT,
     ENCH_TIDE,
     ENCH_INSANE,         // Berserk + changed attitude.
     ENCH_SILENCE,
     ENCH_AWAKEN_FOREST,
     ENCH_EXPLODING,
-#if TAG_MAJOR_VERSION == 34
     ENCH_BLEED,
-#endif
     ENCH_PORTAL_TIMER,
     ENCH_SEVERED,
     ENCH_ANTIMAGIC,
@@ -94,14 +90,12 @@ enum enchant_type
     ENCH_SILVER_CANDLE,  // Zin's silver light.
     ENCH_RECITE_TIMER,   // Was recited against.
     ENCH_INNER_FLAME,
-#if TAG_MAJOR_VERSION == 34
-    ENCH_OLD_ROUSED,
-#endif
+    ENCH_NO_CHARMS,      // banned from charms via miscast
     ENCH_BREATH_WEAPON,  // timer for breathweapon/similar spam
 #if TAG_MAJOR_VERSION == 34
     ENCH_DEATHS_DOOR,
-    ENCH_ROLLING,        // Boulder Beetle in ball form
 #endif
+    ENCH_ROLLING,        // Boulder Beetle in ball form
     ENCH_OZOCUBUS_ARMOUR,
     ENCH_WRETCHED,       // An abstract placeholder for monster mutations
     ENCH_SCREAMED,       // Starcursed scream timer
@@ -110,9 +104,7 @@ enum enchant_type
     ENCH_WATER_HOLD,     // Silence and asphyxiation damage
     ENCH_FLAYED,
     ENCH_HAUNTING,
-#if TAG_MAJOR_VERSION == 34
-    ENCH_RETCHING,
-#endif
+    ENCH_AIR_HOLD,
     ENCH_WEAK,
     ENCH_DIMENSION_ANCHOR,
     ENCH_AWAKEN_VINES,   // Is presently animating snaplasher vines
@@ -152,8 +144,8 @@ enum enchant_type
     ENCH_GOLD_LUST,
     ENCH_DRAINED,
     ENCH_REPEL_MISSILES,
-    ENCH_DEFLECT_MISSILES,
 #if TAG_MAJOR_VERSION == 34
+    ENCH_DEFLECT_MISSILES,
     ENCH_NEGATIVE_VULN,
 #endif
     ENCH_CONDENSATION_SHIELD,
@@ -173,11 +165,32 @@ enum enchant_type
     ENCH_INFESTATION,
     ENCH_STILL_WINDS,
     ENCH_RING_OF_THUNDER,
+#if TAG_MAJOR_VERSION == 34
     ENCH_WHIRLWIND_PINNED,
+#endif
     ENCH_VORTEX,
     ENCH_VORTEX_COOLDOWN,
     ENCH_VILE_CLUTCH,
     ENCH_LAVA_CAKE,
+    ENCH_STICK,
+    ENCH_ELEC_VULN,
+    ENCH_COLD_VULN,
+    ENCH_PHYS_VULN,
+    ENCH_STFSHIELD_COOLDOWN,
+    ENCH_ENTROPIC_BURST,
+    ENCH_CHAOTIC_INFUSION,
+    ENCH_CHAOSNADO,
+    ENCH_SACRED_ORDER,
+    ENCH_SWALLOWED,
+    ENCH_SWALLOWING,
+    ENCH_RING_OF_FLAMES,
+    ENCH_RING_OF_CHAOS,
+    ENCH_RING_OF_MUTATION,
+    ENCH_RING_OF_FOG,
+    ENCH_RING_OF_ICE,
+    ENCH_RING_OF_DRAINING,
+    ENCH_RING_OF_ACID,
+    ENCH_RING_OF_MIASMA,
     // Update enchant_names[] in mon-ench.cc when adding or removing
     // enchantments.
     NUM_ENCHANTMENTS

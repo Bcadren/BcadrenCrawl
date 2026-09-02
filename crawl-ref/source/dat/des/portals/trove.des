@@ -31,7 +31,9 @@ function trove.get_trove_item(e, value, base_item)
     sub_type="",
     ego_type=false,
     plus1=false,
-    plus2=false, -- #if TAG_MAJOR_VERSION == 34
+-- start TAG_MAJOR_VERSION == 34
+    plus2=false,
+-- end TAG_MAJOR_VERSION
     artefact_name=false,
   }
 
@@ -97,6 +99,8 @@ function trove.get_trove_item(e, value, base_item)
   -- currently 20% armour, 15% weapon, 50% consumable, 15% miscellaneous
   local prices = {
        {base="scroll", type="acquirement", quant=2},
+       {base="scroll", type="fear", quant=2+d(3)+d(3)},
+       {base="scroll", type="fog", quant=2+d(3)+d(3)},
        {base="miscellaneous", type="rune of Zot", quant=3, name="slimy rune of Zot"},
        {base="miscellaneous", type="rune of Zot", quant=11, name="abyssal rune of Zot"},
        {base="miscellaneous", type="horn of Geryon"} }
@@ -106,7 +110,15 @@ function trove.get_trove_item(e, value, base_item)
        {base="weapon", type="demon trident", quant=2+d(3)+d(3)},
        {base="weapon", type="demon blade", quant=2+d(3)+d(3)} }
 
-  if you.race() ~= "Felid" then
+  local scroll = { {base="scroll", type="acquirement", quant=2}, { base="scroll", type="bless item",  quant=3} }
+
+  if you.race() ~= "Silent Spectre" then
+    for _, toll in ipairs(scroll) do
+      table.insert(prices, toll)
+    end
+  end
+
+  if you.race() ~= "Felid" and you.race() ~= "Fairy" then
     for _, toll in ipairs(wpn) do
       table.insert(prices, toll)
     end
@@ -119,21 +131,20 @@ function trove.get_trove_item(e, value, base_item)
        {base="armour", type="fire dragon scales", quant=d(3)+d(3)},
        {base="armour", type="ice dragon scales", quant=d(3)+d(3)} }
 
-  if you.race() ~= "Felid" and you.race() ~= "Octopode" then
+  if you.race() ~= "Felid" and you.race() ~= "Draconian" and you.race() ~= "Fairy" and you.race() ~= "Octopode" then
     for _, toll in ipairs(arm) do
       table.insert(prices, toll)
     end
   end
 
   local pots = {
-       {base="potion", type="resistance", quant=2+d(3)},
-       {base="potion", type="agility", quant=4+d(3)+d(2)} }
+       {base="potion", type="resistance", quant=2+d(3)} }
 
   local heal_pots = {
        {base="potion", type="curing", quant=12+d(4)+d(4)},
        {base="potion", type="heal wounds", quant=8+d(3)+d(3)} }
 
-  if you.race() ~= "Mummy" then
+  if you.class() ~= "Mummy" then
     if you.race() ~= "Vine Stalker" then
       for _, toll in ipairs(heal_pots) do
         table.insert(pots, toll)
@@ -141,6 +152,9 @@ function trove.get_trove_item(e, value, base_item)
     end
     if you.race() ~= "Formicid" then
       table.insert(pots, {base="potion", type="haste", quant=4+d(3)+d(2)})
+    end
+    if you.race() ~= "Ghoul" then
+      table.insert(pots, {base="potion", type="cure mutation", quant=1+d(4)})
     end
 
     for _, toll in ipairs(pots) do
@@ -152,7 +166,7 @@ function trove.get_trove_item(e, value, base_item)
        {base="scroll", type="blinking", quant=2+d(3)+d(3)},
        {base="scroll", type="teleportation", quant=10+d(4)+d(4)} }
 
-  if you.race() ~= "Formicid" then
+  if you.race() ~= "Formicid" and you.race() ~= "Silent Spectre" then
     for _, toll in ipairs(stasis_tolls) do
       table.insert(prices, toll)
     end
@@ -226,7 +240,7 @@ end
 -- limit it to the enchant scrolls, tloc scrolls, identify scrolls, mapping
 -- scrolls with a low chance of silence, vulnerability or acquirement (lowest)
 function trove.good_scroll (e)
-    e.item([[scroll of enchantment / scroll of brand weapon w:3 /
+    e.item([[scroll of enchantment / scroll of bless item w:3 /
              scroll of magic mapping w:5 / scroll of blinking /
              scroll of silence w:2 / scroll of acquirement w:1 /
              scroll of teleportation w:20 / scroll of vulnerability w:2 /
@@ -240,7 +254,7 @@ function trove.place_fog(e, type, strength)
 end
 
 function trove.weapon_skills (e)
-  local weapon_skills = {"Short Blades", "Long Blades", "Axes", "Whips & Flails", "Polearms", "Maces & Staves"}
+  local weapon_skills = {"Short Blades", "Long Blades", "Axes and Hammers", "Whips & Flails", "Polearms", "Maces & Staves"}
   local skill_total = 0
   local nonzero_skills = 0
   for _, skill in ipairs(weapon_skills) do
@@ -274,7 +288,7 @@ function trove.spell_skills (e)
 end
 }}
 
-default-depth: D:10-, Depths, Elf, Vaults
+default-depth: D:5-, Depths, Elf, Vaults
 
 ##############################################################################
 #
@@ -331,7 +345,7 @@ CHANCE: 5%
 : trove.portal(_G)
 COLOUR: e = blue
 FTILE:  e = floor_marble
-: if you.absdepth() <= 15 then
+: if you.absdepth() <= 7 then
 # Got drafted in from Vaults:$, while the mages try and close the portal down.
 KMONS:  e = vault guard
 : else
@@ -445,6 +459,7 @@ NAME: nicolae_trove_entry_isolated
 TAGS: no_pool_fixup transparent
 CHANCE: 5%
 KPROP: .O = no_tele_into
+KMASK: .O = opaque
 KFEAT: ' = .
 : trove.portal(_G)
 MAP
@@ -573,6 +588,7 @@ KITEM:   f = acquire armour w:5 / any useful armour good_item / any armour w:2
 KITEM:   F = acquire weapon w:5 / any useful weapon good_item / any weapon w:2
 KITEM:   B = acquire book / acquire:sif_muna book / any book
 KITEM:   g = potion of curing / potion of heal wounds / potion of experience / \
+             potion of cure mutation q:1 / potion of beneficial mutation q:1 / \
              potion of might / potion of agility / potion of brilliance / \
              potion of resistance / potion of magic / potion of haste
 KFEAT:   w = W
@@ -801,8 +817,8 @@ MONS:    storm dragon zombie
 MONS:    golden dragon zombie
 MONS:    fire dragon skeleton
 ITEM:    animal skin good_item / any armour good_item
-ITEM:    gold dragon scales / storm dragon scales / fire dragon scales / troll leather armour / any useful armour good_item
-ITEM:    arrow good_item / bolt good_item
+ITEM:    gold dragon scales / storm dragon scales / fire dragon scales / troll leather / any useful armour good_item
+ITEM:    scroll of random uselessness
 ITEM:    longbow good_item / arbalest good_item / any useful weapon good_item
 SHUFFLE: 123
 SHUFFLE: defg
@@ -860,11 +876,11 @@ COLOUR: x = blue
 KFEAT:  1 = deep_water
 KMONS:  1 = generate_awake shining eye
 # 21 items, 'cos this one is *nasty*.
-# There are 4 extra potions of cure/mutation, anyway.
+# There are 4 extra potions of cure/beneficial mutation, anyway.
 ITEM:   any useful good_item / any
 ITEM:   any useful jewellery good_item / any useful good_item
 ITEM:   acquire weapon / acquire armour / any useful good_item
-ITEM:   potion of mutation q:3 ident:type
+ITEM:   potion of cure mutation ident:type / potion of beneficial mutation ident:type
 : trove.setup_features(_G)
 : set_border_fill_type("open_sea")
 MAP
@@ -943,12 +959,12 @@ WEIGHT:  5
 ORIENT:  encompass
 ITEM:    potion of curing / potion of heal wounds / \
          potion of curing q:2 / potion of heal wounds q:2
-ITEM:    potion of experience q:1
+ITEM:    potion of experience q:1 / potion of beneficial mutation q:1 w:30
 ITEM:    potion of might / potion of resistance / \
          potion of magic / potion of haste / \
          potion of might q:2 / potion of resistance q:2 / \
          potion of magic q:2 / potion of haste q:2
-ITEM:    potion of mutation
+ITEM:    potion of cure mutation / potion of beneficial mutation
 SHUFFLE: df
 SHUFFLE: eg
 : trove.setup_features(_G)

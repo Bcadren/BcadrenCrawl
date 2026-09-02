@@ -24,6 +24,7 @@
 #include "delay.h"
 #include "dgn-overview.h"
 #include "dgn-proclayouts.h"
+#include "tile-env.h"
 #include "files.h"
 #include "god-companions.h" // hep stuff
 #include "god-passive.h" // passive_t::slow_abyss
@@ -31,11 +32,11 @@
 #include "item-prop.h"
 #include "item-status-flag-type.h"
 #include "items.h"
+#include "level-state-type.h"
 #include "libutil.h"
 #include "mapmark.h"
 #include "maps.h"
 #include "message.h"
-#include "misc.h"
 #include "mon-cast.h"
 #include "mon-death.h"
 #include "mon-pathfind.h"
@@ -51,7 +52,7 @@
 #include "stairs.h"
 #include "stringutil.h"
 #include "terrain.h"
-#include "tiledef-dngn.h"
+#include "rltiles/tiledef-dngn.h"
 #include "tileview.h"
 #include "timed-effects.h"
 #include "traps.h"
@@ -100,12 +101,12 @@ static coord_def _place_feature_near(const coord_def &centre,
         if (not_seen && cell_see_cell_nocache(cp, centre))
             continue;
 
-        if (grd(cp) == candidate)
+        if (env.grid(cp) == candidate)
         {
             dprf(DIAG_ABYSS, "Placing %s at (%d,%d)",
                  dungeon_feature_name(replacement),
                  cp.x, cp.y);
-            grd(cp) = replacement;
+            env.grid(cp) = replacement;
             return cp;
         }
     }
@@ -147,7 +148,7 @@ static void _write_abyssal_features()
                 {
                     if (abyssal_features[index] != DNGN_UNSEEN)
                     {
-                        grd(p) = abyssal_features[index];
+                        env.grid(p) = abyssal_features[index];
                         env.level_map_mask(p) = MMT_VAULT;
                         if (cell_is_solid(p))
                             delete_cloud(p);
@@ -158,7 +159,7 @@ static void _write_abyssal_features()
                 else
                 {
                     //Entombing the player is lame.
-                    grd(p) = DNGN_FLOOR;
+                    env.grid(p) = DNGN_FLOOR;
                 }
             }
 
@@ -187,13 +188,13 @@ static void _abyss_fixup_vault(const vault_placement *vp)
     for (vault_place_iterator vi(*vp); vi; ++vi)
     {
         const coord_def p(*vi);
-        const dungeon_feature_type feat(grd(p));
+        const dungeon_feature_type feat(env.grid(p));
         if (feat_is_stair(feat)
             && feat != DNGN_EXIT_ABYSS
             && feat != DNGN_ABYSSAL_STAIR
             && !feat_is_portal_entrance(feat))
         {
-            grd(p) = DNGN_FLOOR;
+            env.grid(p) = DNGN_FLOOR;
         }
 
         tile_init_flavour(p);
@@ -277,7 +278,7 @@ static bool _abyss_place_rune(const map_bitmask &abyss_genlevel_mask)
     {
         const coord_def p(*ri);
         if (abyss_genlevel_mask(p)
-            && grd(p) == DNGN_FLOOR && igrd(p) == NON_ITEM
+            && env.grid(p) == DNGN_FLOOR && env.igrid(p) == NON_ITEM
             && one_chance_in(++places_found))
         {
             chosen_spot = p;
@@ -290,7 +291,7 @@ static bool _abyss_place_rune(const map_bitmask &abyss_genlevel_mask)
              chosen_spot.x, chosen_spot.y);
         int item_ind  = items(true, OBJ_RUNES, RUNE_ABYSSAL, 0);
         if (item_ind != NON_ITEM)
-            item_colour(mitm[item_ind]);
+            item_colour(env.item[item_ind]);
         move_item_to_grid(&item_ind, chosen_spot, true);
         return item_ind != NON_ITEM;
     }
@@ -303,8 +304,8 @@ static bool _abyss_square_accepts_items(const map_bitmask &abyss_genlevel_mask,
                                         coord_def p)
 {
     return abyss_genlevel_mask(p)
-           && grd(p) == DNGN_FLOOR
-           && igrd(p) == NON_ITEM
+           && env.grid(p) == DNGN_FLOOR
+           && env.igrid(p) == NON_ITEM
            && !map_masked(p, MMT_VAULT);
 }
 
@@ -357,7 +358,7 @@ static int _abyss_create_items(const map_bitmask &abyss_genlevel_mask,
             ++items_placed;
     }
 
-    for (const coord_def place : chosen_item_places)
+    for (const coord_def &place : chosen_item_places)
     {
         if (_abyss_square_accepts_items(abyss_genlevel_mask, place))
         {
@@ -399,6 +400,9 @@ void banished(const string &who, const int power)
     ASSERT(!crawl_state.game_is_arena());
     if (brdepth[BRANCH_ABYSS] == -1)
         return;
+
+    end_order();
+    end_still_winds();
 
     if (player_in_branch(BRANCH_ABYSS))
     {
@@ -447,7 +451,7 @@ void push_features_to_abyss()
 
             p += you.pos();
 
-            dungeon_feature_type feature = map_bounds(p) ? grd(p) : DNGN_UNSEEN;
+            dungeon_feature_type feature = map_bounds(p) ? env.grid(p) : DNGN_UNSEEN;
             feature = sanitize_feature(feature);
             abyssal_features.push_back(feature);
         }
@@ -497,7 +501,7 @@ static bool _abyss_check_place_feat(coord_def p,
         else if (!abyss_genlevel_mask(p))
             return false;
         else
-            grd(p) = which_feat;
+            env.grid(p) = which_feat;
 
         if (feats_wanted)
             --*feats_wanted;
@@ -543,7 +547,7 @@ private:
         // env.map_knowledge().known() doesn't work on unmappable levels because
         // mapping flags are not set on such levels.
         for (radius_iterator ri(you.pos(), LOS_DEFAULT); ri; ++ri)
-            if (grd(*ri) == DNGN_EXIT_ABYSS && env.map_knowledge(*ri).seen())
+            if (env.grid(*ri) == DNGN_EXIT_ABYSS && env.map_knowledge(*ri).seen())
                 return true;
 
         return false;
@@ -573,6 +577,7 @@ public:
     {
         // Update known terrain
         viewwindow();
+        update_screen();
 
         const bool exit_is_near = abyss_exit_nearness();
         const bool rune_is_near = abyss_rune_nearness();
@@ -590,7 +595,7 @@ static void _abyss_lose_monster(monster& mons)
     if (mons.needs_abyss_transit())
         mons.set_transit(level_id(BRANCH_ABYSS));
     // make sure we don't end up with an invalid hep ancestor
-    else if (hepliaklqana_ancestor() == mons.mid)
+    else if (hepliaklqana_ancestor() == mons.mid || mons_enslaved_soul(mons))
     {
         simple_monster_message(mons, " is pulled into the Abyss.",
                 MSGCH_BANISHMENT);
@@ -616,7 +621,7 @@ static void _abyss_move_sanctuary(const coord_def abyss_shift_start_centre,
                                   abyss_shift_start_centre);
         }
         else
-            remove_sanctuary(false);
+            remove_sanctuary();
     }
 }
 
@@ -633,7 +638,8 @@ static void _place_displaced_monsters()
         {
             maybe_bloodify_square(mon->pos());
             // hep messaging is done in _abyss_lose_monster
-            if (you.can_see(*mon) && hepliaklqana_ancestor() != mon->mid)
+            if (you.can_see(*mon) && hepliaklqana_ancestor() != mon->mid 
+                                  && !mons_enslaved_soul(*mon))
             {
                 simple_monster_message(*mon, " is pulled into the Abyss.",
                         MSGCH_BANISHMENT);
@@ -662,18 +668,32 @@ static void _push_items()
 {
     for (int i = 0; i < MAX_ITEMS; i++)
     {
-        item_def& item(mitm[i]);
+        item_def& item(env.item[i]);
         if (!item.defined() || !in_bounds(item.pos) || item.held_by_monster())
             continue;
 
-        if (!_pushy_feature(grd(item.pos)))
+        if (env.item[i].flags & ISFLAG_SUMMONED)
+        {
+            // this is here because of hep-related crashes that no one has
+            // figured out. Under some circumstances, a hep ancestor can drop
+            // its items in the abyss in a stack of copies(??), and when they
+            // do, on the next abyss morph the call below to move_item_to_grid
+            // will trigger a crash, softlocking the player out of abyss.
+            // Therefore, preemptively clean things up until someone figures
+            // out this bug. See
+            // https://crawl.develz.org/mantis/view.php?id=11756 among others.
+            debug_dump_item(item.name(DESC_PLAIN).c_str(),
+                i, item, "Cleaning up buggy summoned item!");
+            destroy_item(i);
+            continue;
+        }
+        if (!_pushy_feature(env.grid(item.pos)))
             continue;
 
         for (distance_iterator di(item.pos); di; ++di)
-            if (!_pushy_feature(grd(*di)))
+            if (!_pushy_feature(env.grid(*di)))
             {
                 int j = i;
-                ASSERT(!testbits(item.flags, ISFLAG_SUMMONED));
                 move_item_to_grid(&j, *di, true);
                 break;
             }
@@ -702,10 +722,10 @@ static void _abyss_wipe_square_at(coord_def p, bool saveMonsters=false)
     if (map_masked(p, MMT_VAULT))
         env.level_map_mask(p) &= ~MMT_VAULT;
 
-    grd(p) = DNGN_UNSEEN;
+    env.grid(p) = DNGN_UNSEEN;
 
     // Nuke items.
-    if (igrd(p) != NON_ITEM)
+    if (env.igrid(p) != NON_ITEM)
         dprf(DIAG_ABYSS, "Nuke item stack at (%d, %d)", p.x, p.y);
     lose_item_stack(p);
 
@@ -726,9 +746,9 @@ static void _abyss_wipe_square_at(coord_def p, bool saveMonsters=false)
     env.pgrid(p)        = terrain_property_t{};
     env.grid_colours(p) = 0;
 #ifdef USE_TILE
-    env.tile_bk_fg(p)   = 0;
-    env.tile_bk_bg(p)   = 0;
-    env.tile_bk_cloud(p)= 0;
+    tile_env.bk_fg(p)   = 0;
+    tile_env.bk_bg(p)   = 0;
+    tile_env.bk_cloud(p)= 0;
 #endif
     tile_clear_flavour(p);
     tile_init_flavour(p);
@@ -804,7 +824,7 @@ static void _abyss_update_transporter(const coord_def &pos,
                                       const coord_def &target_centre,
                                       const map_bitmask &shift_area)
 {
-    if (grd(pos) != DNGN_TRANSPORTER)
+    if (env.grid(pos) != DNGN_TRANSPORTER)
         return;
 
     // Get the marker, since we will need to modify it.
@@ -1030,7 +1050,7 @@ void maybe_shift_abyss_around_player()
         you.pet_target = MHITNOT;
 
 #ifdef DEBUG_DIAGNOSTICS
-    int j = count_if(begin(mitm), end(mitm), mem_fn(&item_def::defined));
+    int j = count_if(begin(env.item), end(env.item), mem_fn(&item_def::defined));
 
     dprf(DIAG_ABYSS, "Number of items present: %d", j);
 
@@ -1138,6 +1158,11 @@ static ProceduralSample _abyss_grid(const coord_def &p)
         complex_vec[0] = levelLayout;
         complex_vec[1] = &rivers; // const
         abyssLayout = new WorleyLayout(23571113, complex_vec, 6.1);
+        if (is_existing_level(lid))
+        {
+            auto &vault_list =  you.vault_list[level_id::current()];
+            vault_list.push_back("base: " + lid.describe(false));
+        }
     }
 
     const ProceduralSample sample = (*abyssLayout)(pt, abyssal_state.depth);
@@ -1155,16 +1180,19 @@ static cloud_type _cloud_from_feat(const dungeon_feature_type &ft)
         case DNGN_OPEN_DOOR:
         case DNGN_METAL_WALL:
         case DNGN_SILVER_WALL:
+        case DNGN_CLEAR_METAL_WALL:
             return CLOUD_GREY_SMOKE;
         case DNGN_CRYSTAL_WALL:
         case DNGN_ROCK_WALL:
         case DNGN_SLIMY_WALL:
         case DNGN_STONE_WALL:
         case DNGN_PERMAROCK_WALL:
+        case DNGN_RUNED_STONE_WALL:
             return random_choose(CLOUD_BLUE_SMOKE, CLOUD_PURPLE_SMOKE);
         case DNGN_CLEAR_ROCK_WALL:
         case DNGN_CLEAR_STONE_WALL:
         case DNGN_CLEAR_PERMAROCK_WALL:
+        case DNGN_RUNED_CLEAR_STONE_WALL:
         case DNGN_GRATE:
         case DNGN_CLOSED_CLEAR_DOOR:
         case DNGN_OPEN_CLEAR_DOOR:
@@ -1175,6 +1203,8 @@ static cloud_type _cloud_from_feat(const dungeon_feature_type &ft)
             return CLOUD_BLACK_SMOKE;
         case DNGN_DEEP_WATER:
         case DNGN_SHALLOW_WATER:
+        case DNGN_SLIMY_WATER:
+        case DNGN_DEEP_SLIMY_WATER:
         case DNGN_FOUNTAIN_BLUE:
             return one_chance_in(5) ? CLOUD_RAIN : CLOUD_BLUE_SMOKE;
         case DNGN_FOUNTAIN_SPARKLING:
@@ -1188,6 +1218,8 @@ static dungeon_feature_type _veto_dangerous_terrain(dungeon_feature_type feat)
 {
     if (feat == DNGN_DEEP_WATER)
         return DNGN_SHALLOW_WATER;
+    if (feat == DNGN_DEEP_SLIMY_WATER)
+        return DNGN_SLIMY_WATER;
     if (feat == DNGN_LAVA)
         return DNGN_FLOOR;
     if (feat_is_solid(feat))
@@ -1204,7 +1236,7 @@ static void _update_abyss_terrain(const coord_def &p,
     if (!in_bounds(rp))
         return;
 
-    const dungeon_feature_type currfeat = grd(rp);
+    const dungeon_feature_type currfeat = env.grid(rp);
 
     // Don't decay vaults.
     if (map_masked(rp, MMT_VAULT))
@@ -1246,14 +1278,14 @@ static void _update_abyss_terrain(const coord_def &p,
     if (you.pos() == rp)
         feat = _veto_dangerous_terrain(feat);
     // Veto morph when there's a submerged monster (or a plant) below you.
-    if (you.pos() == rp && mgrd(rp) != NON_MONSTER)
+    if (you.pos() == rp && env.mgrid(rp) != NON_MONSTER)
         feat = currfeat;
 
     // If the selected grid is already there, *or* if we're morphing and
     // the selected grid should have been there, do nothing.
     if (feat != currfeat)
     {
-        grd(rp) = feat;
+        env.grid(rp) = feat;
         if (feat == DNGN_FLOOR && in_los_bounds_g(rp))
         {
             cloud_type cloud = _cloud_from_feat(currfeat);
@@ -1282,7 +1314,7 @@ static void _destroy_all_terrain(bool vaults)
 
 static void _ensure_player_habitable(bool dig_instead)
 {
-    dungeon_feature_type feat = grd(you.pos());
+    dungeon_feature_type feat = env.grid(you.pos());
     if (!you.can_pass_through_feat(feat) || is_feat_dangerous(feat))
     {
         bool shoved = you.shove();
@@ -1290,7 +1322,7 @@ static void _ensure_player_habitable(bool dig_instead)
         {
             // legal only if we just placed a vault
             ASSERT(dig_instead);
-            grd(you.pos()) = DNGN_FLOOR;
+            env.grid(you.pos()) = DNGN_FLOOR;
         }
     }
 }
@@ -1328,6 +1360,9 @@ static void _abyss_apply_terrain(const map_bitmask &abyss_genlevel_mask,
     int delta = you.time_taken * (you.abyss_speed + 40) / 200;
     for (rectangle_iterator ri(MAPGEN_BORDER); ri; ++ri)
     {
+        if (order_at(*ri))
+            continue;
+
         const coord_def p(*ri);
         const coord_def abyss_coord = p + abyssal_state.major_coord;
         bool turned_to_floor = map_masked(p, MMT_TURNED_TO_FLOOR);
@@ -1367,7 +1402,7 @@ static void _abyss_apply_terrain(const map_bitmask &abyss_genlevel_mask,
         dprf(DIAG_ABYSS, "Nuked %d features", ii);
     _ensure_player_habitable(false);
     for (rectangle_iterator ri(MAPGEN_BORDER); ri; ++ri)
-        ASSERT_RANGE(grd(*ri), DNGN_UNSEEN + 1, NUM_FEATURES);
+        ASSERT_RANGE(env.grid(*ri), DNGN_UNSEEN + 1, NUM_FEATURES);
 }
 
 static int _abyss_place_vaults(const map_bitmask &abyss_genlevel_mask)
@@ -1498,6 +1533,7 @@ static void abyss_area_shift()
 
     // And allow monsters in transit another chance to return.
     place_transiting_monsters();
+    place_transiting_items();
 
     auto &vault_list =  you.vault_list[level_id::current()];
 #ifdef DEBUG
@@ -1572,7 +1608,7 @@ static void _abyss_generate_new_area()
     _initialize_abyss_state();
     dprf(DIAG_ABYSS, "Abyss Coord (%d, %d)",
          abyssal_state.major_coord.x, abyssal_state.major_coord.y);
-    remove_sanctuary(false);
+    remove_sanctuary();
 
     env.floor_colour = _roll_abyss_floor_colour();
     env.rock_colour = _roll_abyss_rock_colour();
@@ -1593,12 +1629,13 @@ static void _abyss_generate_new_area()
 
     los_changed();
     place_transiting_monsters();
+    place_transiting_items();
 }
 
 // Check if there is a path between the abyss centre and an exit location.
 static bool _abyss_has_path(const coord_def &to)
 {
-    ASSERT(grd(to) == DNGN_EXIT_ABYSS);
+    ASSERT(env.grid(to) == DNGN_EXIT_ABYSS);
 
     monster_pathfind pf;
     return pf.init_pathfind(ABYSS_CENTRE, to);
@@ -1625,11 +1662,11 @@ retry:
     map_bitmask abyss_genlevel_mask(true);
     _abyss_apply_terrain(abyss_genlevel_mask);
 
-    grd(you.pos()) = _veto_dangerous_terrain(grd(you.pos()));
+    env.grid(you.pos()) = _veto_dangerous_terrain(env.grid(you.pos()));
     _place_displaced_monsters();
 
     for (rectangle_iterator ri(MAPGEN_BORDER); ri; ++ri)
-        ASSERT(grd(*ri) > DNGN_UNSEEN);
+        ASSERT(env.grid(*ri) > DNGN_UNSEEN);
     check_map_validity();
 
     // If we're starting out in the Abyss, make sure the starting grid is
@@ -1638,7 +1675,7 @@ retry:
     // altar near-by.
     if (player_in_starting_abyss())
     {
-        grd(ABYSS_CENTRE) = DNGN_ALTAR_LUGONU;
+        env.grid(ABYSS_CENTRE) = DNGN_ALTAR_LUGONU;
         const coord_def eloc = _place_feature_near(ABYSS_CENTRE, LOS_RADIUS + 2,
                                                    DNGN_FLOOR, DNGN_EXIT_ABYSS,
                                                    50, true);
@@ -1649,7 +1686,7 @@ retry:
     }
     else
     {
-        grd(ABYSS_CENTRE) = DNGN_FLOOR;
+        env.grid(ABYSS_CENTRE) = DNGN_FLOOR;
         if (one_chance_in(5))
         {
             _place_feature_near(ABYSS_CENTRE, LOS_RADIUS,
@@ -1675,8 +1712,26 @@ static void _increase_depth()
         abyssal_state.phase -= PI;
 }
 
+void start_order()
+{
+    env.level_state |= LSTATE_ORDERED;
+    mprf(MSGCH_WARN, "The abyss stops shifting.");
+}
+
+void end_order()
+{
+    for (monster_iterator mon_it; mon_it; ++mon_it)
+        if (mon_it->has_ench(ENCH_SACRED_ORDER))
+            return;
+    env.level_state &= ~LSTATE_ORDERED;
+    mprf(MSGCH_DURATION, "The abyss returns to normal.");
+}
+
 void abyss_morph()
 {
+    if (env.level_state & LSTATE_ORDERED)
+        return;
+
     if (abyssal_state.destroy_all_terrain)
     {
         _destroy_all_terrain(false);
@@ -1715,6 +1770,9 @@ static bool _abyss_force_descent()
 
 void abyss_teleport()
 {
+    end_order();
+    end_still_winds();
+
     xom_abyss_feature_amusement_check xomcheck;
     dprf(DIAG_ABYSS, "New area Abyss teleport.");
 
@@ -1730,7 +1788,7 @@ void abyss_teleport()
         " the Abyss!");
     _abyss_generate_new_area();
     _write_abyssal_features();
-    grd(you.pos()) = _veto_dangerous_terrain(grd(you.pos()));
+    env.grid(you.pos()) = _veto_dangerous_terrain(env.grid(you.pos()));
 
     stop_delay(true);
     forget_map(false);
@@ -1752,19 +1810,27 @@ void abyss_teleport()
 
 struct corrupt_env
 {
-    int rock_colour, floor_colour;
-    corrupt_env(): rock_colour(BLACK), floor_colour(BLACK) { }
+    int rock_colour, floor_colour, secondary_floor_colour;
+    corrupt_env()
+        : rock_colour(BLACK), floor_colour(BLACK),
+           secondary_floor_colour(MAGENTA)
+    { }
+
+    int pick_floor_colour() const
+    {
+        return random2(10) < 2 ? secondary_floor_colour : floor_colour;
+    }
 };
 
-static void _place_corruption_seed(const coord_def &pos, int duration)
+static void _place_corruption_seed(const coord_def &pos, int duration, bool wrath)
 {
-    env.markers.add(new map_corruption_marker(pos, duration));
+    env.markers.add(new map_corruption_marker(pos, duration, wrath));
     // Corruption markers don't need activation, though we might
     // occasionally miss other unactivated markers by clearing.
     env.markers.clear_need_activate();
 }
 
-static void _initialise_level_corrupt_seeds(int power)
+static void _initialise_level_corrupt_seeds(int power, bool wrath)
 {
     const int low = power * 40 / 100, high = power * 140 / 100;
     const int nseeds = random_range(-1, min(2 + power / 110, 4), 2);
@@ -1774,7 +1840,7 @@ static void _initialise_level_corrupt_seeds(int power)
     dprf("Placing %d corruption seeds (power: %d)", nseeds, power);
 
     // The corruption centreed on the player is free.
-    _place_corruption_seed(you.pos(), high + 300);
+    _place_corruption_seed(you.pos(), high + 300, wrath);
 
     for (int i = 0; i < nseeds; ++i)
     {
@@ -1783,25 +1849,27 @@ static void _initialise_level_corrupt_seeds(int power)
         while (tries-- > 0)
         {
             where = dgn_random_point_from(you.pos(), aux_seed_radius, 2);
-            if (grd(where) == DNGN_FLOOR && !env.markers.find(where, MAT_ANY))
+            if (env.grid(where) == DNGN_FLOOR && !env.markers.find(where, MAT_ANY))
                 break;
             where.reset();
         }
 
         if (!where.origin())
-            _place_corruption_seed(where, random_range(low, high, 2) + 300);
+            _place_corruption_seed(where, random_range(low, high, 2) + 300, wrath);
     }
 }
 
 static bool _incorruptible(monster_type mt)
 {
-    return mons_is_abyssal_only(mt) || mons_class_holiness(mt) == MH_HOLY;
+    return mons_is_abyssal_only(mt) || mons_class_holiness(mt) == MH_HOLY 
+        || mt == MONS_ABOMINATION_LARGE || mt == MONS_ABOMINATION_SMALL
+        || mons_class_is_zombified(mt);
 }
 
 // Create a corruption spawn at the given position. Returns false if further
 // monsters should not be placed near this spot (overcrowding), true if
 // more monsters can fit in.
-static bool _spawn_corrupted_servant_near(const coord_def &pos)
+static bool _spawn_corrupted_servant_near(const coord_def &pos, bool hostile)
 {
     // Chance to fail to place a monster (but allow continued attempts).
     if (x_chance_in_y(100, 200 + you.skill(SK_INVOCATIONS, 25)))
@@ -1822,10 +1890,12 @@ static bool _spawn_corrupted_servant_near(const coord_def &pos)
 
         monster_type mons = pick_monster(level_id(BRANCH_ABYSS), _incorruptible);
         ASSERT(mons);
-        if (!monster_habitable_grid(mons, grd(p)))
+        if (!monster_habitable_grid(mons, env.grid(p)))
             continue;
-        mgen_data mg(mons, BEH_NEUTRAL, p);
-        mg.set_summoned(0, 5, 0).set_non_actor_summoner("Lugonu's corruption");
+        mgen_data mg(mons, hostile ? BEH_HOSTILE : BEH_NEUTRAL, p);
+        mg.set_summoned(0, hostile ? 0 : 5, 0).set_non_actor_summoner("Lugonu's corruption");
+        if (hostile)
+            mg.extra_flags |= (MF_NO_REWARD | MF_HARD_RESET);
         mg.place = BRANCH_ABYSS;
         return create_monster(mg);
     }
@@ -1847,7 +1917,7 @@ static void _apply_corruption_effect(map_marker *marker, int duration)
     for (int i = 0; i < neffects; ++i)
     {
         if (x_chance_in_y(cmark->duration, 4000)
-            && !_spawn_corrupted_servant_near(cmark->pos))
+            && !_spawn_corrupted_servant_near(cmark->pos, cmark->wrath))
         {
             break;
         }
@@ -1871,7 +1941,7 @@ static bool _is_grid_corruptible(const coord_def &c)
     if (c == you.pos())
         return false;
 
-    const dungeon_feature_type feat = grd(c);
+    const dungeon_feature_type feat = env.grid(c);
 
     // Stairs and portals cannot be corrupted.
     if (feat_stair_direction(feat) != CMD_NO_CMD)
@@ -1891,6 +1961,9 @@ static bool _is_grid_corruptible(const coord_def &c)
 
     case DNGN_METAL_WALL:
     case DNGN_CRYSTAL_WALL:
+    case DNGN_RUNED_CLEAR_STONE_WALL:
+    case DNGN_RUNED_STONE_WALL:
+    case DNGN_CLEAR_METAL_WALL:
         return one_chance_in(4);
 
     case DNGN_STONE_WALL:
@@ -1917,7 +1990,7 @@ static bool _is_crowded_square(const coord_def &c)
                 continue;
 
             const coord_def n(c.x + xi, c.y + yi);
-            if (!in_bounds(n) || !feat_is_traversable(grd(n)))
+            if (!in_bounds(n) || !feat_is_traversable(env.grid(n)))
                 continue;
 
             if (++neighbours > 4)
@@ -1931,10 +2004,65 @@ static bool _is_crowded_square(const coord_def &c)
 static bool _is_sealed_square(const coord_def &c)
 {
     for (adjacent_iterator ai(c); ai; ++ai)
-        if (!feat_is_opaque(grd(*ai)))
+        if (!feat_is_opaque(env.grid(*ai)))
             return false;
 
     return true;
+}
+
+static void _corrupt_square_flavor(const corrupt_env &cenv, const coord_def &c)
+{
+    dungeon_feature_type feat = env.grid(c);
+    int floor = cenv.pick_floor_colour();
+
+    if (feat == DNGN_ROCK_WALL || feat == DNGN_METAL_WALL
+        || feat == DNGN_STONE_WALL || feat == DNGN_TREE)
+    {
+        env.grid_colours(c) = cenv.rock_colour;
+    }
+    else if (feat == DNGN_FLOOR)
+        env.grid_colours(c) = floor;
+
+    // if you add new features to this, you'll probably need to do some
+    // hand-tweaking in tileview.cc apply_variations.
+    // TODO: these tile assignments here seem to get overridden in
+    // apply_variations, or not used at all...what gives?
+    if (feat == DNGN_ROCK_WALL)
+    {
+        tileidx_t idx = tile_dngn_coloured(TILE_WALL_ABYSS,
+                                           cenv.rock_colour);
+        tile_env.flv(c).wall = idx + random2(tile_dngn_count(idx));
+    }
+    else if (feat == DNGN_FLOOR)
+    {
+        tileidx_t idx = tile_dngn_coloured(TILE_FLOOR_NERVES,
+                                           floor);
+        tile_env.flv(c).floor = idx + random2(tile_dngn_count(idx));
+    }
+    else if (feat == DNGN_STONE_WALL)
+    {
+        // recoloring stone and metal is also impacted heavily by the rolls
+        // in _is_grid_corruptible
+        tileidx_t idx = tile_dngn_coloured(TILE_DNGN_STONE_WALL,
+                                           cenv.rock_colour);
+        tile_env.flv(c).wall = idx + random2(tile_dngn_count(idx));
+    }
+    else if (feat == DNGN_METAL_WALL)
+    {
+        tileidx_t idx = tile_dngn_coloured(TILE_DNGN_METAL_WALL,
+                                           cenv.rock_colour);
+        tile_env.flv(c).wall = idx + random2(tile_dngn_count(idx));
+    }
+    else if (feat == DNGN_TREE)
+    {
+        tileidx_t idx = tile_dngn_coloured(TILE_DNGN_TREE,
+                                           cenv.rock_colour);
+        // trees only have yellow, lightred, red, and darkgray (dead)
+        if (idx == TILE_DNGN_TREE)
+            idx = tile_dngn_coloured(TILE_DNGN_TREE, DARKGREY);
+        env.grid_colours(c) = DARKGREY;
+        tile_env.flv(c).wall = idx + random2(tile_dngn_count(idx));
+    }
 }
 
 static void _corrupt_square(const corrupt_env &cenv, const coord_def &c)
@@ -1950,7 +2078,7 @@ static void _corrupt_square(const corrupt_env &cenv, const coord_def &c)
     // features.
     bool preserve_features = true;
     dungeon_feature_type feat = DNGN_UNSEEN;
-    if (feat_altar_god(grd(c)) != GOD_NO_GOD)
+    if (feat_altar_god(env.grid(c)) != GOD_NO_GOD)
     {
         preserve_features = false;
         if (!one_chance_in(3))
@@ -1961,19 +2089,19 @@ static void _corrupt_square(const corrupt_env &cenv, const coord_def &c)
 
     if (feat_is_trap(feat)
         || feat == DNGN_UNSEEN
-        || (feat_is_traversable(grd(c)) && !feat_is_traversable(feat)
+        || (feat_is_traversable(env.grid(c)) && !feat_is_traversable(feat)
             && coinflip()))
     {
         feat = DNGN_FLOOR;
     }
 
-    if (feat_is_traversable(grd(c)) && !feat_is_traversable(feat)
+    if (feat_is_traversable(env.grid(c)) && !feat_is_traversable(feat)
         && _is_crowded_square(c))
     {
         return;
     }
 
-    if (!feat_is_traversable(grd(c)) && feat_is_traversable(feat)
+    if (!feat_is_traversable(env.grid(c)) && feat_is_traversable(feat)
         && _is_sealed_square(c))
     {
         return;
@@ -1985,32 +2113,16 @@ static void _corrupt_square(const corrupt_env &cenv, const coord_def &c)
     // If we are trying to place a wall on top of a creature or item, try to
     // move it aside. If this fails, simply place floor instead.
     actor* act = actor_at(c);
-    if (feat_is_solid(feat) && (igrd(c) != NON_ITEM || act))
+    if (feat_is_solid(feat) && (env.igrid(c) != NON_ITEM || act))
     {
         push_items_from(c, nullptr);
         push_actor_from(c, nullptr, true);
-        if (actor_at(c) || igrd(c) != NON_ITEM)
+        if (actor_at(c) || env.igrid(c) != NON_ITEM)
             feat = DNGN_FLOOR;
     }
 
     dungeon_terrain_changed(c, feat, preserve_features, true);
-    if (feat == DNGN_ROCK_WALL)
-        env.grid_colours(c) = cenv.rock_colour;
-    else if (feat == DNGN_FLOOR)
-        env.grid_colours(c) = cenv.floor_colour;
-
-    if (feat == DNGN_ROCK_WALL)
-    {
-        tileidx_t idx = tile_dngn_coloured(TILE_WALL_ABYSS,
-                                           cenv.floor_colour);
-        env.tile_flv(c).wall = idx + random2(tile_dngn_count(idx));
-    }
-    else if (feat == DNGN_FLOOR)
-    {
-        tileidx_t idx = tile_dngn_coloured(TILE_FLOOR_NERVES,
-                                           cenv.floor_colour);
-        env.tile_flv(c).floor = idx + random2(tile_dngn_count(idx));
-    }
+    _corrupt_square_flavor(cenv, c);
 }
 
 static void _corrupt_level_features(const corrupt_env &cenv)
@@ -2023,7 +2135,7 @@ static void _corrupt_level_features(const corrupt_env &cenv)
     for (rectangle_iterator ri(MAPGEN_BORDER); ri; ++ri)
     {
         int idistance = GXM + GYM;
-        for (const coord_def seed : corrupt_seeds)
+        for (const coord_def &seed : corrupt_seeds)
             idistance = min(idistance, (*ri - seed).rdist());
 
         const int ground_zero_radius = 2;
@@ -2032,11 +2144,23 @@ static void _corrupt_level_features(const corrupt_env &cenv)
         // at LOS range (radius 7). Even if the corruption roll is made,
         // the feature still gets a chance to resist if it's a wall.
         const int corrupt_perc_chance =
-            (idistance <= ground_zero_radius) ? 100 :
-            max(1, 100 - (sqr(idistance) - sqr(ground_zero_radius)) * 70 / 45);
+            (idistance <= ground_zero_radius) ? 1000 :
+            max(0, 1000 - (sqr(idistance) - sqr(ground_zero_radius)) * 700 / 45);
 
-        if (random2(100) < corrupt_perc_chance && _is_grid_corruptible(*ri))
+        // linear function that is at 30% at range 7, 15% at radius 20,
+        // maxed to 1%. Only affects outside of range 7. For cells within los
+        // that don't make the regular roll, this also gives them a 50%
+        // chance to get flavor-only corruption.
+        const int corrupt_flavor_chance =
+            (idistance <= 7) ? (corrupt_perc_chance + 1000) / 2 :
+            max(10, 380 - 150 * idistance / 13);
+
+        const int roll = random2(1000);
+
+        if (roll < corrupt_perc_chance && _is_grid_corruptible(*ri))
             _corrupt_square(cenv, *ri);
+        else if (roll < corrupt_flavor_chance && _is_grid_corruptible(*ri))
+            _corrupt_square_flavor(cenv, *ri);
     }
 }
 
@@ -2048,9 +2172,9 @@ static bool _is_level_corrupted()
     return !!env.markers.find(MAT_CORRUPTION_NEXUS);
 }
 
-bool is_level_incorruptible(bool quiet)
+bool is_level_incorruptible(bool quiet, bool wrath)
 {
-    if (_is_level_corrupted())
+    if (_is_level_corrupted() && !wrath)
     {
         if (!quiet)
             mpr("This place is already infused with evil and corruption.");
@@ -2079,19 +2203,20 @@ static void _corrupt_choose_colours(corrupt_env *cenv)
     cenv->floor_colour = colour;
 }
 
-bool lugonu_corrupt_level(int power)
+bool lugonu_corrupt_level(int power, bool wrath)
 {
-    if (is_level_incorruptible())
+    if (is_level_incorruptible(false, wrath))
         return false;
 
     simple_god_message("'s Hand of Corruption reaches out!");
     take_note(Note(NOTE_MESSAGE, 0, 0, make_stringf("Corrupted %s",
               level_id::current().describe().c_str()).c_str()));
-    mark_corrupted_level(level_id::current());
+    if (!_is_level_corrupted())
+        mark_corrupted_level(level_id::current());
 
     flash_view(UA_PLAYER, MAGENTA);
 
-    _initialise_level_corrupt_seeds(power);
+    _initialise_level_corrupt_seeds(power, wrath);
 
     corrupt_env cenv;
     _corrupt_choose_colours(&cenv);
@@ -2113,7 +2238,7 @@ void abyss_maybe_spawn_xp_exit()
         || !you.props.exists(ABYSS_STAIR_XP_KEY)
         || you.props[ABYSS_STAIR_XP_KEY].get_int() > 0
         || !in_bounds(you.pos())
-        || feat_is_staircase(grd(you.pos())))
+        || feat_is_critical(env.grid(you.pos())))
     {
         return;
     }
@@ -2122,9 +2247,10 @@ void abyss_maybe_spawn_xp_exit()
                         && you.props[ABYSS_SPAWNED_XP_EXIT_KEY].get_bool();
 
     destroy_wall(you.pos()); // fires listeners etc even if it wasn't a wall
-    grd(you.pos()) = stairs ? DNGN_ABYSSAL_STAIR : DNGN_EXIT_ABYSS;
+    env.grid(you.pos()) = stairs ? DNGN_ABYSSAL_STAIR : DNGN_EXIT_ABYSS;
     big_cloud(CLOUD_TLOC_ENERGY, &you, you.pos(), 3 + random2(3), 3, 3);
     redraw_screen(); // before the force-more
+    update_screen();
     mprf(MSGCH_BANISHMENT,
          "The substance of the Abyss twists violently,"
          " and a gateway leading %s appears!", stairs ? "down" : "out");

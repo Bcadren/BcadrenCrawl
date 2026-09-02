@@ -24,7 +24,7 @@ You can quickly select items by type by pressing:
 Global selects:  <w>,</w>   select all     <w>*</w>   invert all      <w>-</w>   deselect all
                  <w>;</w>   select last unequipped
 Note that for dropping, the <w>,</w> command uses the <w>drop_filter</w> option, which
-narrows the range of items to be (de)selected. The default are useless items.
+narrows the range of items to be (de)selected. The default is all useless items.
 
 <h>Disabling autopickup via the drop menu</h>
 On the drop menu, items you select after pressing <w>\</w> will be marked with a <w>*</w>
@@ -81,7 +81,7 @@ name). In the list of search results, you can select a search result by its
 hotkey to travel to its location.
 
 Some examples of search strings:
-<w>mutation</w>      find all potions of mutation, including potions in shops.
+<w>cure mutation</w> find all potions of cure mutation, including potions in shops.
 <w>ration</w>        finds every single ration and pile of rations.
 <w>shop</w>          lists all shops. Press <w>?</w> and a shop's letter for the stock.
 <w>Lair:2</w>        find everything known to be on Lair:2.
@@ -135,7 +135,7 @@ Use <w>armour && !!body</w> to list all armour pieces except for body armour.
 
 You can search for dungeon features by name: all shops will be found by a search
 for <w>shop</w> (including shops that do not have "shop" in their name); other
-dungeon features can also be found by name: <w>dispersal trap</w>, <w>altar</w>,
+dungeon features can also be found by name: <w>congregation trap</w>, <w>altar</w>,
 etc. You can also search for altars by deity name: <w>Zin</w>.
 
 <h>Non-regex operators:</h>
@@ -159,8 +159,10 @@ level-map
 <w>-</w> or <w>+</w>     : Scroll level map 20 grids up or down.
 <w>.</w>          : Start travel (also <w>Enter</w> and <w>,</w> and <w>;</w>).
              (Moves cursor to the last travel destination if still on @.)
-<w>[</w> or <w>]</w>     : Examine the next higher or lower level
-<w>G</w>          : Go to another level by branch and depth
+<w>[</w> or <w>]</w>     : Examine the next higher or lower level.
+             (Moves cursor to the staircase destination if a known staircase is
+             highlighted.)
+<w>G</w>          : Go to another level by branch and depth.
 <w>o</w>          : Move the cursor to the next autoexplore target.
 <w>{</w> or <w>}</w>     : Zoom out or in (tiles only).
 
@@ -249,6 +251,17 @@ If you are playing with Tiles you can butcher (or bottle) a single
 corpse on the ground by clicking the <w>left mouse button</w> while pressing
 <w>Shift</w>.
 %%%%
+annotate.prompt
+
+<h>Annotate (select level):
+ <w>Enter</w> or <w>.</w> : Annotate current level.
+ any <w>letter</w> : Annotate a level in the branch corresponding to the letter.
+ <w><<</w>          : Annotate the level upstairs.
+ <w>></w>          : Annotate the level downstairs.
+ <w>Ctrl-P</w>     : Annotate a level in the branch above this one.
+ <w>!</w>          : Show list of dungeon branches.
+
+%%%%
 skill-menu
 
                         <h>Skill management</h>
@@ -296,8 +309,7 @@ Apart from (de)selecting skills, you also have the following toggles:
 Fighting, Throwing, Armour, Dodging, Stealth, Unarmed Combat, and Spellcasting
 can always be trained. For the rest:
   - Weapon skills require carrying a weapon of the appropriate type.
-  - Shields requires that you either be carrying a shield, or worship a deity
-        who can offer one through divine means (The Shining One).
+  - Shields requires that you be carrying a shield.
   - Evocations requires carrying an evocable item.
   - Spell schools require knowing a spell of the school.
   - Necromancy can also be trained when worshipping Kikubaaqudgha.

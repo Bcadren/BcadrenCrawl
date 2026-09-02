@@ -36,13 +36,15 @@ void abyss_morph();
 void banished(const string &who = "", const int power = 0);
 void push_features_to_abyss();
 
+void start_order();
+void end_order();
 void generate_abyss();
 void maybe_shift_abyss_around_player();
 void abyss_maybe_spawn_xp_exit();
 void abyss_teleport();
 void save_abyss_uniques();
-bool is_level_incorruptible(bool quiet = false);
-bool lugonu_corrupt_level(int power);
+bool is_level_incorruptible(bool quiet = false, bool wrath = false);
+bool lugonu_corrupt_level(int power, bool wrath = false);
 void run_corruption_effects(int duration);
 void set_abyss_state(coord_def coord, uint32_t depth);
 void destroy_abyss();

@@ -7,6 +7,10 @@
 
 #pragma once
 
+#include <cstdint>
+
+#include "macros.h"
+
 // In this case, an x86 CPU will use x87 math for floating point calculations,
 // which uses 80 bit intermediate results, andleads to difference from the
 // (much more common, in 2019) SSE-based calculations.
@@ -135,14 +139,6 @@ const int MAX_SKILL_LEVEL = 27;
 const int MAX_EXP_TOTAL = 8999999;
 const int EXERCISE_QUEUE_SIZE = 100;
 
-const int LIGHTNING_CHARGE_MULT = 100;
-const int LIGHTNING_MAX_CHARGE = 4;
-
-// Evoker debt for evoking one XP evoker.
-const int XP_EVOKE_DEBT = 10;
-// Evoker debt for evoking a lightning rod once.
-const int XP_EVOKE_LIGHTNING_ROD_DEBT = 3;
-
 const int BASELINE_DELAY  = 10;
 const int INVIS_CONTAM_PER_TURN = 30;
 
@@ -168,13 +164,11 @@ const int MAX_SEC_ENCHANT = 2;
 // formula for MP from a potion of magic
 #define POT_MAGIC_MP (10 + random2avg(28, 3))
 
-const int MAX_KNOWN_SPELLS = 21;
+const int MAX_KNOWN_SPELLS = 52;
 
 const int INVALID_ABSDEPTH = -1000;
 
 const int UNUSABLE_SKILL = -99;
-
-const int WU_JIAN_HEAVEN_TICK_TIME = 10;
 
 //#define DEBUG_MIMIC
 #ifdef DEBUG_MIMIC
@@ -202,13 +196,6 @@ const int AGILITY_BONUS = 5;
 #define berserk_div(x) div_rand_round((x) * 2, 3)
 
 #define MAX_MONSTER_HP 10000
-
-// some shortcuts:
-#define menv   env.mons
-#define mitm   env.item
-#define grd    env.grid
-#define mgrd   env.mgrid
-#define igrd   env.igrid
 
 // colours, such pretty colours ...
 // The order is important (IRGB bit patterns).

@@ -228,7 +228,7 @@ skin of Zhor
 
 Et sært dyrs stinkende skind.
 %%%%
-salamander hide armour
+salamander hide
 
 En læderrustning, som er lavet af en salamanders skind.
 %%%%
@@ -374,7 +374,7 @@ Da du griber om skaftet på denne økse, føles dit sind ikke længere helt som 
 eget. Din krop begynder at udvise en hidtil umulig styrke, og dine bevægelser
 bliver styret af Makhleb.
 %%%%
-moon troll leather armour
+moon troll leather
 
 Denne rustning blev efter sigende skabt ved at fortrylle skindet fra en nu
 uddød race af trolde. Det er umuligt at sige med sikkerhed, om denne rustning

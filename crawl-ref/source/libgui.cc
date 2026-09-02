@@ -17,17 +17,12 @@
 #include "message.h"
 #include "state.h"
 #include "terrain.h"
-#include "tiledef-main.h"
+#include "rltiles/tiledef-main.h"
 #include "tilereg-text.h"
 #include "tiles-build-specific.h"
 #include "travel.h"
 #include "viewgeom.h"
 #include "windowmanager.h"
-
-int m_getch()
-{
-    return getchk();
-}
 
 void set_mouse_enabled(bool enabled)
 {
@@ -143,11 +138,6 @@ int getch_ck()
     return tiles.getch_ck();
 }
 
-int getchk()
-{
-    return getch_ck();
-}
-
 void clrscr()
 {
     tiles.clrscr();
@@ -195,8 +185,7 @@ bool kbhit()
     if (crawl_state.tiles_disabled || crawl_state.seen_hups)
         return false;
     // Look for the presence of any keyboard events in the queue.
-    int count = wm->get_event_count(WME_KEYDOWN);
-    return count > 0;
+    return wm->next_event_is(WME_KEYDOWN);
 }
 
 void console_startup()

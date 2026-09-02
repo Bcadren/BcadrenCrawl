@@ -1,3 +1,4 @@
+TAG_MAJOR_VERSION: 34
 enum: SP_PURPLE_DRACONIAN
 monster: MONS_PURPLE_DRACONIAN
 name: "Purple Draconian"
@@ -16,7 +17,6 @@ aptitudes:
   slings: -1
   bows: -1
   crossbows: -1
-  throwing: -1
   armour: False
   dodging: -1
   invocations: 1
@@ -35,4 +35,7 @@ mutations:
 fake_mutations:
   - long: You can breathe bolts of dispelling energy.
     short: breathe power
-create_enum: False
+
+# start TAG_MAJOR_VERSION == 34
+create_enum: false
+# end TAG_MAJOR_VERSION

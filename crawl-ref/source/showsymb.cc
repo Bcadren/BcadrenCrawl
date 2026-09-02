@@ -19,16 +19,18 @@
 #include "stash.h"
 #include "state.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "terrain.h"
 #include "travel.h"
 #include "viewchar.h"
 #include "mon-tentacle.h"
+#include "wiz-dgn.h"
 #include "tilepick.h"
 #include "rltiles/tiledef-player.h"
 
 static unsigned short _cell_feat_show_colour(const map_cell& cell,
-                                             const coord_def& loc,
-                                             bool coloured)
+    const coord_def& loc,
+    bool coloured)
 {
     dungeon_feature_type feat = cell.feat();
     unsigned short colour = BLACK;
@@ -36,8 +38,8 @@ static unsigned short _cell_feat_show_colour(const map_cell& cell,
 
     // These do not obey vault recolouring.
     const bool no_vault_recolour = feat_has_dry_floor(feat)
-                                   && feat != DNGN_FLOOR
-                                   && !feat_is_open_door(feat);
+        && feat != DNGN_FLOOR
+        && !feat_is_open_door(feat);
 
     // These aren't shown mossy/bloody/slimy in console.
     const bool norecolour = feat_is_door(feat) || no_vault_recolour;
@@ -54,15 +56,10 @@ static unsigned short _cell_feat_show_colour(const map_cell& cell,
             colour = fdef.seen_colour();
 
         if (colour)
-        {
-            // Show trails even out of LOS.
-            if (Options.show_travel_trail && travel_trail_index(loc) >= 0)
-                colour |= COLFLAG_REVERSE;
             return colour;
-        }
     }
     else if (!feat_is_solid(feat)
-             && (cell.flags & (MAP_SANCTUARY_1 | MAP_SANCTUARY_2)))
+        && (cell.flags & (MAP_SANCTUARY_1 | MAP_SANCTUARY_2)))
     {
         if (cell.flags & MAP_SANCTUARY_1)
             colour = YELLOW;
@@ -78,14 +75,17 @@ static unsigned short _cell_feat_show_colour(const map_cell& cell,
     }
     else if (cell.flags & MAP_BLOODY && !norecolour)
         colour = RED;
+    else if (cell.flags & MAP_SNOWY && !norecolour)
+    {
+        if (one_chance_in(10))
+            colour = LIGHTCYAN;
+        else
+            colour = WHITE;
+    }
     else if (cell.flags & MAP_MOLDY && !norecolour)
         colour = (cell.flags & MAP_GLOWING_MOLDY) ? LIGHTRED : LIGHTGREEN;
-    else if (cell.flags & MAP_CORRODING && !norecolour
-             && !feat_is_wall(feat) && !feat_is_lava(feat)
-             && !feat_is_water(feat))
-    {
+    else if (cell.flags & MAP_CORRODING && feat == DNGN_FLOOR)
         colour = LIGHTGREEN;
-    }
     else if (cell.feat_colour() && !no_vault_recolour)
         colour = cell.feat_colour();
     else
@@ -141,9 +141,6 @@ static unsigned short _cell_feat_show_colour(const map_cell& cell,
 #endif
     }
 
-    if (Options.show_travel_trail && travel_trail_index(loc) >= 0)
-        colour |= COLFLAG_REVERSE;
-
     return colour;
 }
 
@@ -191,10 +188,8 @@ static int _get_mons_colour(const monster_info& mi)
     if (stype != mi.type && mi.type != MONS_SENSED)
         col = mons_class_colour(stype);
 
-#if TAG_MAJOR_VERSION == 34
     if (mi.is(MB_ROLLING))
         col = ETC_BONE;
-#endif
 
     if (mi.is(MB_BERSERK))
         col = RED;
@@ -204,6 +199,9 @@ static int _get_mons_colour(const monster_info& mi)
 
     if (mi.is(MB_INNER_FLAME))
         col = ETC_FIRE;
+
+    if (mi.is(MB_ENTROPIC_BURST) || mi.is(MB_CHAOTIC_INFUSION))
+        col = ETC_JEWEL;
 
     if (mi.attitude == ATT_FRIENDLY)
         col |= COLFLAG_FRIENDLY_MONSTER;
@@ -222,7 +220,7 @@ static int _get_mons_colour(const monster_info& mi)
     else if (mons_class_is_stationary(mi.type))
     {
         if (Options.feature_item_brand != CHATTR_NORMAL
-            && feat_stair_direction(grd(mi.pos)) != CMD_NO_CMD)
+            && feat_stair_direction(env.grid(mi.pos)) != CMD_NO_CMD)
         {
             col |= COLFLAG_FEATURE_ITEM;
         }
@@ -256,8 +254,15 @@ static cglyph_t _get_item_override(const item_def &item)
     if (Options.item_glyph_overrides.empty())
         return g;
 
+    // use qualname for gold so that pile quantity doesn't affect caching.
+    // Could extend this to missiles, but in that case I can actually imagine
+    // someone writing annotation code that relies on a count.
+    // TODO: the caching here avoids the regex penalty, but annotation and
+    // item.name themselves are quite heavy when called a lot, so some better
+    // caching might be in order. (Or more efficient calls to this function.)
     string name = stash_annotate_item(STASH_LUA_SEARCH_ANNOTATE, &item)
-                + " {" + item_prefix(item, false) + "} " + item.name(DESC_PLAIN);
+                + " {" + item_prefix(item, false) + "} "
+                + item.name(item.base_type == OBJ_GOLD ? DESC_QUALNAME : DESC_PLAIN);
 
     {
         // Check the cache...
@@ -379,7 +384,12 @@ static cglyph_t _get_cell_glyph_with_class(const map_cell& cell,
 
         if (cell.detected_monster())
         {
-            ASSERT(mi->type == MONS_SENSED);
+            // BCADDO: Restore this assert sometime.
+            if (mi->type != MONS_SENSED)
+            {
+                mprf(MSGCH_ERROR, "%s", "Floor monster data corrupted. Apologies for the inconvience.");
+                wizard_recreate_level();
+            }
             if (mons_is_sensed(mi->base_type))
                 g.col = mons_class_colour(mi->base_type);
             else
@@ -539,10 +549,23 @@ static cglyph_t _get_cell_glyph_with_class(const map_cell& cell,
         return g;
     }
 
+    if (Options.show_travel_trail && travel_trail_index(loc) >= 0)
+    {
+        const feature_def& fd = get_feature_def(DNGN_TRAVEL_TRAIL);
+
+        if (fd.symbol())
+            g.ch = fd.symbol();
+        if (fd.colour() != COLOUR_UNDEF)
+            g.col = fd.colour();
+
+        g.col |= COLFLAG_REVERSE;
+    }
+
     if (!g.ch)
     {
         const feature_def &fdef = get_feature_def(show);
-        g.ch = cell.seen() ? fdef.symbol() : fdef.magic_symbol();
+        g.ch = !cell.seen() || cell.flags & MAP_EMPHASIZE ? fdef.magic_symbol()
+                                                          : fdef.symbol();
     }
 
     if (g.col)

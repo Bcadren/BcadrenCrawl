@@ -1,5 +1,7 @@
 #pragma once
 
+#include "tag-version.h"
+
 // When adding:
 // * Add an entry in feature-data.h for the feature.
 // * edit dat/descript/features.txt and add a
@@ -67,15 +69,29 @@ enum dungeon_feature_type
     DNGN_OPEN_CLEAR_DOOR,
 #endif
 
+#if TAG_MAJOR_VERSION == 34
     DNGN_TRAP_MECHANICAL,
+#endif
     DNGN_TRAP_TELEPORT,
+#if TAG_MAJOR_VERSION > 34
+    DNGN_TRAP_TELEPORT_PERMANENT,
+#endif
     DNGN_TRAP_SHAFT,
     DNGN_TRAP_WEB,
 #if TAG_MAJOR_VERSION > 34
     DNGN_TRAP_ALARM,
     DNGN_TRAP_ZOT,
-    DNGN_TRAP_DISPERSAL,
+    DNGN_TRAP_CONGREGATION,
     DNGN_PASSAGE_OF_GOLUBRIA,
+#endif
+#if TAG_MAJOR_VERSION > 34
+    DNGN_TRAP_ARROW,
+    DNGN_TRAP_SPEAR,
+    DNGN_TRAP_BLADE,
+    DNGN_TRAP_NEEDLE,
+    DNGN_TRAP_BOLT,
+    DNGN_TRAP_NET,
+    DNGN_TRAP_PLATE,
 #endif
 #if TAG_MAJOR_VERSION == 34
     DNGN_UNDISCOVERED_TRAP,
@@ -214,8 +230,11 @@ enum dungeon_feature_type
 #endif
     DNGN_DRY_FOUNTAIN,
 
-    // Not meant to ever appear in grd().
+    // Not meant to ever appear in env.grid().
     DNGN_EXPLORE_HORIZON, // dummy for redefinition
+#if TAG_MAJOR_VERSION > 34
+    DNGN_TRAVEL_TRAIL, // dummy for redefinition
+#endif
 
     DNGN_UNKNOWN_ALTAR,
     DNGN_UNKNOWN_PORTAL,
@@ -290,7 +309,7 @@ enum dungeon_feature_type
     DNGN_ICE,
     DNGN_OBSIDIAN,
 
-    DNGN_TRAP_DISPERSAL,
+    DNGN_TRAP_CONGREGATION,
     DNGN_ENTER_GAUNTLET,
     DNGN_EXIT_GAUNTLET,
     DNGN_CLOSED_CLEAR_DOOR,
@@ -299,6 +318,39 @@ enum dungeon_feature_type
     DNGN_SEALED_CLEAR_DOOR,
 #endif
 
-    NUM_FEATURES,
+    DNGN_RUNED_CLEAR_STONE_WALL,  // Probably the only necessary runed wall type; but just to be clear what it is in case of later additions.
+    DNGN_TOXIC_BOG,
+    DNGN_QUAGMIRE,
+
+    DNGN_SLIMY_WATER,
+    DNGN_DEEP_SLIMY_WATER,
+
+    DNGN_RUINED_PLINTH,
+    DNGN_SARCOPHAGUS,
+
+    DNGN_ENDLESS_SLUDGE,
+
+    DNGN_MANGROVE,
+    DNGN_SLIMESHROOM,
+
+    DNGN_ALTAR_BAHAMUT_TIAMAT,
+
+    DNGN_CLEAR_METAL_WALL,
+
+#if TAG_MAJOR_VERSION == 34
+    DNGN_TRAP_ARROW,
+    DNGN_TRAP_SPEAR,
+    DNGN_TRAP_BLADE,
+    DNGN_TRAP_NEEDLE,
+    DNGN_TRAP_BOLT,
+    DNGN_TRAP_NET,
+    DNGN_TRAP_PLATE,
+    DNGN_TRAP_TELEPORT_PERMANENT,
+    DNGN_TRAVEL_TRAIL,
+#endif
+
+    DNGN_RUNED_STONE_WALL,
+
+    NUM_FEATURES
 };
 COMPILE_CHECK(NUM_FEATURES <= 256);

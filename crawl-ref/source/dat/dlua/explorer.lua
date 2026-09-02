@@ -7,10 +7,10 @@ util.namespace('explorer')
 
 -- matches pregeneration order
 explorer.generation_order = {
+                "Temple",
                 "D:1",
                 "D:2", "D:3", "D:4", "D:5", "D:6", "D:7", "D:8", "D:9",
                 "D:10", "D:11", "D:12", "D:13", "D:14", "D:15",
-                "Temple",
                 "Lair:1", "Lair:2", "Lair:3", "Lair:4", "Lair:5", "Lair:6",
                 "Orc:1", "Orc:2",
                 "Spider:1", "Spider:2", "Spider:3", "Spider:4",
@@ -270,7 +270,7 @@ end
 
 function explorer.describe_mons(mons)
     local mi = mons.get_info()
-    -- TODO: weird distribution of labor between mons and moninfo, can this be
+    -- TODO: weird distribution of labour between mons and moninfo, can this be
     -- cleaned up?
     -- TODO: does it make sense to use the same item notability function here?
     local feats = util.map(function (i) return "item:" .. i.name() end,
@@ -389,10 +389,10 @@ explorer.catalog_names =    {vaults    = "   Vaults: ",
 explorer.dangerous_monsters = {
         "ancient lich",
         "orb of fire",
-        "greater mummy",
-        "Hell Sentinel",
-        "Ice Fiend",
-        "Brimstone Fiend",
+        "royal mummy",
+        "gwarchodwr",
+        "Vetrifl",
+        "rhuddgoch",
         "Tzitzimitl",
         "shard shrike",
         "caustic shrike",
@@ -498,9 +498,13 @@ end
 
 function explorer.catalog_portals(i, lvl, cats_to_show, show_level_fun)
     local result = { }
+    current_where = you.where()
     for j,port in ipairs(explorer.portal_order) do
         if you.where() == dgn.level_name(dgn.br_entrance(port)) then
             result[port] = explorer.catalog_place(-j, port, cats_to_show, show_level_fun)
+            -- restore the level, in case there are multiple portals from a
+            -- single level
+            debug.goto_place(current_where)
         end
     end
     return result
@@ -515,20 +519,13 @@ function explorer.catalog_dungeon(max_depth, cats_to_show, show_level_fun)
     for i,lvl in ipairs(explorer.generation_order) do
         if i > max_depth then break end
         result[lvl] = explorer.catalog_place(i, lvl, cats_to_show, show_level_fun)
-        local portals = explorer.catalog_portals(i, lvl, cats_to_show, show_level_fun)
-        for port, cat in pairs(portals) do
-            result[port] = cat
+        if result[lvl] ~= nil then
+            -- only check portals if the place was built
+            local portals = explorer.catalog_portals(i, lvl, cats_to_show, show_level_fun)
+            for port, cat in pairs(portals) do
+                result[port] = cat
+            end
         end
-        -- if (dgn.br_exists(string.match(lvl, "[^:]+"))) then
-        --     debug.goto_place(lvl)
-        --     debug.generate_level()
-        --     local old_quiet = explorer.quiet
-        --     if show_level_fun ~= nil and not show_level_fun(i) then
-        --         explorer.quiet = true
-        --     end
-        --     result[lvl] = explorer.catalog_current_place(lvl, cats_to_show, true)
-        --     explorer.quiet = old_quiet
-        -- end
     end
     return result
 end

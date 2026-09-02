@@ -1,7 +1,7 @@
 enum: SP_SILENT_SPECTRE
 monster: MONS_SILENT_SPECTRE
 name: "Silent Spectre"
-short_name: SS
+short_name: "SS"
 adjective: "Spectral"
 genus: "Spectre"
 difficulty: Advanced
@@ -21,7 +21,6 @@ aptitudes:
   slings: -1
   bows: -2
   crossbows: -2
-  throwing: -1
   armour: -1
   dodging: 2
   stealth: 3
@@ -50,12 +49,10 @@ mutations:
     MUT_PETRIFICATION_RESISTANCE: 1
     MUT_NEGATIVE_ENERGY_RESISTANCE: 3
     MUT_TORMENT_RESISTANCE: 1
-    MUT_UNBREATHING_FORM: 1
+    MUT_UNBREATHING: 1
     MUT_SILENT_CAST: 1
-    MUT_GHOST: 1
-fake_mutations:
-  - long: You are surrounded by an aura of unnatural quiet.
-    short: silence aura
+    MUT_INSUBSTANTIAL: 1
+    MUT_SILENCE_AURA: 2
 recommended_jobs:
   - JOB_GLADIATOR
   - JOB_TRANSMUTER
@@ -69,5 +66,7 @@ recommended_weapons:
   - SK_POLEARMS
   - SK_MACES_STAVES
   - SK_LONG_BLADES
-  - SK_THROWING
-create_enum: False
+  
+# start TAG_MAJOR_VERSION == 34
+create_enum: false
+# end TAG_MAJOR_VERSION

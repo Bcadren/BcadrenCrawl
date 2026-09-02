@@ -15,6 +15,7 @@
 #include "item-prop-enum.h"
 #include "menu.h"
 #include "operation-types.h"
+#include "tag-version.h"
 
 enum object_selector
 {
@@ -31,15 +32,13 @@ enum object_selector
     OSEL_EVOKABLE                =  -9,
     OSEL_WORN_ARMOUR             = -10,
     OSEL_CURSED_WORN             = -11,
+    OSEL_SUBSUMABLE              = -12,
 #if TAG_MAJOR_VERSION == 34
-    OSEL_UNCURSED_WORN_ARMOUR    = -12,
     OSEL_UNCURSED_WORN_JEWELLERY = -13,
 #endif
-    OSEL_BRANDABLE_WEAPON        = -14,
-#if TAG_MAJOR_VERSION == 34
-    OSEL_ENCHANTABLE_WEAPON      = -15,
-#endif
-    OSEL_BLESSABLE_WEAPON        = -16,
+    OSEL_BLESSABLE_ITEM          = -14,
+    OSEL_BRANDABLE_WEAPON        = -15, // For temporary brand spells (E. Wounds only atm).
+    OSEL_BLESSABLE_WEAPON        = -16, 
     OSEL_CURSABLE                = -17, // Items that are cursable and not
                                         // known-cursed. Unknown-cursed items
                                         // are included, to prevent information
@@ -49,6 +48,8 @@ enum object_selector
 #endif
     OSEL_UNCURSED_WORN_RINGS     = -19,
     OSEL_UNCURSED_WIELDED_WEAPONS = -20,
+    OSEL_QUIVER_ACTION           = -21,
+    OSEL_QUIVER_ACTION_FORCE     = -22,
 };
 
 /// Behaviour flags for prompt_invent_item().
@@ -107,6 +108,7 @@ class InvEntry : public MenuEntry
 {
 private:
     static bool show_glyph;
+    static bool show_coordinates;
 
     mutable string basename;
     mutable string qualname;
@@ -123,6 +125,7 @@ public:
     InvEntry(const item_def &i);
     string get_text(const bool need_cursor = false) const override;
     void set_show_glyph(bool doshow);
+    void set_show_coordinates(bool doshow);
     static void set_show_cursor(bool doshow);
 
     const string &get_basename() const;
@@ -236,8 +239,7 @@ int prompt_invent_item(const char *prompt,
 vector<SelItem> select_items(
                         const vector<const item_def*> &items,
                         const char *title, bool noselect = false,
-                        menu_type mtype = menu_type::pickup,
-                        invtitle_annotator titlefn = nullptr);
+                        menu_type mtype = menu_type::pickup);
 
 vector<SelItem> prompt_drop_items(const vector<SelItem> &preselected_items);
 
@@ -249,9 +251,7 @@ void identify_inventory();
 const char *item_class_name(int type, bool terse = false);
 const char *item_slot_name(equipment_type type);
 
-#ifdef USE_TILE
 bool get_tiles_for_item(const item_def &item, vector<tile_def>& tileset, bool show_background);
-#endif
 
 bool check_old_item_warning(const item_def& item, operation_types oper);
 bool check_warning_inscriptions(const item_def& item, operation_types oper);
@@ -263,9 +263,10 @@ bool prompt_failed(int retval);
 
 void list_charging_evokers(FixedVector<item_def*, NUM_MISCELLANY> &evokers);
 
+bool item_is_subsumable(const item_def &item);
 bool item_is_wieldable(const item_def &item);
 bool item_is_evokable(const item_def &item, bool reach = true,
-                      bool known = false, bool msg = false, bool equip = true);
+                      bool msg = false, bool equip = true);
 bool needs_notele_warning(const item_def &item, operation_types oper);
 bool needs_handle_warning(const item_def &item, operation_types oper,
                           bool &penance, bool wielding_pass = false);

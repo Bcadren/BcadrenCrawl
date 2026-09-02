@@ -18,7 +18,7 @@
 #include "clua.h"
 #include "describe-god.h"
 #include "evoke.h"
-#include "exercise.h"
+#include "files.h"
 #include "god-abil.h"
 #include "god-conduct.h"
 #include "god-passive.h"
@@ -26,7 +26,6 @@
 #include "item-prop.h"
 #include "libutil.h"
 #include "message.h"
-#include "misc.h"
 #include "notes.h"
 #include "output.h"
 #include "random.h"
@@ -35,7 +34,7 @@
 #include "sprint.h"
 #include "state.h"
 #include "stringutil.h"
-#include "unwind.h"
+#include "tag-version.h"
 
 // MAX_COST_LIMIT is the maximum XP amount it will cost to raise a skill
 //                by 10 skill points (ie one standard practice).
@@ -69,7 +68,7 @@ static const char *skill_titles[NUM_SKILLS][6] =
     {"Fighting",       "Skirmisher",    "Fighter",         "Warrior",         "Slayer",         "Conqueror"},
     {"Short Blades",   "Cutter",        "Slicer",          "Swashbuckler",    "Cutthroat",      "Politician"},
     {"Long Blades",    "Slasher",       "Carver",          "Fencer",          "@Adj@ Blade",    "Swordmaster"},
-    {"Axes",           "Chopper",       "Cleaver",         "Severer",         "Executioner",    "Axe Maniac"},
+    {"Axes & Hammers", "Chopper",       "Cleaver",         "Severer",         "Executioner",    "Axe Maniac"},
     {"Whips & Flails", "Whippersnapper","Lasher",          "Disciplinarian",  "Punisher",       "Sadistic @Genus_Short@"},
     {"Polearms",       "Poker",         "Spear-Bearer",    "Impaler",         "Phalangite",     "@Adj@ Porcupine"},
     {"Maces & Staves", "Twirler",       "Cruncher",        "Shatterer",       "Pulveriser",     "Skullcrusher"},
@@ -96,7 +95,7 @@ static const char *skill_titles[NUM_SKILLS][6] =
 #endif
     {"Hexes",          "Vexing",        "Jinx",            "Bewitcher",       "Maledictor",     "Spellbinder"},
     {"Charms",         "Charmwright",   "Infuser",         "Anointer",        "Gracecrafter",   "Miracle Worker"},
-    {"Summonings",     "Caller",        "Summoner",        "Convoker",        "Demonologist",   "Hellbinder"},
+    {"Summonings",     "Caller",        "Summoner",        "Convoker",        "Worldbinder",    "Plane Render"},
     {"Necromancy",     "Grave Robber",  "Reanimator",      "Necromancer",     "Thanatomancer",  "@Genus_Short@ of Death"},
     {"Translocations", "Grasshopper",   "Placeless @Genus@", "Blinker",       "Portalist",      "Plane @Walker@"},
     {"Transmutations", "Changer",       "Transmogrifier",  "Alchemist",       "Malleable",      "Shapeless @Genus@"},
@@ -110,10 +109,12 @@ static const char *skill_titles[NUM_SKILLS][6] =
     // These titles apply to atheists only, worshippers of the various gods
     // use the god titles instead, depending on piety or, in Gozag's case, gold.
     // or, in U's case, invocations skill.
-    {"Invocations",    "Unbeliever",    "Agnostic",        "Dissident",       "Heretic",        "Apostate"},
+    {"Invocations",    "Unbeliever",    "Agnostic",        "Dissident",       "Heretic",        "Cynic"},
     {"Evocations",     "Charlatan",     "Prestidigitator", "Fetichist",       "Evocator",       "Talismancer"},
 };
 
+static const char *slimy_fight_titles[6] =
+    {"Fighting", "Consumer", "Devourer", "Assimilator", "Voracious Slime", "Titanic Slime"};
 static const char *martial_arts_titles[6] =
     {"Unarmed Combat", "Insei", "Martial Artist", "Black Belt", "Sensei", "Grand Master"};
 static const char *claw_and_tooth_titles[6] =
@@ -365,7 +366,7 @@ void redraw_skill(skill_type exsk, skill_type old_best_skill, bool recalculate_o
     }
 
     // Identify weapon pluses.
-    if (exsk <= SK_THROWING)
+    if (exsk <= SK_CROSSBOWS)
         auto_id_inventory();
 }
 
@@ -421,30 +422,30 @@ static void _init_queue(list<skill_type> &queue, FixedVector<T, SIZE> &array)
     ASSERT(queue.size() == (unsigned)EXERCISE_QUEUE_SIZE);
 }
 
-static void _erase_from_stop_train(const skill_set &can_train)
+static void _erase_from_skills_to_hide(const skill_set &can_train)
 {
     for (skill_type sk : can_train)
-        you.stop_train.erase(sk);
+        you.skills_to_hide.erase(sk);
 }
 
 /*
- * Check the inventory to see what skills the player can train,
- * among the ones in you.stop_train.
- * Trainable skills are removed from the set.
+ * Check the inventory to see what skills are likely to be useful
+ * among the ones in you.skills_to_hide.
+ * Useful skills are removed from the set.
  */
 static void _check_inventory_skills()
 {
     for (const auto &item : you.inv)
     {
         // Exit early if there's no more skill to check.
-        if (you.stop_train.empty())
+        if (you.skills_to_hide.empty())
             return;
 
         skill_set skills;
         if (!item.defined() || !item_skills(item, skills))
             continue;
 
-        _erase_from_stop_train(skills);
+        _erase_from_skills_to_hide(skills);
     }
 }
 
@@ -453,7 +454,7 @@ static void _check_spell_skills()
     for (spell_type spell : you.spells)
     {
         // Exit early if there's no more skill to check.
-        if (you.stop_train.empty())
+        if (you.skills_to_hide.empty())
             return;
 
         if (spell == SPELL_NO_SPELL)
@@ -461,7 +462,7 @@ static void _check_spell_skills()
 
         skill_set skills;
         spell_skills(spell, skills);
-        _erase_from_stop_train(skills);
+        _erase_from_skills_to_hide(skills);
     }
 }
 
@@ -470,10 +471,10 @@ static void _check_abil_skills()
     for (ability_type abil : get_god_abilities())
     {
         // Exit early if there's no more skill to check.
-        if (you.stop_train.empty())
+        if (you.skills_to_hide.empty())
             return;
 
-        you.stop_train.erase(abil_skill(abil));
+        you.skills_to_hide.erase(abil_skill(abil));
     }
 }
 
@@ -482,32 +483,18 @@ string skill_names(const skill_set &skills)
     return comma_separated_fn(begin(skills), end(skills), skill_name);
 }
 
-static void _check_start_train()
+static void _check_skills_to_show()
 {
-    skill_set skills;
-    for (skill_type sk : you.start_train)
+    for (skill_type sk : you.skills_to_show)
     {
         if (is_invalid_skill(sk) || is_useless_skill(sk))
             continue;
 
-        if (!you.can_currently_train[sk] && you.train[sk])
-            skills.insert(sk);
-        you.can_currently_train.set(sk);
+        you.should_show_skill.set(sk);
     }
 
     reset_training();
-
-    // We're careful of not invalidating the iterator when erasing.
-    for (auto it = skills.begin(); it != skills.end();)
-        if (!you.training[*it])
-            skills.erase(it++);
-        else
-            ++it;
-
-    if (!skills.empty())
-        mprf("You resume training %s.", skill_names(skills).c_str());
-
-    you.start_train.clear();
+    you.skills_to_show.clear();
 }
 
 static bool _player_is_gnoll()
@@ -515,7 +502,7 @@ static bool _player_is_gnoll()
     return you.species == SP_GNOLL;
 }
 
-static void _check_stop_train()
+static void _check_skills_to_hide()
 {
     // Gnolls can't stop training skills.
     if (_player_is_gnoll())
@@ -525,11 +512,11 @@ static void _check_stop_train()
     _check_spell_skills();
     _check_abil_skills();
 
-    if (you.stop_train.empty())
+    if (you.skills_to_hide.empty())
         return;
 
     skill_set skills;
-    for (skill_type sk : you.stop_train)
+    for (skill_type sk : you.skills_to_hide)
     {
         if (is_invalid_skill(sk))
             continue;
@@ -538,46 +525,38 @@ static void _check_stop_train()
 
         if (skill_trained(sk) && you.training[sk])
             skills.insert(sk);
-        you.can_currently_train.set(sk, false);
-    }
-
-    if (!skills.empty())
-    {
-        mprf("You stop training %s.", skill_names(skills).c_str());
-        check_selected_skills();
+        you.should_show_skill.set(sk, false);
     }
 
     reset_training();
-    you.stop_train.clear();
+    you.skills_to_hide.clear();
 }
 
 void update_can_currently_train()
 {
-    if (!you.start_train.empty())
-        _check_start_train();
+    if (!you.skills_to_show.empty())
+        _check_skills_to_show();
 
-    if (!you.stop_train.empty())
-        _check_stop_train();
+    if (!you.skills_to_hide.empty())
+        _check_skills_to_hide();
 }
 
-bool training_restricted(skill_type sk)
+bool skill_default_shown(skill_type sk)
 {
     if (_player_is_gnoll())
-        return false;
+        return true;
 
     switch (sk)
     {
     case SK_FIGHTING:
-    // Requiring missiles would mean disabling the skill when you run out.
-    case SK_THROWING:
     case SK_ARMOUR:
     case SK_DODGING:
     case SK_STEALTH:
     case SK_UNARMED_COMBAT:
     case SK_SPELLCASTING:
-        return false;
-    default:
         return true;
+    default:
+        return false;
     }
 }
 
@@ -588,8 +567,8 @@ bool training_restricted(skill_type sk)
 void init_can_currently_train()
 {
     // Clear everything out, in case this isn't the first game.
-    you.start_train.clear();
-    you.stop_train.clear();
+    you.skills_to_show.clear();
+    you.skills_to_hide.clear();
     you.can_currently_train.reset();
 
     for (int i = 0; i < NUM_SKILLS; ++i)
@@ -600,11 +579,12 @@ void init_can_currently_train()
             continue;
 
         you.can_currently_train.set(sk);
-        if (training_restricted(sk))
-            you.stop_train.insert(sk);
+        you.should_show_skill.set(sk);
+        if (!skill_default_shown(sk))
+            you.skills_to_hide.insert(sk);
     }
 
-    _check_stop_train();
+    _check_skills_to_hide();
 }
 
 void init_train()
@@ -750,6 +730,12 @@ bool check_selected_skills()
             return true;
     }
 
+    if (crawl_state.seen_hups)
+    {
+        save_game(true, "Game saved, see you later!");
+        return false;
+    }
+
     mpr("You need to enable at least one skill for training.");
     // Training will be fixed up on load if this ASSERT triggers.
     ASSERT(!_player_is_gnoll());
@@ -757,6 +743,7 @@ bool check_selected_skills()
     reset_training();
     skill_menu();
     redraw_screen();
+    update_screen();
     return true;
 }
 
@@ -1275,17 +1262,14 @@ static int _train(skill_type exsk, int &max_exp, bool simu)
         return 0;
 
     // Bonus from manual
-    int slot;
-    int bonus_left = skill_inc;
-    while (bonus_left > 0 && (slot = manual_slot_for_skill(exsk)) != -1)
+    if (you.manual_points[exsk] > 0)
     {
-        item_def& manual(you.inv[slot]);
-        const int bonus = min<int>(bonus_left, manual.skill_points);
-        skill_inc += bonus;
-        bonus_left -= bonus;
-        manual.skill_points -= bonus;
-        if (!manual.skill_points && !simu && !crawl_state.simulating_xp_gain)
-            finish_manual(slot);
+        const int bonus = min<int>(skill_inc, you.manual_points[exsk]);
+        skill_inc               += bonus;
+        you.manual_points[exsk] -= bonus;
+
+        if (!you.manual_points[exsk] && !simu && !crawl_state.simulating_xp_gain)
+            mprf("You finish your manual of %s.", skill_name(exsk));
     }
 
     const skill_type old_best_skill = best_skill(SK_FIRST_SKILL, SK_LAST_SKILL);
@@ -1583,7 +1567,7 @@ skill_type str_to_skill(const string &skill)
  */
 skill_type str_to_skill_safe(const string &skill)
 {
-    // legacy behavior -- ensure that a valid skill is returned.
+    // legacy behaviour -- ensure that a valid skill is returned.
     skill_type sk = str_to_skill(skill);
     if (sk == SK_NONE)
         return SK_FIGHTING;
@@ -1646,15 +1630,9 @@ string skill_title_by_rank(skill_type best_skill, uint8_t skill_rank,
     {
         switch (best_skill)
         {
-        case SK_SUMMONINGS:
-            // don't call good disciples hellbinders or demonologists
-            if (is_good_god(god))
-            {
-                if (skill_rank == 4)
-                    result = "Worldbinder";
-                else if (skill_rank == 5)
-                    result = "Planerender";
-            }
+        case SK_FIGHTING:
+            if (you.get_mutation_level(MUT_SLIME) >= 2 || you.get_mutation_level(MUT_OOZOMORPH))
+                result = slimy_fight_titles[skill_rank];
             break;
 
         case SK_UNARMED_COMBAT:
@@ -1722,13 +1700,13 @@ string skill_title_by_rank(skill_type best_skill, uint8_t skill_rank,
             result = skill_titles[best_skill][skill_rank];
     }
 
-    const map<string, string> replacements =
+    // BCADDO: Make job_class usable here too for mummy/demigod replacements. (can't just check you.char_class because it's also used for player ghosts).
+    const map<string, string> replacements =    
     {
         { "Adj", species_name(species, SPNAME_ADJ) },
         { "Genus", species_name(species, SPNAME_GENUS) },
         { "genus", lowercase_string(species_name(species, SPNAME_GENUS)) },
-        { "Genus_Short", (species == SP_DEMIGOD || you.char_class == JOB_DEMIGOD) ? "God" :
-                           species_name(species, SPNAME_GENUS) },
+        { "Genus_Short", species_name(species, SPNAME_GENUS) },
         { "Walker", species_walking_verb(species) + "er" },
         { "Weight", _stk_weight(species) },
     };
@@ -1826,8 +1804,13 @@ void init_skill_order()
 bool is_removed_skill(skill_type skill)
 {
 #if TAG_MAJOR_VERSION == 34
-    if (skill == SK_STABBING || skill == SK_TRAPS || skill == SK_CONJURATIONS)
+    if (skill == SK_STABBING || skill == SK_TRAPS ||
+        skill == SK_CONJURATIONS || skill == SK_THROWING)
+    {
         return true;
+    }
+#else
+    UNUSED(skill);
 #endif
     return false;
 }
@@ -1855,10 +1838,8 @@ bool is_useless_skill(skill_type skill)
         || (skill == SK_DODGING && you.get_mutation_level(MUT_NO_DODGING))
         || (skill == SK_ARMOUR && you.get_mutation_level(MUT_NO_ARMOUR)
             && !you.duration[DUR_COLLAPSE])
-        || (skill == SK_SHIELDS && you.get_mutation_level(MUT_MISSING_HAND))
         || (skill == SK_EVOCATIONS && you.get_mutation_level(MUT_NO_ARTIFICE))
-        || (skill == SK_STEALTH && you.get_mutation_level(MUT_NO_STEALTH))
-    )
+        || (skill == SK_STEALTH && you.get_mutation_level(MUT_NO_STEALTH)))
     {
         return true;
     }
@@ -1919,6 +1900,92 @@ unsigned int skill_exp_needed(int lev, skill_type sk, species_type sp)
     return exp[lev] * species_apt_factor(sk, sp);
 }
 
+int colour_apt(skill_type skill, draconian_colour colour)
+{
+    switch (colour)
+    {
+    default:
+    case DR_BROWN:
+        return 0;
+    case DR_RED:
+        if (skill == SK_FIRE_MAGIC)
+            return 5;
+        return 0;
+    case DR_WHITE:
+        if (skill == SK_ICE_MAGIC)
+            return 5;
+        return 0;
+    case DR_BLUE:
+        if (skill == SK_AIR_MAGIC)
+            return 5;
+        return 0;
+    case DR_CYAN:
+        if (skill == SK_TRANSLOCATIONS)
+            return 5;
+        return 0;
+    case DR_SILVER:
+        if (skill == SK_EARTH_MAGIC)
+            return 5;
+        return 0;
+    case DR_GREEN:
+        if (skill == SK_POISON_MAGIC)
+            return 5;
+        return 0;
+    case DR_PINK:
+        if (skill == SK_SUMMONINGS)
+            return 5;
+        return 0;
+    case DR_PURPLE:
+        if (skill == SK_HEXES)
+            return 5;
+        return 0;
+    case DR_LIME:
+        if (skill == SK_TRANSMUTATIONS)
+            return 5;
+        return 0;
+    case DR_MAGENTA:
+        if (skill == SK_CHARMS)
+            return 5;
+        return 0;
+    case DR_BLACK:
+        if (skill == SK_NECROMANCY)
+            return 5;
+        return 0;
+    case DR_OLIVE:
+        if (skill == SK_AIR_MAGIC || skill == SK_POISON_MAGIC)
+            return 4;
+        return 0;
+    case DR_BONE:
+        if (skill == SK_EARTH_MAGIC || skill == SK_CHARMS)
+            return 4;
+        return 0;
+    case DR_TEAL:
+        if (skill == SK_TRANSLOCATIONS || skill == SK_TRANSMUTATIONS)
+            return 4;
+        return 0;
+    case DR_GOLDEN:
+        if (skill == SK_FIRE_MAGIC || skill == SK_ICE_MAGIC || skill == SK_POISON_MAGIC)
+            return 4;
+        return 0;
+    case DR_PEARL:
+        if (skill == SK_EARTH_MAGIC || skill == SK_CHARMS || skill == SK_SUMMONINGS)
+            return 4;
+        return 0;
+    case DR_PLATINUM:
+        if (skill == SK_TRANSLOCATIONS || skill == SK_TRANSMUTATIONS || skill == SK_HEXES)
+            return 4;
+        return 0;
+    case DR_SCINTILLATING:
+        if (is_magic_skill(skill) && skill != SK_SPELLCASTING && !is_removed_skill(skill))
+            return 3;
+        return 0;
+    case DR_BLOOD:
+        if (skill == SK_NECROMANCY || skill == SK_AIR_MAGIC || skill == SK_HEXES)
+            return 4;
+        return 0;
+    }
+}
+
 int species_apt(skill_type skill, species_type species)
 {
     static bool spec_skills_initialised = false;
@@ -1939,14 +2006,73 @@ int species_apt(skill_type skill, species_type species)
 
     int mod = 0;
 
+    // BCADDO: This is getting to the point it should be data-ified O_O;
     if (you.char_class == JOB_MUMMY)
     {
-        if (skill == SK_NECROMANCY || skill == SK_SPELLCASTING)
+        if (skill == SK_SPELLCASTING || skill == SK_INVOCATIONS)
             mod = 2;
-        else if (skill == SK_FIGHTING)
-            mod = 0;
-        else
+        else if (skill == SK_NECROMANCY)
+            mod = 3;
+        else if (!is_magic_skill(skill) && skill != SK_EVOCATIONS)
             mod = -2;
+    }
+
+    if (you.char_class == JOB_VINE_STALKER)
+    {
+        if (skill == SK_STEALTH)
+            mod = 3;
+        else if (skill == SK_ARMOUR || skill == SK_DODGING)
+            mod = -2;
+        else if (!is_magic_skill(skill) && skill != SK_EVOCATIONS)
+            mod = -1;
+    }
+
+    if (you.char_class == JOB_MERFOLK)
+    {
+        mod = 1;
+        if (skill == SK_POLEARMS || skill == SK_ICE_MAGIC || skill == SK_TRANSMUTATIONS
+            || skill == SK_STEALTH || skill == SK_DODGING)
+        {
+            mod = 3;
+        }
+        else if (skill == SK_BOWS || skill == SK_CROSSBOWS || skill == SK_ARMOUR
+            || skill == SK_FIRE_MAGIC || skill == SK_AIR_MAGIC || skill == SK_EARTH_MAGIC
+            || skill == SK_MACES_STAVES || skill == SK_WHIPS_FLAILS)
+        {
+            mod = -2;
+        }
+    }
+
+    if (you.char_class == JOB_NAGA)
+    {
+        if (skill == SK_SLINGS || skill == SK_BOWS || skill == SK_CROSSBOWS)
+            mod = -1;
+        else if (skill == SK_STEALTH)
+            mod = 4;
+        else if (skill == SK_ARMOUR || skill == SK_DODGING || skill == SK_SHIELDS)
+            mod = -2;
+        else if (skill == SK_POISON_MAGIC)
+            mod = 3;
+
+        if (skill == SK_ARMOUR && _spec_skills[species][skill] == UNUSABLE_SKILL)
+            return -3;
+    }
+
+    if (you.char_class == JOB_CENTAUR)
+    {
+        mod = -1;
+        if (skill == SK_BOWS || skill == SK_CROSSBOWS || skill == SK_SLINGS)
+            mod = 3;
+        else if (skill == SK_ARMOUR || skill == SK_DODGING
+            || skill == SK_SHIELDS || skill == SK_SPELLCASTING)
+        {
+            mod = -3;
+        }
+        else if (skill == SK_STEALTH)
+            mod = -5;
+
+        if (skill == SK_ARMOUR && _spec_skills[species][skill] == UNUSABLE_SKILL)
+            return -4;
     }
 
     if (you.char_class == JOB_DEMIGOD && skill == SK_INVOCATIONS)
@@ -1960,9 +2086,27 @@ int species_apt(skill_type skill, species_type species)
             mod = -1;
     }
 
-    return max(UNUSABLE_SKILL, _spec_skills[species][skill]
-                               - you.get_mutation_level(MUT_UNSKILLED)
-                               + mod);
+    // The check for experience_level is because this can be called uninitialized during creation.
+    if (you.species == SP_DRACONIAN && you.experience_level > 1)
+    {
+        mod += colour_apt(skill);
+        
+        if (you.get_mutation_level(MUT_MINOR_MARTIAL_APT_BOOST) && skill == you.minor_skill)
+            mod += 3;
+        if (you.get_mutation_level(MUT_MAJOR_MARTIAL_APT_BOOST) && skill == you.major_skill)
+            mod += (you.get_mutation_level(MUT_MAJOR_MARTIAL_APT_BOOST) > 1) ? 5 : 3;
+        if (you.get_mutation_level(MUT_DEFENSIVE_APT_BOOST) && skill == you.defence_skill)
+            mod += 3;
+    }
+
+    if (_spec_skills[species][skill] == UNUSABLE_SKILL)
+    {
+        if (skill == SK_ARMOUR && ((you.get_mutation_level(MUT_CORE_MELDING) == 1) || you.get_mutation_level(MUT_AMORPHOUS_BODY)))
+            return -1;
+        return UNUSABLE_SKILL;
+    }
+
+    return _spec_skills[species][skill] - you.get_mutation_level(MUT_UNSKILLED) + mod;
 }
 
 float species_apt_factor(skill_type sk, species_type sp)
@@ -1982,18 +2126,14 @@ vector<skill_type> get_crosstrain_skills(skill_type sk)
         return { SK_LONG_BLADES };
     case SK_LONG_BLADES:
         return { SK_SHORT_BLADES };
-    case SK_AXES:
+    case SK_AXES_HAMMERS:
         return { SK_POLEARMS };
     case SK_MACES_STAVES:
          return { SK_WHIPS_FLAILS, SK_POLEARMS };
     case SK_WHIPS_FLAILS:
         return { SK_MACES_STAVES };
     case SK_POLEARMS:
-        return { SK_AXES, SK_MACES_STAVES }; 
-    case SK_SLINGS:
-        return { SK_THROWING };
-    case SK_THROWING:
-        return { SK_SLINGS };
+        return { SK_AXES_HAMMERS, SK_MACES_STAVES };
     case SK_BOWS:
         return { SK_CROSSBOWS };
     case SK_CROSSBOWS:
@@ -2110,7 +2250,7 @@ int transfer_skill_points(skill_type fsk, skill_type tsk, int skp_max,
     ASSERT(!_player_is_gnoll());
     ASSERT(!is_invalid_skill(fsk) && !is_invalid_skill(tsk));
 
-    const int penalty = 90; // 10% XP penalty
+    const int penalty = 110; // 10% XP bonus
     int total_skp_lost   = 0; // skill points lost in fsk.
     int total_skp_gained = 0; // skill points gained in tsk.
     int fsk_level = you.skills[fsk];
@@ -2238,7 +2378,7 @@ void skill_state::save()
     auto_training       = you.auto_training;
     exp_available       = you.exp_available;
     total_experience    = you.total_experience;
-    get_all_manual_charges(manual_charges);
+    manual_points       = you.manual_points;
     for (int i = 0; i < NUM_SKILLS; i++)
     {
         real_skills[i] = you.skill((skill_type)i, 10, true);
@@ -2261,7 +2401,7 @@ void skill_state::restore_levels()
     you.skill_order                 = skill_order;
     you.exp_available               = exp_available;
     you.total_experience            = total_experience;
-    set_all_manual_charges(manual_charges);
+    you.manual_points               = manual_points;
 }
 
 void skill_state::restore_training()

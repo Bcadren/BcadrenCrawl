@@ -16,6 +16,7 @@
 #include "god-passive.h"
 #include "item-prop.h"
 #include "los.h"
+#include "message.h"
 #include "mon-behv.h"
 #include "mon-death.h"
 #include "religion.h"
@@ -39,9 +40,9 @@ bool actor::will_trigger_shaft() const
                 && mons_is_elven_twin(static_cast<const monster* >(this)));
 }
 
-level_id actor::shaft_dest(bool known = false) const
+level_id actor::shaft_dest() const
 {
-    return generic_shaft_dest(pos(), known);
+    return generic_shaft_dest();
 }
 
 /**
@@ -49,13 +50,7 @@ level_id actor::shaft_dest(bool known = false) const
  */
 bool actor::ground_level() const
 {
-    return !airborne() && !is_wall_clinging();
-}
-
-bool actor::stand_on_solid_ground() const
-{
-    return ground_level() && feat_has_solid_floor(grd(pos()))
-           && !feat_is_water(grd(pos()));
+    return !airborne() && !is_clinging() && !mounted();
 }
 
 // Give hands required to wield weapon.
@@ -85,20 +80,24 @@ bool actor::can_wield(const item_def* item, bool ignore_curse,
 
 bool actor::can_pass_through(int x, int y) const
 {
-    return can_pass_through_feat(grd[x][y]);
+    return can_pass_through_feat(env.grid[x][y]);
 }
 
 bool actor::can_pass_through(const coord_def &c) const
 {
-    return can_pass_through_feat(grd(c));
+    return can_pass_through_feat(env.grid(c));
 }
 
 bool actor::is_habitable(const coord_def &_pos) const
 {
+    // sanity
+    if (!in_bounds(_pos))
+        return false;
+
     if (can_cling_to(_pos))
         return true;
 
-    return is_habitable_feat(grd(_pos));
+    return is_habitable_feat(env.grid(_pos));
 }
 
 bool actor::handle_trap()
@@ -172,7 +171,7 @@ bool actor::can_hibernate(bool holi_only, bool intrinsic_only) const
 bool actor::can_sleep(bool holi_only) const
 {
     const mon_holy_type holi = holiness();
-    if (holi & (MH_UNDEAD | MH_NONLIVING | MH_PLANT))
+    if (holi & (MH_UNDEAD | MH_ELEMENTAL | MH_PLANT | MH_CONSTRUCT))
         return false;
 
     if (!holi_only)
@@ -181,7 +180,7 @@ bool actor::can_sleep(bool holi_only) const
     return true;
 }
 
-void actor::shield_block_succeeded(actor *foe)
+void actor::shield_block_succeeded()
 {
     item_def *sh = shield();
     const unrandart_entry *unrand_entry;
@@ -193,8 +192,13 @@ void actor::shield_block_succeeded(actor *foe)
         && (unrand_entry = get_unrand_entry(sh->unrand_idx))
         && unrand_entry->melee_effects)
     {
-        unrand_entry->melee_effects(sh, this, foe, false, 0);
+        unrand_entry->melee_effects(sh, this, nullptr, false, 0, false);
     }
+}
+
+int actor::res_physical(bool mt) const
+{
+    return ((res_bludgeon(mt) + res_pierce(mt) + res_slash(mt)) / 3);
 }
 
 int actor::inaccuracy() const
@@ -207,39 +211,34 @@ bool actor::gourmand(bool calc_unid, bool items) const
     return items && wearing(EQ_AMULET, AMU_THE_GOURMAND, calc_unid);
 }
 
-bool actor::res_corr(bool calc_unid, bool items) const
-{
-    return items && (wearing(EQ_RINGS, RING_RESIST_CORROSION, calc_unid)
-                     || wearing(EQ_BODY_ARMOUR, ARM_ACID_DRAGON_ARMOUR, calc_unid)
-                     || scan_artefacts(ARTP_RCORR, calc_unid));
-}
-
 bool actor::cloud_immune(bool calc_unid, bool items) const
 {
     const item_def *body_armour = slot_item(EQ_BODY_ARMOUR);
     return items && (wearing_ego(EQ_CLOAK, SPARM_CLOUD_IMMUNE, calc_unid)
-                     || (body_armour
-                        && is_unrandom_artefact(*body_armour, UNRAND_RCLOUDS)));
+        || (body_armour
+            && is_unrandom_artefact(*body_armour, UNRAND_RCLOUDS)));
 }
 
-bool actor::holy_wrath_susceptible() const
+bool actor::holy_wrath_susceptible(bool mt) const
 {
-    return res_holy_energy() < 0;
+    return res_holy_energy(mt) < 0;
 }
 
 // This is a bit confusing. This is not the function that determines whether or
 // not an actor is capable of teleporting, only whether they are specifically
 // under the influence of the "notele" effect. See actor::no_tele() for a
 // superset of this function.
-bool actor::has_notele_item(bool calc_unid, vector<item_def> *matches) const
+bool actor::has_notele_item(bool calc_unid, vector<const item_def *> *matches) const
 {
     return scan_artefacts(ARTP_PREVENT_TELEPORTATION, calc_unid, matches);
 }
 
 // permaswift effects like boots of running and lightning scales
-bool actor::run(bool calc_unid, bool items) const
+int actor::run(bool calc_unid, bool items) const
 {
-    return items && wearing_ego(EQ_BOOTS, SPARM_RUNNING, calc_unid);
+    if (items)
+        return wearing_ego(EQ_BOOTS, SPARM_RUNNING, calc_unid);
+    return 0;
 }
 
 bool actor::angry(bool calc_unid, bool items) const
@@ -259,10 +258,10 @@ bool actor::faith(bool calc_unid, bool items) const
 
 int actor::archmagi(bool calc_unid, bool items) const
 {
-    if (!items)
-        return 0;
+    if (items)
+        return wearing_ego(EQ_ALL_ARMOUR, SPARM_ARCHMAGI, calc_unid);
 
-    return wearing_ego(EQ_ALL_ARMOUR, SPARM_ARCHMAGI, calc_unid);
+    return 0;
 }
 
 
@@ -283,6 +282,8 @@ int actor::high_priest(bool calc_unid, bool items) const
  */
 int actor::spec_evoke(bool calc_unid, bool items) const
 {
+    UNUSED(calc_unid);
+    UNUSED(items);
     return 0;
 }
 
@@ -300,11 +301,20 @@ bool actor::extra_harm(bool calc_unid, bool items) const
 {
     return items &&
            (wearing(EQ_AMULET, AMU_HARM, calc_unid)
+            || wearing_ego(EQ_CLOAK, SPARM_HARM, calc_unid)
+            || wearing_ego(EQ_BODY_ARMOUR, SPARM_HARM, calc_unid)
             || scan_artefacts(ARTP_HARM, calc_unid));
 }
 
 bool actor::rmut_from_item(bool calc_unid) const
 {
+    if (is_player())
+    {
+        const item_def * inside = slot_item(EQ_CYTOPLASM);
+        if (inside && get_weapon_brand(*inside) == SPWPN_SILVER)
+            return true;
+    }
+
     return scan_artefacts(ARTP_RMUT, calc_unid);
 }
 
@@ -345,11 +355,25 @@ int actor::spirit_shield(bool calc_unid, bool items) const
     return ss;
 }
 
-int actor::apply_ac(int damage, int max_damage, ac_type ac_rule,
-                    int stab_bypass, bool for_real) const
+bool actor::rampaging(bool calc_unid, bool items) const
 {
-    int ac = max(armour_class() - stab_bypass, 0);
-    int gdr = gdr_perc();
+    if (you.mounted())
+        return false;
+
+    return items &&
+           (wearing_ego(EQ_ALL_ARMOUR, SPARM_RAMPAGING, calc_unid)
+            || scan_artefacts(ARTP_RAMPAGING, calc_unid));
+}
+
+int actor::apply_ac(int damage, int max_damage, ac_type ac_rule,
+                    int stab_bypass, bool for_real, bool mount) const
+{
+    int ac = armour_class();
+    if (mount)
+        ac = mount_ac();
+    ac = max(ac - stab_bypass, 0);
+
+    int gdr = mount ? mount_gdr() : gdr_perc();
     int saved = 0;
     switch (ac_rule)
     {
@@ -382,11 +406,16 @@ int actor::apply_ac(int damage, int max_damage, ac_type ac_rule,
     saved = max(saved, min(gdr * max_damage / 100, ac / 2));
     if (for_real && (damage > 0) && (saved >= damage) && is_player())
     {
-        const item_def *body_armour = slot_item(EQ_BODY_ARMOUR);
-        if (body_armour)
-            count_action(CACT_ARMOUR, body_armour->sub_type);
+        if (mount)
+            count_action(CACT_MOUNT, (int)you.mount);
         else
-            count_action(CACT_ARMOUR, -1); // unarmoured subtype
+        {
+            const item_def *body_armour = slot_item(EQ_BODY_ARMOUR);
+            if (body_armour)
+                count_action(CACT_ARMOUR, body_armour->sub_type);
+            else
+                count_action(CACT_ARMOUR, -1); // unarmoured subtype
+        }
     }
 
     return max(damage - saved, 0);
@@ -394,9 +423,19 @@ int actor::apply_ac(int damage, int max_damage, ac_type ac_rule,
 
 bool actor_slime_wall_immune(const actor *act)
 {
-    return act->is_player() && have_passive(passive_t::slime_wall_immune)
+    return act->is_player() && have_passive(passive_t::slime_wall_immune) 
+        || act->is_fairy() && act->res_corr()
         || act->res_acid() == 3
-        || act->is_monster() && mons_is_slime(*act->as_monster());
+        || act->is_monster() && mons_is_slime(*act->as_monster())
+        || act->is_monster() && mons_primary_habitat(*act->as_monster()) == HT_SLIME;
+}
+
+bool actor::is_clinging() const
+{
+    if (is_monster() && as_monster()->type == MONS_CEILING_CRAWLER)
+        return true;
+
+    return is_wall_clinging();
 }
 
 /**
@@ -417,7 +456,7 @@ bool actor::is_wall_clinging() const
  */
 bool actor::can_cling_to(const coord_def& p) const
 {
-    if (!is_wall_clinging() || !can_pass_through_feat(grd(p)))
+    if (!is_wall_clinging() || !can_pass_through_feat(env.grid(p)))
         return false;
 
     return cell_can_cling_to(pos(), p);
@@ -435,6 +474,10 @@ bool actor::can_cling_to(const coord_def& p) const
  */
 bool actor::check_clinging(bool stepped, bool door)
 {
+    // Short-circuit ceiling crawlers.
+    if (is_clinging() && !is_wall_clinging())
+        return true;
+
     bool was_clinging = is_wall_clinging();
     bool clinging = can_cling_to_walls() && cell_is_clingable(pos())
                     && !airborne();
@@ -543,6 +586,36 @@ void actor::stop_constricting(mid_t whom, bool intentional, bool quiet)
  */
 void actor::stop_constricting_all(bool intentional, bool quiet)
 {
+    if (is_monster())
+    {
+        monster * mon = as_monster();
+
+        if (mon->has_ench(ENCH_SWALLOWED))
+        {
+            actor * swallowing = mon->get_ench(ENCH_SWALLOWED).agent();
+
+            if (swallowing)
+                swallowing->as_monster()->del_ench(ENCH_SWALLOWED);
+
+            mon->del_ench(ENCH_SWALLOWED);
+        }
+
+        if (mon->has_ench(ENCH_SWALLOWING))
+        {
+            actor * swallowed = mon->get_ench(ENCH_SWALLOWING).agent();
+
+            if (swallowed)
+            {
+                if (swallowed->is_player())
+                    you.duration[DUR_SWALLOWED] = 0;
+                else
+                    swallowed->as_monster()->del_ench(ENCH_SWALLOWED);
+            }
+
+            mon->del_ench(ENCH_SWALLOWING);
+        }
+    }
+
     if (!constricting)
         return;
 
@@ -598,14 +671,17 @@ void actor::stop_directly_constricting_all(bool intentional, bool quiet)
 
 void actor::stop_being_constricted(bool quiet)
 {
-    // Make sure we are actually being constricted.
-    actor* const constrictor = actor_by_mid(constricted_by);
+    if (is_constricted())
+    {
+        // Make sure we are actually being constricted.
+        actor* const constrictor = actor_by_mid(constricted_by);
 
-    if (constrictor)
-        constrictor->stop_constricting(mid, false, quiet);
+        if (constrictor)
+            constrictor->stop_constricting(mid, false, quiet);
 
-    // In case the actor no longer exists.
-    clear_constricted();
+        // In case the actor no longer exists.
+        clear_constricted();
+    }
 }
 
 /**
@@ -642,7 +718,7 @@ bool actor::has_invalid_constrictor(bool move) const
     // Indirect constriction requires the defender not to move.
     return move
         // Indirect constriction requires reachable ground.
-        || !feat_has_solid_floor(grd(pos()))
+        || !feat_has_solid_floor(env.grid(pos()))
         // Constriction doesn't work out of LOS.
         || !ignoring_player && !attacker->see_cell(pos());
 }
@@ -725,22 +801,36 @@ bool actor::can_constrict(const actor* defender, bool direct) const
 {
     ASSERT(defender); // XXX: change to actor &defender
 
+    size_type size = body_size(PSIZE_BODY);
+
+    // Only sources of engulf right now; let them ignore normal size restriction for the most part.
+    if (is_monster() && (as_monster()->type == MONS_ECTOPLASMIC_ORB
+        || as_monster()->type == MONS_WATER_ELEMENTAL
+        || mons_genus(as_monster()->type) == MONS_CROCODILE))
+    {
+        size = SIZE_BIG;
+    }
+
+    if (defender->is_constricted() || defender->res_constrict() >= 3
+        || defender->is_player() && you.duration[DUR_SWALLOWED]
+        || defender->is_monster() && defender->as_monster()->has_ench(ENCH_SWALLOWED))
+    {
+        return false;
+    }
+
     if (direct)
     {
-        return (!is_constricting() || has_usable_tentacle())
-               && !defender->is_constricted()
+        return (!is_constricting() || usable_tentacles())
                && can_see(*defender)
                && !confused()
-               && body_size(PSIZE_BODY) >= defender->body_size(PSIZE_BODY)
-               && defender->res_constrict() < 3
-               && adjacent(pos(), defender->pos());
+               && size >= defender->body_size(PSIZE_BODY)
+               && adjacent(pos(), defender->pos())
+               && !(is_monster() && as_monster()->has_ench(ENCH_SWALLOWED));
     }
 
     return can_see(*defender)
-        && !defender->is_constricted()
-        && defender->res_constrict() < 3
         // All current indrect forms of constriction require reachable ground.
-        && feat_has_solid_floor(grd(defender->pos()));
+        && feat_has_solid_floor(env.grid(defender->pos()));
 }
 
 #ifdef DEBUG_DIAGNOSTICS
@@ -788,6 +878,10 @@ void actor::constriction_damage_defender(actor &defender, int duration)
     else
         exclamations = attack_strength_punctuation(damage);
 
+    string verb = (is_monster()
+        && mons_genus(type) == MONS_CROCODILE) ? "crush"
+                                               : "constrict";
+
     if (is_player() || you.can_see(*this))
     {
         string attacker_desc;
@@ -798,27 +892,18 @@ void actor::constriction_damage_defender(actor &defender, int duration)
         else
             attacker_desc = name(DESC_THE);
 
-        mprf("%s %s %s%s%s", attacker_desc.c_str(),
-             conj_verb("constrict").c_str(),
+        mprf("%s %s %s%s", attacker_desc.c_str(),
+             conj_verb(verb.c_str()).c_str(),
              defender.name(DESC_THE).c_str(),
-#ifdef DEBUG_DIAGNOSTICS
-             make_stringf(" for %d", damage).c_str(),
-#else
-             "",
-#endif
              exclamations.c_str());
     }
     else if (you.can_see(defender) || defender.is_player())
     {
-        mprf("%s %s constricted%s%s",
-             defender.name(DESC_THE).c_str(),
-             defender.conj_verb("are").c_str(),
-#ifdef DEBUG_DIAGNOSTICS
-             make_stringf(" for %d", damage).c_str(),
-#else
-             "",
-#endif
-             exclamations.c_str());
+        mprf("%s %s %sed%s",
+            defender.name(DESC_THE).c_str(),
+            defender.conj_verb("are").c_str(),
+            verb.c_str(),
+            exclamations.c_str());
     }
 
     dprf("constrict at: %s df: %s base %d dur %d ac %d tsc %d inf %d",
@@ -828,6 +913,19 @@ void actor::constriction_damage_defender(actor &defender, int duration)
 
     if (defender.is_monster() && defender.as_monster()->hit_points < 1)
         monster_die(*defender.as_monster(), this);
+
+}
+
+actor * actor::get_constrictor_or_frog()
+{
+    if (is_constricted())
+    {
+        if (constricted_by == MID_PLAYER)
+            return &you;
+        return actor_by_mid(constricted_by);
+    }
+
+    return nullptr;
 }
 
 // Deal damage over time
@@ -856,6 +954,31 @@ void actor::handle_constriction()
     }
 
     clear_invalid_constrictions();
+}
+
+bool actor::submerged(bool /*mt*/) const
+{
+    return can_submerge_in(pos());
+}
+
+bool actor::can_submerge_in(const coord_def &c) const
+{
+    if (body_size(PSIZE_BODY) >= SIZE_GIANT)
+        return false;
+    if (airborne())
+        return false;
+
+    const dungeon_feature_type grid = env.grid(c);
+
+    if (feat_is_watery(grid))
+    {
+        if (grid == DNGN_DEEP_SLIMY_WATER || grid == DNGN_DEEP_WATER)
+            return true;
+        else
+            return (swimming() && body_size(PSIZE_BODY) <= SIZE_LITTLE);
+    }
+
+    return false;
 }
 
 string actor::describe_props() const
@@ -968,6 +1091,11 @@ string actor::resist_margin_phrase(int margin) const
 void actor::collide(coord_def newpos, const actor *agent, int pow)
 {
     actor *other = actor_at(newpos);
+    const bool fedhas_prot = agent && agent->deity() == GOD_FEDHAS
+                             && is_monster() && fedhas_protects(as_monster());
+    const bool fedhas_prot_other = agent && agent->deity() == GOD_FEDHAS
+                                   && other && other->is_monster()
+                                   && fedhas_protects(other->as_monster());
     ASSERT(this != other);
     ASSERT(alive());
 
@@ -978,30 +1106,44 @@ void actor::collide(coord_def newpos, const actor *agent, int pow)
         return;
     }
 
-    if (is_monster())
+    if (is_monster() && !fedhas_prot)
         behaviour_event(as_monster(), ME_WHACK, agent);
 
     dice_def damage(2, 1 + pow / 10);
 
     if (other && other->alive())
     {
-        if (other->is_monster())
-            behaviour_event(other->as_monster(), ME_WHACK, agent);
         if (you.can_see(*this) || you.can_see(*other))
         {
             mprf("%s %s with %s!",
                  name(DESC_THE).c_str(),
                  conj_verb("collide").c_str(),
                  other->name(DESC_THE).c_str());
+            if (fedhas_prot || fedhas_prot_other)
+            {
+                const bool both = fedhas_prot && fedhas_prot_other;
+                simple_god_message(
+                    make_stringf(" protects %s plant%s from harm.",
+                        agent->is_player() ? "your" :
+                        both ? "some" : "a",
+                        both ? "s" : "").c_str(), GOD_FEDHAS);
+            }
         }
+
+        if (other->is_monster() && !fedhas_prot_other)
+            behaviour_event(other->as_monster(), ME_WHACK, agent);
+
         const string thisname = name(DESC_A, true);
         const string othername = other->name(DESC_A, true);
-        other->hurt(agent, other->apply_ac(damage.roll()),
-                    BEAM_MISSILE, KILLED_BY_COLLISION,
-                    othername, thisname);
-        if (alive())
+        if (other->alive() && !fedhas_prot_other)
         {
-            hurt(agent, apply_ac(damage.roll()), BEAM_MISSILE,
+            other->hurt(agent, other->apply_ac(damage.roll(), damage.max()),
+                        BEAM_MISSILE, KILLED_BY_COLLISION,
+                        othername, thisname);
+        }
+        if (alive() && !fedhas_prot)
+        {
+            hurt(agent, apply_ac(damage.roll(), damage.max()), BEAM_MISSILE,
                  KILLED_BY_COLLISION, thisname, othername);
         }
         return;
@@ -1009,12 +1151,12 @@ void actor::collide(coord_def newpos, const actor *agent, int pow)
 
     if (you.can_see(*this))
     {
-        if (!can_pass_through_feat(grd(newpos)))
+        if (!can_pass_through_feat(env.grid(newpos)))
         {
             mprf("%s %s into %s!",
                  name(DESC_THE).c_str(), conj_verb("slam").c_str(),
                  env.map_knowledge(newpos).known()
-                 ? feature_description_at(newpos, false, DESC_THE, false)
+                 ? feature_description_at(newpos, false, DESC_THE)
                        .c_str()
                  : "something");
         }
@@ -1023,10 +1165,20 @@ void actor::collide(coord_def newpos, const actor *agent, int pow)
             mprf("%s violently %s moving!",
                  name(DESC_THE).c_str(), conj_verb("stop").c_str());
         }
+
+        if (fedhas_prot)
+        {
+            simple_god_message(
+                make_stringf(" protects %s plant from harm.",
+                    agent->is_player() ? "your" : "a").c_str(), GOD_FEDHAS);
+        }
     }
-    hurt(agent, apply_ac(damage.roll()), BEAM_MISSILE,
-         KILLED_BY_COLLISION, "",
-         feature_description_at(newpos, false, DESC_A, false));
+
+    if (!fedhas_prot)
+    {
+        hurt(agent, apply_ac(damage.roll(), damage.max()), BEAM_MISSILE,
+             KILLED_BY_COLLISION, "", feature_description_at(newpos));
+    }
 }
 
 /// Is this creature despised by the so-called 'good gods'?
@@ -1064,4 +1216,9 @@ bool actor::evil() const
     // Defer to the other function. Since it returns only act, nullptr, or you,
     // none of which points to a const object, the const_cast here is safe.
     return const_cast<actor *>(ensure_valid_actor(static_cast<const actor *>(act)));
+}
+
+bool actor::is_dragonkind() const
+{
+    return is_draconic_type(mons_genus(mons_species()));
 }

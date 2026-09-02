@@ -169,7 +169,7 @@ skin of Zhor
 
 Śmierdząca skóra jakiegoś dziwnego zwierzęcia.
 %%%%
-salamander hide armour
+salamander hide
 
 Skórzana zbroja zrobiona z salamandry.
 %%%%

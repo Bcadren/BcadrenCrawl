@@ -19,7 +19,7 @@ function castle_lemuel_subvault_setup(e)
          e.colour("? = brown")
          e.ftile("? = floor_mud")
          e.kfeat("? = floor")
-         e.kfeat("~ = known alarm trap w:1 / floor")
+         e.kfeat("~ = alarm trap w:1 / floor")
          e.subst("X = c +:1")
          e.subst("8 = 89")
          e.tile("c = wall_stone_smooth")
@@ -28,70 +28,86 @@ function castle_lemuel_subvault_setup(e)
          e.ftile("= = floor_cobble_blood")
          e.kfeat(", = floor")
          e.kfeat("m = iron_grate")
-         if you.absdepth() < 7 then
-            e.subst("* = ...$")
-            e.subst("| = *.")
-            e.mons("gnoll")
-            e.mons("gnoll / gnoll shaman w:5")
-            e.mons("ogre / gnoll sergeant")
-            e.mons("jackal")
-            e.mons("gnoll")
-            e.mons("jackal")
-         elseif you.absdepth () < 15 then
-            e.subst("* : *$")
-            e.subst("| : %*")
-            e.mons("orc");
-            e.mons("orc knight w:2 / orc priest w:3 / orc warrior")
-            e.mons("orc sorcerer / orc warlord / orc knight")
-            e.mons("warg")
-            e.mons("orc")
-            e.mons("warg")
-         elseif you.absdepth () < 24 then
-            e.subst("* : *$")
-            e.subst("| = |*")
-            e.mons("deep elf mage")
-            e.mons("deep elf knight w:5 / deep elf archer w:5 / "
-                   .. "deep elf mage w:30")
-            e.mons("deep elf annihilator / deep elf sorcerer / "
-                   .. "deep elf high priest / deep elf death mage / "
-                   .. "deep elf demonologist")
-            e.mons("nothing")
-            e.mons("deep elf mage")
-            e.mons("nothing")
-         elseif you.absdepth () < 27 then
-            e.subst("* = *$")
-            e.mons("two-headed ogre / cyclops / deep troll / ogre mage w:5")
-            e.mons("ettin / fire giant / frost giant / stone giant / \
-                    deep troll shaman w:5")
-            e.mons("titan")
-            e.mons("nothing")
-            e.mons("cyclops")
-            e.mons("yak / death yak w:5")
-            e.mons("plant / w:1 bush")
-         else
-            e.subst("* = *$")
-            e.subst("w : wl")
-            e.nsubst("1 = 14:1 / *:.")
-            e.mons("red draconian / white draconian / green draconian / \
-                    black draconian / purple draconian / nothing w:30")
-            e.mons("yellow draconian monk / purple draconian annihilator / \
-                    green draconian monk / golden dragon w:5")
-            e.mons("red draconian scorcher / white draconian knight / \
-                    purple draconian stormcaller / black draconian shifter")
-            e.mons("lindwurm / wind drake w:5 / death drake w:5 / \
-                    swamp drake / nothing w:5")
-            e.mons("red draconian / green draconian / white draconian / \
-                    black draconian / purple draconian")
-            e.mons("lindwurm / wind drake w:5 / death drake w:5 / \
-                    swamp drake / nothing w:5")
-            e.mons("plant / w:1 bush")
-        end
+		 if you.in_branch("D") then
+           if you.depth() < 5 then
+              e.subst("* = ...$")
+              e.subst("| = *.")
+              e.mons("gnoll")
+              e.mons("gnoll / gnoll shaman w:5")
+              e.mons("ogre / gnoll sergeant")
+              e.mons("jackal")
+              e.mons("gnoll")
+              e.mons("jackal")
+           elseif you.depth () < 7 then
+              e.subst("* : *$")
+              e.subst("| : %*")
+              e.mons("orc");
+              e.mons("orc knight w:2 / orc priest w:3 / orc warrior")
+              e.mons("orc sorcerer / orc warlord / orc knight")
+              e.mons("warg")
+              e.mons("orc")
+              e.mons("warg")
+		    else 
+			  e.subst("* : *$")
+              e.subst("| = |*")
+              e.mons("deep elf mage")
+              e.mons("deep elf knight w:5 / deep elf archer w:5 / "
+                     .. "deep elf mage w:30")
+              e.mons("deep elf annihilator / deep elf sorcerer / "
+                     .. "deep elf high priest / deep elf death mage / "
+                     .. "deep elf demonologist")
+              e.mons("nothing")
+              e.mons("deep elf mage")
+              e.mons("nothing")
+		    end
+		 else
+           if you.absdepth () < 3 then
+              e.subst("* : *$")
+              e.subst("| = |*")
+              e.mons("deep elf mage")
+              e.mons("deep elf knight w:5 / deep elf archer w:5 / "
+                     .. "deep elf mage w:30")
+              e.mons("deep elf annihilator / deep elf sorcerer / "
+                     .. "deep elf high priest / deep elf death mage / "
+                     .. "deep elf demonologist")
+              e.mons("nothing")
+              e.mons("deep elf mage")
+              e.mons("nothing")
+           elseif you.absdepth () < 5 then
+              e.subst("* = *$")
+              e.mons("two-headed ogre / cyclops / deep troll / ogre mage w:5")
+              e.mons("ettin / fire giant / frost giant / stone giant / \
+                      deep troll shaman w:5")
+              e.mons("titan")
+              e.mons("nothing")
+              e.mons("cyclops")
+              e.mons("yak / death yak w:5")
+              e.mons("plant / w:1 bush")
+           else
+              e.subst("* = *$")
+              e.subst("w : wl")
+              e.nsubst("1 = 14:1 / *:.")
+              e.mons("red draconian / white draconian / blue draconian / \
+                      black draconian / pink draconian / nothing w:30")
+              e.mons("lime draconian monk / purple draconian annihilator / \
+                      green draconian monk / golden dragon w:5")
+              e.mons("red draconian scorcher / white draconian knight / \
+                      blue draconian stormcaller / black draconian shifter")
+              e.mons("lindwurm / wind drake w:5 / death drake w:5 / \
+                      swamp drake / nothing w:5")
+              e.mons("golden draconian / blood draconian / scintillating draconian / \
+                      black draconian / purple draconian")
+              e.mons("lindwurm / wind drake w:5 / death drake w:5 / \
+                      swamp drake / nothing w:5")
+              e.mons("plant / w:1 bush")
+			end
+          end
         e.mons("plant")
         if you.where() == dgn.level_name(dgn.br_entrance("Zot")) then
             e.kfeat("3 = enter_zot")
             -- Ugly hack to get around kfeat overwriting the mons definition.
             e.kmons("3 = red draconian scorcher / white draconian knight / "
-                    .. "purple draconian stormcaller / black draconian shifter")
+                    .. "blue draconian stormcaller / black draconian shifter")
         end
 end
 }}
@@ -115,7 +131,7 @@ MAP
 .+....+..1...1....1...1..+....+.
 .cccccccccccccc++cccccccccccXcc.
 1c1.1..ccccccc....ccccccc..m..c1
-.c.2...+.....+....+.....+..m.8c.
+.c.2...+.....+....+.....+..+.8c.
 +c1.1..ccccccc....ccccccc..m..c+
   cccccccccccc++++cccccccccccc
 ENDMAP
@@ -182,7 +198,7 @@ ENDMAP
 
 ############################################################################
 NAME:     lemuel_castle_with_subvaults
-TAGS:     layout_city
+TAGS:     layout_city transparent
 DEPTH:    D:3-, Depths
 PLACE:    Depths:$
 ORIENT:   northwest

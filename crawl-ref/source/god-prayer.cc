@@ -5,21 +5,15 @@
 #include <cmath>
 
 #include "artefact.h"
-#include "butcher.h"
-#include "coordit.h"
 #include "database.h"
 #include "describe-god.h"
-#include "english.h"
 #include "env.h"
 #include "food.h"
 #include "fprop.h"
 #include "god-abil.h"
-#include "god-item.h"
 #include "god-passive.h"
 #include "hiscores.h"
 #include "invent.h"
-#include "item-prop.h"
-#include "items.h"
 #include "item-use.h"
 #include "makeitem.h"
 #include "message.h"
@@ -27,13 +21,12 @@
 #include "prompt.h"
 #include "religion.h"
 #include "shopping.h"
-#include "spl-goditem.h"
 #include "state.h"
 #include "stepdown.h"
 #include "stringutil.h"
 #include "terrain.h"
 #include "unwind.h"
-#include "view.h"
+#include "xom.h"
 
 string god_prayer_reaction()
 {
@@ -97,6 +90,8 @@ static bool _pray_ecumenical_altar()
 
         if (you_worship(GOD_RU))
             you.props[RU_SACRIFICE_PROGRESS_KEY] = 9999;
+        else if (you_worship(GOD_XOM))
+            xom_is_stimulated(200, XM_INTRIGUED, true);
         else
             gain_piety(20, 1, false);
 
@@ -148,7 +143,7 @@ void try_god_conversion(god_type god)
     }
 }
 
-int zin_tithe(const item_def& item, int quant, bool quiet, bool converting)
+int zin_tithe(const item_def& item, int quant, bool converting)
 {
     if (item.tithe_state == TS_NO_TITHE)
         return 0;
@@ -209,100 +204,4 @@ int zin_tithe(const item_def& item, int quant, bool quiet, bool converting)
     }
     you.attribute[ATTR_TITHE_BASE] = due;
     return taken;
-}
-
-enum class jiyva_slurp_result
-{
-    none = 0,
-    food = 1 << 0,
-    hp   = 1 << 1,
-    mp   = 1 << 2,
-};
-DEF_BITFIELD(jiyva_slurp_results, jiyva_slurp_result);
-
-struct slurp_gain
-{
-    jiyva_slurp_results jiyva_bonus;
-    piety_gain_t piety_gain;
-};
-
-// God effects of sacrificing one item from a stack (e.g., a weapon, one
-// out of 20 arrows, etc.). Does not modify the actual item in any way.
-static slurp_gain _sacrifice_one_item_noncount(const item_def& item)
-{
-    // item_value() multiplies by quantity.
-    const int shop_value = item_value(item, true) / item.quantity;
-    // Since the god is taking the items as a sacrifice, they must have at
-    // least minimal value, otherwise they wouldn't be taken.
-    const int value = (item.base_type == OBJ_CORPSES ?
-                          50 * stepdown_value(max(1,
-                          max_corpse_chunks(item.mon_type)), 4, 4, 12, 12) :
-                      (is_worthless_consumable(item) ? 1 : shop_value));
-
-#if defined(DEBUG_DIAGNOSTICS) || defined(DEBUG_SACRIFICE)
-        mprf(MSGCH_DIAGNOSTICS, "Sacrifice item value: %d", value);
-#endif
-
-    slurp_gain gain { jiyva_slurp_result::none, PIETY_NONE };
-
-    // compress into range 0..250
-    const int stepped = stepdown_value(value, 50, 50, 200, 250);
-    gain_piety(stepped, 50);
-    gain.piety_gain = (piety_gain_t)min(2, div_rand_round(stepped, 50));
-
-    if (player_under_penance(GOD_JIYVA))
-        return gain;
-
-    int item_value = div_rand_round(stepped, 50);
-    if (have_passive(passive_t::slime_feed)
-        && x_chance_in_y(apply_pity(you.piety), MAX_PIETY)
-        && !you_foodless())
-    {
-        //same as a sultana
-        lessen_hunger(apply_pity(70), true);
-        gain.jiyva_bonus |= jiyva_slurp_result::food;
-    }
-
-    if (have_passive(passive_t::slime_mp)
-        && x_chance_in_y(apply_pity(you.piety), MAX_PIETY)
-        && you.magic_points < you.max_magic_points)
-    {
-        inc_mp(apply_pity(max(random2(item_value), 1)));
-        gain.jiyva_bonus |= jiyva_slurp_result::mp;
-    }
-
-    if (have_passive(passive_t::slime_hp)
-        && x_chance_in_y(apply_pity(you.piety), MAX_PIETY)
-        && you.hp < you.hp_max
-        && !you.duration[DUR_DEATHS_DOOR])
-    {
-        inc_hp(apply_pity(max(random2(item_value), 1)));
-        gain.jiyva_bonus |= jiyva_slurp_result::hp;
-    }
-
-    return gain;
-}
-
-void jiyva_slurp_item_stack(const item_def& item, int quantity)
-{
-    ASSERT(you_worship(GOD_JIYVA));
-    if (quantity <= 0)
-        quantity = item.quantity;
-    slurp_gain gain { jiyva_slurp_result::none, PIETY_NONE };
-    for (int j = 0; j < quantity; ++j)
-    {
-        const slurp_gain new_gain = _sacrifice_one_item_noncount(item);
-
-        gain.piety_gain = max(gain.piety_gain, new_gain.piety_gain);
-        gain.jiyva_bonus |= new_gain.jiyva_bonus;
-    }
-
-    if (gain.piety_gain > PIETY_NONE)
-        simple_god_message(" appreciates your sacrifice.");
-    if (gain.jiyva_bonus & jiyva_slurp_result::food)
-        mpr("You feel a little less hungry.");
-    if (gain.jiyva_bonus & jiyva_slurp_result::mp)
-        canned_msg(MSG_GAIN_MAGIC);
-    if (gain.jiyva_bonus & jiyva_slurp_result::hp)
-        canned_msg(MSG_GAIN_HEALTH);
 }

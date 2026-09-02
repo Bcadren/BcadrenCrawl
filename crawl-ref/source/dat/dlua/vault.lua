@@ -108,7 +108,9 @@ end
 function halls_of_blades_weapon(e)
   local long_blade_type = crawl.one_chance_in(2) and "double sword"
                                                   or "triple sword"
-  local types = {"quick blade", long_blade_type,
+  local short_blade_type = crawl.one_chance_in(3) and "katar"
+                                                  or "tanto"
+  local types = {short_blade_type, long_blade_type,
                  "executioner's axe", "eveningstar", "bardiche",
                  "lajatang"}
   local egos = {"molten", "freezing", "electrocution", "venom",
@@ -127,4 +129,25 @@ function halls_of_blades_weapon(e)
 
   e.mons("dancing weapon; good_item " .. weapon1 .. " ego:" .. ego1)
   e.mons("dancing weapon; good_item " .. weapon2 .. " ego:" .. ego2)
+end
+
+-- Setup for door vaults to define a common loot set and create the door
+-- markers.
+function door_vault_setup(e)
+  -- Don't generate loot in Hells, generate down hatches instead.
+  if you.in_branch("Geh") or you.in_branch("Tar") or you.in_branch("Coc")
+     or you.in_branch("Dis") then
+    e.kfeat("23 = >")
+  else
+    e.kitem("1 = * / nothing")
+    e.kitem("23 = | / nothing")
+  end
+
+  -- The marker affects find_connected_range() so that each door opens and
+  -- closes separately rather than all of them joining together into a huge
+  -- gate that opens all at once.
+  e.lua_marker('+',  props_marker { connected_exclude="true" })
+  e.lua_marker('a',
+               props_marker { stop_explore="strange structure made of doors" })
+  e.kfeat("a = runed_door")
 end

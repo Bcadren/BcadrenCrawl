@@ -1,5 +1,7 @@
 #pragma once
 
+#include "tag-version.h"
+
 enum attribute_type
 {
 #if TAG_MAJOR_VERSION == 34
@@ -25,18 +27,20 @@ enum attribute_type
     ATTR_PURCHASES,            // Gold amount spent at shops.
     ATTR_DONATIONS,            // Gold amount donated to Zin.
     ATTR_MISC_SPENDING,        // Spending for things like ziggurats.
+    ATTR_GRAVITY_POWER,        // Spellpower of last Gell's Gravitation use.
 #if TAG_MAJOR_VERSION == 34
-    ATTR_UNUSED1,              // was ATTR_RND_LVL_BOOKS
     ATTR_NOISES,
-    ATTR_SHADOWS,              // Lantern of shadows effect.
-    ATTR_UNUSED2,              // was ATTR_FRUIT_FOUND
 #endif
+    ATTR_SHADOWS,              // Lantern of shadows effect.
+    ATTR_SHADOW_DELAY,         // Delay between shadow spawns (lantern)
     ATTR_FLIGHT_UNCANCELLABLE, // Tornado only right now.
     ATTR_INVIS_UNCANCELLABLE,  // Spell/potion of invis is in effect.
     ATTR_PERM_FLIGHT,          // Tengu flight or boots of flying are on.
     ATTR_SEEN_INVIS_TURN,      // Last turn you saw something invisible.
     ATTR_SEEN_INVIS_SEED,      // Random seed for invis monster positions.
-    ATTR_APPENDAGE,            // eq slot of Beastly Appendage
+#if TAG_MAJOR_VERSION == 34
+    ATTR_UNUSED3,            // old Beastly Appendage
+#endif
     ATTR_TITHE_BASE,           // Remainder of untithed gold.
     ATTR_EVOL_XP,              // XP gained since last evolved mutation
     ATTR_LIFE_GAINED,          // XL when a felid gained a life.
@@ -53,9 +57,7 @@ enum attribute_type
     ATTR_SEARING_RAY,          // Are we currently firing a searing ray?
     ATTR_RECITE_TYPE,          // Recitation type.
     ATTR_RECITE_SEED,          // Recite text seed.
-#if TAG_MAJOR_VERSION == 34
-    ATTR_RECITE_HP,            // HP on start of recitation.
-#endif
+    ATTR_SKELETON,             // Animate Skeleton active
     ATTR_SWIFTNESS,            // Duration of future antiswiftness.
 #if TAG_MAJOR_VERSION == 34
     ATTR_BARBS_MSG,            // Have we already printed a message on move?
@@ -98,5 +100,9 @@ enum attribute_type
     ATTR_WALL_JUMP_READY,      // Ready to perform a wall jump.
     ATTR_ROOTED,               // Lignifite Roots are in the ground.
     ATTR_DEATHS_DOOR_HP,       // How much HP we should have under Death's Door
+    ATTR_SCRYING,              // Do we have X-Ray Vision?
+    ATTR_STAFF_SHIELD,         // SH from a wielded enhancer staff. 
+    ATTR_STRIPPED_COLOUR,      // Lost draconian colour.
+    ATTR_KIKU_CORPSE,          // Receive corpses from kiku on spellcast.
     NUM_ATTRIBUTES
 };

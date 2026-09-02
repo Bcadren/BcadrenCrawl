@@ -5,7 +5,11 @@
 
 #pragma once
 
+#include <vector>
+
 #include "enum.h"
+
+using std::vector;
 
 //////////////////////////////////////////////////////////////////////
 // Places and names
@@ -21,8 +25,6 @@ string prep_branch_level_name(level_id id = level_id::current());
 int absdungeon_depth(branch_type branch, int depth);
 
 bool single_level_branch(branch_type branch);
-
-bool branch_allows_followers(branch_type branch);
 
 vector<level_id> all_dungeon_ids();
 

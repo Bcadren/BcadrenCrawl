@@ -390,7 +390,7 @@ corpse
 Un cadavre. Vous pouvez le découper pour produire des morceaux de viande
 comestibles.
 %%%%
-crystal plate armour
+crystal plate
 
 Une armure cristalline incroyablement lourde mais extrêmement protectrice.
 %%%%
@@ -493,7 +493,7 @@ great mace
 
 Une énorme et très encombrante masse de guerre.
 %%%%
-hand axe
+hatchet
 
 Une petite hache.
 %%%%
@@ -834,31 +834,6 @@ Ce parchemin permet à son lecteur de se téléporter sur une courte distance,
 avec un contrôle précis. Méfiez-vous tout de même car ce type de téléportation
 contamine le sujet avec de l'énergie magique résiduelle.
 %%%%
-scroll of brand weapon
-
-Ce parchemin enchante l'arme choisie de façon à la rendre beaucoup plus
-efficaces pour infliger des dommages sur les ennemis de son porteur. Il peut
-aussi rendre permanente la marque temporaire obtenue à partir de certains
-sorts, ou peut être utilisé sur une arme en ayant déjà une provoquant ainsi
-l'effacement de celle ci pour en mettre une nouvelle au hasard.
-
-Les marques qui sont étroitement liés à l'un des dieux (Trog, Lugonu,
-Kikubaaquadgha, L’Étincelant) ne peuvent être apposé de cette façon. Xom,
-d'autre part, ne laisserait pas une telle occasion de s'amuser pour la rendre
-inutile.
-%%%%
-scroll of curse armour
-
-Ce parchemin place une malédiction sur une pièce d'armure équipé.
-%%%%
-scroll of curse jewellery
-
-Ce parchemin place une malédiction sur une amulette ou un anneau équipé.
-%%%%
-scroll of curse weapon
-
-Ce parchemin place une malédiction sur une arme équipé.
-%%%%
 scroll of enchantment
 
 Ce parchemin place un enchantement sur l'arme équipée,  la rendant plus précise
@@ -895,11 +870,6 @@ scroll of random uselessness
 
 Il est facile d'être aveuglé par le sentiment d'accomplissement que l'on a à
 faire marcher ce parchemin, au vu de sa particulière inutilité.
-%%%%
-scroll of remove curse
-
-Lire ce parchemin permet de libérer les objets que vous portez ou tenez en main
-de leurs malédictions.
 %%%%
 scroll of summoning
 
@@ -1019,7 +989,7 @@ troll hide
 La peau raide et noueuse d'un troll doté de propriété régénératrice. Il existe
 des méthodes magiques pour la transformer en armure.
 %%%%
-troll leather armour
+troll leather
 
 Une armure magique confectionnée à partir de la peau raide et bosselée d'un
 troll. Elle est capable de régénérer les tissus de son porteur à un rythme lent

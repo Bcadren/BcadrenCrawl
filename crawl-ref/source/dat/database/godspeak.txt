@@ -77,50 +77,6 @@ Xom alters the dungeon around you.
 ##################
 # Xom nastiness
 ##################
-# miscast strength 0, mostly harmless
-Xom zero miscast effect
-
-Xom almost notices you.
-
-Xom's attention almost turns to you for a moment.
-
-Xom's power almost touches on you for a moment.
-
-You almost hear Xom's maniacal laughter.
-%%%%
-# miscast strength random2(2), harmless/annoying
-Xom minor miscast effect
-
-Xom notices you.
-
-Xom's attention turns to you for a moment.
-
-Xom's power touches on you for a moment.
-
-You hear Xom's maniacal laughter.
-%%%%
-# miscast strength random2(3), mostly annoying
-Xom medium miscast effect
-
-@Xom minor miscast effect@
-%%%%
-# miscast strength random2(4), up to really nasty
-Xom major miscast effect
-
-"Try this."
-
-Xom's attention turns to you.
-
-Xom's power touches on you.
-
-Xom giggles.
-
-w:1
-"This scratches an itch."
-
-w:1
-"Running a series of toy crash tests now."
-%%%%
 Xom rearrange the pieces
 
 Xom decides to rearrange the pieces.
@@ -276,6 +232,17 @@ Xom cloud trail
 
 "This place needs a little more atmosphere."
 %%%%
+# turns walls into glass
+Xom vitrification
+
+You feel watched.
+
+Everything around you seems to assume a strange transparency.
+
+The walls suddenly lose part of their structure.
+
+Xom alters the dungeon around you.
+%%%%
 # strengthens friendlies, weakens hostiles
 Xom good monster polymorph
 
@@ -396,6 +363,14 @@ Xom shushes you conspicuously.
 
 Xom whispers: Shhh!
 %%%%
+Xom doors
+
+Xom says "What's behind door number 3?"
+
+Xom maniacally slams open every door you can see.
+
+Xom chortles "Why do they keep these things closed?"
+%%%%
 Xom cloud
 
 "The weather's been a little too boring around here."
@@ -495,6 +470,42 @@ else
 end
 }}
 %%%%
+############################################
+# Beogh rants on destroying an orcish idol #
+############################################
+# Beogh's messiah has destroyed an idol
+Beogh idol follower
+
+Beogh fumes, "This is no small sin, orc. Repent!"
+
+Beogh whispers, "You will suffer for this misdeed."
+
+Beogh rages, "An eye for an eye..."
+%%%%
+# an unbelieving orc has destroyed an idol
+Beogh idol orc
+
+Beogh's voice booms out: "Heretic, die!"
+
+You hear Beogh's thundering voice: "Suffer, infidel!"
+
+Beogh roars, "Feel my power, apostate!"
+%%%%
+# a character of another species has destroyed an idol
+Beogh idol other
+
+Beogh is not amused by that idol's destruction.
+
+Beogh seems highly displeased.
+
+Your arrogance infuriates Beogh.
+
+Beogh utters a curse on your species.
+
+Beogh curses everyone not orcish, especially @player_genus_plural@.
+
+Beogh swears eternal hatred towards @player_god@.
+%%%%
 recite_closure
 
 "Amen!"
@@ -522,7 +533,7 @@ w:3
 ######################################
 Ashenzari welcome
 
-Ashenzari says: Partake of my vision. Partake of my curse.
+Ashenzari says: Treasure these ephemeral moments...
 %%%%
 Beogh penance
 

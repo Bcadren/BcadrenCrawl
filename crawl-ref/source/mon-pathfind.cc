@@ -45,21 +45,20 @@ int mons_tracking_range(const monster* mon)
         break;
     }
 
-    if (range)
-    {
-        if (mon->can_cling_to_walls())
-            range += 4;
-        else if (mons_is_native_in_branch(*mon))
-            range += 3;
-        else if (mons_class_flag(mon->type, M_BLOOD_SCENT))
-            range++;
-    }
+    if (mon->can_cling_to_walls())
+        range += 4;
+    else if (mons_is_native_in_branch(*mon))
+        range += 3;
+    else if (mons_class_flag(mon->type, M_BLOOD_SCENT))
+        range++;
 
     if (player_under_penance(GOD_ASHENZARI))
         range *= 5;
 
     if (mons_foe_is_marked(*mon) || mon->has_ench(ENCH_HAUNTING))
         range *= 5;
+
+    ASSERT(range);
 
     return range;
 }
@@ -395,14 +394,14 @@ vector<coord_def> monster_pathfind::calc_waypoints()
 
 bool monster_pathfind::traversable(const coord_def& p)
 {
-    if (!traverse_unmapped && grd(p) == DNGN_UNSEEN)
+    if (!traverse_unmapped && env.grid(p) == DNGN_UNSEEN)
         return false;
 
     // XXX: Hack to be somewhat consistent with uses of
     //      opc_immob elsewhere in pathfinding.
     //      All of this should eventually be replaced by
     //      giving the monster a proper pathfinding LOS.
-    if (opc_immob(p) == OPC_OPAQUE && !feat_is_closed_door(grd(p)))
+    if (opc_immob(p) == OPC_OPAQUE && !feat_is_closed_door(env.grid(p)))
     {
         // XXX: Ugly hack to make thorn hunters use their briars for defensive
         //      cover instead of just pathing around them.
@@ -426,7 +425,7 @@ bool monster_pathfind::traversable(const coord_def& p)
     if (mons)
         return mons_traversable(p);
 
-    return feat_has_solid_floor(grd(p));
+    return feat_has_solid_floor(env.grid(p));
 }
 
 // Checks whether a given monster can pass over a certain position, respecting
@@ -441,7 +440,7 @@ bool monster_pathfind::mons_traversable(const coord_def& p)
     return mons_can_traverse(*mons, p, traverse_in_sight)
             || mons->can_cling_to_walls()
                && cell_is_clingable(p)
-               && mons->can_pass_through_feat(grd(p))
+               && mons->can_pass_through_feat(env.grid(p))
                && cell_can_cling_to(pos, p);
 }
 
@@ -460,7 +459,7 @@ int monster_pathfind::mons_travel_cost(coord_def npos)
     ASSERT(grid_distance(pos, npos) <= 1);
 
     // Doors need to be opened.
-    if (feat_is_closed_door(grd(npos)))
+    if (feat_is_closed_door(env.grid(npos)))
         return 2;
 
     // Travelling through water, entering or leaving water is more expensive

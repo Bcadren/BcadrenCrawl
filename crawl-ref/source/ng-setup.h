@@ -14,7 +14,8 @@ item_def* newgame_make_item(object_class_type base,
                             bool force_tutorial = false);
 
 struct newgame_def;
-void setup_game(const newgame_def& ng);
+void setup_game(const newgame_def& ng, bool normal_dungeon_setup=true);
 void initial_dungeon_setup();
+void note_equipment();
 
 void give_items_skills(const newgame_def& ng);

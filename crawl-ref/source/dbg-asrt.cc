@@ -131,14 +131,14 @@ static void _dump_player(FILE *file)
         && !in_bounds(you.pos()) && you.hp > 0 && you.hp_max > 0
         && you.strength() > 0 && you.intel() > 0 && you.dex() > 0)
     {
-        // Arena mode can change behavior of the rest of the code and/or lead
+        // Arena mode can change behaviour of the rest of the code and/or lead
         // to asserts.
         crawl_state.type            = GAME_TYPE_NORMAL;
         crawl_state.arena_suspended = false;
         return;
     }
 
-    // Arena mode can change behavior of the rest of the code and/or lead
+    // Arena mode can change behaviour of the rest of the code and/or lead
     // to asserts.
     crawl_state.arena_suspended = false;
 
@@ -187,7 +187,7 @@ static void _dump_player(FILE *file)
     {
         fprintf(file, "Delayed (%u):\n",
                 (unsigned int)you.delay_queue.size());
-        for (const auto delay : you.delay_queue)
+        for (const auto &delay : you.delay_queue)
         {
             fprintf(file, "    type:     %s", delay->name());
             fprintf(file, "\n");
@@ -393,13 +393,13 @@ static void _dump_player(FILE *file)
     if (in_bounds(you.pos()) && monster_at(you.pos()))
     {
         fprintf(file, "Standing on same square as: ");
-        const unsigned short midx = mgrd(you.pos());
+        const unsigned short midx = env.mgrid(you.pos());
 
         if (invalid_monster_index(midx))
             fprintf(file, "invalid monster index %d\n", (int) midx);
         else
         {
-            const monster* mon = &menv[midx];
+            const monster* mon = &env.mons[midx];
             fprintf(file, "%s:\n", debug_mon_str(mon).c_str());
             debug_dump_mon(mon, true);
         }
@@ -611,7 +611,7 @@ void do_crash_dump()
         _dump_ver_stuff(stderr);
 
         fprintf(stderr, "%s\n\n", crash_signal_info().c_str());
-        write_stack_trace(stderr, 0);
+        write_stack_trace(stderr);
         call_gdb(stderr);
 
         return;
@@ -640,8 +640,8 @@ void do_crash_dump()
     // This message is parsed by the WebTiles server.
     fprintf(stderr,
             "\n\nWe crashed! This is likely due to a bug in Crawl. "
-            "\nPlease submit a bug report at https://crawl.develz.org/mantis/ "
-            "and include:"
+            "\nPlease submit a bug report at https://github.com/crawl/crawl/issues or at"
+            "\nhttps://crawl.develz.org/mantis/ and include:"
             "\n- The crash report: %s"
             "\n- Your save file: %s"
             "\n- A description of what you were doing when this crash occurred.\n\n",
@@ -679,7 +679,7 @@ void do_crash_dump()
     // might themselves cause crashes.
     if (!signal_info.empty())
         fprintf(file, "%s\n\n", signal_info.c_str());
-    write_stack_trace(file, 0);
+    write_stack_trace(file);
     fprintf(file, "\n");
 
     call_gdb(file);
@@ -783,6 +783,7 @@ void do_crash_dump()
 
 NORETURN static void _BreakStrToDebugger(const char *mesg, bool assert)
 {
+    UNUSED(assert);
 // FIXME: this needs a way to get the SDL_window in windowmanager-sdl.cc
 #if 0
 #if defined(USE_TILE_LOCAL) && defined(TARGET_OS_WINDOWS)

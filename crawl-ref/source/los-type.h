@@ -8,6 +8,7 @@ enum los_type
     LOS_NO_TRANS     = (1 << 1), // o o T h
     LOS_SOLID        = (1 << 2), // o o o T
     LOS_SOLID_SEE    = (1 << 3), // o o o h
+    LOS_MONSTER      = (1 << 4), // o * T h
     // KEY:
     //   o: opaque, T: transparent, h: half-opaque (two cells block LOS)
     // Columns:
@@ -15,4 +16,5 @@ enum los_type
     //   g: glass (transparent walls)
     //   s: other FFT_SOLID features: grate, statue/idol, open/lava sea
     //   c: semi-opaque clouds (fog, etc.); bushes
+    //   *: runed cells are opaque, rest are transparent.
 };

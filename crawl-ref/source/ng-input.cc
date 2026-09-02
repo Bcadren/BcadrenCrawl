@@ -4,12 +4,9 @@
 
 #include <cwctype>
 
-#include "cio.h"
 #include "end.h"
-#include "files.h"
 #include "format.h"
 #include "item-name.h" // make_name
-#include "initfile.h"
 #include "libutil.h"
 #include "options.h"
 #include "stringutil.h"
@@ -21,7 +18,7 @@ formatted_string opening_screen()
 {
     string msg =
     "<yellow>Hello, welcome to " CRAWL " " + string(Version::Long) + "!</yellow>\n"
-    "<brown>(c) Copyright 1997-2002 Linley Henzell, 2002-2019 Crawl DevTeam";
+    "<brown>(c) Copyright 1997-2002 Linley Henzell, 2002-2020 Crawl DevTeam";
 
     return formatted_string::parse_string(msg);
 }

@@ -38,16 +38,12 @@ function fill_special_room(e, mon, lord_mon, pack)
 end
 
 function sroom_kobold_lair(e)
-    local level = you.absdepth() - 1
-
     -- Return early if we're being called during map validation.
     if e.is_validating() then return end
 
     local level_mons = 6
 
-    if level < 6 then
-        level_mons = 2
-    elseif level < 9 then
+    if you.absdepth() < 5 then
         level_mons = 4
     end
 
@@ -61,22 +57,22 @@ function sroom_kobold_lair(e)
 end
 
 function sroom_orc_lair(e)
-    local level = you.absdepth() - 1
+    local level = you.absdepth()
 
     -- Return early if we're being called during map validation.
     if e.is_validating() then return end
 
     local mon
 
-    if level > 20 or you.in_branch("Elf") then
+    if level > 7 or you.in_branch("Elf") then
         mon = "orc priest w:7 / orc warrior w:12 / orc knight w:8 / "
               .. " orc high priest w:2 / two-headed ogre w:1"
         lord_mon = "orc warlord"
-    elseif level > 14 or you.in_branch("Orc") then
+    elseif level > 6 or you.in_branch("Orc") then
         mon = "orc w:6 / orc warrior w:8 / orc priest w:2 /  "
               .. "orc knight w:3 / troll w:1 "
         lord_mon = "orc knight / orc high priest w:6 / orc warlord w:4"
-    elseif level > 9 then
+    elseif level > 3 then
         mon = "orc w:25 / orc warrior / orc priest w:3 / ogre w:2"
         lord_mon = "orc priest w:7 / orc knight w:3"
     else
@@ -105,7 +101,7 @@ function sroom_beehive(e)
                       "patrolling queen bee", true)
 
     e.kmons('M = meliai')
-    if level > 11 then
+    if level > 5 then
         e.nsubst('1 = 3:M / *:1')
     end
 
@@ -132,7 +128,7 @@ function sroom_morgue(e)
     local mons = {}
 
     mons[1] = "zombie w:9 / skeleton w:5 / spectral thing w:1"
-    mons[2] = "shadow wraith w:3 / soul eater w:4 / vampire mage w:3 / "
+    mons[2] = "shadow wraith w:3 / saelneytandi w:4 / vampire mage w:3 / "
               .. "flayed ghost w:4 / death knight w:1"
     mons[3] = "skeletal warrior w:15 ; great mace" .. weap
               .. " | glaive" .. weap .. " | battleaxe" .. weap
@@ -166,7 +162,7 @@ function sroom_morgue(e)
     elseif you.in_branch("Tar") or you.in_branch("Crypt") then
         mons[5] = "eidolon w:6 / jiangshi w:6"
         mons[6] = "mummy priest w:2 / revenant w:6"
-        bodies = "shadow dragon corpse / base draconian corpse / "
+        bodies = "shadow dragon corpse / black draconian corpse / "
                  .. "dire elephant corpse"
         bodies_chance = 33
     else
@@ -249,6 +245,8 @@ function sroom_mythical_zoo(e)
         Z = Z + 5
     elseif you.in_branch("Lair") then
         Z = Z - 2
+	elseif you.in_branch("D") then
+		Z = Z * 2
     end
 
     local mons = {}
@@ -269,9 +267,9 @@ function sroom_mythical_zoo(e)
     end
 
     if Z >= 21 then
-       lord_mon = "catoblepas / sphinx w:60 / hell beast w:20"
+       lord_mon = "catoblepas / sphinx w:60 / helvityr w:20"
     elseif Z >= 16 then
-       lord_mon = "catoblepas / hydra w:40 / hell beast w:40"
+       lord_mon = "catoblepas / hydra w:40 / helvityr w:40"
     else
        lord_mon = "catoblepas / manticore w:40 / hydra w:40"
     end
@@ -338,8 +336,8 @@ function sroom_demon_pit(e)
         {"balrug", weight_c},
         {"blizzard_demon", weight_c},
         {"hellion", weight_d},
-        {"tormentor", weight_d},
-        {"cacodemon", 5},
+        {"poenydio", weight_d},
+        {"titivilus", 5},
     }
 
     -- Choose three demons as weighted above,
@@ -351,8 +349,8 @@ function sroom_demon_pit(e)
         tier_twos[chosen][2] = 0
     end
 
-    lord_mon = "brimstone fiend / ice fiend / tzitzimitl / " ..
-               "hell sentinel / nonbase demonspawn w:20"
+    lord_mon = "rhuddgoch / Vetrifl / tzitzimitl / " ..
+               "gwarchodwr / nonbase demonspawn w:20"
 
     fill_special_room(e, mons, lord_mon, true)
 
@@ -365,25 +363,25 @@ end
 ###########################
 
 NAME:   special_room_kobold
-DEPTH:  D:7-11, Orc, !Orc:$
+DEPTH:  D:4-5, Orc, !Orc:$
 TAGS:   special_room unrand
-WEIGHT: 11
+WEIGHT: 22
 : sroom_kobold_lair(_G)
 MAP
 ENDMAP
 
 NAME:   special_room_orc
-DEPTH:  D:8-, Orc, !Orc:$, Elf, Vaults
+DEPTH:  D:2-, Orc, !Orc:$, Elf, Vaults
 TAGS:   special_room allow_dup unrand
-WEIGHT: 59 (D:8-12, Orc), 40 (D:13-, Elf:1), 32
+WEIGHT: 59 (D:4-6, Orc), 40 (D:7-, Elf:1), 32
 : sroom_orc_lair(_G)
 MAP
 ENDMAP
 
 NAME:   special_room_bee
-DEPTH:  D:9-, Lair, Orc, !Orc:$, Spider
+DEPTH:  D:4-, Lair, Orc, !Orc:$, Spider
 TAGS:   special_room unrand uniq_beehive
-WEIGHT: 30 (D:9-12, Orc, Lair:1-3), 24 (D:13-, Lair:4-), 20
+WEIGHT: 30 (D:4-6, Orc, Lair:1-3), 24 (D:7-, Lair:4-), 20
 : sroom_beehive(_G)
 MAP
 ENDMAP
@@ -405,9 +403,9 @@ MAP
 ENDMAP
 
 NAME:   special_room_mythical_zoo
-DEPTH:  D:14-, Depths, Lair:4-, Elf
+DEPTH:  D:7-, Depths, Lair:4-, Elf
 TAGS:   special_room allow_dup unrand
-WEIGHT: 20 (D:14-, Lair:4-5), 25 (Depths:1-3, Lair:$, Elf), 28
+WEIGHT: 20 (D:7-, Lair:4-5), 25 (Depths:1-3, Lair:$, Elf), 28
 : sroom_mythical_zoo(_G)
 MAP
 ENDMAP

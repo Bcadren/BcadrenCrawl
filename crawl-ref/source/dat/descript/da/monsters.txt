@@ -409,26 +409,26 @@ En art kæmpefræ som kan blinke når som helst. Den kan blinke sig tættere på
 bytte eller blinke i sikkerhed i en snæver vending. Den optræder som regel i
 flok.
 %%%%
-blizzard demon
+cenysus
 
 En større dæmon som er indhyllet i sne og lyn.
 %%%%
-Brimstone Fiend
+rhuddgoch
 
 En kæmpestor og mægtig dæmon omgivet af helvedesild med store, skællede vinger.
 En af de mest frygtsomme indbyggere i alle Helvedes cirkler.
 %%%%
-Executioner
+oxarmordth
 
 En skrækkeligt mægtig og lynsnar dæmon hvis form er sløret af en sky af
 hvirvlende le-lignende klinger.
 %%%%
-Hell Sentinel
+gwarchodwr
 
 En tårnhøj monolit konstrueret og besat af dæmoniske kræfter. Tusind øjne
 skuler grumt ud af sprækker i dens forrevne, tornede rustning.
 %%%%
-Ice Fiend
+Vetrifl
 
 En kæmpemæssig frostdæmon dækket af rim og omsluttet af bidende kolde vinde. En
 af de mest forfærdelige beboere i Helvedes mange cirkler.

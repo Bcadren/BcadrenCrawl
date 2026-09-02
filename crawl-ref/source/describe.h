@@ -12,6 +12,7 @@
 #include "command-type.h"
 #include "enum.h"
 #include "mon-util.h"
+#include "tag-version.h"
 #include "trap-type.h"
 
 struct monster_info;
@@ -51,16 +52,18 @@ void describe_feature_type(dungeon_feature_type feat);
 string get_cloud_desc(cloud_type cloud, bool include_title = true);
 void get_feature_desc(const coord_def &gc, describe_info &inf, bool include_extra = true);
 
+command_type describe_item_popup(const item_def &item,
+                                 function<void (string&)> fixup_desc = nullptr,
+                                 bool do_actions = false);
 bool describe_item(item_def &item, function<void (string&)> fixup_desc = nullptr);
 void get_item_desc(const item_def &item, describe_info &inf);
 void inscribe_item(item_def &item);
 void target_item(item_def &item);
 
-int describe_monsters(const monster_info &mi, bool force_seen = false,
-                      const string &footer = "");
+int describe_monsters(const monster_info &mi, const string& footer = "");
 
 void get_monster_db_desc(const monster_info &mi, describe_info &inf,
-                         bool &has_stat_desc, bool force_seen = false);
+                         bool &has_stat_desc);
 branch_type serpent_of_hell_branch(monster_type m);
 string serpent_of_hell_flavour(monster_type m);
 
@@ -91,7 +94,7 @@ string process_description(const describe_info &inf, bool include_title = true);
 const char* get_size_adj(const size_type size, bool ignore_medium = false);
 
 const char* jewellery_base_ability_string(int subtype);
-string artefact_inscription(const item_def& item);
+string artefact_inscription(const item_def& item, bool curse = false);
 void add_inscription(item_def &item, string inscrip);
 
 string trap_name(trap_type trap);
@@ -101,3 +104,6 @@ int str_to_trap(const string &s);
 int count_desc_lines(const string& _desc, const int width);
 
 string extra_cloud_info(cloud_type cloud_type);
+
+/* Public for testing purposes only: do not use elsewhere. */
+string _monster_habitat_description(const monster_info& mi);

@@ -1,9 +1,13 @@
 #pragma once
 
 #include <functional>
+#include <vector>
 
 #include "enchant-type.h"
 #include "mon-util.h"
+#include "tag-version.h"
+
+using std::vector;
 
 #define SPECIAL_WEAPON_KEY "special_weapon_name"
 #define CLOUD_IMMUNE_MB_KEY "cloud_immune"
@@ -24,6 +28,8 @@ enum monster_info_flags
     MB_CONFUSED,
     MB_INVISIBLE,
     MB_POISONED,
+    MB_MORE_POISONED,
+    MB_MAX_POISONED,
 #if TAG_MAJOR_VERSION == 34
     MB_ROTTING,
 #endif
@@ -36,9 +42,7 @@ enum monster_info_flags
     MB_SICK,
     MB_CAUGHT,
     MB_WEBBED,
-#if TAG_MAJOR_VERSION == 34
-    MB_OLD_FRENZIED,
-#endif
+    MB_DOOR_SEAL,
     MB_PETRIFYING,
     MB_PETRIFIED,
     MB_VULN_MAGIC,
@@ -48,9 +52,7 @@ enum monster_info_flags
     MB_INSANE,
     MB_SILENCING,
     MB_MESMERIZING,
-#if TAG_MAJOR_VERSION == 34
-    MB_EVIL_ATTACK,
-#endif
+    MB_CIGOTUVI,
     MB_SHAPESHIFTER,
     MB_CHAOTIC,
     MB_SUBMERGED,
@@ -90,9 +92,7 @@ enum monster_info_flags
     MB_PERM_SUMMON,
     MB_INNER_FLAME,
     MB_UMBRAED,
-#if TAG_MAJOR_VERSION == 34
-    MB_OLD_ROUSED,
-#endif
+    MB_NO_CHARMS,
     MB_BREATH_WEAPON,
 #if TAG_MAJOR_VERSION == 34
     MB_DEATHS_DOOR,
@@ -102,8 +102,8 @@ enum monster_info_flags
     MB_NO_REGEN,
 #if TAG_MAJOR_VERSION == 34
     MB_SUPPRESSED,
-    MB_ROLLING,
 #endif
+    MB_ROLLING,
     MB_RANGED_ATTACK,
     MB_NO_NAME_TAG,
     MB_OZOCUBUS_ARMOUR,
@@ -176,6 +176,25 @@ enum monster_info_flags
     MB_PINNED,
     MB_VILE_CLUTCH,
     MB_HIGHLIGHTED_SUMMONER,
+    MB_COLD_VULN,
+    MB_ELEC_VULN,
+    MB_PHYS_VULN,
+    MB_ENTROPIC_BURST,
+    MB_CHAOTIC_INFUSION,
+    MB_CHAOSNADO,
+    MB_AIR_HOLD,
+    MB_AIR_HOLD_DROWN,
+    MB_SWALLOWED,
+    MB_SWALLOWED_DROWN,
+    MB_CLOUD_RING_THUNDER,
+    MB_CLOUD_RING_FLAMES,
+    MB_CLOUD_RING_CHAOS,
+    MB_CLOUD_RING_MUTATION,
+    MB_CLOUD_RING_FOG,
+    MB_CLOUD_RING_ICE,
+    MB_CLOUD_RING_DRAINING,
+    MB_CLOUD_RING_ACID,
+    MB_CLOUD_RING_MIASMA,
     NUM_MB_FLAGS
 };
 
@@ -204,11 +223,19 @@ struct monster_info_base
     string quote;
     mon_holy_type holi;
     mon_intel_type mintel;
+    god_type religion;
     int hd;
+    int max_hp;
+    int current_hp;
     int ac;
     int ev;
     int base_ev;
+    int sh;
     int mr;
+    int tohit;
+    int ranged_tohit;
+    int dur;
+    int xp_val;
     resists_t mresists;
     bool can_see_invis;
     monuse_flags mitemuse;
@@ -219,6 +246,7 @@ struct monster_info_base
     vector<string> constricting_name;
     monster_spells spells;
     mon_attack_def attack[MAX_NUM_ATTACKS];
+    bool can_go_frenzy;
 
     uint32_t client_id;
 };
@@ -263,7 +291,8 @@ struct monster_info : public monster_info_base
     }
 
     void to_string(int count, string& desc, int& desc_colour,
-                   bool fullname = true, const char *adjective = nullptr) const;
+                   bool fullname = true, const char *adjective = nullptr,
+                   bool verbose = true) const;
 
     /* only real equipment is visible, miscellany is for mimic items */
     unique_ptr<item_def> inv[MSLOT_LAST_VISIBLE_SLOT + 1];
@@ -293,7 +322,7 @@ struct monster_info : public monster_info_base
 
     inline bool neutral() const
     {
-        return attitude == ATT_NEUTRAL || attitude == ATT_GOOD_NEUTRAL || attitude == ATT_STRICT_NEUTRAL;
+        return attitude == ATT_NEUTRAL || attitude == ATT_GOOD_NEUTRAL || attitude == ATT_STRICT_NEUTRAL || attitude == ATT_PASSIVE;
     }
 
     string db_name() const;
@@ -306,14 +335,18 @@ struct monster_info : public monster_info_base
     vector<string> attributes() const;
 
     const char *pronoun(pronoun_type variant) const;
-    const bool pronoun_plurality() const;
+    bool pronoun_plurality() const;
 
     string wounds_description_sentence() const;
     string wounds_description(bool colour = false) const;
+    string tohit_description(bool terse = false) const;
+    string ev_description(bool terse = false) const;
 
     string constriction_description() const;
 
     monster_type draco_or_demonspawn_subspecies() const;
+
+    item_def * staff() const;
 
     mon_intel_type intel() const
     {
@@ -368,8 +401,10 @@ struct monster_info : public monster_info_base
         return props.exists("priest");
     }
 
+    int weapon_damage(const item_def &weapon) const;
+    int spiky_odds() const;
     bool has_spells() const;
-    int spell_hd() const;
+    int spell_hd(spell_type spell = SPELL_NO_SPELL) const;
     unsigned colour(bool base_colour = false) const;
     void set_colour(int colour);
 
@@ -387,5 +422,11 @@ bool set_monster_list_colour(string key, int colour);
 void clear_monster_list_colours();
 
 void get_monster_info(vector<monster_info>& mons);
+
+void mons_to_string_pane(string& desc, int& desc_colour, bool fullname,
+                           const vector<monster_info>& mi, int start,
+                           int count);
+void mons_conditions_string(string& desc, const vector<monster_info>& mi,
+                            int start, int count, bool equipment);
 
 typedef function<vector<string> (const monster_info& mi)> (desc_filter);

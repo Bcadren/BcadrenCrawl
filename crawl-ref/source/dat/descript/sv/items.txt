@@ -51,7 +51,7 @@ grape
 
 En liten frukt.
 %%%%
-hand axe
+hatchet
 
 En liten yxa.
 %%%%

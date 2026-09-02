@@ -1,3 +1,7 @@
+#pragma once
+
+#include "tag-version.h"
+
 // In the default case, these translations hold:
 // unseen_colour -> seen_colour
 // seen_colour -> seen_em_colour
@@ -28,6 +32,14 @@ static feature_def feat_defs[] =
     COLOUR_IS(BLACK),
     FFT_NONE, MF_UNSEEN,
 },
+
+{
+    DNGN_TRAVEL_TRAIL, "travel trail", "travel_trail",
+    NUM_DCHAR_TYPES, NUM_DCHAR_TYPES,
+    COLOUR_IS(BLACK),
+    FFT_NONE, MF_UNSEEN,
+},
+
 
 {
     DNGN_CLOSED_DOOR, "closed door", "closed_door",
@@ -79,6 +91,20 @@ static feature_def feat_defs[] =
 },
 
 {
+    DNGN_MANGROVE, "mangrove", "mangrove",
+    DCHAR_TREE, DCHAR_WALL_MAGIC,
+    COLOUR_IS(ETC_TREE),
+    FFT_OPAQUE | FFT_SOLID, MF_WALL,
+},
+
+{
+    DNGN_SLIMESHROOM, "giant mushroom", "slimeshroom",
+    DCHAR_TREE, DCHAR_WALL_MAGIC,
+    COLOUR_IS(ETC_SLIMESHROOM),
+    FFT_OPAQUE | FFT_SOLID, MF_WALL,
+},
+
+{
     DNGN_METAL_WALL, "metal wall", "metal_wall",
     DCHAR_WALL, DCHAR_WALL_MAGIC,
     COLOUR_IS(CYAN),
@@ -121,6 +147,13 @@ static feature_def feat_defs[] =
 },
 
 {
+    DNGN_RUNED_STONE_WALL, "runed stone wall", "runed_stone_wall",
+    DCHAR_WALL, DCHAR_WALL_MAGIC,
+    COLOUR_IS(LIGHTBLUE),
+    FFT_OPAQUE | FFT_WALL | FFT_SOLID, MF_WALL,
+},
+
+{
     DNGN_PERMAROCK_WALL, "unnaturally hard rock wall", "permarock_wall",
     DCHAR_PERMAWALL, DCHAR_WALL_MAGIC,
     COLOUR_IS(ETC_ROCK),
@@ -136,6 +169,20 @@ static feature_def feat_defs[] =
 
 {
     DNGN_CLEAR_STONE_WALL, "translucent stone wall", "clear_stone_wall",
+    DCHAR_WALL, DCHAR_WALL_MAGIC,
+    COLOUR_IS(LIGHTCYAN),
+    FFT_WALL | FFT_SOLID, MF_WALL,
+},
+
+{
+    DNGN_CLEAR_METAL_WALL, "translucent aluminium wall", "clear_metal_wall",
+    DCHAR_WALL, DCHAR_WALL_MAGIC,
+    COLOUR_IS(LIGHTCYAN),
+    FFT_WALL | FFT_SOLID, MF_WALL,
+},
+
+{
+    DNGN_RUNED_CLEAR_STONE_WALL, "translucent runed stone wall", "clear_runed_stone_wall",
     DCHAR_WALL, DCHAR_WALL_MAGIC,
     COLOUR_IS(LIGHTCYAN),
     FFT_WALL | FFT_SOLID, MF_WALL,
@@ -159,6 +206,13 @@ static feature_def feat_defs[] =
     DNGN_OPEN_SEA, "the open sea", "open_sea",
     DCHAR_WALL, NUM_DCHAR_TYPES,
     COLOUR_IS(BLUE),
+    FFT_SOLID, MF_DEEP_WATER,
+},
+
+{
+    DNGN_ENDLESS_SLUDGE, "the endless sewage", "endless_sludge",
+    DCHAR_WALL, NUM_DCHAR_TYPES,
+    COLOUR_IS(GREEN),
     FFT_SOLID, MF_DEEP_WATER,
 },
 
@@ -191,6 +245,13 @@ static feature_def feat_defs[] =
 },
 
 {
+    DNGN_SARCOPHAGUS, "sarcophagus", "sarcophagus",
+    DCHAR_STATUE, NUM_DCHAR_TYPES,
+    COLOUR_IS(YELLOW),
+    FFT_SOLID, MF_WALL,
+},
+
+{
     DNGN_MALIGN_GATEWAY, "portal to somewhere", "malign_gateway",
     DCHAR_ARCH, NUM_DCHAR_TYPES,
     COLOURS(ETC_SHIMMER_BLUE, LIGHTGREY),
@@ -219,9 +280,44 @@ static feature_def feat_defs[] =
 },
 
 {
+    DNGN_SLIMY_WATER, "some liquid slime", "slimy_water",
+    DCHAR_WAVY, NUM_DCHAR_TYPES,
+    COLOUR_IS(LIGHTGREEN),
+    FFT_NONE, MF_WATER,
+},
+
+{
+    DNGN_DEEP_SLIMY_WATER, "some deep liquid slime", "deep_slimy_water",
+    DCHAR_WAVY, NUM_DCHAR_TYPES,
+    COLOUR_IS(GREEN),
+    FFT_NONE, MF_DEEP_WATER,
+},
+
+{
+    DNGN_TOXIC_BOG, "a toxic bog", "toxic_bog",
+    DCHAR_WAVY, NUM_DCHAR_TYPES,
+    COLOUR_IS(ETC_POISON),
+    FFT_NONE, MF_WATER,
+},
+
+{
+    DNGN_QUAGMIRE, "a chaotic quagmire", "quagmire",
+    DCHAR_WAVY, NUM_DCHAR_TYPES,
+    COLOUR_IS(ETC_JEWEL),
+    FFT_NONE, MF_WATER,
+},
+
+{
     DNGN_FLOOR, "floor", "floor",
     DCHAR_FLOOR, DCHAR_FLOOR_MAGIC,
     COLOUR_IS(ETC_FLOOR),
+    FFT_NONE, MF_FLOOR,
+},
+
+{
+    DNGN_RUINED_PLINTH, "a ruined plinth", "plinth",
+    DCHAR_ALTAR, NUM_DCHAR_TYPES,
+    COLOUR_IS(LIGHTGREY),
     FFT_NONE, MF_FLOOR,
 },
 
@@ -277,9 +373,19 @@ static feature_def feat_defs[] =
     FFT_TRAP, MF_TRAP,\
 }
 
+#if TAG_MAJOR_VERSION == 34
 TRAP(DNGN_TRAP_MECHANICAL, "mechanical trap", "trap_mechanical", LIGHTCYAN),
-TRAP(DNGN_TRAP_DISPERSAL, "dispersal trap", "trap_dispersal", MAGENTA),
+#endif
+TRAP(DNGN_TRAP_ARROW, "arrow trap", "trap_mechanical", LIGHTCYAN),
+TRAP(DNGN_TRAP_SPEAR, "spear trap", "trap_mechanical", LIGHTCYAN),
+TRAP(DNGN_TRAP_BLADE, "blade trap", "trap_mechanical", LIGHTCYAN),
+TRAP(DNGN_TRAP_NEEDLE, "needle trap", "trap_mechanical", LIGHTCYAN),
+TRAP(DNGN_TRAP_BOLT, "bolt trap", "trap_mechanical", LIGHTCYAN),
+TRAP(DNGN_TRAP_NET, "net trap", "trap_mechanical", LIGHTCYAN),
+TRAP(DNGN_TRAP_PLATE, "pressure plate", "trap_mechanical", LIGHTCYAN),
+TRAP(DNGN_TRAP_CONGREGATION, "congregation trap", "trap_congregation", MAGENTA),
 TRAP(DNGN_TRAP_TELEPORT, "teleport trap", "trap_teleport", LIGHTBLUE),
+TRAP(DNGN_TRAP_TELEPORT_PERMANENT, "permanent teleport trap", "trap_teleport_permanent", LIGHTBLUE),
 #if TAG_MAJOR_VERSION == 34
 TRAP(DNGN_TRAP_SHADOW, "shadow trap", "trap_shadow", BLUE),
 TRAP(DNGN_TRAP_SHADOW_DORMANT, "dormant shadow trap", "trap_shadow_dormant", BLUE),
@@ -554,7 +660,7 @@ ALTAR(DNGN_ALTAR_BEOGH, "roughly hewn altar of Beogh", "altar_beogh", ETC_BEOGH)
 ALTAR(DNGN_ALTAR_JIYVA, "viscous altar of Jiyva", "altar_jiyva", ETC_SLIME),
 ALTAR(DNGN_ALTAR_FEDHAS, "blossoming altar of Fedhas", "altar_fedhas", GREEN),
 ALTAR(DNGN_ALTAR_CHEIBRIADOS, "snail-covered altar of Cheibriados", "altar_cheibriados", LIGHTCYAN),
-ALTAR(DNGN_ALTAR_ASHENZARI, "shattered altar of Ashenzari", "altar_ashenzari", LIGHTRED),
+ALTAR(DNGN_ALTAR_ASHENZARI, "splintered altar of Ashenzari", "altar_ashenzari", LIGHTRED),
 ALTAR(DNGN_ALTAR_DITHMENOS, "shadowy altar of Dithmenos", "altar_dithmenos", ETC_DITHMENOS),
 ALTAR(DNGN_ALTAR_GOZAG, "opulent altar of Gozag", "altar_gozag", ETC_GOLD), // for the Gold God!
 ALTAR(DNGN_ALTAR_QAZLAL, "stormy altar of Qazlal", "altar_qazlal", ETC_ELEMENTAL),
@@ -566,6 +672,7 @@ ALTAR(DNGN_ALTAR_PAKELLAS, "oddly glowing altar of Pakellas", "altar_pakellas", 
 ALTAR(DNGN_ALTAR_USKAYAW, "hide-covered altar of Uskayaw", "altar_uskayaw", ETC_INCARNADINE),
 ALTAR(DNGN_ALTAR_HEPLIAKLQANA, "hazy altar of Hepliaklqana", "altar_hepliaklqana", LIGHTGREEN),
 ALTAR(DNGN_ALTAR_WU_JIAN, "ornate altar of the Wu Jian Council", "altar_wu_jian", ETC_WU_JIAN),
+ALTAR(DNGN_ALTAR_BAHAMUT_TIAMAT, "ornate altar of Bahamut and Tiamat", "altar_bahamut_and_tiamat", ETC_BAHA_TIA),
 
 #define FOUNTAIN(enum, name, vaultname, colour)\
 {\

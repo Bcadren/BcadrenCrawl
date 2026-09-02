@@ -6,11 +6,14 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "command-type.h"
 #include "enum.h"
 #include "god-type.h"
 #include "terrain-change-type.h"
+
+using std::vector;
 
 class  actor;
 struct coord_def;
@@ -48,7 +51,7 @@ bool feat_is_statuelike(dungeon_feature_type feat);
 bool feat_is_permarock(dungeon_feature_type feat);
 bool feat_is_endless(dungeon_feature_type feat);
 bool feat_can_wall_jump_against(dungeon_feature_type feat);
-bool feat_is_diggable(dungeon_feature_type feat);
+bool feat_is_diggable(dungeon_feature_type feat, bool formacid = false);
 
 bool feat_is_stone_stair_down(dungeon_feature_type feat);
 bool feat_is_stone_stair_up(dungeon_feature_type feat);
@@ -145,7 +148,9 @@ bool cell_can_cling_to(const coord_def& from, const coord_def to);
 bool cell_triggers_conduct(const coord_def pos);
 bool is_boring_terrain(dungeon_feature_type feat);
 
-void mutate_terrain_change_duration(coord_def pos, int delta, bool replace = false);
+bool order_at(const coord_def pos);
+
+bool mutate_terrain_change_duration(coord_def pos, int delta, bool replace = false);
 dungeon_feature_type orig_terrain(coord_def pos);
 void temp_change_terrain(coord_def pos, dungeon_feature_type newfeat, int dur,
                          terrain_change_type type = TERRAIN_CHANGE_GENERIC,

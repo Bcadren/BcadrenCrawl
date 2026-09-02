@@ -7,11 +7,11 @@
 
 #include "teleport.h"
 
-#include "act-iter.h"
 #include "cloud.h"
 #include "coord.h"
 #include "coordit.h"
 #include "delay.h"
+#include "directn.h"
 #include "env.h"
 #include "fprop.h"
 #include "libutil.h"
@@ -22,6 +22,8 @@
 #include "mon-place.h"
 #include "mon-tentacle.h"
 #include "random.h"
+#include "spl-transloc.h"
+#include "stringutil.h"
 #include "terrain.h"
 #include "view.h"
 
@@ -67,14 +69,14 @@ bool monster::blink_to(const coord_def& dest, bool quiet, bool jump)
     if (dest == pos())
         return false;
 
-    bool was_constricted = false;
+    bool was_constricted = (is_constricted() || has_ench(ENCH_SWALLOWED));
     const string verb = (jump ? "leap" : "blink");
 
-    if (is_constricted())
-    {
-        was_constricted = true;
+    const maybe_bool esc = attempt_escape(2);
 
-        if (!attempt_escape(2))
+    if (was_constricted)
+    {
+        if (esc == MB_FALSE || (jump && esc == MB_MAYBE))
         {
             if (!quiet)
             {
@@ -84,6 +86,9 @@ bool monster::blink_to(const coord_def& dest, bool quiet, bool jump)
             }
             return false;
         }
+
+        if (esc != MB_TRUE)
+            was_constricted = false;
     }
 
     if (!quiet)
@@ -100,6 +105,12 @@ bool monster::blink_to(const coord_def& dest, bool quiet, bool jump)
     if (!move_to_pos(dest, true))
         return false;
 
+    if (esc == MB_MAYBE)
+    {
+        actor * act = this;
+        translocation_constriction_interaction(act);
+    }
+
     // Leave a cloud.
     if (!props.exists(FAKE_BLINK_KEY) && !cell_is_solid(oldplace))
     {
@@ -115,61 +126,73 @@ bool monster::blink_to(const coord_def& dest, bool quiet, bool jump)
     return true;
 }
 
+static bool _override_safe(const monster mons)
+{
+    monster_type mt = fixup_zombie_type(mons.type, mons_base_type(mons));
+
+    switch (mt)
+    {
+    // These guys bug out when yoinked out of water.
+    case MONS_ELEMENTAL_WELLSPRING:
+    case MONS_KRAKEN:
+        return true;
+    default:
+        break;
+    }
+    return false;
+}
+
 // If the returned value is mon.pos(), then nothing was found.
-static coord_def _random_monster_nearby_habitable_space(const monster& mon)
+static coord_def _random_monster_nearby_space(const monster& mon, const bool safe, const coord_def disp_center)
 {
     const bool respect_sanctuary = mon.wont_attack();
 
-    coord_def target;
-    int tries;
+    coord_def target = mon.pos();
+    int places = 0;
 
-    for (tries = 0; tries < 150; ++tries)
+    for (rectangle_iterator ri (mon.pos(), you.current_vision); ri; ++ri)
     {
-        coord_def delta;
-        delta.x = random2(13) - 6;
-        delta.y = random2(13) - 6;
-
-        // Check that we don't get something too close to the
-        // starting point.
-        if (delta.origin())
+        if (!in_bounds(*ri))
             continue;
 
-        // Blinks by 1 cell are not allowed.
-        if (delta.rdist() == 1)
+        if (grid_distance(*ri, mon.pos()) < 2)
             continue;
 
-        // Update target.
-        target = delta + mon.pos();
-
-        // Check that the target is valid and survivable.
-        if (!in_bounds(target))
+        if ((safe || _override_safe(mon)) && !monster_habitable_grid(&mon, env.grid(*ri)))
+            continue;
+        
+        if (!disp_center.origin() && (env.grid(*ri) == DNGN_TRAP_CONGREGATION || *ri == disp_center))
             continue;
 
-        if (!monster_habitable_grid(&mon, grd(target), false))
+        if (!mon.can_pass_through(*ri))
             continue;
 
-        if (respect_sanctuary && is_sanctuary(target))
+        if (cell_is_solid(*ri))
             continue;
 
-        if (target == you.pos())
+        if (actor_at(*ri))
             continue;
 
-        if (!cell_see_cell(mon.pos(), target, LOS_NO_TRANS))
+        if (respect_sanctuary && is_sanctuary(*ri))
             continue;
 
-        // Survived everything, break out (with a good value of target.)
-        break;
+        if (!cell_see_cell(mon.pos(), *ri, LOS_SOLID))
+            continue;
+
+        if (!disp_center.origin() && !cell_see_cell(disp_center, *ri, LOS_SOLID))
+            continue;
+
+        if (one_chance_in(++places))
+            target = *ri;
     }
-
-    if (tries == 150)
-        target = mon.pos();
 
     return target;
 }
 
-bool monster_blink(monster* mons, bool quiet)
+bool monster_blink(monster* mons, bool safe, bool quiet, coord_def disp_center)
 {
-    coord_def near = _random_monster_nearby_habitable_space(*mons);
+    coord_def near = _random_monster_nearby_space(*mons, safe, disp_center);
+
     return mons->blink_to(near, quiet);
 }
 
@@ -189,7 +212,7 @@ bool monster_space_valid(const monster* mons, coord_def target,
     if (testbits(env.pgrid(target), FPROP_NO_TELE_INTO))
         return false;
 
-    return monster_habitable_grid(mons, grd(target), false);
+    return monster_habitable_grid(mons, env.grid(target), false);
 }
 
 static bool _monster_random_space(const monster* mons, coord_def& target,
@@ -222,6 +245,10 @@ void mons_relocated(monster* mons)
         // this should take care of any tentacles
         monster_die(*tentacle, KILL_RESET, -1, true, false);
     }
+
+    // Make boulders stop rolling.
+    if (mons->has_ench(ENCH_ROLLING))
+        mons->del_ench(ENCH_ROLLING, false);
 
     mons->clear_clinging();
 }
@@ -414,12 +441,69 @@ void blink_close(monster* mon)
 #endif
 }
 
+bool blink_out(actor* moved)
+{
+    coord_def target = coord_def (0,0);
+    coord_def pos = moved->pos();
+
+    for (rectangle_iterator ri(pos, 12); ri; ++ri)
+    {
+        if (valid_blink_destination(moved, *ri))
+        {
+            if (target.origin())
+            {
+                target = *ri;
+                continue;
+            }
+
+            int x = grid_distance(pos, *ri);
+            int y = grid_distance(pos, target);
+            
+            if (x < y || x == y && one_chance_in(3))
+                target = *ri;
+        }
+    }
+
+    if (target.origin())
+    {
+        for (rectangle_iterator ri(pos, 12); ri; ++ri)
+        {
+            if (valid_blink_destination(moved, *ri, false, true, false))
+            {
+                if (target.origin())
+                {
+                    target = *ri;
+                    continue;
+                }
+
+                int x = grid_distance(pos, *ri);
+                int y = grid_distance(pos, target);
+
+                if (x < y || x == y && one_chance_in(3))
+                    target = *ri;
+            }
+        }
+    }
+
+    if (target.origin())
+    {
+        if (moved->is_player())
+            you_teleport_now();
+        else
+            monster_teleport(moved->as_monster(), true, true);
+        return true;
+    }
+
+    return moved->move_to_pos(target, false, true);
+}
+
 // This only checks the contents of the tile - nothing in between.
 // Could compact most of this into a big boolean if you wanted to trade
 // readability for dubious speed improvements.
 bool valid_blink_destination(const actor* moved, const coord_def& target,
                              bool forbid_sanctuary,
-                             bool forbid_unhabitable)
+                             bool forbid_unhabitable,
+                             bool require_los)
 {
     ASSERT(moved);
 
@@ -427,17 +511,13 @@ bool valid_blink_destination(const actor* moved, const coord_def& target,
         return false;
     if (actor_at(target))
         return false;
-    if (forbid_unhabitable)
-    {
-        if (!moved->is_habitable(target))
-            return false;
-//        if (moved->is_player() && is_feat_dangerous(grd(target), true))
-//            return false;
-        // Commenting out instead of deleting outright in case I decide to revert. *Evil Laugh*
-    }
+    if (forbid_unhabitable && !moved->is_habitable(target))
+        return false;
+    if (!moved->can_pass_through(target))
+        return false;
     if (forbid_sanctuary && is_sanctuary(target))
         return false;
-    if (!moved->see_cell_no_trans(target))
+    if (require_los && !moved->see_cell_no_trans(target))
         return false;
 
     return true;

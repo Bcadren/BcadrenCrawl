@@ -15,10 +15,15 @@
 # not raising an exception). `hasattr` is also safe.
 
 import logging
+import os
+
+import yaml
+
 try:
     from collections import OrderedDict
 except ImportError:
-    from ordereddict import OrderedDict
+    from ordereddict import OrderedDict # type: ignore
+
 
 dgl_mode = True
 
@@ -58,12 +63,19 @@ game_data_no_cache = True
 # Watch socket dirs for games not started by the server
 watch_socket_dirs = False
 
+use_game_yaml = True
+
 # Game configs
-# %n in paths and urls is replaced by the current username
-# morgue_url is for a publicly available URL to access morgue_path
+#
+# You can define game configs in two ways:
+# 1. With a static dictionary `games`
+# 2. As extra games to append to this list from `load_games.load_games` (which
+#    by default loads games as defined in `games.d/*.yaml`).
+#
+# All options in this config are documented in games.d/base.yaml.
 games = OrderedDict([
     ("dcss-web-trunk", dict(
-        name = "DCSS trunk",
+        name = "Play trunk",
         crawl_binary = "./crawl",
         rcfile_path = "./rcs/",
         macro_path = "./rcs/",
@@ -72,53 +84,23 @@ games = OrderedDict([
         ttyrec_path = "./rcs/ttyrecs/%n",
         socket_path = "./rcs",
         client_path = "./webserver/game_data/",
+        # dir_path = ".",
+        # cwd = ".",
         morgue_url = None,
-        send_json_options = True)),
-    ("seeded-web-trunk", dict(
-        name = "DCSS trunk, custom seed",
-        crawl_binary = "./crawl",
-        rcfile_path = "./rcs/",
-        macro_path = "./rcs/",
-        morgue_path = "./rcs/%n",
-        inprogress_path = "./rcs/running",
-        ttyrec_path = "./rcs/ttyrecs/%n",
-        socket_path = "./rcs",
-        client_path = "./webserver/game_data/",
-        morgue_url = None,
+        show_save_info = True,
+        # milestone_path = "./rcs/milestones",
         send_json_options = True,
-        options = ["-seed"])),
-    ("sprint-web-trunk", dict(
-        name = "Sprint trunk",
-        crawl_binary = "./crawl",
-        rcfile_path = "./rcs/",
-        macro_path = "./rcs/",
-        morgue_path = "./rcs/%n",
-        inprogress_path = "./rcs/running",
-        ttyrec_path = "./rcs/ttyrecs/%n",
-        socket_path = "./rcs",
-        client_path = "./webserver/game_data/",
-        morgue_url = None,
-        send_json_options = True,
-        options = ["-sprint"])),
-    ("tut-web-trunk", dict(
-        name = "Tutorial trunk",
-        crawl_binary = "./crawl",
-        rcfile_path = "./rcs/",
-        macro_path = "./rcs/",
-        morgue_path = "./rcs/%n",
-        inprogress_path = "./rcs/running",
-        ttyrec_path = "./rcs/ttyrecs/%n",
-        socket_path = "./rcs",
-        client_path = "./webserver/game_data/",
-        morgue_url = None,
-        send_json_options = True,
-        options = ["-tutorial"])),
+        # env = {"LANG": "en_US.UTF8"},
+        )),
 ])
+
 
 dgl_status_file = "./rcs/status"
 
-# Set to None not to read milestones
-milestone_file = "./milestones"
+# Extra paths to tail for milestone updates. This is a legacy setting, you
+# should use `milestone_path` or `dir_path` for each game in the games dict.
+# (This setting can be a string or list of strings.)
+milestone_file = ["./milestones"]
 
 status_file_update_rate = 5
 
@@ -167,17 +149,23 @@ kill_timeout = 10 # Seconds until crawl is killed after HUP is sent
 nick_regex = r"^[a-zA-Z0-9]{3,20}$"
 max_passwd_length = 20
 
-allow_password_reset = False # Set to true to allow users to request a password reset email. Some settings must be properly configured for this to work
+# Set to True to allow users to request a password reset email. Some settings
+# must be properly configured for this to work:
+allow_password_reset = False
+# Set to True to allow dgl admin users to generate password reset tokens in the
+# admin panel. Only use if you really trust your admin users!
+admin_password_reset = False
 
 # Set to the primary URL where a player would reach the main lobby
 # For example: "http://crawl.akrasiac.org/"
 # This is required for for password reset, as it will be the base URL for
-# recovery URLs.
+# recovery URLs. Use "http://localhost:8080/" for testing.
 lobby_url = None
 
 # Proper SMTP settings are required for password reset to function properly.
 # if smtp_host is anything other than `localhost`, you may need to adjust the
 # timeout settings (see server.py, calls to ioloop.set_blocking_log_threshold).
+# TODO: set_blocking_log_threshold is deprecated in tornado 5+...
 # Ideally, test out these settings carefully in a non-production setting
 # before enabling this, as there's a bunch of ways for this to go wrong and you
 # don't want to get your SMTP server blacklisted.
@@ -220,7 +208,10 @@ daemon = False # If true, the server will detach from the session after startup
 player_url = None
 
 # Only for development:
+# This is insecure; do not set development_mode = True in production!
+development_mode = False
+
 # Disable caching of static files which are not part of game data.
-no_cache = False
+no_cache = development_mode
 # Automatically log in all users with the username given here.
 autologin = None

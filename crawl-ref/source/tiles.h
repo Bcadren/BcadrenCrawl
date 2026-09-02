@@ -22,10 +22,11 @@ enum TextureID
 
 struct VColour
 {
-    VColour() {}
     VColour(unsigned char _r, unsigned char _g, unsigned char _b,
             unsigned char _a = 255) : r(_r), g(_g), b(_b), a(_a) {}
-    VColour(const VColour &vc) : r(vc.r), g(vc.g), b(vc.b), a(vc.a) {}
+    VColour() = default;
+    VColour(const VColour &vc) = default;
+    VColour& operator=(const VColour &vc) = default;
 
     inline void set(const VColour &in)
     {
@@ -50,12 +51,9 @@ struct VColour
 
 struct tile_def
 {
-    tile_def(tileidx_t _tile, TextureID _tex, int _ymax = TILE_Y)
-            : tile(_tile), tex(_tex), ymax(_ymax) {}
+    tile_def(tileidx_t _tile, int _ymax = TILE_Y)
+            : tile(_tile), ymax(_ymax) {}
 
     tileidx_t tile;
-    TextureID tex;
     int ymax;
 };
-
-TextureID get_dngn_tex(tileidx_t idx);

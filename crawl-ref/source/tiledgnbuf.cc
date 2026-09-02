@@ -3,15 +3,16 @@
 #include "tiledgnbuf.h"
 
 #include "tile-flags.h"
-#include "tiledef-dngn.h"
-#include "tiledef-icons.h"
-#include "tiledef-main.h"
-#include "tiledef-player.h"
+#include "rltiles/tiledef-dngn.h"
+#include "rltiles/tiledef-icons.h"
+#include "rltiles/tiledef-main.h"
+#include "rltiles/tiledef-player.h"
+#include "tag-version.h"
 #include "tiledoll.h"
 #include "tilemcache.h"
 #include "tilepick.h"
 
-DungeonCellBuffer::DungeonCellBuffer(ImageManager *im) :
+DungeonCellBuffer::DungeonCellBuffer(const ImageManager *im) :
     m_buf_floor(&im->m_textures[TEX_FLOOR]),
     m_buf_wall(&im->m_textures[TEX_WALL]),
     m_buf_feat(&im->m_textures[TEX_FEAT]),
@@ -54,14 +55,16 @@ void DungeonCellBuffer::add(const packed_cell &cell, int x, int y)
     }
     else if (fg_idx == TILEP_PLAYER)
         pack_player(x, y, in_water);
-    else if (fg_idx >= TILE_MAIN_MAX)
+    else if (get_tile_texture(fg_idx) == TEX_PLAYER)
         m_buf_doll.add(fg_idx, x, y, TILEP_PART_MAX, in_water, false);
 
     pack_foreground(x, y, cell);
 
     // Draw cloud layer(s)
-    if (cloud_idx && cloud_idx < TILE_FEAT_MAX)
+    if (cloud_idx)
     {
+        ASSERT(get_tile_texture(cloud_idx) == TEX_DEFAULT);
+
         // If there's a foreground, sandwich it between two semi-transparent
         // clouds at different z-indices. This uses the same alpha fading as
         // a swimming characters but applied to the cloud (instead of as normal
@@ -74,6 +77,14 @@ void DungeonCellBuffer::add(const packed_cell &cell, int x, int y)
         else
             // Otherwise render it normally with full transparency
              m_buf_main.add(cloud_idx, x, y);
+    }
+
+    // Render any 'main' overlays (zaps) on top of clouds and items.
+    for (int i = 0; i < cell.num_dngn_overlay; ++i)
+    {
+        const auto tile = cell.dngn_overlay[i];
+        if (TILE_DNGN_MAX <= tile && tile < TILE_MAIN_MAX)
+            add_main_tile(tile, x, y);
     }
 }
 
@@ -100,9 +111,9 @@ void DungeonCellBuffer::add_monster(const monster_info &mon, int x, int y)
         else
             m_buf_doll.add(TILEP_MONS_UNKNOWN, x, y, 0, false, false);
     }
-    else if (t0 >= TILE_MAIN_MAX)
+    else if (get_tile_texture(t0) == TEX_PLAYER)
         m_buf_doll.add(t0, x, y, TILEP_PART_MAX, false, false);
-    else if (t0 && t0 <= TILE_MAIN_MAX)
+    else if (get_tile_texture(t0) == TEX_DEFAULT)
     {
         const tileidx_t base_idx = tileidx_known_base_item(t0);
         if (base_idx)
@@ -118,7 +129,7 @@ void DungeonCellBuffer::add_monster(const monster_info &mon, int x, int y)
 }
 
 void DungeonCellBuffer::add_dngn_tile(int tileidx, int x, int y,
-                                      bool in_water)
+                                      bool in_water, bool in_slime)
 {
     ASSERT(tileidx < TILE_FEAT_MAX);
 
@@ -128,7 +139,12 @@ void DungeonCellBuffer::add_dngn_tile(int tileidx, int x, int y,
         m_buf_wall.add(tileidx, x, y);
     else if (in_water)
     {
-        m_buf_floor.add(TILE_DNGN_SHALLOW_WATER, x, y);
+        m_buf_floor.add(TILE_DNGN_SHALLOW_WATER_MURKY, x, y);
+        m_buf_feat_trans.add(tileidx, x, y, 0, true, false);
+    }
+    else if (in_slime)
+    { 
+        m_buf_floor.add(TILE_DNGN_SLIMY_WATER, x, y);
         m_buf_feat_trans.add(tileidx, x, y, 0, true, false);
     }
     else
@@ -247,14 +263,13 @@ void DungeonCellBuffer::pack_background(int x, int y, const packed_cell &cell)
     const tileidx_t bg = cell.bg;
     const tileidx_t bg_idx = cell.bg & TILE_FLAG_MASK;
 
-    if (bg_idx >= TILE_DNGN_FIRST_TRANSPARENT)
-        add_dngn_tile(cell.flv.floor, x, y);
+    add_dngn_tile(cell.flv.floor, x, y);
 
     // Draw blood beneath feature tiles.
     if (bg_idx > TILE_WALL_MAX)
         add_blood_overlay(x, y, cell);
 
-    add_dngn_tile(bg_idx, x, y, cell.mangrove_water);
+    add_dngn_tile(bg_idx, x, y, cell.mangrove_water, cell.mushroom_slime);
 
     if (bg_idx > TILE_DNGN_UNSEEN)
     {
@@ -263,7 +278,11 @@ void DungeonCellBuffer::pack_background(int x, int y, const packed_cell &cell)
             add_blood_overlay(x, y, cell, bg_idx >= TILE_FLOOR_MAX);
 
         for (int i = 0; i < cell.num_dngn_overlay; ++i)
-            add_dngn_tile(cell.dngn_overlay[i], x, y);
+        {
+            const auto tile = cell.dngn_overlay[i];
+            if (tile < TILE_DNGN_MAX)
+                add_dngn_tile(tile, x, y);
+        }
 
         if (!(bg & TILE_FLAG_UNSEEN))
         {
@@ -386,6 +405,9 @@ void DungeonCellBuffer::pack_background(int x, int y, const packed_cell &cell)
 
     }
 
+    if (cell.is_snowy)
+        m_buf_floor.add(TILE_SNOW + cell.is_snowy - 1, x, y);
+
     // allow rays even on completely unseen squares (e.g. passwall)
     if (bg & TILE_FLAG_RAY)
         m_buf_feat.add(TILE_RAY, x, y);
@@ -404,7 +426,7 @@ void DungeonCellBuffer::pack_foreground(int x, int y, const packed_cell &cell)
     const tileidx_t fg_idx = cell.fg & TILE_FLAG_MASK;
     const bool in_water = _in_water(cell);
 
-    if (fg_idx && fg_idx <= TILE_MAIN_MAX)
+    if (get_tile_texture(fg_idx) == TEX_DEFAULT)
     {
         const tileidx_t base_idx = tileidx_known_base_item(fg_idx);
 
@@ -472,11 +494,26 @@ void DungeonCellBuffer::pack_foreground(int x, int y, const packed_cell &cell)
         }
     }
 
-    if (fg & TILE_FLAG_POISON)
+    if (fg & TILE_FLAG_POISON_MASK)
     {
-        m_buf_icons.add(TILEI_POISON, x, y, -status_shift, 0);
-        status_shift += 5;
+        const tileidx_t poison_flag = fg & TILE_FLAG_POISON_MASK;
+        if (poison_flag == TILE_FLAG_POISON)
+        {
+            m_buf_icons.add(TILEI_POISON, x, y, -status_shift, 0);
+            status_shift += 5;
+        }
+        else if (poison_flag == TILE_FLAG_MORE_POISON)
+        {
+            m_buf_icons.add(TILEI_MORE_POISON, x, y, -status_shift, 0);
+            status_shift += 5;
+        }
+        else if (poison_flag == TILE_FLAG_MAX_POISON)
+        {
+            m_buf_icons.add(TILEI_MAX_POISON, x, y, -status_shift, 0);
+            status_shift += 5;
+        }
     }
+
     if (fg & TILE_FLAG_STICKY_FLAME)
     {
         m_buf_icons.add(TILEI_STICKY_FLAME, x, y, -status_shift, 0);
@@ -545,11 +582,8 @@ void DungeonCellBuffer::pack_foreground(int x, int y, const packed_cell &cell)
         m_buf_icons.add(TILEI_CONFUSED, x, y, -status_shift, 0);
         status_shift += 7;
     }
-    if (fg & TILE_FLAG_DEATHS_DOOR)
-    {
-        m_buf_icons.add(TILEI_DEATHS_DOOR, x, y, -status_shift, 0);
-        status_shift += 6;
-    }
+    if (fg & TILE_FLAG_SEALING_RUNE)
+        m_buf_icons.add(TILEI_SEALING_RUNE, x, y, 2, 2);
     if (fg & TILE_FLAG_MUTE)
     {
         m_buf_icons.add(TILEI_MUTE, x, y, -status_shift, 0);
@@ -560,11 +594,13 @@ void DungeonCellBuffer::pack_foreground(int x, int y, const packed_cell &cell)
         m_buf_icons.add(TILEI_WRETCHED, x, y, -status_shift, 0);
         status_shift += 7;
     }
+    /* BCADDO: Find a way to put this back.
     if (fg & TILE_FLAG_DAZED)
     {
         m_buf_icons.add(TILEI_DAZED, x, y, -status_shift, 0);
         status_shift += 9;
     }
+    */
     if (fg & TILE_FLAG_BOUND_SOUL)
     {
         m_buf_icons.add(TILEI_BOUND_SOUL, x, y, -status_shift, 0);

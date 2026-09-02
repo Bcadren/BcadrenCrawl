@@ -627,6 +627,8 @@ ditch-delivered
 
 dizzy-eyed
 
+dog-faced
+
 doghearted
 
 dread-bolted
@@ -1061,6 +1063,8 @@ pimple
 
 pissant
 
+pony soldier
+
 pot-faker
 
 prigger-of-prances
@@ -1311,6 +1315,8 @@ nag
 nightmare
 
 pony
+
+pony soldier
 %%%%
 ##########################################################
 # noun, Minotaur special

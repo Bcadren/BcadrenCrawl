@@ -851,14 +851,14 @@ VISUAL:@The_monster@ gnaws at a bone — where's that from?
 
 @hound@
 %%%%
-friendly hound Shoals
+friendly Shoals hound
 
 w:50
 @friendly hound@
 
 VISUAL:@The_monster@ [plays|frolics] in the surf!
 
-There's a distinct wet dog smell emanating from @the_monster@.
+A distinct wet dog smell emanates from @the_monster@.
 
 w:1
 VISUAL:@The_monster@ hopefully picks up a piece of driftwood and looks at you.
@@ -1303,7 +1303,7 @@ Evocations player ghost
 
 @The_monster@ says @to_foe@, "Are you sure you're pointing that wand in the right direction?"
 
-@The_monster@ says, "I could kill you with a [stone|fan|lamp]."
+@The_monster@ says, "I could kill you with a [tomato|fan|lamp]."
 %%%%
 Ashenzari player ghost
 
@@ -1789,15 +1789,15 @@ You hear demonic laughter.
 
 @The_monster@ screams @at_foe@, "Bow down before your king! Bow! Bow!!" @player_only@
 %%%%
-############ AZRAEL ### efreet
-Azrael
+############ Maalik ### efreet
+Maalik
 
-@_Azrael_common_@
+@_Maalik_common_@
 
 w:2
-@_Azrael_rare_@
+@_Maalik_rare_@
 %%%%
-_Azrael_common_
+_Maalik_common_
 
 @The_monster@ laughs insanely.
 
@@ -1811,7 +1811,7 @@ VISUAL:@The_monster@'s eyes look fiery.
 
 VISUAL:@The_monster@ is momentarily hidden by a cloud of flames.
 %%%%
-_Azrael_rare_
+_Maalik_rare_
 
 @The_monster@ grins and asks @foe,@ "Are you [flammable|inflammable|feeling hot]?"
 
@@ -1846,7 +1846,7 @@ else
     return "arms"
 end
 }}
-## END Azrael ##
+## END Maalik ##
 %%%%
 
 ############ BAI SUZHEN ### Dragon-lady of famed tragic folklore
@@ -2746,6 +2746,8 @@ w:50
 
 @The_monster@ says, "I keep getting this feeling like someone's watching me. Creepy."
 
+@The_monster@ says, "I used up all my cure mutation potions. I hate that."
+
 @The_monster@ says, "I always freeze up when I think I'm being watched."
 
 @The_monster@ says, "A death ooze jiggled at me. That's naff."
@@ -3521,7 +3523,7 @@ w:50
 
 @The_monster@ says, "You look ridiculous with all that flailing around."
 %%%%
-Wu Jian Council Donald
+Wu Jian Donald
 
 w:50
 @_generic_Donald_@
@@ -4178,6 +4180,23 @@ _Fannar_rare_
 
 @The_monster@ says @to_foe@, "Does this not give you the chills?"
 %%%%
+############ Gammafunk ### A proud vault guardian
+Gammafunk
+
+@_Gammafunk_common_@
+%%%%
+_Gammafunk_common_
+
+@The_monster@ says @to_foe@, "Look! There's extra experience for you in here. Come on in!"
+
+@The_monster@ says @to_foe@, "Nevermind the Zot Traps, they're just for decoration..."
+
+@The_monster@ says @to_foe@, "Can you let me out? The transporter doesn't let me back out..."
+
+@The_monster@ says @to_foe@, "I just love adventurers! Why don't you visit for awhile longer?"
+
+@The_monster@ says @to_foe@, "You have no idea how hard it is to set up these transporters..."
+%%%%
 ############ Gastronok ### A rather hungry wizard-slug
 # Cantrip messages:
 gastronok_self_buff
@@ -4309,6 +4328,8 @@ _Grinder_rare_
 @The_monster@ says, "My boss said I was rubbish. His entrails said otherwise."
 
 @The_monster@ says, "At least @my_God@ appreciates what I'm doing."
+
+@The_monster@ says, "Make like a tree!"
 
 VISUAL:@The_monster@ rolls @possessive@ eyes.
 %%%%
@@ -4466,7 +4487,7 @@ fleeing Harold
 __NEXT
 
 w:5
-@The_monster@ @yells@, "I'm getting too old for this!"
+@The_monster@ @_yells_@, "I'm getting too old for this!"
 %%%%
 Harold killed
 
@@ -4869,7 +4890,7 @@ Khufu
 ## END Khufu ##
 %%%%
 ############ KIRKE ### an enchantress, lover of Odysseus
-Kirke
+Circe
 
 VISUAL:@The_monster@ splashes a potion @at_foe@.
 
@@ -4931,6 +4952,43 @@ _Louise_rare_
 
 @The_monster@ says, "It's the perfect time of year for a holiday!"
 ### END Louise
+%%%%
+############ Maggie ### Younger Margery
+Maggie
+
+@_Maggie_common_@
+
+w:5
+@_Maggie_rare_@
+%%%%
+_Maggie_common_
+
+VISUAL:@The_monster@ practices a pose.
+
+VISUAL:@The_monster@ smiles, but it's obviously fake.
+
+@The_monster@ says @to_foe@, "Leave now, and tell all of Margery's mercy!"
+
+@The_monster@ says @to_foe@, "Fear not. I will immortalize you in the tale of my first kill."
+
+VISUAL:@The_monster@ gives herself a magical halo, but it quickly sputters out.
+
+@The_monster@ mumbles the words to a spell, but in the wrong order.
+%%%%
+_Maggie_rare_
+
+@The_monster@ says @to_foe@, "If you die in the Dungeon, but nobody's around to see it, does it really matter?"
+
+@The_monster@ says @to_foe@, "Did Master Lance send you?"
+
+@The_monster@ says @to_foe@, "Have you seen any dragons?"
+
+@The_monster@ says @to_foe@, "How do the people who live here stand the isolation?"
+
+@The_monster@ shouts @at_foe@, "Leave me alone!"
+
+@The_monster@ mutters to herself, "Master Lance won't take me back. This is the way forward."
+## END Maggie ##
 %%%%
 ############ MARA ### A powerful demon lord, Lord of Illusions
 Mara
@@ -5857,7 +5915,7 @@ _Saint Roka rival_
 
 @The_monster@ shouts @at_foe@, "There can only be one messiah: ME!"
 
-@The_monster@ despairs, @at_foe@, "False prophets abound here!"
+@The_monster@ despairs @at_foe@, "False prophets abound here!"
 
 @The_monster@ shouts, "Orcs, take notice: this deceiver is a mere {{ return you.race() }}!"
 %%%%
@@ -6247,6 +6305,22 @@ confused Bennu permanently killed
 
 @Bennu permanently killed@
 %%%%
+############### Swooping Magpie ############################
+swooping magpie
+
+w:1
+@The_monster@ cries out "Nevermore."
+
+w:50
+@The_monster@ beats its wings defensively.
+
+w:50
+@The_monster@ clacks its beak.
+
+w:50
+@The_monster@ makes a course angry caw.
+
+%%%%
 ################## Bullfrog ################################
 bullfrog
 
@@ -6327,10 +6401,12 @@ default electric golem
 
 SOUND:@The_monster@ crackles and sizzles.
 %%%%
-################## Frilled lizard ##############################
-frilled lizard
+################## cinder newt ##############################
+cinder newt
 
-@The_monster@ unfolds @possessive@ giant frill.
+@The_monster@ exhales a small puff of smoke.
+
+@The_monster@ makes @possessive@ spots glow like burning embers. A small amount of steam evaporates from @possessive@ back.
 
 @The_monster@ hisses @at_foe@.
 %%%%
@@ -6344,7 +6420,7 @@ hell lord
 
 @_hell_lord_taunt_@
 %%%%
-crimson imp
+llaibwca
 
 w:1
 @_says_imp_taunt_@
@@ -6352,7 +6428,7 @@ w:1
 w:2
 @_hostile_imp_@
 %%%%
-iron imp
+haearbwca
 
 w:1
 @_says_imp_taunt_@
@@ -6360,7 +6436,7 @@ w:1
 w:2
 @_hostile_imp_@
 %%%%
-shadow imp
+cysgobwca
 
 w:1
 @_says_imp_taunt_@
@@ -6368,7 +6444,7 @@ w:1
 w:2
 @_hostile_imp_@
 %%%%
-white imp
+gwybwca
 
 w:1
 @_says_imp_taunt_@
@@ -6481,23 +6557,23 @@ VISUAL:@The_monster@ flickers into the darkness.
 
 VISUAL:@The_monster@ grins at you slowly.
 %%%%
-################## Tormentor ###############################
+################## POENYDIO ###############################
 # A cruel demon
-tormentor
+poenydio
 
 w:1
 @_demon_taunt_@
 
 w:9
-@_tormentor_@
+@_poenydio_@
 %%%%
-_tormentor_
+_poenydio_
 
-@_tormentor_common_@
+@_poenydio_common_@
 
-@_tormentor_rare_@
+@_poenydio_rare_@
 %%%%
-_tormentor_common_
+_poenydio_common_
 
 w:15
 @The_monster@ says @to_foe@, "I'll crush your bones, one by one."
@@ -6516,7 +6592,7 @@ VISUAL:@The_monster@ grins malevolently.
 
 @The_monster@ screams @at_foe@, "You will die horribly!"
 %%%%
-_tormentor_rare_
+_poenydio_rare_
 
 @The_monster@ laughs crazily.
 
@@ -6535,7 +6611,7 @@ _tormentor_rare_
 @The_monster@ shouts @at_foe@, "Prepare for my thousand needles of pain!"
 
 @The_monster@ shouts @at_foe@, "I'll tear you apart!"
-## END _tormentor_ ##
+## END _poenydio_ ##
 %%%%
 ################## Wizard ##################################
 wizard

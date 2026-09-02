@@ -379,6 +379,14 @@ As you descend in search of the Orb, @_halloween_things_@ flock about you. This 
 
 You hear a witch cackle, and suddenly arrive in the dungeon. If you don't find the Orb of Zot, you'll turn into a @_lowly_@!
 %%%%
+welcome_spam Christmas
+
+@welcome_spam@ Merry Christmas!
+
+All you want for Christmas is the Orb of Zot. Santa brought you to the dungeon, but you have to go in and take it!
+
+You get into the Holiday Spirit and give yourself the gift of killing as your start your search for the Orb of Zot.
+%%%%
 hell_effect_quiet
 
 {{

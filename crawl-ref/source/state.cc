@@ -7,23 +7,20 @@
 
 #include "state.h"
 
-#ifndef TARGET_OS_WINDOWS
+#if defined(UNIX) || defined(TARGET_COMPILER_MINGW)
 #include <unistd.h>
 #endif
 
 #include "dbg-util.h"
 #include "delay.h"
 #include "directn.h"
-#include "exclude.h"
 #include "hints.h"
 #include "macro.h"
 #include "menu.h"
 #include "message.h"
-#include "misc.h"
 #include "monster.h"
 #include "player.h"
 #include "religion.h"
-#include "scroller.h"
 #include "showsymb.h"
 #include "unwind.h"
 
@@ -35,6 +32,9 @@ game_state::game_state()
       io_inited(false),
       need_save(false), game_started(false), saving_game(false),
       updating_scores(false),
+#ifndef USE_TILE_LOCAL
+      smallterm(false),
+#endif
       seen_hups(0), map_stat_gen(false), map_stat_dump_disconnect(false),
       obj_stat_gen(false), type(GAME_TYPE_NORMAL),
       last_type(GAME_TYPE_UNSPECIFIED), last_game_exit(game_exit::unknown),
@@ -65,10 +65,10 @@ game_state::game_state()
 {
     reset_cmd_repeat();
     reset_cmd_again();
-#ifdef TARGET_OS_WINDOWS
+#ifndef UNIX
     no_gdb = "Non-UNIX Platform -> not running gdb.";
 #else
-    no_gdb = access("/usr/bin/gdb", 1) ? "/usr/bin/gdb not executable." : 0;
+    no_gdb = access(GDB_PATH, 1) ? "gdb not executable." : 0;
 #endif
 }
 
@@ -238,7 +238,7 @@ bool interrupt_cmd_repeat(activity_interrupt ai,
             monster_info mi(mon);
 
             mprf(MSGCH_WARN, "%s comes into view.",
-                 get_monster_equipment_desc(mi, DESC_WEAPON).c_str());
+                 get_monster_equipment_desc(*mon, DESC_WEAPON).c_str());
         }
 
         if (crawl_state.game_is_hints())

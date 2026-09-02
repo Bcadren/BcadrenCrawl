@@ -5,6 +5,7 @@
 
 #include "AppHdr.h"
 
+#include "options.h"
 #include "spl-book.h"
 #include "book-data.h"
 
@@ -21,17 +22,12 @@
 #include "database.h"
 #include "delay.h"
 #include "describe.h"
-#include "describe-spells.h"
 #include "end.h"
-#include "english.h"
 #include "god-conduct.h"
-#include "god-item.h"
 #include "invent.h"
 #include "item-prop.h"
-#include "item-status-flag-type.h"
-#include "items.h"
 #include "libutil.h"
-#include "macro.h"
+#include "makeitem.h" // BCADNOTE: Should move is_banned_book() over?
 #include "message.h"
 #include "output.h"
 #include "prompt.h"
@@ -39,9 +35,7 @@
 #include "spl-util.h"
 #include "state.h"
 #include "stringutil.h"
-#ifdef USE_TILE
- #include "tilepick.h"
-#endif
+#include "tilepick.h"
 #include "transform.h"
 #include "unicode.h"
 
@@ -98,7 +92,8 @@ static const map<wand_type, spell_type> _wand_spells =
     { WAND_POLYMORPH,       SPELL_WAND_POLYMORPH },
     { WAND_ENSLAVEMENT,     SPELL_ENSLAVEMENT },
     { WAND_ACID,            SPELL_WAND_ACID },
-    { WAND_DISINTEGRATION,  SPELL_DISINTEGRATE },
+    { WAND_DRAIN,           SPELL_WAND_DRAIN },
+    { WAND_DISINTEGRATION,  SPELL_WAND_DISINTEGRATE },
     { WAND_CLOUDS,          SPELL_CLOUD_CONE },
     { WAND_SCATTERSHOT,     SPELL_SCATTERSHOT },
     { WAND_RANDOM_EFFECTS,  SPELL_RANDOM_EFFECTS },
@@ -117,6 +112,21 @@ spell_type spell_in_wand(wand_type wand)
         return *spl;
 
     die("Unknown wand: %d", wand);
+}
+
+wand_type wand_from_spell(spell_type spell)
+{
+    for (auto p : _wand_spells)
+        if (spell == p.second)
+            return p.first;
+    return NUM_WANDS;
+}
+
+bool is_wand_spell(spell_type spell)
+{
+    if (wand_from_spell(spell) < NUM_WANDS)
+        return true;
+    return false;
 }
 
 vector<spell_type> spells_in_book(const item_def &book)
@@ -141,6 +151,22 @@ vector<spell_type> spells_in_book(const item_def &book)
     return ret;
 }
 
+// I almost named this spell_in_book but that was too similar to the above.
+// Returns if a particular spell is in the associated book.
+// Currently only used for checking rituals for Kiku.
+bool spell_found_in_book(const book_type book, const spell_type spell)
+{
+    const vector<spell_type> spells = spellbook_template(book);
+
+    for (int i = 0; i < (int)spells.size(); i++)
+    {
+        if (spells[i] == spell)
+            return true;
+    }
+
+    return false;
+}
+
 vector<spell_type> spellbook_template(book_type book)
 {
     ASSERT_RANGE(book, 0, (int)ARRAYSZ(spellbook_templates));
@@ -162,35 +188,32 @@ int book_rarity(book_type which_book)
 
     case BOOK_CHANGES:
     case BOOK_MALEDICT:
-        return 2;
+        return 5;
 
     case BOOK_CONJURATIONS:
     case BOOK_NECROMANCY:
     case BOOK_CALLINGS:
-        return 3;
+        return 12;
 
     case BOOK_FLAMES:
     case BOOK_FROST:
     case BOOK_AIR:
     case BOOK_GEOMANCY:
-        return 4;
+        return 15;
 
     case BOOK_YOUNG_POISONERS:
     case BOOK_BATTLE:
     case BOOK_DEBILITATION:
-        return 5;
+        return 25;
 
     case BOOK_CLOUDS:
     case BOOK_POWER:
-        return 6;
-
-    case BOOK_ENCHANTMENTS:
     case BOOK_PARTY_TRICKS:
-        return 7;
+        return 28;
 
     case BOOK_TRANSFIGURATIONS:
     case BOOK_BEASTS:
-        return 8;
+        return 30;
 
     case BOOK_FIRE:
     case BOOK_ICE:
@@ -198,28 +221,29 @@ int book_rarity(book_type which_book)
     case BOOK_EARTH:
     case BOOK_UNLIFE:
     case BOOK_SPATIAL_TRANSLOCATIONS:
-        return 10;
+        return 35;
 
-    case BOOK_TEMPESTS:
     case BOOK_DEATH:
     case BOOK_SUMMONINGS:
-        return 11;
+        return 40;
 
+    case BOOK_ENCHANTMENTS:
     case BOOK_BURGLARY:
     case BOOK_ALCHEMY:
     case BOOK_DREAMS:
     case BOOK_FEN:
-        return 12;
+        return 50;
 
+    case BOOK_TEMPESTS:
     case BOOK_WARP:
-    case BOOK_DRAGON:
-        return 15;
+        return 70;
 
     case BOOK_ANNIHILATIONS:
     case BOOK_GRAND_GRIMOIRE:
     case BOOK_NECRONOMICON:  // Kikubaaqudgha special
-    case BOOK_MANUAL:
-        return 20;
+    case BOOK_KIKU_RITUALS:  // Second Kiku Special
+    case BOOK_DRAGON:        // Tiamat special
+        return 92;
 
     default:
         return 1;
@@ -230,7 +254,7 @@ static uint8_t _lowest_rarity[NUM_SPELLS];
 
 static const set<book_type> rare_books =
 {
-    BOOK_ANNIHILATIONS, BOOK_GRAND_GRIMOIRE, BOOK_NECRONOMICON,
+    BOOK_ANNIHILATIONS, BOOK_GRAND_GRIMOIRE, BOOK_NECRONOMICON, BOOK_DRAGON
 };
 
 bool is_rare_book(book_type type)
@@ -247,7 +271,7 @@ void init_spell_rarities()
     {
         const book_type book = static_cast<book_type>(i);
         // Manuals and books of destruction are not even part of this loop.
-        if (is_rare_book(book))
+        if (is_rare_book(book) || is_banned_book(book))
             continue;
 
 #ifdef DEBUG
@@ -294,13 +318,48 @@ void init_spell_rarities()
     }
 }
 
-bool is_player_spell(spell_type which_spell)
+bool is_player_book_spell(spell_type which_spell)
 {
     for (int i = 0; i < NUM_FIXED_BOOKS; ++i)
         for (spell_type spell : spellbook_template(static_cast<book_type>(i)))
             if (spell == which_spell)
                 return true;
     return false;
+}
+
+// Needs to be castable by the player somehow, but via idiosyncratic means.
+// Religion reusing a spell enum, or something weirder like sonic wave.
+// A spell doesn't need to be here if it just the beam type that is used.
+static unordered_set<int> _player_nonbook_spells =
+{
+    // misc items
+    SPELL_THUNDERBOLT,
+    SPELL_PHANTOM_MIRROR, // this isn't cast directly, but the player code at
+                          // least uses the enum value
+    SPELL_SONIC_WAVE,
+    SPELL_PHIAL_OF_FLOODS,
+    SPELL_ENGLACIATION, // Skin of Zhor
+    // religion
+    SPELL_SMITING,
+    // Ds powers
+    SPELL_HURL_HELLFIRE,
+    // Wands
+    SPELL_WAND_ACID,
+    SPELL_WAND_DRAIN,
+    SPELL_WAND_DISINTEGRATE,
+    SPELL_WAND_ENSNARE,
+    SPELL_WAND_FLAME,
+    SPELL_WAND_HASTING,
+    SPELL_WAND_HEALING,
+    SPELL_WAND_POLYMORPH,
+};
+
+bool is_player_spell(spell_type which_spell)
+{
+    return !spell_removed(which_spell)
+        && (is_player_book_spell(which_spell)
+            || is_wand_spell(which_spell)
+            || _player_nonbook_spells.count(which_spell) > 0);
 }
 
 int spell_rarity(spell_type which_spell)
@@ -311,11 +370,6 @@ int spell_rarity(spell_type which_spell)
         return -1;
 
     return rarity;
-}
-
-void read_book(item_def &book)
-{
-    describe_item(book);
 }
 
 /**
@@ -338,11 +392,8 @@ bool player_can_memorise(const item_def &book)
     for (spell_type stype : spells_in_book(book))
     {
         // Easiest spell already too difficult?
-        if (spell_difficulty(stype) > you.experience_level
-            || player_spell_levels() < spell_levels_required(stype))
-        {
+        if (player_spell_levels() < spell_levels_required(stype))
             return false;
-        }
 
         if (!you.has_spell(stype))
             return true;
@@ -351,7 +402,7 @@ bool player_can_memorise(const item_def &book)
 }
 
 /**
- * Populate the given list with all spells the player can currently memorize,
+ * Populate the given list with all spells the player can currently memorise,
  * from library or Vehumet. Does not filter by currently known spells, spell
  * levels, etc.
  *
@@ -364,10 +415,6 @@ static void _list_available_spells(spell_set &available_spells)
         if (you.spell_library[st])
             available_spells.insert(st);
     }
-
-    // Handle Vehumet gifts
-    for (auto gift : you.vehumet_gifts)
-        available_spells.insert(gift);
 }
 
 bool player_has_available_spells()
@@ -380,8 +427,7 @@ bool player_has_available_spells()
     for (const spell_type spell : available_spells)
     {
         if (!you.has_spell(spell) && you_can_memorise(spell)
-            && spell_difficulty(spell) <= avail_slots
-            && spell_difficulty(spell) <= you.experience_level)
+            && spell_difficulty(spell) <= avail_slots)
         {
             return true;
         }
@@ -406,7 +452,6 @@ static spell_list _get_spell_list(bool just_check = false,
     int num_known      = 0;
     int num_misc       = 0;
     int num_restricted = 0;
-    int num_low_xl     = 0;
     int num_low_levels = 0;
     int num_memable    = 0;
 
@@ -433,21 +478,19 @@ static spell_list _get_spell_list(bool just_check = false,
             // don't filter out spells that are too high-level for us; we
             // probably still want to see them. (since that's temporary.)
 
-            if (mem_spells.back().difficulty > you.experience_level)
-                num_low_xl++;
-            else if (avail_slots < mem_spells.back().level)
+            if (avail_slots < mem_spells.back().level)
                 num_low_levels++;
             else
                 num_memable++;
         }
     }
 
-    const int total = num_known + num_misc + num_low_xl + num_low_levels
+    const int total = num_known + num_misc + num_low_levels
                       + num_restricted;
 
     const char* unavail_reason;
 
-    if (num_memable || num_low_levels > 0 || num_low_xl > 0)
+    if (num_memable || num_low_levels)
         unavail_reason = "";
     else if (num_known == total)
         unavail_reason = "You already know all available spells.";
@@ -487,12 +530,6 @@ static bool _sort_mem_spells(const sortable_spell &a, const sortable_spell &b)
     const bool mem_b = you_can_memorise(b.spell);
     if (mem_a != mem_b)
         return mem_a;
-
-    // List the Vehumet gifts at the very top.
-    const bool offering_a = vehumet_is_offering(a.spell);
-    const bool offering_b = vehumet_is_offering(b.spell);
-    if (offering_a != offering_b)
-        return offering_a;
 
     // List spells we can memorise right away first.
     const int player_levels = player_spell_levels();
@@ -534,13 +571,10 @@ protected:
     virtual formatted_string calc_title() override
     {
         return formatted_string::parse_string(
-                    make_stringf("<w>Spells %s                 Type                          Failure  Level ",
-                        current_action == action::memorise ?
-                            "(Memorise)" :
-                        current_action == action::describe ?
-                            "(Describe)" :
-                        current_action == action::hide ?
-                            "(Hide)    " :
+                    make_stringf("<w>Spells %s                 Type                          Failure  Level",
+                        current_action == action::memorise ? "(Memorise)" :
+                        current_action == action::describe ? "(Describe)" :
+                        current_action == action::hide ? "(Hide)    " :
                             "(Show)    "));
     }
 
@@ -666,15 +700,10 @@ private:
 
     colour_t entry_colour(const sortable_spell& entry)
     {
-        if (vehumet_is_offering(entry.spell))
-            return LIGHTBLUE;
-        else
-        {
-            bool transient = false;
-            bool memcheck = true;
-            return spell_highlight_by_utility(entry.spell, COL_UNKNOWN,
-                                                    transient, memcheck);
-        }
+        bool transient = false;
+        bool memcheck = true;
+        return spell_highlight_by_utility(entry.spell, COL_UNKNOWN,
+                                                transient, memcheck);
     }
 
     // Update the list of spells. If show_hidden is true, show only hidden
@@ -732,9 +761,7 @@ private:
             ++hotkey;
 
             me->colour = colour;
-#ifdef USE_TILE
-            me->add_tile(tile_def(tileidx_spell(spell.spell), TEX_GUI));
-#endif
+            me->add_tile(tile_def(tileidx_spell(spell.spell)));
 
             me->data = &(spell.spell);
             add_entry(me);
@@ -806,7 +833,10 @@ static spell_type _choose_mem_spell(spell_list &spells)
 
     const vector<MenuEntry*> sel = spell_menu.show();
     if (!crawl_state.doing_prev_cmd_again)
+    {
         redraw_screen();
+        update_screen();
+    }
     if (sel.empty())
         return SPELL_NO_SPELL;
     const spell_type spell = *static_cast<spell_type*>(sel[0]->data);
@@ -911,12 +941,6 @@ static bool _learn_spell_checks(spell_type specspell, bool wizard = false)
         return false;
     }
 
-    if (you.experience_level < spell_difficulty(specspell) && !wizard)
-    {
-        mpr("You're too inexperienced to learn that spell!");
-        return false;
-    }
-
     if (player_spell_levels() < spell_levels_required(specspell) && !wizard)
     {
         mpr("You can't memorise that many levels of magic yet!");
@@ -932,10 +956,11 @@ static bool _learn_spell_checks(spell_type specspell, bool wizard = false)
  * @param   specspell  The spell to be learned.
  * @param   wizard     Whether to memorise instantly and skip some checks for
  *                     wizmode memorisation.
+ * @param   interactive whether to do the interactive prompt
  * @return             true if the player learned the spell, false
  *                     otherwise.
 */
-bool learn_spell(spell_type specspell, bool wizard)
+bool learn_spell(spell_type specspell, bool wizard, bool interactive)
 {
     if (!_learn_spell_checks(specspell, wizard))
         return false;
@@ -956,7 +981,7 @@ bool learn_spell(spell_type specspell, bool wizard)
 
         const int severity = fail_severity(specspell);
 
-        if (raw_spell_fail(specspell) >= 100 && !vehumet_is_offering(specspell))
+        if (raw_spell_fail(specspell) >= 100)
             mprf(MSGCH_WARN, "This spell is impossible to cast!");
         else if (severity > 0)
         {
@@ -966,16 +991,19 @@ bool learn_spell(spell_type specspell, bool wizard)
         }
     }
 
-    const string prompt = make_stringf(
-             "Memorise %s, consuming %d spell level%s and leaving %d?",
-             spell_title(specspell), spell_levels_required(specspell),
-             spell_levels_required(specspell) != 1 ? "s" : "",
-             player_spell_levels() - spell_levels_required(specspell));
-
-    if (!yesno(prompt.c_str(), true, 'n', false))
+    if (interactive)
     {
-        canned_msg(MSG_OK);
-        return false;
+        const string prompt = make_stringf(
+                 "Memorise %s, consuming %d spell level%s and leaving %d?",
+                 spell_title(specspell), spell_levels_required(specspell),
+                 spell_levels_required(specspell) != 1 ? "s" : "",
+                 player_spell_levels() - spell_levels_required(specspell));
+
+        if (!yesno(prompt.c_str(), true, 'n', false))
+        {
+            canned_msg(MSG_OK);
+            return false;
+        }
     }
 
     if (wizard)
@@ -988,6 +1016,8 @@ bool learn_spell(spell_type specspell, bool wizard)
 
         did_god_conduct(DID_SPELL_CASTING, 2 + random2(5));
     }
+
+    quiver::on_actions_changed();
 
     return true;
 }

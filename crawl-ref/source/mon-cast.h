@@ -6,7 +6,10 @@
 #pragma once
 
 #include "enum.h"
+#include "externs.h"
+#include "spell-type.h"
 
+class actor;
 class monster;
 struct bolt;
 struct dice_def;
@@ -19,7 +22,7 @@ void aura_of_brilliance(monster* agent);
 bool mons_should_cloud_cone(monster* agent, int power, const coord_def pos);
 bool scattershot_tracer(monster *caster, int pow, coord_def aim);
 
-dice_def waterstrike_damage(const monster &caster);
+dice_def waterstrike_damage(int spell_hd);
 dice_def resonance_strike_base_damage(const monster &caster);
 
 void flay(const monster &caster, actor &defender, int damage);
@@ -28,7 +31,9 @@ bool handle_mon_spell(monster* mons);
 
 static const int ENCH_POW_FACTOR = 3;
 int mons_power_for_hd(spell_type spell, int hd);
-int mons_spell_range(spell_type spell, int hd);
+int mons_cause_fear(monster* mons, bool actual = true, bool scroll = false);
+bool trace_los(monster* agent, bool(*vulnerable)(const actor*));
+bool torment_vulnerable(const actor* victim);
 bolt mons_spell_beam(const monster* mons, spell_type spell_cast, int power,
                      bool check_validity = false);
 void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
@@ -36,7 +41,6 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
 void mons_cast_noise(monster* mons, const bolt &pbolt,
                      spell_type spell_cast, mon_spell_slot_flags slot_flags);
 bool setup_mons_cast(const monster* mons, bolt &pbolt, spell_type spell_cast,
-                     bool evoke = false,
                      bool check_validity = false);
 
 void mons_cast_haunt(monster* mons);

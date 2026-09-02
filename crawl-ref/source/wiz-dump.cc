@@ -25,6 +25,7 @@
 #include "religion.h"
 #include "skills.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "unicode.h"
 #include "wiz-you.h"
 
@@ -119,8 +120,8 @@ static uint8_t _jewellery_type_from_artefact_prop(const string &s
     if (s.substr(0, 2) == "MR")
         return RING_PROTECTION_FROM_MAGIC;
 
-    if (s.substr(0, 2) == "rF")
-        return RING_PROTECTION_FROM_FIRE;
+    if (s.substr(0, 5) == "Chaos")
+        return AMU_CHAOS;
     if (s.substr(0, 2) == "rC")
         return RING_PROTECTION_FROM_COLD;
     if (s.substr(0, 2) == "rN")
@@ -411,7 +412,7 @@ bool chardump_parser::_check_stats2(const vector<string> &tokens)
                                                (god_type) 1, NUM_GODS,
                                                always_true<god_type>,
                                                bind(god_name, placeholders::_1,
-                                                    false));
+                                                    false, false));
             if (!you_worship(god))
             {
                 if (god == GOD_GOZAG)
@@ -547,7 +548,7 @@ bool chardump_parser::_check_equipment(const vector<string> &tokens)
         int mitm_slot = get_mitm_slot();
         if (mitm_slot != NON_ITEM)
         {
-            mitm[mitm_slot] = item;
+            env.item[mitm_slot] = item;
             move_item_to_grid(&mitm_slot, you.pos());
         }
     }

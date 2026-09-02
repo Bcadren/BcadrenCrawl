@@ -13,6 +13,9 @@
 #define HYDRA_FORM_HEADS_KEY "hydra_form_heads"
 #define MAX_HYDRA_HEADS 20
 
+#define APPENDAGE_KEY "beastly_appendages"
+#define APPENDAGE_LEVEL 2
+
 enum form_capability
 {
     FC_DEFAULT,
@@ -121,9 +124,12 @@ public:
     bool res_elec() const;
     int res_pois() const;
     bool res_rot() const;
-    bool res_acid() const;
+    int res_acid() const;
     bool res_sticky_flame() const;
     bool res_petrify() const;
+    int res_piercing() const;
+    int res_bludgeoning() const;
+    int res_slashing() const;
 
     /**
      * Base unarmed damage provided by the form.
@@ -258,8 +264,7 @@ enum undead_form_reason
     UFR_TOO_ALIVE = 1,
     UFR_TOO_SOLID = 2,
 };
-undead_form_reason lifeless_prevents_form(transformation form = you.form,
-                                          bool involuntary = false);
+undead_form_reason lifeless_prevents_form(transformation form = you.form);
 
 bool form_can_wield(transformation form = you.form);
 bool form_can_wear(transformation form = you.form);

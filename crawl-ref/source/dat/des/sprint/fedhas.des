@@ -8,7 +8,7 @@ KMONS:  A = fungus
 KMONS:  B = spriggan hd:3
 KMONS:  C = oklob sapling hp:7
 KMONS:  D = oklob sapling hp:15 name:wizard n_suf \
-            spells:spit_acid.50.natural;magic_dart.36.wizard;cantrip.18.wizard
+            spells:spit_acid.50.natural;sting.36.wizard;cantrip.18.wizard
 KMONS:  E = scorpion
 KMONS:  F = wandering mushroom
 KMONS:  G = burning bush
@@ -21,8 +21,7 @@ KMONS:  M = oklob plant hp:30 name:conjurer n_suf \
                    throw_icicle.30.wizard
 KMONS:  N = ballistomycete spore
 KMONS:  O = oklob plant hp:30 name:summoner n_suf \
-            spells:spit_acid.67.natural;call_imp.30.wizard;\
-                   summon_swarm.30.wizard
+            spells:spit_acid.67.natural;call_imp.30.wizard
 KMONS:  P = oklob plant hp:30 name:shifter n_suf \
             spells:spit_acid.67.natural;blink_other.60.wizard
 KMONS:  Q = demonic crawler
@@ -31,7 +30,7 @@ KMONS:  T = spriggan
 KMONS:  U = spriggan berserker
 KMONS:  V = Agnes
 KMONS:  W = spriggan defender
-KMONS:  X = spriggan rider ; storm_bow . arrow
+KMONS:  X = spriggan rider ; storm_bow
 KMONS:  Y = bush
 KMONS:  a = hornet
 KMONS:  b = ghost moth
@@ -46,7 +45,7 @@ KMONS:  f = oklob plant name:annihilator n_suf \
                    iskenderun's_icy_sphere.20.wizard;bolt_of_cold.20.wizard
 KMONS:  g = the Enchantress
 KMONS:  h = moth of wrath
-KMONS:  m = river rat
+KMONS:  m = sewer rat
 KMONS:  n = worker ant
 KMONS:  u = rat
 KITEM:  j = ration
@@ -100,6 +99,7 @@ NAME:   sprint_temple
 TAGS:   fedhas_sprint_temple no_rotate no_hmirror no_vmirror
 # No Fedhas or Ashenzari.
 KFEAT:  b = altar_beogh
+KFEAT:  B = altar_bahamut_and_tiamat
 KFEAT:  c = altar_cheibriados
 KFEAT:  d = altar_dithmenos
 KFEAT:  e = altar_elyvilon
@@ -127,7 +127,7 @@ KMONS:  P = oklob sapling name:priest n_suf \
 MAP
 .T.b.c.d.e.T.
 ..g.h.j.k.l..
-...m.nPo.q...
+.w.m.nPo.q.B.
 ..r.s.t.u.v..
-.w.x.y.z.1.T.
+.T.x.y.z.1.T.
 ENDMAP

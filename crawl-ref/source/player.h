@@ -23,8 +23,13 @@
 #include "equipment-type.h"
 #include "flush-reason-type.h"
 #include "game-chapter.h"
+#include "gender-type.h"
+#include "hunger-state-t.h"
+#include "kill-method-type.h"
 #include "kills.h"
+#include "maybe-bool.h"
 #include "mon-holy-type.h"
+#include "mount.h"
 #include "mutation-type.h"
 #include "place-info.h"
 #include "quiver.h"
@@ -44,14 +49,15 @@
 #define POWERED_BY_DEATH_KEY "powered_by_death_strength"
 #define SONG_OF_SLAYING_KEY "song_of_slaying_bonus"
 #define FORCE_MAPPABLE_KEY "force_mappable"
-#define REGEN_AMULET_ACTIVE "regen_amulet_active"
 #define MANA_REGEN_AMULET_ACTIVE "mana_regen_amulet_active"
-#define ACROBAT_AMULET_ACTIVE "acrobat_amulet_active"
 #define SAP_MAGIC_KEY "sap_magic_amount"
 #define TEMP_WATERWALK_KEY "temp_waterwalk"
 #define LAST_ACTION_WAS_MOVE_OR_REST_KEY "last_action_was_move_or_rest"
 #define PARALYSED_BY_KEY "paralysed_by"
 #define PETRIFIED_BY_KEY "petrified_by"
+#define NOXIOUS_BOG_KEY "noxious_bog_pow"
+#define INVIS_CONTAMLESS_KEY "contamless_invisibility"
+#define DEMON_SCREAM "damaging silence"
 
 // display/messaging breakpoints for penalties from Ru's MUT_HORROR
 #define HORROR_LVL_EXTREME  3
@@ -121,10 +127,6 @@ public:
     species_type species;
     job_type char_class;
 
-    // Only used by Xom.
-    string xom_name;
-    string xom_insult;
-
     // This field is here even in non-WIZARD compiles, since the
     // player might have been playing previously under wiz mode.
     bool          wizard;            // true if player has entered wiz mode.
@@ -147,8 +149,10 @@ public:
     int max_magic_points;
     int mp_max_adj;             // max MP loss (ability costs, tutorial bonus)
 
+    FixedVector<int8_t, NUM_STATS> mutated_stats;
     FixedVector<int8_t, NUM_STATS> stat_loss;
     FixedVector<int8_t, NUM_STATS> base_stats;
+    FixedVector<int8_t, NUM_STATS> jiyva_stat_targets;
 
     int hunger;
     int disease;
@@ -167,12 +171,23 @@ public:
     FixedBitVector<NUM_EQUIP> melded;
     // Whether these are unrands that we should run the _*_world_reacts func for
     FixedBitVector<NUM_EQUIP> unrand_reacts;
+    // True if the slot has an item that activates when worn with max hp (regen
+    // items, acrobat amulet) and max hp has been reached while wearing it;
+    // false otherwise.
+    FixedBitVector<NUM_EQUIP> activated;
 
     FixedArray<int, NUM_OBJECT_CLASSES, MAX_SUBTYPES> force_autopickup;
 
     // PC's symbol (usually @) and colour.
     monster_type symbol;
     transformation form;
+
+    mount_type mount;
+    int mount_hp_max;
+    int mount_hp;
+    int mount_hp_regen;
+    int mount_energy;
+    int mount_heads; // for hydra mount
 
     FixedVector< item_def, ENDOFPACK > inv;
     FixedBitVector<NUM_RUNE_TYPES> runes;
@@ -181,13 +196,23 @@ public:
     FixedBitVector<NUM_SPELLS> spell_library;
     FixedBitVector<NUM_SPELLS> hidden_spells;
     FixedVector<spell_type, MAX_KNOWN_SPELLS> spells;
-    set<spell_type> old_vehumet_gifts, vehumet_gifts;
+
+    struct summon_xp
+    {
+        spell_type summon;
+        unsigned int   xp;
+        int         bonus;
+    };
+
+    vector<summon_xp> summon_xp_data;
 
     uint8_t spell_no;
     game_chapter chapter;
     bool royal_jelly_dead;
     bool transform_uncancellable;
     bool fishtail; // Merfolk fishtail transformation
+
+    bool sidebar_toggle;
 
     unsigned short pet_target;
 
@@ -198,7 +223,6 @@ public:
     int berserk_penalty;                // The penalty for moving while berserk
 
     FixedVector<int, NUM_ATTRIBUTES> attribute;
-    FixedVector<uint8_t, NUM_AMMO> quiver; // default items for quiver
     FixedVector<int, NUM_TIMERS> last_timer_effect;
     FixedVector<int, NUM_TIMERS> next_timer_effect;
 
@@ -211,8 +235,11 @@ public:
     FixedVector<training_status, NUM_SKILLS> train_alt; ///< config of other mode
     FixedVector<unsigned int, NUM_SKILLS>  training; ///< percentage of XP used
     FixedBitVector<NUM_SKILLS> can_currently_train; ///< Is training this skill allowed?
+    FixedBitVector<NUM_SKILLS> should_show_skill; ///< Is this skill shown by default?
     FixedVector<unsigned int, NUM_SKILLS> skill_points;
+    FixedVector<unsigned int, NUM_SKILLS> manual_points; ///< Manual points
     FixedVector<unsigned int, NUM_SKILLS> training_targets; ///< Training targets, scaled by 10 (so [0,270]).  0 means no target.
+    int experience_pool; ///< XP waiting to be applied.
 
     /// track skill points gained by crosstraining
     FixedVector<unsigned int, NUM_SKILLS> ct_skill_points;
@@ -221,8 +248,8 @@ public:
     bool auto_training;
     list<skill_type> exercises;     ///< recent practise events
     list<skill_type> exercises_all; ///< also include events for disabled skills
-    set<skill_type> stop_train;     ///< need to check if we can still train
-    set<skill_type> start_train;    ///< we can resume training
+    set<skill_type> skills_to_hide;     ///< need to check if it should still be shown in the skill menu
+    set<skill_type> skills_to_show;    ///< we can un-hide in the skill menu
 
     // Skill menu states
     skill_menu_state skill_menu_do;
@@ -249,8 +276,6 @@ public:
     branch_type where_are_you;
     int depth;
 
-    FixedVector<uint8_t, 30> branch_stairs;
-
     god_type religion;
     string jiyva_second_name;       // Random second name of Jiyva
     uint8_t piety;
@@ -268,6 +293,8 @@ public:
     FixedVector<uint8_t, NUM_MUTATIONS> mutation;
     FixedVector<uint8_t, NUM_MUTATIONS> innate_mutation;
     FixedVector<uint8_t, NUM_MUTATIONS> temp_mutation;
+    FixedVector<uint8_t, NUM_MUTATIONS> miscast_mutation;
+    FixedVector<uint8_t, NUM_MUTATIONS> suppressed_mutation;
     FixedVector<uint8_t, NUM_MUTATIONS> sacrifices;
 
     FixedVector<uint8_t, NUM_ABILITIES> sacrifice_piety;
@@ -280,10 +307,38 @@ public:
 
     vector<demon_trait> demonic_traits;
 
+    struct miscast_mutation_info
+    {
+        int           xp;
+        mutation_type mutation;
+    };
+
+    vector<miscast_mutation_info> miscast_mutation_data;
+
+    // Jiyva Rework Variables
+    vector<mutation_type> jiyva_mut_set;
+    brand_type pseudopod_brand;
+
+    // Draconian Rework Variables
+    bool major_first;
+    skill_type major_skill;
+    skill_type minor_skill;
+    skill_type defence_skill;
+    draconian_colour drac_colour;
+
+    // Yred Enslaved Soul Information (In case a save is in a state where it'd need revival)
+    monster_type enslaved_soul;
+    gender_type soul_gender;
+    monster_spells soul_spells;
+    vector<item_type> soul_items;
+    int soul_hd_boost;
+
     int magic_contamination;
 
     FixedVector<uint32_t, NUM_WEAPONS> seen_weapon;
-    FixedVector<uint32_t, NUM_ARMOURS> seen_armour;
+    FixedVector<uint64_t, NUM_ARMOURS> seen_armour;
+    FixedVector<uint16_t, NUM_ARMOURS> seen_staff;
+    FixedVector<uint64_t, NUM_SHIELDS> seen_shield;
     FixedBitVector<NUM_MISCELLANY>     seen_misc;
     uint8_t                            octopus_king_rings;
 
@@ -321,7 +376,9 @@ public:
 
     LevelXPInfo global_xp_info;
 
-    player_quiver m_quiver;
+    quiver::ammo_history m_quiver_history;
+
+    quiver::action_cycler quiver_action;
 
     // monsters mesmerising player; should be protected, but needs to be saved
     // and restored.
@@ -413,8 +470,11 @@ public:
     string banished_by;
     int banished_power;
 
+    // TODO burn this API with fire
     bool wield_change;          // redraw weapon
+    bool gear_change;           // redraw equip bar
     bool redraw_quiver;         // redraw quiver
+    bool redraw_noise;
 
     bool redraw_title;
     bool redraw_hit_points;
@@ -424,6 +484,7 @@ public:
     bool redraw_armour_class;
     bool redraw_evasion;
     bool redraw_status_lights;
+    bool redraw_resists;
 
     colour_t flash_colour;
     targeter *flash_where;
@@ -508,7 +569,7 @@ public:
     bool is_web_immune() const override;
     bool cannot_speak() const;
     bool invisible() const override;
-    bool can_see_invisible(bool calc_unid = true) const override;
+    bool can_see_invisible() const override;
     int vision(bool calc_unid = true) const;
     int innate_vision() const;
     bool visible_to(const actor *looker) const override;
@@ -527,8 +588,13 @@ public:
 
     bool tengu_flight() const;
     int heads() const override;
+    int max_spiny_damage(bool allow_tran = false) const;
+    int max_ice_spine_damage(bool allow_tran = false) const;
 
     bool spellcasting_unholy() const;
+
+    int lookup_spell_xp_bonus(spell_type spell) const;
+    summon_xp lookup_spell_xp(spell_type spell) const;
 
     // Dealing with beholders. Implemented in behold.cc.
     void add_beholder(const monster& mon, bool axe = false);
@@ -560,12 +626,14 @@ public:
 
     bool has_spell(spell_type spell) const override;
 
-    string shout_verb(bool directed = false) const;
+    string shout_verb(bool directed = false, int forced_screaminess = -1) const;
     int shout_volume() const;
 
     item_def *slot_item(equipment_type eq, bool include_melded=false) const
         override;
 
+    int weapon_damage(const item_def &item) const override;
+    int spiky_odds(skill_type skill) const override;
     int base_ac_from(const item_def &armour, int scale = 1) const;
 
     int inaccuracy() const override;
@@ -594,7 +662,7 @@ public:
     bool      is_perm_summoned() const override { return false; };
 
     bool        swimming() const override;
-    bool        submerged() const override;
+    bool        submerged(bool mt = false) const override;
     bool        floundering() const override;
     bool        extra_balanced() const override;
     bool        shove(const char* feat_name = "") override;
@@ -604,6 +672,7 @@ public:
     size_type   body_size(size_part_type psize = PSIZE_TORSO,
                           bool base = false) const override;
     brand_type  damage_brand(int which_attack = -1) override;
+    int         vorpal_type(int which_attack = -1) override;
     int         damage_type(int which_attack = -1) override;
     random_var  attack_delay(const item_def *projectile = nullptr,
                              bool rescale = true) const override;
@@ -614,48 +683,45 @@ public:
     int       has_claws(bool allow_tran = true) const override;
     bool      has_usable_claws(bool allow_tran = true) const;
     int       has_talons(bool allow_tran = true) const;
-    bool      has_usable_talons(bool allow_tran = true) const;
     int       has_hooves(bool allow_tran = true) const;
-    bool      has_usable_hooves(bool allow_tran = true) const;
     int       has_fangs(bool allow_tran = true) const;
-    int       has_usable_fangs(bool allow_tran = true) const;
     int       has_tail(bool allow_tran = true) const;
     int       has_usable_tail(bool allow_tran = true) const;
-    bool      has_usable_offhand() const;
-    int       has_pseudopods(bool allow_tran = true) const;
     int       has_usable_pseudopods(bool allow_tran = true) const;
     int       has_tentacles(bool allow_tran = true) const;
-    int       has_usable_tentacles(bool allow_tran = true) const;
+    int       usable_tentacles(bool allow_tran = true) const override;
     int       branch_SH(bool allow_tran = true) const;
 
     // Information about player mutations. Implemented in mutation.cc
-    int       get_base_mutation_level(mutation_type mut, bool innate=true, bool temp=true, bool normal=true) const;
-    int       get_mutation_level(mutation_type mut, bool check_form=true) const;
+    int       get_base_mutation_level(mutation_type mut, bool innate = true, bool temp = true, bool normal = true, bool suppressed = true) const;
+    int       get_mutation_level(mutation_type mut, bool check_form = true) const;
     int       get_mutation_level(mutation_type mut, mutation_activity_type minact) const;
     int       get_innate_mutation_level(mutation_type mut) const;
     int       get_temp_mutation_level(mutation_type mut) const;
 
     int       get_training_target(const skill_type sk) const;
-    bool      set_training_target(const skill_type sk, const double target, bool announce=false);
-    bool      set_training_target(const skill_type sk, const int target, bool announce=false);
+    bool      set_training_target(const skill_type sk, const double target, bool announce = false);
+    bool      set_training_target(const skill_type sk, const int target, bool announce = false);
     void      clear_training_targets();
 
+    bool      has_miscast_mutation(mutation_type mut) const;
     bool      has_temporary_mutation(mutation_type mut) const;
     bool      has_innate_mutation(mutation_type mut) const;
-    bool      has_mutation(mutation_type mut, bool check_form=true) const;
+    bool      has_mutation(mutation_type mut, bool check_form = true) const;
 
-    int       how_mutated(bool innate=false, bool levels=false, bool temp=true) const;
+    int       how_mutated(bool innate = false, bool levels = false, bool temp = true, bool ds = false, bool normal = true) const;
 
-    int wearing(equipment_type slot, int sub_type, bool calc_unid = true) const
+    int wearing(equipment_type slot, int sub_type, bool calc_unid = true, bool count_jiyva = true, bool check_active = false) const
         override;
     int wearing_ego(equipment_type slot, int type, bool calc_unid = true) const
         override;
     int scan_artefacts(artefact_prop_type which_property,
                        bool calc_unid = true,
-                       vector<item_def> *matches = nullptr) const override;
+                       vector<const item_def *> *matches = nullptr) const override;
 
     item_def *weapon(int which_attack = -1) const override;
     item_def *shield() const override;
+    item_def *staff(bool ignore_cooldown = false) const override;
 
     hands_reqd_type hands_reqd(const item_def &item,
                                bool base = false) const override;
@@ -681,7 +747,7 @@ public:
     string arm_name(bool plural, bool *can_plural = nullptr) const override;
     string unarmed_attack_name() const;
 
-    bool fumbles_attack() override;
+    bool fumbles_attack() override { return false; };
     bool drowning();
     bool fights_well_unarmed(int heavy_armour_penalty) override;
 
@@ -701,9 +767,9 @@ public:
     bool malmutate(const string &reason) override;
     bool polymorph(int pow, bool allow_immobile = true) override;
     void backlight();
-    void banish(actor* /*agent*/, const string &who = "", const int power = 0,
+    void banish(const actor* /*agent*/, const string &who = "", const int power = 0,
                 bool force = false) override;
-    void blink() override;
+    void blink(coord_def disp_center = coord_def(0, 0)) override;
     void teleport(bool right_now = false,
                   bool wizard_tele = false) override;
     void drain_stat(stat_type stat, int amount) override;
@@ -715,21 +781,23 @@ public:
     void make_hungry(int nutrition, bool silent = true) override;
     bool poison(actor *agent, int amount = 1, bool force = false) override;
     bool sicken(int amount) override;
-    void paralyse(actor *, int str, string source = "") override;
-    void petrify(actor *, bool force = false) override;
-    bool fully_petrify(actor *foe, bool quiet = false) override;
-    void slow_down(actor *, int str) override;
+    void paralyse(const actor *, int str, string source = "") override;
+    void petrify(const actor *, bool force = false, bool mt = false) override;
+    bool fully_petrify(const actor *atk = nullptr, 
+                       bool quiet = false, bool mt = false) override;
+    void slow_down(actor *, int str, bool do_msg = true) override;
     void confuse(actor *, int strength) override;
     void weaken(actor *attacker, int pow) override;
-    bool heal(int amount) override;
-    bool drain_exp(actor *, bool quiet = false, int pow = 3) override;
-    bool rot(actor *, int amount, bool quiet = false, bool no_cleanup = false)
-        override;
+    bool heal(int amount, bool force = false) override;
+    bool drain_exp(const actor *, bool quiet = false, int pow = 3) override;
+    bool rot(actor *, int amount, bool quiet = false, bool no_cleanup = false, 
+             bool bypass_resistance = false) override;
     void splash_with_acid(const actor* evildoer, int acid_strength,
                           bool allow_corrosion = true,
-                          const char* hurt_msg = nullptr) override;
+                          const char* hurt_msg = nullptr,
+                          bool mt = false) override;
     bool corrode_equipment(const char* corrosion_source = "the acid",
-                           int degree = 1) override;
+                           int degree = 1, bool mt = false) override;
     void sentinel_mark(bool trap = false);
     int hurt(const actor *attacker, int amount,
              beam_type flavour = BEAM_MISSILE,
@@ -745,29 +813,35 @@ public:
 
     monster_type mons_species(bool zombie_base = false) const override;
 
-    mon_holy_type holiness(bool temp = true) const override;
+    mon_holy_type holiness(bool temp = true, bool mt = false) const override;
     bool undead_or_demonic() const override;
-    bool is_holy(bool spells = true) const override;
+    bool is_holy() const override;
     bool is_nonliving(bool temp = true) const override;
     int how_chaotic(bool check_spells_god) const override;
-    bool is_unbreathing() const override;
+    bool is_unbreathing(bool mt = false) const override;
     bool is_insubstantial() const override;
-    int res_acid(bool calc_unid = true) const override;
-    bool res_damnation() const override { return false; };
-    int res_fire() const override;
-    int res_steam() const override;
-    int res_cold() const override;
-    int res_elec() const override;
-    int res_poison(bool temp = true) const override;
-    int res_rotting(bool temp = true) const override;
-    int res_water_drowning() const override;
-    bool res_sticky_flame() const override;
-    int res_holy_energy() const override;
-    int res_negative_energy(bool intrinsic_only = false) const override;
-    bool res_torment() const override;
-    bool res_tornado() const override;
-    bool res_petrify(bool temp = true) const override;
-    int res_constrict() const override;
+    int res_acid(bool mt = false) const override;
+    bool res_hellfire(bool /*mt*/) const override { return false; };
+    int res_fire(bool mt = false) const override;
+    int res_steam(bool mt = false) const override;
+    int res_cold(bool mt = false) const override;
+    int res_elec(bool mt = false) const override;
+    bool wearing_heavy_armour() const override;
+    bool wearing_heavy_manmade_armour() const override;
+    int res_slash(bool mt = false) const override;
+    int res_pierce(bool mt = false) const override;
+    int res_bludgeon(bool mt = false) const override;
+    int res_poison(bool mt = false) const override;
+    rot_resistance res_rotting(bool mt = false) const override;
+    int res_water_drowning(bool mt = false) const override;
+    bool res_sticky_flame(bool mt = false) const override;
+    int res_holy_energy(bool mt = false) const override;
+    int res_negative_energy(bool mt = false) const override;
+    bool res_torment(bool mt = false) const override;
+    bool res_tornado(bool mt = false) const override;
+    bool res_wind(bool mt = false) const override;
+    bool res_petrify(bool mt = false) const override;
+    int res_constrict(bool mt = false) const override;
     int res_magic(bool /*calc_unid*/ = true) const override;
     bool no_tele(bool calc_unid = true, bool /*permit_id*/ = true,
                  bool blink = false) const override;
@@ -776,16 +850,24 @@ public:
     bool antimagic_susceptible() const override;
 
     bool gourmand(bool calc_unid = true, bool items = true) const override;
-    bool res_corr(bool calc_unid = true, bool items = true) const override;
+    int res_corr(bool mount = false) const override;
     bool clarity(bool calc_unid = true, bool items = true) const override;
     bool stasis() const override;
+    bool is_fairy() const override;
     bool cloud_immune(bool calc_unid = true, bool items = true) const override;
+    bool frag_immune() const override { return false; }
+    bool evokable_berserk(bool calc_unid = true) const override;
+    int evokable_invis(bool calc_unid = true) const override;
+    int spirit_shield(bool calc_unid = true, bool items = true) const override;
 
     bool airborne() const override;
     bool cancellable_flight() const;
     bool permanent_flight() const;
     bool racial_permanent_flight() const;
     int get_noise_perception(bool adjusted = true) const;
+
+    bool debuffable() const override;
+    void debuff() override;
 
     bool paralysed() const override;
     bool cannot_move() const override;
@@ -798,8 +880,8 @@ public:
     int silence_radius() const override;
     int liquefying_radius() const override;
     int umbra_radius() const override;
-    bool petrifying() const override;
-    bool petrified() const override;
+    bool petrifying(bool mt = false) const override;
+    bool petrified(bool mt = false) const override;
     bool liquefied_ground() const override;
     bool incapacitated() const override
     {
@@ -811,10 +893,9 @@ public:
     void put_to_sleep(actor *, int power = 0, bool hibernate = false) override;
     void awaken();
     void check_awaken(int disturbance) override;
-    int beam_resists(bolt &beam, int hurted, bool doEffects, string source)
-        override;
+    void beam_effects(beam_type flavour, int base, int post_res,
+                      bolt *beam = nullptr, bool mt = false) override;
 
-    bool can_throw_large_rocks() const override;
     bool can_smell() const;
     bool can_sleep(bool holi_only = false) const override;
 
@@ -829,11 +910,10 @@ public:
     int stat_maxhp() const override  { return hp_max; }
     int stealth() const override     { return player_stealth(); }
 
-    bool shielded() const override;
-    int shield_bonus() const override;
+    int shield_bonus(bool random = true) const override;
     int shield_block_penalty() const override;
     int shield_bypass_ability(int tohit) const override;
-    void shield_block_succeeded(actor *foe) override;
+    void shield_block_succeeded() override;
     int missile_deflection() const override;
     void ablate_deflection() override;
 
@@ -845,7 +925,6 @@ public:
     int armour_tohit_penalty(bool random_factor, int scale = 1) const override;
     int shield_tohit_penalty(bool random_factor, int scale = 1) const override;
 
-    bool wearing_light_armour(bool with_skill = false) const;
     int  skill(skill_type skill, int scale =1,
                bool real = false, bool drained = true,
                bool temp=true) const override;
@@ -894,13 +973,42 @@ public:
     void set_duration(duration_type dur, int turns, int cap = 0,
                       const char *msg = nullptr);
 
-    bool attempt_escape(int attempts = 1);
-    int usable_tentacles() const;
-    bool has_usable_tentacle() const override;
+    maybe_bool attempt_escape(int attempts = 1);
+
+    void stop_being_constricted(bool quiet = false) override;
+    actor * get_constrictor_or_frog() override;
 
     bool form_uses_xl() const;
+    bool have_serpentine_tail() const;
+    bool can_silent_cast() const;
+
+    bool can_blood_cast(int cost) const;
+    string walkverb() const;
 
     bool clear_far_engulf() override;
+
+    bool is_dragonkind() const override;
+    bool mounted() const override;
+    string mount_name(bool terse = false) const;
+
+    int ac_change_from_mutation(mutation_type mut) const;
+
+    int armour_class_with_one_sub(item_def sub) const;
+
+    int armour_class_with_one_removal(item_def sub) const;
+
+    int scan_artefact(artefact_prop_type which_property,
+                      bool calc_unid,
+                      item_def item) const;
+
+    int ac_changes_from_mutations() const;
+    vector<const item_def *> get_armour_items() const;
+    vector<const item_def *> get_armour_items_one_sub(const item_def& sub) const;
+    vector<const item_def *> get_armour_items_one_removal(const item_def& sub) const;
+    int base_ac_with_specific_items(int scale,
+                                    vector<const item_def *> armour_items) const;
+    int armour_class_with_specific_items(
+                                vector<const item_def *> items) const;
 
 protected:
     void _removed_beholder(bool quiet = false);
@@ -910,7 +1018,9 @@ protected:
     bool _possible_fearmonger(const monster* mon) const;
 };
 COMPILE_CHECK((int) SP_UNKNOWN_BRAND < 8*sizeof(you.seen_weapon[0]));
-COMPILE_CHECK((int) SP_UNKNOWN_BRAND < 8*sizeof(you.seen_armour[0]));
+COMPILE_CHECK((int) SP_UNKNOWN_EGO   < 8*sizeof(you.seen_armour[0]));
+COMPILE_CHECK((int) SP_UNKNOWN_FACET < 8*sizeof(you.seen_staff[0]));
+COMPILE_CHECK((int) SP_UNKNOWN_EGO   < 8*sizeof(you.seen_shield[0]));
 
 class monster;
 struct item_def;
@@ -920,7 +1030,7 @@ void moveto_location_effects(dungeon_feature_type old_feat,
                              bool stepped=false, const coord_def& old_pos=coord_def());
 
 bool check_moveto(const coord_def& p, const string &move_verb = "step",
-                  const string &msg = "");
+                  bool physically = true);
 bool check_moveto_terrain(const coord_def& p, const string &move_verb,
                           const string &msg = "", bool *prompted = nullptr);
 bool check_moveto_cloud(const coord_def& p, const string &move_verb = "step",
@@ -956,10 +1066,7 @@ bool player_is_shapechanged();
 
 void update_acrobat_status();
 
-bool is_effectively_light_armour(const item_def *item);
 bool player_effectively_in_light_armour();
-
-int player_energy();
 
 int player_shield_racial_factor();
 int player_armour_shield_spell_penalty();
@@ -967,11 +1074,12 @@ int player_armour_shield_spell_penalty();
 int hepliakqlana_ally_movement_speed(); 
 int player_movement_speed();
 
-int player_hunger_rate(bool temp = true);
+int player_hunger_rate();
 
-int calc_hunger(int food_cost);
+string player_name();
 
 int player_icemail_armour_class();
+int player_staff_shielding();
 int sanguine_armour_bonus();
 
 int player_wizardry(spell_type spell);
@@ -982,12 +1090,9 @@ int player_prot_life(bool calc_unid = true, bool temp = true,
 bool regeneration_is_inhibited();
 int player_regen();
 int player_mp_regen();
-void update_amulet_attunement_by_health();
-void update_mana_regen_amulet_attunement();
 
 int player_res_cold(bool calc_unid = true, bool temp = true,
                     bool items = true);
-int player_res_acid(bool calc_unid = true, bool items = true);
 
 bool player_res_torment(bool random = true);
 bool player_kiku_res_torment();
@@ -997,6 +1102,7 @@ bool player_likes_water(bool permanently = false);
 
 int player_res_electricity(bool calc_unid = true, bool temp = true,
                            bool items = true);
+int player_res_acid();
 
 int player_res_fire(bool calc_unid = true, bool temp = true,
                     bool items = true);
@@ -1009,7 +1115,7 @@ int player_res_poison(bool calc_unid = true, bool temp = true,
                       bool items = true);
 int player_res_magic(bool calc_unid = true, bool temp = true);
 
-int player_shield_class();
+int player_shield_class(bool temp = true);
 int player_displayed_shield_class();
 bool player_omnireflects();
 
@@ -1022,9 +1128,11 @@ int player_spec_hex();
 int player_spec_charm();
 int player_spec_poison();
 int player_spec_summ();
+int player_spec_translo();
+int player_spec_transmu();
 int player_spec_invo();
 
-const int player_adjust_evoc_power(const int power, int enhancers = 0);
+int player_adjust_evoc_power(const int power, int enhancers = 0);
 
 int player_speed();
 
@@ -1045,8 +1153,9 @@ void display_char_status();
 
 void forget_map(bool rot = false);
 
-int get_exp_progress();
-void gain_exp(unsigned int exp_gained, unsigned int* actual_gain = nullptr);
+int get_exp_progress(bool percent = true);
+unsigned int gain_exp(unsigned int exp_gained);
+void apply_exp();
 
 int xp_to_level_diff(int xp, int scale=1);
 
@@ -1095,6 +1204,8 @@ string describe_contamination(int level);
 bool sanguine_armour_valid();
 void activate_sanguine_armour();
 
+void handle_spectral_brand();
+
 void set_mp(int new_amount);
 
 bool player_regenerates_hp();
@@ -1108,12 +1219,16 @@ bool confuse_player(int amount, bool quiet = false, bool force = false);
 
 bool poison_player(int amount, string source, string source_aux = "",
                    bool force = false);
+bool poison_mount(int amount, bool force = false);
 void paralyse_player(string source, int amount = 0);
-void handle_player_poison(int delay);
-void reduce_player_poison(int amount);
+void handle_player_poison(int delay, bool mount);
+void reduce_player_poison(int amount, bool mount = false);
 int get_player_poisoning();
 bool poison_is_lethal();
 int poison_survival();
+
+double poison_dur_to_aut(double dur);
+double poison_aut_to_dur(double aut);
 
 bool miasma_player(actor *who, string source_aux = "");
 
@@ -1121,11 +1236,11 @@ bool napalm_player(int amount, string source, string source_aux = "");
 void dec_napalm_player(int delay);
 
 bool spell_slow_player(int pow);
-bool slow_player(int turns);
-void dec_slow_player(int delay);
+bool slow_player(int turns, bool do_msg = true);
+void dec_slow_player(int delay, bool mount);
 void dec_berserk_recovery_player(int delay);
 
-bool haste_player(int turns, bool rageext = false);
+bool haste_player(int turns, bool rageext = false, bool msg = true);
 void dec_haste_player(int delay);
 void dec_elixir_player(int delay);
 void dec_ambrosia_player(int delay);
@@ -1134,7 +1249,7 @@ bool invis_allowed(bool quiet = false, string *fail_reason = nullptr);
 bool flight_allowed(bool quiet = false, string *fail_reason = nullptr);
 void fly_player(int pow, bool already_flying = false);
 void float_player();
-void force_land_player(actor *foe, bool damage = false);
+void force_land_player(const actor *foe, bool damage = false);
 bool land_player(bool quiet = false);
 void player_open_door(coord_def doorpos);
 void player_close_door(coord_def doorpos);
@@ -1142,7 +1257,7 @@ void player_close_door(coord_def doorpos);
 void dec_disease_player(int delay);
 void player_end_berserk();
 
-void handle_player_drowning(int delay);
+void handle_player_drowning(int delay, duration_type dur);
 
 // Determines if the given grid is dangerous for the player to enter.
 bool is_feat_dangerous(dungeon_feature_type feat, bool permanently = false,
@@ -1156,3 +1271,6 @@ bool need_expiration_warning(coord_def p = you.pos());
 
 bool player_has_orb();
 bool player_on_orb_run();
+
+void change_drac_colour(draconian_colour new_colour);
+void toggle_sidebar();

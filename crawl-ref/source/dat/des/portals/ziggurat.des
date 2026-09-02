@@ -219,7 +219,7 @@ TAGS: ziggurat_pillar centered unrand no_exits
 # This is evil. Monster sets are: summoners (1), smites (2), harmless (3).
 # This pillar has tactical implications: you will have to stay away from it,
 # and teleports are more risky.
-MONS: ancient lich / shadow demon / curse skull / \
+MONS: ancient lich / cysgodol / curse skull / \
       ironbrand convoker / corrupter / deep elf demonologist
 MONS: eye of draining / eye of devastation / \
       floating eye / ghost moth / black sun / torpor snail
@@ -259,7 +259,7 @@ ENDMAP
 
 NAME: ziggurat_pillar_centre_h
 TAGS: ziggurat_pillar centered no_dump unrand no_exits
-MONS: crimson imp
+MONS: llaibwca
 MAP
 ccncc
 c...c
@@ -408,24 +408,29 @@ TAGS:    ziggurat_pillar centered generate_awake unrand no_exits
 DEPTH:   Zig:10-
 WEIGHT:  5
 MONS:    lost soul, rakshasa
-KFEAT:   ~ = known permanent teleport trap
-SUBST:   9 : 00., x : bcvx, X : bcnv
+KFEAT:   ~ = permanent teleport trap
+SHUFFLE: xm / cn
+SUBST:   9 : 00., c : bcv
+: if crawl.coinflip() then
+SUBST:  a : m
+: end
+KFEAT:   a = iron_grate
 : if you.depth() > 18 then
 SUBST:   0 : 0112
 : end
 MAP
-  xxx
- Xx0xX
+  xax
+ ax0xa
 xx9.9xx
-x0.~.0x
+a0.~.0a
 xx9.9xx
- Xx0xX
-  xxx
+ ax0xa
+  xax
 ENDMAP
 
 NAME:  ziggurat_pillar_centre_dispersal
 TAGS:  ziggurat_pillar centered generate_awake unrand no_exits
-KFEAT: ^ = dispersal trap
+KFEAT: ^ = congregation trap
 MAP
 ^G.G^
 GG.GG

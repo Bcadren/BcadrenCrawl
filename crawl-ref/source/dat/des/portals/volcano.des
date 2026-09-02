@@ -85,7 +85,7 @@ function volcano_setup (e)
     setup_loot(e)
     e.kfeat("< = exit_volcano")
     e.kfeat("I = exit_volcano")
-    e.kfeat("^ = known alarm trap")
+    e.kfeat("^ = alarm trap")
     e.subst("L : LLL.l")
     e.subst("L = lll.")
     e.subst("y : yyy.x")
@@ -185,13 +185,13 @@ function setup_loot (e)
     e.item([[potion of berserk rage w:14 / potion of might w:5 /
              potion of brilliance w:5 / potion of agility w:5 /
              potion of experience q:1 w:1 / potion of resistance]])
-    e.item(make_fiery_weapon(e, {"rapier w:10", "quick blade w:5", "eveningstar w:2",
+    e.item(make_fiery_weapon(e, {"rapier w:10", "tanto w:5", "eveningstar w:2",
                                  "demon whip w:2", "great mace w:16", "demon blade w:2",
                                  "great sword w:16", "triple sword w:2", "broad axe w:3",
                                  "battleaxe w:16", "executioner's axe w:1",
                                  "demon trident w:2", "glaive w:16", "bardiche w:2",
                                  "longbow w:8", "arbalest w:8", "fustibalus w:8",
-                                 "quarterstaff", "lajatang w:5"}))
+                                 "cleaver", "lajatang w:5"}))
     e.item("any / star_item w:4")
 end
 
@@ -211,12 +211,13 @@ end
 --  * Beastial - 20%
 --  * Demonic - 20%
 --  * Elemental - 15%
+-- BCADDO: Give the ogres Macahuitl when you make them.
 
 function fiery_guardians (e, intelligent, village)
     -- Shorthand abbreviations.
     local flame = "ego:molten ident:type"
     local res = "ego:fire_resistance ident:type"
-    local magestuff = "spear " .. flame .. " | whip " .. flame
+    local magestuff = "spear " .. flame .. " | cleaver " .. flame
                       .. " . robe " .. res
     local goodgear = "scimitar " .. flame
                      .. " | halberd " .. flame
@@ -225,8 +226,8 @@ function fiery_guardians (e, intelligent, village)
 
     -- Weighings back and forth with humanoids or not.
     if crawl.x_chance_in_y(9, 20) or village or intelligent then
-        local ogrestuff = "great mace " .. flame .. " | giant club w:14 " .. flame
-        local centaurstuff = "shortbow " .. flame .. " . arrow"
+        local ogrestuff = "great mace " .. flame .. " | dire flail w:14 " .. flame
+        local centaurstuff = "shortbow " .. flame .. " . spear"
         if village then
             e.mons("two-headed ogre ; " .. ogrestuff .. " . " .. ogrestuff ..
                    " / centaur ; " .. centaurstuff ..
@@ -240,7 +241,7 @@ function fiery_guardians (e, intelligent, village)
             e.mons("ogre mage w:40 ; " .. magestuff)
         elseif set_weight < 2 then
             e.mons("centaur ; " .. centaurstuff ..
-                   " / yaktaur w:5 ; arbalest " .. flame .. " . bolt")
+                   " / yaktaur w:5 ; arbalest " .. flame .. " . scroll of random uselessness")
             e.mons("centaur warrior ; " .. centaurstuff)
         else
            e.mons("salamander")
@@ -259,8 +260,8 @@ function fiery_guardians (e, intelligent, village)
         elseif set_weight < 8 then
             -- "Demonic" monster pack.
             e.mons("hell hound / red ugly thing / " ..
-                   "red devil ; trident ego:molten ident:type")
-            e.mons("sun demon / smoke demon")
+                   "cythraul ; trident ego:molten ident:type")
+            e.mons("sturnulos / mygdarth")
             e.mons("orc sorcerer ; " .. magestuff .. " / " ..
                    "hell knight ; " .. goodgear .. " . chain mail " .. res)
         else
@@ -1008,8 +1009,6 @@ ENDMAP
 NAME:    vts_chambers
 TAGS:    volcano_tomb_subvault no_item_gen no_monster_gen no_rotate no_hmirror
 TAGS:    no_vmirror unrand
-#        Traps and doors.
-KFEAT:   ! = known alarm trap
 MONS:    gargoyle w:99 / toenail golem w:1
 MONS:    troll skeleton / spriggan skeleton / naga skeleton
 MONS:    alligator skeleton / harpy skeleton / anaconda skeleton
@@ -1034,7 +1033,7 @@ cc1.........3....$X$$$vxxx
 cc1.........3....$v.5.vxxx
 xccc......ccccc..$X...vxxx
 xxxcc.cc.ccddecccvvvv+vxxx
-xxxxc3cc3c1eeg+!.+4Y..vvvx
+xxxxc3cc3c1eeg+^.+4Y..vvvx
 xxccc.cc.cccccccYvvv..+1vx
 xxc...cc...c...c..3v+vvvvx
 xxc...cc...c...+.5.vffvxxx
@@ -1123,13 +1122,12 @@ NAME:       volcano_village
 TAGS:       no_item_gen no_monster_gen
 ORIENT:     encompass
 WEIGHT:     20
-SUBST:      S = lw, W = wW`, L = ll`, R = lx
-SHUFFLE:    MIN
-NSUBST:     I = 4:. / * = $def, MN = 1:123
-NSUBST:     M = 3:1 / 2:2 / 3 = $def / *:.
-NSUBST:     N = 2:1 / 1:2 / 1 = $def / *:.
-SUBST:      . = .:99 ':1
-KFEAT:      ' = known alarm trap
+SUBST:      p = lw, W = wW`, q = ll`, r = lx
+SHUFFLE:    JK / LM / NO
+NSUBST:     J = 4=. / $def
+NSUBST:     L = 3=1 / 12. / 2=2 / 3=$def / .
+NSUBST:     N = 2=1 / 12. / 1=2 / 1=$def / .
+SUBST:      K = ^, MO = ., . = .:99 ^:1
 KPROP:      ` = no_tele_into
 :           fiery_guardians(_G, true, true)
 :           volcano_setup(_G)
@@ -1145,23 +1143,23 @@ xwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwx
 xwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwx
 xwwwwwwwwWwWwWwWwWwWwWwWwWwWwWwWwWwwwwwwwwx
 xwwwwwwwWWWWWWWWWWWWWWWWWWWWWWWWWWWwwwwwwwx
-xwwwwwwx...........................xxwwwwwx
+xwwwwwwx....MMM.............OOO....xxwwwwwx
 xwwwxxxx...xx+xx...xxxxx...xx+xx...'xxwwwwx
-xwwxx.xx..xxMMMxx.xxIIIxx.xxNNNxx..x+xxxwwx
-xSSx.x.x..xMMMMMx.xIIIIIx.xNNNNNx..x.xAxSSx
-xSSx<x.x..xMMMMMx.xIIIIIx.xNNNNNx..x.x<xSSx
-xlRxxx+x..xxMMMxx.xxIIIxx.xxNNNxx..xx.xxRlx
-xRlllxx....xxxxx...xx+xx...xxxxx...xxxxllRx
-xlRlllxx...........................xllllRlx
-xRllllllLLLLLLLLLLLLLLLLLLLLLLLLLLLllllllRx
-xlRllllllLlLlLlLlLlLlLlLlLlLlLlLlLllllllRlx
-xRlllVllllllllllllllllllllllllllllllVllllRx
-xlRlllllllllllVllllllVllllllllVlllllllllRlx
-xRlRlllllllllllllllllllllllllllllllllllRlRx
-xRlllRlllRlllRlllRlllRlllRlllRlllRlllRlllRx
-xlRlRlRlRlRlRlRlRlRlRlRlRlRlRlRlRlRlRlRlRlx
-xRlRlRlRlRlRlRlRlRlRlRlRlRlRlRlRlRlRlRlRlRx
-xRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRx
+xwwxx.xx..xxLLLxx.xxJJJxx.xxNNNxx..x+xxxwwx
+xppx.x.x..xLLLLLx.xJJJJJx.xNNNNNx..x'xAxppx
+xppx<x.x..xLLLLLx.xJJJJJx.xNNNNNx..x'x<xppx
+xlrxxx+x..xxLLLxx.xxJJJxx.xxNNNxx..xx'xxrlx
+xrlllxx....xxxxx...xx+xx...xxxxx...xxxxllrx
+xlrlllxx............KKK............xllllrlx
+xrllllllqqqqqqqqqqqqqqqqqqqqqqqqqqqllllllrx
+xlrllllllqlqlqlqlqlqlqlqlqlqlqlqlqllllllrlx
+xrlllVllllllllllllllllllllllllllllllVllllrx
+xlrlllllllllllVllllllVllllllllVlllllllllrlx
+xrlrlllllllllllllllllllllllllllllllllllrlrx
+xrlllrlllrlllrlllrlllrlllrlllrlllrlllrlllrx
+xlrlrlrlrlrlrlrlrlrlrlrlrlrlrlrlrlrlrlrlrlx
+xrlrlrlrlrlrlrlrlrlrlrlrlrlrlrlrlrlrlrlrlrx
+xrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrx
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ENDMAP
 ###############################################################################
@@ -1435,8 +1433,8 @@ xxxxxxxxxxxxxxxxxxlllll.g.t.<.tllxxxxxxxxxxxxxxx
 xxxxxxxxxxxxxxxllllll..t.$..$.g.llxxxxxxxxxxxxxx
 xxxxxxxxxxxxxlllMlll.t$.gp.t.p.t.lxxxxxxxxxxxxxx
 xxxxxxxxxxxxlllllllt.g.$..g$.g..tllxxxxxxxxxxxxx
-xxxxxxxxxxxllllllllt.gt.3.1.p.t..lllxxxxxxxxxxxx
-xxxxxxxxxxlllllJllltp..p.....$...lllxxxxxxxxxxxx
+xxxxxxxxxxxllllllllt.gt.3.1.p.t..lllxxxx<xxxxxxx
+xxxxxxxxxxlllllJllltp..p.....$...lllxxxxxpxxxxxx
 xxxxxxxxxlllKllllllt.......3...t.llxxxxxdCexxxxx
 xxxxxxxxlllllllllllttp...tttttt.llxxxxxxxf4xxxxx
 xxxxxxxxllllllllMlllttt..tt.ptttlxxxxxxxxx.xxxxx

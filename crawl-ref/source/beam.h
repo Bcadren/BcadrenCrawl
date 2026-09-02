@@ -5,18 +5,27 @@
 
 #pragma once
 
+#include <vector>
+
 #include "ac-type.h"
 #include "beam-type.h"
 #include "enchant-type.h"
+#include "externs.h"
+#include "killer-type.h"
 #include "mon-attitude-type.h"
-#include "options.h"
 #include "random.h"
 #include "ray.h"
 #include "spl-cast.h"
 #include "zap-type.h"
 
+using std::vector;
+
 #define BEAM_STOP       1000        // all beams stopped by subtracting this
                                     // from remaining range
+
+#define KNOCKBACK_KEY   "knocked back by" // if knockback sends into water/lava; credit the correct thing with the kill.
+#define PULLED_KEY      "pulled by"
+#define DASH_KEY        "hit by dash"
 
 class monster;
 
@@ -48,6 +57,8 @@ struct tracer_info
 
 struct bolt
 {
+    bolt();
+
     // INPUT parameters set by caller
     spell_type  origin_spell = SPELL_NO_SPELL; // may remain SPELL_NO_SPELL for
                                                // non-spell beams.
@@ -104,14 +115,16 @@ struct bolt
     bool   was_missile = false;   // For determining if this was SPMSL_FLAME /
                                   // FROST etc so that we can change mulch rate
     // Do we draw animations?
-    bool   animate = bool(Options.use_animations & UA_BEAM);
+    bool   animate;
     ac_type ac_rule = ac_type::normal;   // How defender's AC affects damage.
 #ifdef DEBUG_DIAGNOSTICS
     bool   quiet_debug = false;    // Disable any debug spam.
 #endif
 
     // OUTPUT parameters (tracing, ID)
-    bool obvious_effect = false; // did an 'obvious' effect happen?
+    bool obvious_effect = false; // is this a non-enchantment, or did it already
+                                 // show some effect or message? (Otherwise, we'll
+                                 // print the canned 'nothing happened.)
 
     bool seen = false;          // Has player seen the beam?
     bool heard = false;         // Has the player heard the beam?
@@ -119,7 +132,7 @@ struct bolt
     vector<coord_def> path_taken = {}; // Path beam took.
 
     // INTERNAL use - should not usually be set outside of beam.cc
-    int  extra_range_used = false;
+    int  extra_range_used = 0;
     bool is_tracer = false;       // is this a tracer?
     bool is_targeting = false;    // . . . in particular, a targeting tracer?
     bool aimed_at_feet = false;   // this was aimed at self!
@@ -156,6 +169,8 @@ struct bolt
 private:
     bool can_see_invis = false;
     bool nightvision = false;
+    int tunnelpower = 0;
+    bool hit_something = false;
 
 public:
     bool is_enchantment() const; // no block/dodge, use magic resist
@@ -190,7 +205,7 @@ public:
     bool nice_to(const monster_info& mi) const;
     bool has_saving_throw() const;
 
-    void draw(const coord_def& p);
+    void draw(const coord_def& p, bool force_refresh=true);
     void drop_object();
 
     // Various explosion-related stuff.
@@ -228,13 +243,13 @@ private:
     bool is_big_cloud() const; // expands into big_cloud at endpoint
     int range_used_on_hit() const;
     bool bush_immune(const monster &mons) const;
+    int apply_lighting(int base_hit, const actor &target) const;
 
     set<string> message_cache;
     void emit_message(const char* msg);
 
-    int apply_AC(const actor* victim, int hurted);
-    bool determine_damage(monster* mon, int& preac, int& postac, int& final,
-                          vector<string> &messages);
+    int apply_AC(const actor* victim, int hurted, int max_dmg, bool mount = false);
+    bool determine_damage(monster* mon, int& preac, int& postac, int& final);
 
     // Functions which handle actually affecting things. They all
     // operate on the beam's current position (i.e., whatever pos()
@@ -296,8 +311,8 @@ public:
     void choose_ray();
 };
 
-int mons_adjust_flavoured(monster* mons, bolt &pbolt, int hurted,
-                          bool doFlavouredEffects = true);
+void impale_player_with_barbs(bool mt = false);
+void impale_monster_with_barbs(monster* mon, actor* agent, string what = "barbed spikes");
 
 // Return whether the effect was visible.
 bool enchant_actor_with_flavour(actor* victim, const actor *atk,
@@ -305,8 +320,7 @@ bool enchant_actor_with_flavour(actor* victim, const actor *atk,
 
 bool enchant_monster_invisible(monster* mon, const string &how);
 
-bool ench_flavour_affects_monster(beam_type flavour, const monster* mon,
-                                                  bool intrinsic_only = false);
+bool ench_flavour_affects_monster(beam_type flavour, const monster* mon);
 spret mass_enchantment(enchant_type wh_enchant, int pow,
                             bool fail = false);
 int ench_power_stepdown(int pow);
@@ -317,9 +331,9 @@ bool miasma_monster(monster* mons, const actor* who);
 bool napalm_monster(monster* mons, const actor* who, int levels = 1,
                     bool verbose = true);
 bool curare_actor(actor* source, actor* target, int levels, string name,
-                  string source_name);
-int silver_damages_victim(actor* victim, int damage, string &dmg_msg);
-void fire_tracer(const monster* mons, bolt &pbolt,
+                  string source_name, bool mount = false);
+int silver_damages_victim(actor* victim, int damage, string &dmg_msg, bool mount = false);
+void fire_tracer(const actor* act, bolt &pbolt,
                   bool explode_only = false, bool explosion_hole = false);
 bool imb_can_splash(coord_def origin, coord_def center,
                     vector<coord_def> path_taken, coord_def target);
@@ -328,13 +342,19 @@ spret zapping(zap_type ztype, int power, bolt &pbolt,
                    bool fail = false);
 bool player_tracer(zap_type ztype, int power, bolt &pbolt, int range = 0);
 
-void create_feat_splash(coord_def center, int radius, int nattempts);
+vector<coord_def> create_feat_splash(coord_def center, int radius, int num, int dur, bool acid = false);
 
 void init_zap_index();
 void clear_zap_info_on_exit();
 
 int zap_power_cap(zap_type ztype);
+bool zap_explodes(zap_type ztype);
+bool zap_is_enchantment(zap_type ztype);
 int zap_ench_power(zap_type z_type, int pow, bool is_monster);
+int zap_to_hit(zap_type z_type, int power, bool is_monster);
+dice_def zap_damage(zap_type z_type, int power, bool is_monster, bool random = true);
+colour_t zap_colour(zap_type z_type);
+
 void zappy(zap_type z_type, int power, bool is_monster, bolt &pbolt);
 void bolt_parent_init(const bolt &parent, bolt &child);
 

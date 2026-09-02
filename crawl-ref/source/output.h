@@ -18,7 +18,7 @@ void print_stats_level();
 void draw_border();
 
 #ifndef USE_TILE_LOCAL
-void redraw_console_sidebar();
+void smallterm_warning();
 #endif
 
 void redraw_screen(bool show_updates = true);
@@ -29,7 +29,7 @@ int update_monster_pane();
 const char *equip_slot_to_name(int equip);
 int equip_name_to_slot(const char *s);
 
-int stealth_breakpoint(int stealth);
+int stealth_pips();
 
 void print_overview_screen();
 

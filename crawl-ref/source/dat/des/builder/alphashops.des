@@ -58,37 +58,37 @@
    function shopcontents(s)
       local i = {}
       if s == "A" then i = { "arbalest", "book of alchemy", "book of air",
-       "manual of air magic", "book of annihilations", "arrow",
+       "manual of air magic", "book of annihilations",
        "potion of agility", "potion of ambrosia", "scroll of acquirement q:1",
-       "scroll of amnesia", "staff of air", "ring of attention",
-       "manual of axes", "manual of armour", "wand of acid",
+       "potion of amnesia", "staff of air", "ring of attention",
+       "manual of axes & hammers", "manual of armour", "wand of acid",
        "acid dragon scales", "scroll of attention" }
 
-      elseif s == "B" then i = { "bardiche", "battleaxe", "bolt",
+      elseif s == "B" then i = { "bardiche", "battleaxe",
        "book of battle", "book of beasts", "book of burglary", "box of beasts",
+       "potion of beneficial mutation q:1", 
        "broad axe", "pair of boots", "potion of berserk rage",
-       "blowgun", "potion of blood", "potion of brilliance",
-       "scroll of blinking", "scroll of brand weapon",
+       "potion of blood", "potion of brilliance",
+       "scroll of blinking", "scroll of bless item",
        "manual of bows", "buckler" }
 
       elseif s == "C" then i = { "book of callings", "book of cantrips",
-       "club", "book of changes", "centaur barding",
-       "chain mail", "crystal ball of energy", "cloak", "crystal plate armour",
+       "club", "book of changes", "centaur barding", "potion of cure mutation",
+       "chain mail", "crystal ball of energy", "cloak", "crystal plate",
        "potion of cancellation", "book of clouds", "staff of cold",
-	   "manual of crossbows",
+	   "manual of crossbows", "condenser vane",
        "manual of charms", "potion of curing", "wand of clouds" }
 
       elseif s == "D" then i = { "book of death", "book of debilitation",
-       "book of dreams", "book of the dragon", "dagger", "demon blade",
-       "demon trident", "demon whip", "dire flail", "double sword",
-       "ring of dexterity", "manual of dodging", "wand of disintegration",
-       "staff of death" }
+       "book of dreams","dagger", "demon blade", "demon trident", 
+	   "demon whip", "dire flail", "double sword", "ring of dexterity", 
+	   "manual of dodging", "wand of disintegration", "staff of death" }
 
       elseif s == "E" then i = { "book of enchantments", "manual of evocations",
        "eveningstar", "ring of evasion", "executioner's axe",
        "potion of experience q:1", "scroll of enchantment", "staff of earth",
        "wand of enslavement", "book of the earth",
-       "manual of earth magic", "staff of energy" }
+       "manual of earth magic" }
 
       elseif s == "F" then i = { "book of fire", "book of flames", "flail",
        "book of frost", "falchion", "fan of gales", "fire dragon scales",
@@ -102,7 +102,7 @@
        "glaive", "gold dragon scales", "grand grimoire", "great mace",
        "great sword", "pair of gloves" }
 
-      elseif s == "H" then i = { "amulet of harm", "halberd", "hand axe",
+      elseif s == "H" then i = { "amulet of harm", "halberd", "hatchet",
        "hand crossbow", "hunting sling", "potion of heal wounds",
        "potion of haste", "scroll of holy word", "manual of hexes", "hat",
        "helmet", "heater shield" }
@@ -112,12 +112,12 @@
        "potion of invisibility", "ring of intelligence",
        "wand of iceblast", "manual of invocations", "manual of ice magic" }
 
-      elseif s == "J" then i = { "javelin" }
+      elseif s == "J" then i = { "any" }
 
       elseif s == "K" then i = { "any" }
 
       elseif s == "L" then i = { "lamp of fire", "manual of long blades",
-       "large rock", "leather armour", "long sword",
+       "leather armour", "long sword", "staff of life", "lantern of shadows",
        "potion of lignification", "lajatang", "longbow", "lightning rod" }
 
       elseif s == "M" then i = { "book of minor magic", "book of misfortune",
@@ -126,7 +126,7 @@
 	   "potion of might", "potion of mutation", "scroll of magic mapping" }
 
       elseif s == "N" then i = { "book of necromancy", "naga barding",
-       "necronomicon", "needle", "manual of necromancy" }
+       "manual of necromancy" }
 
       elseif s == "O" then i = { "any" }
 
@@ -134,44 +134,41 @@
        "pearl dragon scales", "phantom mirror", "phial of floods",
        "plate armour", "ring of poison resistance", "manual of polearms",
        "wand of polymorph", "ring of positive energy", "ring of protection",
-       "manual of poison magic", "staff of power",
-       "ring of protection from magic",
+       "manual of poison magic", "ring of protection from magic",
        "staff of poison" }
 
-      elseif s == "Q" then i = { "quarterstaff", "quicksilver dragon scales",
-       "quick blade" }
+      elseif s == "Q" then i = { "quarterstaff", "quicksilver dragon scales"}
 
       elseif s == "R" then i = { "amulet of rage", "amulet of reflection",
        "amulet of regeneration", "amulet of reduced vision", "rapier",
 	   "ring of resist corrosion",
        "ration", "potion of resistance", "robe", "ring mail",
-       "scroll of random uselessness", "scroll of remove curse",
+       "scroll of random uselessness",
        "wand of random effects" }
 
       elseif s == "S" then i = { "scarf", "scimitar", "short sword",
-       "sling bullet", "scale mail", "book of summonings", "book of the sky",
+       "scale mail", "book of summonings", "book of the sky",
        "ring of slaying", "spear", "ring of stealth",
        "ring of strength", "manual of stealth", "sack of spiders",
        "scroll of summoning", "scythe", "book of spatial translocations",
        "scroll of silence", "scutum", "shortbow", "steam dragon scales",
 	   "shadow dragon scales", "storm dragon scales", "swamp dragon scales",
-	   "manual of short blades", "staff of summoning", "manual of slings",
+	   "manual of short blades", "manual of slings",
 	   "manual of shields", "manual of spellcasting", "manual of summonings",
-	   "stone", "wand of scattershot" }
+	   "wand of scattershot" }
 
       elseif s == "T" then i = { "book of the tempests", "scroll of torment",
        "book of transfigurations", "ring of teleportation",
        "scroll of teleportation", "triple sword", "triple crossbow",
-       "troll leather armour", "manual of throwing",
-       "manual of translocations", "manual of transmutations", "tomahawk",
-       "trident", "throwing net" }
+       "troll leather", "manual of translocations",
+	   "manual of transmutations", "trident" , "staff of transmutation", "tanto"}
 
       elseif s == "U" then i = { "book of unlife", "manual of unarmed combat" }
 
       elseif s == "V" then i = { "scroll of vulnerability" }
 
       elseif s == "W" then i = { "ring of wizardry", "book of the warp", "whip",
-       "war axe", "staff of wizardry", "manual of whips and flails" }
+       "war axe", "manual of whips and flails" }
 
       elseif s == "X" then i = { "any" }
 
@@ -208,7 +205,7 @@
 
 NAME: nicolae_alphabet_shops
 TAGS: transparent allow_dup extra
-DEPTH: D:4-, Depths, Orc, Elf, Snake, Shoals
+DEPTH: D:2-, Depths, Orc, Elf, Snake, Shoals
 WEIGHT: 5
 # We allow shop lists with no fewer than 5 item types, and place 5-15
 # items or place itemcount items, whichever is less, where itemcount is

@@ -35,10 +35,11 @@ function callback.dk_xom_monty_hall_move(data, triggerable, triggerer, marker, e
 end
 }}
 
+# BCADDO: Revise this to make sure the player gets it.
 NAME:    dk_xom_monty_hall
 TAGS:    no_item_gen no_monster_gen temple_overflow_xom uniq_altar_xom
 WEIGHT:  3
-DEPTH:   D:2-7
+DEPTH:   D:2-3
 KFEAT:   _ = altar_xom
 MONS:    generate_awake iguana hd:1
 MONS:    generate_awake jelly

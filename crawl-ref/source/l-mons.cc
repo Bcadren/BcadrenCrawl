@@ -19,6 +19,7 @@
 #include "monster.h"
 #include "mon-util.h"
 #include "stringutil.h"
+#include "tag-version.h"
 
 #define WRAPPED_MONSTER(ls, name)                                       \
     MonsterWrap *___mw = clua_get_userdata< MonsterWrap >(ls, MONS_METATABLE); \
@@ -38,11 +39,10 @@ void push_monster(lua_State *ls, monster* mons)
 }
 
 #define MDEF(name)                                                      \
-    static int l_mons_##name(lua_State *ls, monster* mons,             \
-                             const char *attr)                         \
+    static int l_mons_##name(lua_State *ls, monster* mons)             \
 
 #define MDEFN(name, closure)                    \
-    static int l_mons_##name(lua_State *ls, monster* mons, const char *attrs) \
+    static int l_mons_##name(lua_State *ls, monster* mons) \
     {                                                                   \
     lua_pushlightuserdata(ls, mons);                                    \
     lua_pushcclosure(ls, l_mons_##closure, 1);                          \
@@ -314,7 +314,7 @@ MDEFN(random_teleport, do_random_teleport)
 MDEF(experience)
 {
     ASSERT_DLUA;
-    PLUARET(number, exper_value(*mons));
+    PLUARET(number, mon_exper_value(*mons));
 }
 
 static int l_mons_do_set_prop(lua_State *ls)
@@ -503,7 +503,7 @@ MDEFN(get_info, do_get_info)
 struct MonsAccessor
 {
     const char *attribute;
-    int (*accessor)(lua_State *ls, monster* mons, const char *attr);
+    int (*accessor)(lua_State *ls, monster* mons);
 };
 
 static MonsAccessor mons_attrs[] =
@@ -563,7 +563,7 @@ static int monster_get(lua_State *ls)
 
     for (const MonsAccessor &ma : mons_attrs)
         if (!strcmp(attr, ma.attribute))
-            return ma.accessor(ls, mons, attr);
+            return ma.accessor(ls, mons);
 
     return 0;
 }

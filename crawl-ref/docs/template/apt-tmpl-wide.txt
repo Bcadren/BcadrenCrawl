@@ -39,7 +39,7 @@ Arm - Armour                 Fgt - Fighting              Spc - Spellcasting
 Ddg - Dodging                SBl - Short Blades          Coj - Conjurations
 Sth - Stealth                LBl - Long Blades           Hex - Hexes
 Shd - Shields                W&F - Whips & Flails        Cha - Charms
-                             Axs - Axes                  Sum - Summonings
+                             A&H - Axes & Hammers        Sum - Summonings
 Inv - Invocations            Pla - Polearms              Nec - Necromancy
 Evo - Evocations             M&S - Maces & Staves        Trl - Translocations
                              UC  - Unarmed Combat        Trm - Transmutations
@@ -51,5 +51,5 @@ MR  - magic resistance       Crb - Crossbows             Ear - Earth Magic
                                                          Poi - Poison Magic
 
 
-                 Arm Ddg Sth Shd   Inv Evo   HP  MP Exp  MR   Fgt SBl LBl W&F Axs Pla M&S UC   Thr Slg Bws Crb   Spc Coj Hex Cha Sum Nec Trl Trm   Fir Ice Air Ear Poi
+                 Arm Ddg Sth Shd   Inv Evo   HP  MP Exp  MR   Fgt SBl LBl W&F A&H Pla M&S UC   Thr Slg Bws Crb   Spc Coj Hex Cha Sum Nec Trl Trm   Fir Ice Air Ear Poi
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------

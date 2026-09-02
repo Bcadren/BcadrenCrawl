@@ -11,13 +11,11 @@
 #include "act-iter.h"
 #include "areas.h"
 #include "beam.h"
-#include "bloodspatter.h"
 #include "cloud.h"
 #include "coordit.h"
 #include "database.h"
 #include "dgn-shoals.h"
 #include "dgn-event.h"
-#include "dungeon.h"
 #include "env.h"
 #include "exercise.h"
 #include "externs.h"
@@ -46,6 +44,7 @@
 #include "spl-clouds.h"
 #include "spl-miscast.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "teleport.h"
 #include "terrain.h"
 #include "tileview.h"
@@ -83,11 +82,8 @@ static void _random_hell_miscast()
                                  2, spschool::charms,
                                  2, spschool::hexes);
 
-    const int pow = 4 + random2(6);
-    const int fail = random2avg(97, 3);
-    MiscastEffect(&you, nullptr, {miscast_source::hell_effect}, which_miscast,
-                  pow, fail,
-                  "the effects of Hell");
+    miscast_effect(you, nullptr, {miscast_source::hell_effect}, which_miscast,
+                   5, random2avg(40, 3), "the effects of Hell");
 }
 
 /// The thematically appropriate hell effects for a given hell branch.
@@ -107,22 +103,22 @@ static map<branch_type, hell_effect_spec> hell_effects_by_branch =
     { BRANCH_DIS, { {RANDOM_DEMON_GREATER}, spschool::earth, {
         { RANDOM_MONSTER, 100 }, // TODO
     }}},
-    { BRANCH_GEHENNA, { {MONS_BRIMSTONE_FIEND}, spschool::fire, {
+    { BRANCH_GEHENNA, { {MONS_RHUDDGOCH}, spschool::fire, {
         { RANDOM_MONSTER, 100 }, // TODO
     }}},
-    { BRANCH_COCYTUS, { {MONS_ICE_FIEND, MONS_SHARD_SHRIKE}, spschool::ice, {
+    { BRANCH_COCYTUS, { {MONS_VETRIFL, MONS_SHARD_SHRIKE}, spschool::ice, {
         // total weight 100
         { MONS_ZOMBIE, 15 },
         { MONS_SKELETON, 10 },
         { MONS_SIMULACRUM, 10 },
         { MONS_FREEZING_WRAITH, 10 },
         { MONS_FLYING_SKULL, 10 },
-        { MONS_TORMENTOR, 10 },
+        { MONS_POENYDIO, 10 },
         { MONS_REAPER, 10 },
         { MONS_BONE_DRAGON, 5 },
         { MONS_ICE_DRAGON, 5 },
-        { MONS_BLIZZARD_DEMON, 5 },
-        { MONS_ICE_DEVIL, 5 },
+        { MONS_CENYSUS, 5 },
+        { MONS_RYPUIWEL, 5 },
     }}},
     { BRANCH_TARTARUS, { {MONS_TZITZIMITL}, spschool::necromancy, {
         { RANDOM_MONSTER, 100 }, // TODO
@@ -151,10 +147,8 @@ static void _themed_hell_summon_or_miscast()
     }
     else
     {
-        const int pow = 4 + random2(6);
-        const int fail = random2avg(97, 3);
-        MiscastEffect(&you, nullptr, {miscast_source::hell_effect},
-                      spec->miscast_type, pow, fail,
+        miscast_effect(you, nullptr, {miscast_source::hell_effect},
+                      spec->miscast_type, 5, random2avg(40, 3),
                       "the effects of Hell");
     }
 }
@@ -219,29 +213,29 @@ static void _hell_effects(int /*time_delta*/)
         _minor_hell_summons();
 }
 
-static void _handle_magic_contamination()
+static void _apply_contam_over_time()
 {
     int added_contamination = 0;
-
-    // Scale has been increased by a factor of 1000, but the effect now happens
-    // every turn instead of every 20 turns, so everything has been multiplied
-    // by 50 and scaled to you.time_taken.
+    int dissipation = 25;
+    bool no_contam = you.props.exists(INVIS_CONTAMLESS_KEY) && you.props[INVIS_CONTAMLESS_KEY].get_bool();
 
     //Increase contamination each turn while invisible
-    if (you.duration[DUR_INVIS])
+    if (you.duration[DUR_INVIS] && !no_contam)
         added_contamination += INVIS_CONTAM_PER_TURN;
     //If not invisible, normal dissipation
     else
-        added_contamination -= 25;
+        added_contamination -= 75;
+
+    // BCADDO: Revise?
 
     // The Orb halves dissipation (well a bit more, I had to round it),
     // but won't cause glow on its own -- otherwise it'd spam the player
     // with messages about contamination oscillating near zero.
     if (you.magic_contamination && player_has_orb())
-        added_contamination += 13;
+        added_contamination += 38;
 
     // Scaling to turn length
-    added_contamination = div_rand_round(added_contamination * you.time_taken,
+    added_contamination = div_rand_round((added_contamination - dissipation) * you.time_taken,
                                          BASELINE_DELAY);
 
     contaminate_player(added_contamination, false);
@@ -250,13 +244,18 @@ static void _handle_magic_contamination()
 // Bad effects from magic contamination.
 static void _magic_contamination_effects()
 {
-    mprf(MSGCH_WARN, "Your body shudders with the violent release "
-                     "of wild energies!");
-
     const int contam = you.magic_contamination;
+    const bool can_mutate = !you.get_mutation_level(MUT_RADIOSYNTHESIS);
+    const bool boom = contam > 10000 && coinflip();
+
+    if (can_mutate || boom)
+    {
+        mprf(MSGCH_WARN, "Your body shudders with the violent release "
+                         "of wild energies!");
+    }
 
     // For particularly violent releases, make a little boom.
-    if (contam > 10000 && coinflip())
+    if (boom)
     {
         bolt beam;
 
@@ -272,26 +271,34 @@ static void _magic_contamination_effects()
                                        div_rand_round(contam, 15000)));
         beam.ench_power   = div_rand_round(contam, 200);
         beam.is_explosion = true;
-
-        beam.explode();
+        beam.fake_flavour();
+        beam.explode(true, !can_mutate);
     }
 
-    const mutation_permanence_class mutclass = MUTCLASS_NORMAL;
+    if (can_mutate)
+    {
+        if (one_chance_in(3))
+        {
+            const int x = 2 + random2(3);
+            for (int i = 0; i < x; i++)
+                temp_mutate(RANDOM_BAD_MUTATION, "mutagenic glow");
+        }
 
-    // We want to warp the player, not do good stuff!
-    mutate(one_chance_in(5) ? RANDOM_MUTATION : RANDOM_BAD_MUTATION,
-           "mutagenic glow", true, coinflip(), false, false, mutclass);
+        // We want to warp the player, not do good stuff!
+        mutate(one_chance_in(5) ? RANDOM_MUTATION : RANDOM_BAD_MUTATION,
+            "mutagenic glow", true, coinflip());
+    }
 
     // we're meaner now, what with explosions and whatnot, but
     // we dial down the contamination a little faster if its actually
     // mutating you.  -- GDL
-    contaminate_player(-(random2(contam / 4) + 1000));
+    if (can_mutate || boom)
+        contaminate_player(-(random2(contam / 4) + 1000));
 }
 // Checks if the player should be hit with magic contaimination effects,
 // then actually does it if they should be.
-static void _handle_magic_contamination(int /*time_delta*/)
+static void _check_contamination_effects(int /*time_delta*/)
 {
-    // [ds] Move magic contamination effects closer to b26 again.
     const bool glow_effect = player_severe_contamination()
                              && x_chance_in_y(you.magic_contamination, 12000);
 
@@ -328,65 +335,7 @@ static void _abyss_speed(int /*time_delta*/)
         --you.abyss_speed;
 }
 
-static void _jiyva_effects(int /*time_delta*/)
-{
-    if (have_passive(passive_t::jellies_army) && one_chance_in(10))
-    {
-        int total_jellies = 1 + random2(5);
-        bool success = false;
-        for (int num_jellies = total_jellies; num_jellies > 0; num_jellies--)
-        {
-            // Spread jellies around the level.
-            coord_def newpos;
-            do
-            {
-                newpos = random_in_bounds();
-            }
-            while (grd(newpos) != DNGN_FLOOR
-                       && grd(newpos) != DNGN_SHALLOW_WATER
-                   || monster_at(newpos)
-                   || cloud_at(newpos)
-                   || testbits(env.pgrid(newpos), FPROP_NO_JIYVA));
-
-            mgen_data mg(MONS_JELLY, BEH_STRICT_NEUTRAL, newpos);
-            mg.god = GOD_JIYVA;
-            mg.non_actor_summoner = "Jiyva";
-
-            if (create_monster(mg))
-                success = true;
-        }
-
-        if (success && !silenced(you.pos()))
-        {
-            switch (random2(3))
-            {
-                case 0:
-                    simple_god_message(" gurgles merrily.");
-                    break;
-                case 1:
-                    mprf(MSGCH_SOUND, "You hear %s splatter%s.",
-                         total_jellies > 1 ? "a series of" : "a",
-                         total_jellies > 1 ? "s" : "");
-                    break;
-                case 2:
-                    simple_god_message(" says: Divide and consume!");
-                    break;
-            }
-        }
-    }
-
-    if (have_passive(passive_t::fluid_stats)
-        && x_chance_in_y(you.piety / 4, MAX_PIETY)
-        && !player_under_penance() && one_chance_in(4))
-    {
-        jiyva_stat_action();
-    }
-
-    if (have_passive(passive_t::jelly_eating) && one_chance_in(25))
-        jiyva_eat_offlevel_items();
-}
-
-static void _evolve(int time_delta)
+static void _evolve(int /*time_delta*/)
 {
     if (int lev = you.get_mutation_level(MUT_EVOLUTION))
         if (one_chance_in(2 / lev)
@@ -439,7 +388,7 @@ static struct timed_effect timed_effects[] =
 #if TAG_MAJOR_VERSION == 34
     { nullptr,                         0,     0, false },
 #endif
-    { _handle_magic_contamination,   200,   600, false },
+    { _check_contamination_effects,   70,   200, false },
 #if TAG_MAJOR_VERSION == 34
     { nullptr,                         0,     0, false },
 #endif
@@ -453,7 +402,9 @@ static struct timed_effect timed_effects[] =
     { nullptr,                         0,     0, false },
 #endif
     { _abyss_speed,                  100,   300, false },
-    { _jiyva_effects,                100,   300, false },
+#if TAG_MAJOR_VERSION == 34
+    { nullptr,                       100,   300, false },
+#endif
     { _evolve,                      5000, 15000, false },
 #if TAG_MAJOR_VERSION == 34
     { nullptr,                         0,     0, false },
@@ -485,7 +436,7 @@ void handle_time()
 
     // Magic contamination from spells and Orb.
     if (!crawl_state.game_is_arena())
-        _handle_magic_contamination();
+        _apply_contam_over_time();
 
     for (unsigned int i = 0; i < ARRAYSZ(timed_effects); i++)
     {
@@ -633,7 +584,7 @@ static void _catchup_monster_move(monster* mon, int moves)
             break;
 
         const coord_def next(pos + inc);
-        const dungeon_feature_type feat = grd(next);
+        const dungeon_feature_type feat = env.grid(next);
         if (feat_is_solid(feat)
             || monster_at(next))
         {
@@ -665,7 +616,7 @@ static void _catchup_monster_moves(monster* mon, int turns)
         return;
 
     // Ball lightning dissapates harmlessly out of LOS
-    if (mon->type == MONS_BALL_LIGHTNING && mon->summoner == MID_PLAYER)
+    if ((mon->type == MONS_BALL_LIGHTNING || mon->type == MONS_ENTROPIC_SPHERE) && mon->summoner == MID_PLAYER)
     {
         monster_die(*mon, KILL_RESET, NON_MONSTER);
         return;
@@ -709,8 +660,6 @@ static void _catchup_monster_moves(monster* mon, int turns)
     // Let sleeping monsters lie.
     if (mon->asleep() || mon->paralysed())
         return;
-
-
 
     const int mon_turns = (turns * mon->speed) / 10;
     const int moves = min(mon_turns, 50);
@@ -799,12 +748,12 @@ void monster::timeout_enchantments(int levels)
         case ENCH_BREATH_WEAPON: case ENCH_WRETCHED:
         case ENCH_SCREAMED: case ENCH_BLIND: case ENCH_WORD_OF_RECALL:
         case ENCH_INJURY_BOND: case ENCH_FLAYED: case ENCH_BARBS:
-        case ENCH_AGILE: case ENCH_FROZEN:
+        case ENCH_AGILE: case ENCH_FROZEN: case ENCH_SEAL:
         case ENCH_BLACK_MARK: case ENCH_SAP_MAGIC: case ENCH_NEUTRAL_BRIBED:
         case ENCH_FRIENDLY_BRIBED: case ENCH_CORROSION: case ENCH_GOLD_LUST:
         case ENCH_RESISTANCE: case ENCH_HEXED: case ENCH_IDEALISED:
-        case ENCH_BOUND_SOUL: case ENCH_STILL_WINDS: case ENCH_RING_OF_THUNDER:
-        case ENCH_WHIRLWIND_PINNED:
+        case ENCH_BOUND_SOUL: case ENCH_STILL_WINDS: 
+        case ENCH_WHIRLWIND_PINNED: case ENCH_CIGOTUVI: case ENCH_BLEED:
             lose_ench_levels(entry.second, levels);
             break;
 
@@ -823,13 +772,16 @@ void monster::timeout_enchantments(int levels)
             break;
 
         case ENCH_INVIS:
-            if (!mons_class_flag(type, M_INVIS))
+            if (!mons_class_flag(type, M_INVIS) && !(flags & MF_INVIS))
                 lose_ench_levels(entry.second, levels);
             break;
 
         case ENCH_INSANE:
         case ENCH_BERSERK:
+        case ENCH_ROLLING:
         case ENCH_INNER_FLAME:
+        case ENCH_ENTROPIC_BURST:
+        case ENCH_CHAOTIC_INFUSION:
         case ENCH_MERFOLK_AVATAR_SONG:
         case ENCH_INFESTATION:
             del_ench(entry.first);
@@ -851,7 +803,7 @@ void monster::timeout_enchantments(int levels)
             // That triggered a behaviour_event, which could have made a
             // pacified monster leave the level.
             if (alive() && !is_stationary())
-                monster_blink(this, true);
+                monster_blink(this, true, true);
             break;
 
         case ENCH_HELD:
@@ -900,8 +852,10 @@ void update_level(int elapsedTime)
 #endif
 
     rot_floor_items(elapsedTime);
-    shoals_apply_tides(turns, true, turns < 5);
+    shoals_apply_tides(turns, true);
     timeout_tombs(turns);
+    timeout_terrain_changes(elapsedTime);
+    timeout_malign_gateways(elapsedTime);
 
     if (env.sanctuary_time)
     {
@@ -1145,7 +1099,7 @@ void timeout_tombs(int duration)
             _drop_tomb(cmark->pos, empty_tomb, zin);
 
             monster* mon_src =
-                !invalid_monster_index(cmark->source) ? &menv[cmark->source]
+                !invalid_monster_index(cmark->source) ? &env.mons[cmark->source]
                                                       : nullptr;
             // A monster's Tomb of Doroklohe spell.
             if (mon_src
@@ -1167,6 +1121,8 @@ void timeout_terrain_changes(int duration, bool force)
     string warning;
     string statement;
     int num_seen[NUM_TERRAIN_CHANGE_TYPES] = {0};
+    // n.b. unordered_set doesn't work here because pair isn't hashable
+    set<pair<coord_def, terrain_change_type>> revert;
 
     for (map_marker *mark : env.markers.get_all(MAT_TERRAIN_CHANGE))
     {
@@ -1177,7 +1133,7 @@ void timeout_terrain_changes(int duration, bool force)
             marker->duration -= duration;
 
         if (marker->change_type == TERRAIN_CHANGE_DOOR_SEAL
-            && !feat_is_sealed(grd(marker->pos)))
+            && !feat_is_sealed(env.grid(marker->pos)))
         {
             // TODO: could this be done inside `revert_terrain_change`? The
             // two things to test are corrupting sealed doors, and destroying
@@ -1228,15 +1184,18 @@ void timeout_terrain_changes(int duration, bool force)
         {
             if (you.see_cell(marker->pos))
                 num_seen[marker->change_type]++;
-            // will delete `marker`.
-            revert_terrain_change(marker->pos, marker->change_type);
+            revert.insert(pair<coord_def, terrain_change_type>(marker->pos,
+                                                        marker->change_type));
         }
     }
+    // finally, revert the changes and delete the markers
+    for (const auto &m_pos : revert)
+        revert_terrain_change(m_pos.first, m_pos.second);
 
     if (!warning.empty())
-        mprf(MSGCH_DANGER, warning.c_str());
+        mprf(MSGCH_DANGER, "%s", warning.c_str());
     else if (!statement.empty())
-        mprf(MSGCH_PLAIN, statement.c_str());
+        mprf(MSGCH_PLAIN, "%s", statement.c_str());
 
     if (num_seen[TERRAIN_CHANGE_DOOR_SEAL] > 1)
         mpr("The runic seals fade away.");
@@ -1261,7 +1220,7 @@ void setup_environment_effects()
             if (!in_bounds(x, y))
                 continue;
 
-            const int grid = grd[x][y];
+            const int grid = env.grid[x][y];
             if (grid == DNGN_LAVA
                     || (grid == DNGN_SHALLOW_WATER
                         && player_in_branch(BRANCH_SWAMP)))
@@ -1276,7 +1235,7 @@ void setup_environment_effects()
 
 static void apply_environment_effect(const coord_def &c)
 {
-    const dungeon_feature_type grid = grd(c);
+    const dungeon_feature_type grid = env.grid(c);
     // Don't apply if if the feature doesn't want it.
     if (testbits(env.pgrid(c), FPROP_NO_CLOUD_GEN))
         return;
@@ -1323,7 +1282,7 @@ void run_environment_effects()
 
     run_corruption_effects(you.time_taken);
     shoals_apply_tides(div_rand_round(you.time_taken, BASELINE_DELAY),
-                       false, true);
+                       false);
     timeout_tombs(you.time_taken);
     timeout_malign_gateways(you.time_taken);
     timeout_terrain_changes(you.time_taken);

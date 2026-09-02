@@ -32,6 +32,7 @@
 #include <vector>
 
 #ifdef USE_TILE_LOCAL
+#include <SDL.h>
 #include <SDL_keycode.h>
 #endif
 
@@ -40,10 +41,12 @@
 #include "files.h"
 #include "initfile.h"
 #include "libutil.h"
+#include "menu.h"
 #include "message.h"
 #include "misc.h" // erase_val
 #include "options.h"
 #include "output.h"
+#include "prompt.h"
 #include "state.h"
 #include "state.h"
 #include "stringutil.h"
@@ -52,7 +55,7 @@
 #include "version.h"
 
 typedef deque<int> keybuf;
-typedef map<int,keyseq> macromap;
+typedef map<keyseq,keyseq> macromap;
 
 static macromap Keymaps[KMC_CONTEXT_COUNT];
 static macromap Macros;
@@ -251,6 +254,37 @@ static void buf2keyseq(const char *buff, keyseq &k)
     }
 }
 
+int function_keycode_fixup(int keycode)
+{
+    // is this harmless on windows console?
+#if !defined(USE_TILE_LOCAL) && TAG_MAJOR_VERSION == 34
+    // For many years, dcss has (accidentally, it seems) used these keycodes
+    // for function keys, because of a patch from 2009 that mapped some common
+    // terminal escape codes for F1-F4 to 1011-1014 under the belief (??) that
+    // these were used for some numpad keys. In webtiles code, these keycodes
+    // are even hardcoded in to the non-versioned part of the js code, so it's
+    // extremely hard to change. So we do this somewhat horrible fixup to deal
+    // with the complicated history. TODO: remove some day
+    switch (keycode)
+    {
+    case -1011: return CK_F1;
+    case -1012: return CK_F2;
+    case -1013: return CK_F3;
+    case -1014: return CK_F4;
+    case -1015: return CK_F5;
+    case -1016: return CK_F6;
+    case -1017: return CK_F7;
+    case -1018: return CK_F8;
+    case -1019: return CK_F9;
+    case -1020: return CK_F10;
+    default:
+        return keycode;
+    }
+#else
+    return keycode;
+#endif
+}
+
 static int read_key_code(string s)
 {
     if (s.empty())
@@ -282,8 +316,9 @@ static int read_key_code(string s)
  *   \{x40} produces 64 (hexadecimal code)
  *   \{!more} or \{!m} disables -more- prompt until the end of the macro.
  */
-static keyseq parse_keyseq(string s)
+keyseq parse_keyseq(string s)
 {
+    // TODO parse readable descriptions of special keys, e.g. \{F1} or something
     int state = 0;
     keyseq v;
 
@@ -332,7 +367,7 @@ static keyseq parse_keyseq(string s)
             }
             else
             {
-                const int key = read_key_code(arg);
+                const int key = function_keycode_fixup(read_key_code(arg));
                 v.push_back(key);
             }
 
@@ -375,6 +410,8 @@ static string vtostr(const keyseq &seq)
             else
             {
                 char buff[20];
+                // TODO: get rid of negative values in user-facing uses of
+                // keycodes
                 snprintf(buff, sizeof(buff), "\\{%d}", key);
                 s << buff;
             }
@@ -391,16 +428,15 @@ static string vtostr(const keyseq &seq)
 /*
  * Add a macro (surprise, surprise).
  */
-static void macro_add(macromap &mapref, int key, keyseq action)
+static void macro_add(macromap &mapref, keyseq key, keyseq action)
 {
-    if (!action.empty())
-        mapref[key] = action;
+    mapref[key] = action;
 }
 
 /*
  * Remove a macro.
  */
-static bool macro_del(macromap &mapref, int key)
+static bool macro_del(macromap &mapref, keyseq key)
 {
     return mapref.erase(key) != 0;
 }
@@ -494,17 +530,57 @@ void macro_buf_add_cmd(command_type cmd, bool reverse)
 }
 
 /*
- * Adds keys from a sequence to the end of the internal keybuffer.
- * Each key is expanded/converted with the given keymap.
+ * Adds keypresses from a sequence into the internal keybuffer. Does some
+ * O(N^2) analysis to the sequence to apply keymaps.
  */
 static void macro_buf_add_long(keyseq actions,
                                macromap &keymap = Keymaps[KMC_DEFAULT])
 {
-    for (const auto key : actions)
+    keyseq tmp;
+
+    // debug << "Adding: " << vtostr(actions) << endl;
+    // debug.flush();
+
+    // Check whether any subsequences of the sequence are macros.
+    // The matching starts from as early as possible, and is
+    // as long as possible given the first constraint. I.e from
+    // the sequence "abcdef" and macros "ab", "bcde" and "de"
+    // "ab" and "de" are recognised as macros.
+
+    while (!actions.empty())
     {
-        const auto subst = keymap.find(key);
-        const auto out = subst == keymap.end() ? keyseq({key}) : subst->second;
-        macro_buf_add(out, false, false);
+        tmp = actions;
+
+        while (!tmp.empty())
+        {
+            auto subst = keymap.find(tmp);
+            // Found a macro. Add the expansion (action) of the
+            // macro into the buffer.
+            if (subst != keymap.end() && !subst->second.empty())
+            {
+                macro_buf_add(subst->second, false, false);
+                break;
+            }
+
+            // Didn't find a macro. Remove a key from the end
+            // of the sequence, and try again.
+            tmp.pop_back();
+        }
+
+        if (tmp.empty())
+        {
+            // Didn't find a macro. Add the first keypress of the sequence
+            // into the buffer, remove it from the sequence, and try again.
+            macro_buf_add(actions.front(), false, false);
+            actions.pop_front();
+        }
+        else
+        {
+            // Found a macro, which has already been added above. Now just
+            // remove the macroed keys from the sequence.
+            for (unsigned int i = 0; i < tmp.size(); i++)
+                actions.pop_front();
+        }
     }
 }
 
@@ -557,15 +633,29 @@ static void macro_buf_apply_command_macro()
     if (macro_keys_left > 0 || expanded_keys_left > 0)
         return;
 
-    const auto expansion = Macros.find(Buffer.front());
-    if (expansion != Macros.end())
-    {
-        const keyseq &result = expansion->second;
+    keyseq tmp = Buffer;
 
-        // Found macro, remove match from front:
-        Buffer.pop_front();
-        macro_keys_left = result.size();
-        macro_buf_add(result, true, true);
+    // find the longest match from the start of the buffer and replace it
+    while (!tmp.empty())
+    {
+        auto expansion = Macros.find(tmp);
+
+        if (expansion != Macros.end() && !expansion->second.empty())
+        {
+            const keyseq &result = expansion->second;
+
+            // Found macro, remove match from front:
+            for (unsigned int i = 0; i < tmp.size(); i++)
+                Buffer.pop_front();
+
+            macro_keys_left = result.size();
+
+            macro_buf_add(result, true, true);
+
+            break;
+        }
+
+        tmp.pop_back();
     }
 }
 
@@ -622,7 +712,7 @@ static void write_map(FILE *f, const macromap &mp, const char *key)
         if (entry.second.size())
         {
             fprintf(f, "%s%s\nA:%s\n\n", OUTS(key),
-                OUTS(vtostr({entry.first})), OUTS(vtostr(entry.second)));
+                OUTS(vtostr(entry.first)), OUTS(vtostr(entry.second)));
         }
     }
 }
@@ -666,8 +756,11 @@ void macro_save()
  * Reads as many keypresses as are available (waiting for at least one),
  * and returns them as a single keyseq.
  */
-static int _getch_single(int (*rgetch)() = nullptr)
+static keyseq _getch_mul()
 {
+    keyseq keys;
+    int    a;
+
     // Something's gone wrong with replaying keys if crawl needs to
     // get new keys from the user.
     if (crawl_state.is_replaying_keys())
@@ -677,31 +770,24 @@ static int _getch_single(int (*rgetch)() = nullptr)
         crawl_state.cancel_cmd_again();
     }
 
-    if (!rgetch)
-        rgetch = m_getch;
-
-    // The key == 0 test is legacy code that I don't dare to remove. I
+    // The a == 0 test is legacy code that I don't dare to remove. I
     // have a vague recollection of it being a kludge for conio support.
-    int key;
     do
     {
-        key = rgetch();
+        a = getch_ck();
+        if (a != CK_NO_KEY)
+            keys.push_back(a);
     }
-    while (key == 0 || key == CK_NO_KEY);
+    while (keys.size() == 0 || ((kbhit() || a == 0) && a != CK_REDRAW));
 
-    return key;
+    return keys;
 }
 
 /*
  * Replacement for getch(). Returns keys from the key buffer if available.
  * If not, adds some content to the buffer, and returns some of it.
  */
-int getchm(int (*rgetch)())
-{
-    return getchm(KMC_DEFAULT, rgetch);
-}
-
-int getchm(KeymapContext mc, int (*rgetch)())
+int getchm(KeymapContext mc)
 {
     int a;
 
@@ -709,17 +795,18 @@ int getchm(KeymapContext mc, int (*rgetch)())
     if ((a = macro_buf_get()) != -1)
         return a;
 
-    // Read a key...
-    macro_buf_add_with_keymap(_getch_single(rgetch), mc);
+    // Read some keys...
+    keyseq keys = _getch_mul();
+    macro_buf_add_with_keymap(keys, mc);
     return macro_buf_get();
 }
 
-void macro_buf_add_with_keymap(int key, KeymapContext mc)
+void macro_buf_add_with_keymap(keyseq keys, KeymapContext mc)
 {
     if (mc == KMC_NONE)
-        macro_buf_add(keyseq({key}), false, false);
+        macro_buf_add(keys, false, false);
     else
-        macro_buf_add_long(keyseq({key}), Keymaps[mc]);
+        macro_buf_add_long(keys, Keymaps[mc]);
 }
 
 /**
@@ -745,8 +832,12 @@ int getch_with_command_macros()
     _macro_inject_sent_keys();
 
     if (Buffer.empty())
-        macro_buf_add_with_keymap(_getch_single(), KMC_DEFAULT);
+    {
+        keyseq keys = _getch_mul();
+        macro_buf_add_with_keymap(keys, KMC_DEFAULT);
+    }
 
+    // Apply longest matching macro at front of buffer:
     macro_buf_apply_command_macro();
 
     return macro_buf_get();
@@ -845,7 +936,7 @@ static void _input_action_raw(const string &macro_type, keyseq* action)
         cgotoxy(x, y);
         cprintf("%s", vtostr(*action).c_str());
 
-        int input = m_getch();
+        int input = getch_ck();
 
         switch (input)
         {
@@ -888,18 +979,77 @@ static string _macro_type_name(bool keymap, KeymapContext keymc)
                         (keymap ? "keymap" : "macro"));
 }
 
+class MacroEditMenu : public Menu
+{
+public:
+    MacroEditMenu(macromap &_mapref, bool _keymap, KeymapContext _keymc)
+        : Menu(MF_SINGLESELECT | MF_ALLOW_FORMATTING),
+          selected_new_key(false),
+          mapref(_mapref), keymc(_keymc), is_keymap(_keymap)
+    {
+        set_tag("macros");
+        action_cycle = Menu::CYCLE_TOGGLE;
+        menu_action  = Menu::ACT_EXECUTE;
+    }
+
+    virtual formatted_string calc_title() override
+    {
+        return formatted_string::parse_string("Editing <w>"
+            + _macro_type_name(is_keymap, keymc) + "</w>. <w>[Enter]</w> to add/edit by key, <w>-</w> to clear all, other keys add");
+    }
+
+    bool process_key(int keyin) override
+    {
+        if (keyin == CK_ENTER || keyin == '-')
+        {
+            lastch = keyin;
+            return false;
+        }
+        switch (keyin)
+        {
+        case CK_REDRAW:
+        case CK_MOUSE_B2:
+        case CK_MOUSE_CMD:
+        CASE_ESCAPE
+        case ' ': case CK_PGDN: case '>': case '+':
+        case CK_MOUSE_B1:
+        case CK_MOUSE_CLICK:
+        case CK_PGUP: case '<':
+        case CK_UP:
+        case CK_DOWN:
+        case CK_HOME:
+        case CK_END:
+            return Menu::process_key(keyin);
+        default:
+            selected_new_key = true;
+            // fallthrough
+        case CK_ENTER:
+        case '-':
+            lastch = keyin;
+            return false;
+        }
+    }
+    bool selected_new_key;
+protected:
+    macromap &mapref;
+    KeymapContext keymc;
+    bool is_keymap;
+};
+
 void macro_add_query()
 {
     int input;
     bool keymap = false;
-    bool raw = false;
     KeymapContext keymc = KMC_DEFAULT;
 
+    // TODO: roll this all into a single menu with subsections
+
     clear_messages();
-    mprf(MSGCH_PROMPT, "(m)acro, (M)acro raw, keymap "
+    // TODO: add a (r)eset option in case you mess up?
+    mprf(MSGCH_PROMPT, "(m)acro, keymap "
                        "[(k) default, (x) level-map, (t)argeting, "
                        "(c)onfirm, m(e)nu], (s)ave? ");
-    input = m_getch();
+    input = getch_ck();
     int low = toalower(input);
 
     if (low == 'k')
@@ -928,10 +1078,7 @@ void macro_add_query()
         keymc  = KMC_MENU;
     }
     else if (low == 'm')
-    {
         keymap = false;
-        raw = (input == 'M');
-    }
     else if (input == 's')
     {
         mpr("Saving macros.");
@@ -946,47 +1093,126 @@ void macro_add_query()
 
     // reference to the appropriate mapping
     macromap &mapref = (keymap ? Keymaps[keymc] : Macros);
-    const string macro_type = _macro_type_name(keymap, keymc);
-    const string trigger_prompt = make_stringf("Input %s trigger key: ",
-                                               macro_type.c_str());
-    msgwin_prompt(trigger_prompt);
+
+    MacroEditMenu menu(mapref, keymap, keymc);
+    menu.set_title(new MenuEntry("", MEL_TITLE));
+    for (auto &mapping : mapref)
+    {
+        // TODO: indicate if macro is from rc file somehow?
+        string action_str = vtostr(mapping.second);
+        action_str = replace_all(action_str, "<", "<<");
+        MenuEntry *me = new MenuEntry(action_str,
+                                                MEL_ITEM, 1,
+                                                (int) mapping.first[0]);
+        me->data = (void *) &mapping.first;
+        menu.add_entry(me);
+    }
+
+    keyseq *key_chosen = nullptr;
+    menu.on_single_selection = [&key_chosen](const MenuEntry& item)
+    {
+        key_chosen = static_cast<keyseq *>(item.data);
+        return false;
+    };
+    menu.show();
+
+    keyseq key;
 
     mouse_control mc(MOUSE_MODE_MACRO);
-    int key = m_getch();
-    string key_str = vtostr({key});
+    const string macro_type = _macro_type_name(keymap, keymc);
+
+    if (!key_chosen)
+    {
+        if (menu.getkey() == CK_ENTER)
+        {
+            const string trigger_prompt = make_stringf(
+                "Input %s trigger key (<white>\\</white> to enter by keycode): ",
+                macro_type.c_str());
+            msgwin_prompt(trigger_prompt);
+            key = _getch_mul();
+            if (key[0] == '\\')
+            {
+                msgwin_reply("keycode");
+                key.clear();
+                char buf[20];
+                msgwin_get_line("Input keycode: ", buf, sizeof(buf));
+                key.push_back(read_key_code(string(buf)));
+                if (key[0] == 0)
+                {
+                    canned_msg(MSG_OK);
+                    return;
+                }
+            }
+            else
+                msgwin_reply(vtostr(key));
+        }
+        else if (menu.getkey() == '-')
+        {
+            const string clear_prompt = make_stringf("Really clear all %ss?",
+                macro_type.c_str());
+            if (yesno(clear_prompt.c_str(), false, 'N'))
+            {
+                mapref = macromap();
+                mprf("All %ss cleared!", macro_type.c_str());
+                crawl_state.unsaved_macros = true;
+            }
+            else
+                canned_msg(MSG_OK);
+            return;
+        }
+        else if (menu.selected_new_key)
+            key.push_back(menu.getkey());
+        else
+            return;
+    }
+    else
+        key = *key_chosen;
+
+    // TODO: menu-ify (or at least do in a popup) the rest of this stuff:
+
+    string key_str = keycode_is_printable(key[0])
+        ? keycode_to_name(key[0]).c_str()
+        : make_stringf("%s (%s)",
+                vtostr(key).c_str(), keycode_to_name(key[0]).c_str());
     key_str = replace_all(key_str, "<", "<<");
 
-    msgwin_reply(vtostr({key}));
-
-    if (mapref.count(key))
+    const bool starts_empty = !mapref.count(key) || mapref[key].empty();
+    string action_str;
+    if (!starts_empty)
     {
-        string action_str = vtostr(mapref[key]);
+        action_str = vtostr(mapref[key]);
         action_str = replace_all(action_str, "<", "<<");
-        mprf(MSGCH_WARN, "Current Action: %s", action_str.c_str());
-        mprf(MSGCH_PROMPT, "Do you wish to (r)edefine, (c)lear, or (a)bort? ");
+    }
+    else
+        action_str = "<red>[none]</red>";
 
-        input = m_getch();
+    mprf(MSGCH_WARN, "Current Action for %s: %s",
+                                key_str.c_str(), action_str.c_str());
+    mprf(MSGCH_PROMPT, "Do you wish to (r)edefine, %s%sor (a)bort? ",
+        keymap ? "" : "redefine (R)aw, ",
+        starts_empty ? "" : "(c)lear, ");
 
-        input = toalower(input);
-        if (input == 'a' || key_is_escape(input))
-        {
-            canned_msg(MSG_OK);
-            return;
-        }
-        else if (input == 'c')
-        {
-            mprf("Cleared %s '%s' => '%s'.",
-                 macro_type.c_str(),
-                 key_str.c_str(),
-                 action_str.c_str());
-            macro_del(mapref, key);
-            crawl_state.unsaved_macros = true;
-            return;
-        }
+    input = getch_ck();
+
+    input = toalower(input);
+    if (!starts_empty && input == 'c')
+    {
+        mprf("Cleared %s '%s' => '%s'.",
+             macro_type.c_str(),
+             key_str.c_str(),
+             action_str.c_str());
+        macro_del(mapref, key);
+        crawl_state.unsaved_macros = true;
+        return;
+    }
+    else if (input != 'r' && input != 'R')
+    {
+        canned_msg(MSG_OK);
+        return;
     }
 
     keyseq action;
-    if (raw)
+    if (input == 'R' && !keymap) // why isn't raw input mode used for keymaps?
         _input_action_raw(macro_type, &action);
     else
         _input_action_text(macro_type, &action);
@@ -1005,15 +1231,16 @@ void macro_add_query()
     }
     else
     {
-        string action_str = vtostr(action);
-        action_str = replace_all(action_str, "<", "<<");
+        string new_action_str = vtostr(action);
+        new_action_str = replace_all(new_action_str, "<", "<<");
         macro_add(mapref, key, action);
         mprf("Created %s '%s' => '%s'.",
-             macro_type.c_str(), key_str.c_str(), action_str.c_str());
+             macro_type.c_str(), key_str.c_str(), new_action_str.c_str());
     }
 
     crawl_state.unsaved_macros = true;
     redraw_screen();
+    update_screen();
 }
 
 /*
@@ -1061,8 +1288,7 @@ static void _read_macros_from(const char* filename)
         else if (s.substr(0, 2) == "A:")
         {
             action = parse_keyseq(s.substr(2));
-            if (!key.empty())
-                macro_add((keymap ? Keymaps[keymc] : Macros), key.front(), action);
+            macro_add((keymap ? Keymaps[keymc] : Macros), key, action);
         }
     }
 }
@@ -1125,10 +1351,10 @@ string read_rc_file_macro(const string& field)
 
 
     keyseq key = parse_keyseq(macro_key_string);
+
     keyseq action = parse_keyseq(action_string);
 
-    if (!key.empty())
-        macro_add((keymap ? Keymaps[keymc] : Macros), key.front(), action);
+    macro_add((keymap ? Keymaps[keymc] : Macros), key, action);
 
     // If we didn't save here, macros in rc files would be saved iff you also
     // changed another macro with cntrl-D and saved at the exit prompt.
@@ -1156,6 +1382,111 @@ string keyseq_to_str(const keyseq &seq)
 
 }
 
+bool keycode_is_printable(int keycode)
+{
+    switch (keycode)
+    {
+    case  0:
+    case  8:
+    case  9:
+    case 27:
+    case '\n':
+    case '\r':
+        return false;
+    default:
+#ifdef USE_TILE_LOCAL
+        // the upper bound here is based on a comment in
+        // windowmanager-sdl.cc:_translate_keysym. It could potentially be
+        // applied more generally but I'm concerned about non-US keyboard
+        // layouts etc. I'm also not sure how accurate it is for sdl...
+        return keycode >= 0 && keycode < 256;
+#else
+        return keycode >= 0;
+#endif
+    }
+}
+
+string keycode_to_name(int keycode)
+{
+    // TODO: handling of alt keys in SDL is generally a mess, including here
+    // (they are basically just ignored)
+    if (keycode_is_printable(keycode))
+        return string(1, keycode);
+
+    // placeholder
+    switch (keycode)
+    {
+    case  0: return "NULL";
+    case  8: return "Backspace"; // CK_BKSP
+    case  9: return "Tab";
+    case 27: return "Esc";
+    case '\n':
+    case '\r': // CK_ENTER
+        return "Enter";
+    case CK_DELETE: return "Del";
+    case CK_UP:     return "Up";
+    case CK_DOWN:   return "Down";
+    case CK_LEFT:   return "Left";
+    case CK_RIGHT:  return "Right";
+    case CK_INSERT: return "Ins";
+    case CK_HOME:   return "Home";
+    case CK_CLEAR:  return "Clear";
+    case CK_PGUP:   return "PgUp";
+    case CK_PGDN:   return "PgDn";
+    // shift/ctrl-modified keys aside from shift-tab don't seem to work on mac
+    // console, and are somewhat spotty on webtiles.
+    case CK_SHIFT_UP:     return "Shift-Up";
+    case CK_SHIFT_DOWN:   return "Shift-Down";
+    case CK_SHIFT_LEFT:   return "Shift-Left";
+    case CK_SHIFT_RIGHT:  return "Shift-Right";
+    case CK_SHIFT_INSERT: return "Shift-Ins";
+    case CK_SHIFT_HOME:   return "Shift-Home";
+    case CK_SHIFT_CLEAR:  return "Shift-Clear";
+    case CK_SHIFT_PGUP:   return "Shift-PgUp";
+    case CK_SHIFT_PGDN:   return "Shift-PgDn";
+    case CK_SHIFT_TAB:    return "Shift-Tab";
+    case CK_CTRL_UP:      return "^Up";
+    case CK_CTRL_DOWN:    return "^Down";
+    case CK_CTRL_LEFT:    return "^Left";
+    case CK_CTRL_RIGHT:   return "^Right";
+    case CK_CTRL_INSERT:  return "^Ins";
+    case CK_CTRL_HOME:    return "^Home";
+    case CK_CTRL_CLEAR:   return "^Clear";
+    case CK_CTRL_PGUP:    return "^PgUp";
+    case CK_CTRL_PGDN:    return "^PgDn";
+    case CK_CTRL_TAB:     return "^Tab";
+    case CK_F0:     return "F0";
+    case CK_F1:     return "F1";
+    case CK_F2:     return "F2";
+    case CK_F3:     return "F3";
+    case CK_F4:     return "F4";
+    case CK_F5:     return "F5";
+    case CK_F6:     return "F6";
+    case CK_F7:     return "F7";
+    case CK_F8:     return "F8";
+    case CK_F9:     return "F9";
+    case CK_F10:    return "F10";
+    case CK_F11:    return "F11";
+    case CK_F12:    return "F12";
+    default:
+#ifdef USE_TILE_LOCAL
+        // SDL uses 1 << 30 to indicate non-printable keys, crawl uses negative
+        // numbers; convert back to plain SDL form
+        if (keycode < 0)
+            keycode = -keycode;
+        // SDL_GetKeyName strips capitalization, so we don't want to use it for
+        // printable keys.
+        return string(SDL_GetKeyName(keycode));
+#else
+    {
+        keyseq v;
+        v.push_back(keycode);
+        return vtostr(v);
+    }
+#endif
+    }
+}
+
 void macro_init()
 {
     for (const auto &fn : Options.additional_macro_files)
@@ -1166,6 +1497,7 @@ void macro_init()
 
 void macro_userfn(const char *keys, const char *regname)
 {
+    UNUSED(keys, regname);
     // TODO: Implement.
     // Converting 'keys' to a key sequence is the difficulty. Doing it portably
     // requires a mapping of key names to whatever getch() spits back, unlikely
@@ -1281,7 +1613,7 @@ void init_keybindings()
 
         // Only one command per key, but it's okay to have several
         // keys map to the same command.
-        ASSERT(!key_map.count(data.key));
+        ASSERTM(!key_map.count(data.key), "bad mapping for key '%c'", data.key);
 
         key_map[data.key] = data.cmd;
         cmd_map[data.cmd] = data.key;
@@ -1302,10 +1634,10 @@ string command_to_name(command_type cmd)
 
 command_type key_to_command(int key, KeymapContext context)
 {
-    if (-key > CMD_NO_CMD && -key < CMD_MIN_SYNTHETIC)
+    if (CMD_NO_CMD < -key && -key < CMD_MIN_SYNTHETIC)
     {
-        const command_type  cmd         = (command_type) -key;
-        const KeymapContext cmd_context = context_for_command(cmd);
+        const auto cmd = static_cast<command_type>(-key);
+        const auto cmd_context = context_for_command(cmd);
 
         if (cmd == CMD_NO_CMD)
             return CMD_NO_CMD;

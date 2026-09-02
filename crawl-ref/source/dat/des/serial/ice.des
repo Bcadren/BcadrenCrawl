@@ -11,13 +11,13 @@ function init_ice(e)
   e.weight('2')
   if you.in_branch("Coc") then
     e.kmons('.- = simulacrum w:30 / \
-                  ice fiend w:1 / blizzard demon w:5 / ice devil w:20 / \
-                  white imp / ice beast w:20 / \
+                  Vetrifl w:1 / cenysus w:5 / rypuiwel w:20 / \
+                  gwybwca / ice beast w:20 / \
                   ice dragon w:5 / ice dragon simulacrum w:5 / \
                   w:2000 nothing')
   else
     e.kmons('.- = simulacrum w:20 / death yak w:1 / \
-                  wolf  / yak / polar bear / white imp w:20 / \
+                  wolf  / yak / polar bear / gwybwca w:20 / \
                   ufetubus / ice beast w:15 / w:2000 nothing')
   end
   e.subst("- = --.")

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "tag-version.h"
+
 struct monster_info;
 
 // various elemental colour schemes... used for abstracting random
@@ -50,9 +52,7 @@ enum element_type
     ETC_RANDOM,         // any colour (except BLACK)
     ETC_TORNADO,        // twisting swirls of grey
     ETC_LIQUEFIED,      // ripples of yellow and brown.
-#if TAG_MAJOR_VERSION == 34
-    ETC_MANGROVE,       // colour of trees on water
-#endif
+    ETC_SLIMESHROOM,    // colour of slimeshrooms
     ETC_ORB_GLOW,       // halo coming from the Orb of Zot
     ETC_DISJUNCTION,    // halo from Disjunction
     ETC_DITHMENOS,      // Dithmenos altar colours
@@ -64,6 +64,8 @@ enum element_type
 #endif
     ETC_WU_JIAN,        // Wu Jian Chinese-inspired colours
     ETC_AWOKEN_FOREST,  // Angry trees.
+    ETC_CHAOS,          // Chaos.
+    ETC_BAHA_TIA,       // altar colours for Bahamut/Tiamat.
     ETC_DISCO = 96,
     ETC_FIRST_LUA = ETC_DISCO, // colour indices have to be <128
 
@@ -72,26 +74,36 @@ enum element_type
 
 typedef int (*element_colour_calculator)(int, const coord_def&);
 
-struct element_colour_calc
+struct base_colour_calc
 {
+    base_colour_calc(element_type _type, string _name)
+        : type(_type), name(_name) {}
+    virtual ~base_colour_calc() {}
+
     element_type type;
     string name;
 
-    element_colour_calc(element_type _type, string _name,
-                        element_colour_calculator _calc)
-        : type(_type), name(_name), calc(_calc)
-        {};
-
     virtual int get(const coord_def& loc = coord_def(),
-                    bool non_random = false);
-
-    virtual ~element_colour_calc() {};
+                    bool non_random = false) = 0;
 
 protected:
     int rand_max {120}; // 0-119 is the range of randomness promised to
                         // Lua colour functions.
     int rand(bool non_random);
+};
 
+
+struct element_colour_calc : public base_colour_calc
+{
+    element_colour_calc(element_type _type, string _name,
+                        element_colour_calculator _calc)
+        : base_colour_calc(_type, _name), calc(_calc) {}
+    virtual ~element_colour_calc() {}
+
+    int get(const coord_def& loc = coord_def(),
+            bool non_random = false) override;
+
+protected:
     element_colour_calculator calc;
 };
 
@@ -100,7 +112,7 @@ int str_to_colour(const string &str, int default_colour = -1,
 const string colour_to_str(colour_t colour);
 
 void init_element_colours();
-void add_element_colour(element_colour_calc *colour);
+void add_element_colour(base_colour_calc *colour);
 colour_t random_colour(bool ui_rand = false);
 colour_t random_uncommon_colour();
 bool is_low_colour(colour_t colour) IMMUTABLE;
@@ -115,5 +127,5 @@ bool get_orb_phase(const coord_def& loc);
 int dam_colour(const monster_info&);
 colour_t rune_colour(int type);
 
-// Applies ETC_ colour substitutions and brands.
+// Applies ETC_ colour substitutions
 unsigned real_colour(unsigned raw_colour, const coord_def& loc = coord_def());

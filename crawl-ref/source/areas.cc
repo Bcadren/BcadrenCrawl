@@ -15,6 +15,7 @@
 #include "coordit.h"
 #include "env.h"
 #include "fprop.h"
+#include "god-abil.h"
 #include "god-conduct.h"
 #include "god-passive.h" // passive_t::umbra
 #include "libutil.h"
@@ -27,6 +28,7 @@
 #include "traps.h"
 #include "travel.h"
 
+/// Bitmasks for area properties
 enum class areaprop
 {
     sanctuary_1   = (1 << 0),
@@ -35,14 +37,16 @@ enum class areaprop
     halo          = (1 << 3),
     liquid        = (1 << 4),
     actual_liquid = (1 << 5),
-    orb           = (1 << 6),
+    orb           = (1 << 6), ///< The glow of the Orb of Zot
     umbra         = (1 << 7),
     quad          = (1 << 8),
     disjunction   = (1 << 9),
     soul_aura     = (1 << 10),
 };
+/// Bit field for the area properties
 DEF_BITFIELD(areaprops, areaprop);
 
+/// Center of an area effect
 struct area_centre
 {
     area_centre_type type;
@@ -54,10 +58,15 @@ struct area_centre
 
 typedef FixedArray<areaprops, GXM, GYM> propgrid_t;
 
+/// The area center cache. Contains centers of all area effects.
 static vector<area_centre> _agrid_centres;
 
-static propgrid_t _agrid;
+static propgrid_t _agrid; ///< The area grid cache
+/// \brief Is the area grid cache up-to-date?
+/// \details If false, each check for area effects that affect a coordinate
+/// would trigger an update of the area grid cache.
 static bool _agrid_valid = false;
+/// \brief If true, the level has no area effect
 static bool no_areas = false;
 
 static void _set_agrid_flag(const coord_def& p, areaprop f)
@@ -70,6 +79,11 @@ static bool _check_agrid_flag(const coord_def& p, areaprop f)
     return bool(_agrid(p) & f);
 }
 
+/// \brief Invalidates the area effect cache
+/// \details Invalidates the area effect cache, causing the next request for
+/// area effects to re-calculate which locations are covered by halos, etc.
+/// If \p recheck_new is false, the cache will only be invalidated if the level
+/// had existing area effects.
 void invalidate_agrid(bool recheck_new)
 {
     _agrid_valid = false;
@@ -79,6 +93,7 @@ void invalidate_agrid(bool recheck_new)
 
 void areas_actor_moved(const actor* act, const coord_def& oldpos)
 {
+    UNUSED(oldpos);
     if (act->alive() &&
         (you.entering_level
          || act->halo_radius() > -1 || act->silence_radius() > -1
@@ -89,6 +104,11 @@ void areas_actor_moved(const actor* act, const coord_def& oldpos)
     }
 }
 
+/// \brief Add some of the actor's area effects to the grid and center caches
+/// \param actor The actor
+/// \details Adds some but not all of an actor's area effects (e.g. silence)
+/// to the area grid (\ref _agrid) and center (\ref _agrid_centres) caches.
+/// Sets \ref no_areas to false if the actor generates those area effects.
 static void _actor_areas(actor *a)
 {
     int r;
@@ -117,7 +137,7 @@ static void _actor_areas(actor *a)
 
         for (radius_iterator ri(a->pos(), r, C_SQUARE, LOS_SOLID); ri; ++ri)
         {
-            dungeon_feature_type f = grd(*ri);
+            dungeon_feature_type f = env.grid(*ri);
 
             _set_agrid_flag(*ri, areaprop::liquid);
 
@@ -285,12 +305,25 @@ static void _remove_sanctuary_property(const coord_def& where)
     env.pgrid(where) &= ~(FPROP_SANCTUARY_1 | FPROP_SANCTUARY_2);
 }
 
+bool sanctuary_exists()
+{
+    return in_bounds(env.sanctuary_pos);
+}
+
+/*
+ * Remove any sanctuary from the level.
+ *
+ * @param did_attack If true, the sanctuary removal was the result of a player
+ *                   attack, so we apply penance. Otherwise the sanctuary is
+ *                   removed with no penance.
+ * @returns True if we removed an existing sanctuary, false otherwise.
+ */
 bool remove_sanctuary(bool did_attack)
 {
     if (env.sanctuary_time)
         env.sanctuary_time = 0;
 
-    if (!in_bounds(env.sanctuary_pos))
+    if (!sanctuary_exists())
         return false;
 
     const int radius = 4;
@@ -463,14 +496,12 @@ void create_sanctuary(const coord_def& center, int time)
         mpr("The monsters scatter in all directions!");
 }
 
-/////////////
-// Silence
-
-// radius, calculated from remaining duration
+// Range calculation for spells whose radius shrinks over time with remaining
+// duration.
 // dur starts at 10 (low power) and is capped at 100
 // maximal range: 5
-// last 6 turns: range 0, hence only the player silenced
-static int _silence_range(int dur)
+// last 6 turns: range 0, hence only the player affected
+static int _shrinking_aoe_range(int dur)
 {
     if (dur <= 0)
         return -1;
@@ -478,12 +509,17 @@ static int _silence_range(int dur)
     return isqrt(max(0, min(3*(dur - 5)/4, 25)));
 }
 
+/////////////
+// Silence
+
 int player::silence_radius() const
 {
-    if (you.species == SP_SILENT_SPECTRE)
-        return 4;
-    else
-    return _silence_range(duration[DUR_SILENCE]);
+    int SR = -1;
+    
+    if (you.get_mutation_level(MUT_SILENCE_AURA))
+        SR = 2 * you.get_mutation_level(MUT_SILENCE_AURA);
+
+    return max(SR, _shrinking_aoe_range(duration[DUR_SILENCE]));
 }
 
 int monster::silence_radius() const
@@ -498,9 +534,10 @@ int monster::silence_radius() const
     // The below is arbitrarily chosen to make monster decay look reasonable.
     const int moddur = BASELINE_DELAY
                        * max(7, stepdown_value(dur * 10 - 60, 10, 5, 45, 100));
-    return _silence_range(moddur);
+    return _shrinking_aoe_range(moddur);
 }
 
+/// Check if a coordinate is silenced
 bool silenced(const coord_def& p)
 {
     if (!map_bounds(p))
@@ -538,10 +575,12 @@ int player::halo_radius() const
                                                     / piety_breakpoint(5);
     }
 
-    if (player_equip_unrand(UNRAND_EOS))
+    if (you.get_mutation_level(MUT_FAIRY_LIGHT))
+        size = max(size, 2 * you.get_mutation_level(MUT_FAIRY_LIGHT));
+    else if (player_equip_unrand(UNRAND_EOS))
         size = max(size, 3);
-    else if (you.attribute[ATTR_HEAVENLY_STORM] > 0)
-        size = max(size, 1);
+    else if (you.props.exists(WU_JIAN_HEAVENLY_STORM_KEY))
+        size = max(size, 2);
 
     return size;
 }
@@ -551,22 +590,30 @@ static int _mons_class_halo_radius(monster_type type)
     // The values here depend on 1. power, 2. sentience. Thus, high-ranked
     // sentient celestials have really big haloes, while holy animals get
     // little or none.
+    if (mons_is_hepliaklqana_ancestor(type))
+    {
+        if (you.species == SP_FAIRY)
+            return 2;
+        return -1;
+    }
     switch (type)
     {
+    case MONS_HOLY_SWINE:
+        return 1;  // only notionally holy
+    case MONS_HOLY_FLAN:
+    case MONS_FAIRY:
+        return 2;
     case MONS_ANGEL:
-        return 4;
     case MONS_CHERUB:
-        return 4;
     case MONS_DAEVA:
+    case MONS_SILVER_STAR:
         return 4;
+    case MONS_MENNAS:
+        return 5;
     case MONS_OPHAN:
         return 6;
     case MONS_SERAPH:
         return 7; // highest rank among sentient ones
-    case MONS_HOLY_SWINE:
-        return 1;  // only notionally holy
-    case MONS_MENNAS:
-        return 5;  // ???  Low on grace or what?
     default:
         return -1;
     }
@@ -592,7 +639,7 @@ int monster::halo_radius() const
 
 int player::liquefying_radius() const
 {
-    return _silence_range(duration[DUR_LIQUEFYING]);
+    return _shrinking_aoe_range(duration[DUR_LIQUEFYING]);
 }
 
 int monster::liquefying_radius() const
@@ -603,7 +650,7 @@ int monster::liquefying_radius() const
     // The below is arbitrarily chosen to make monster decay look reasonable.
     const int moddur = BASELINE_DELAY *
         max(7, stepdown_value(dur * 10 - 60, 10, 5, 45, 100));
-    return _silence_range(moddur);
+    return _shrinking_aoe_range(moddur);
 }
 
 bool liquefied(const coord_def& p, bool check_actual)
@@ -614,7 +661,7 @@ bool liquefied(const coord_def& p, bool check_actual)
     if (!_agrid_valid)
         _update_agrid();
 
-    if (feat_is_water(grd(p)))
+    if (feat_is_water(env.grid(p)) || feat_is_lava(env.grid(p)))
         return false;
 
     // "actually" liquefied (ie, check for movement)

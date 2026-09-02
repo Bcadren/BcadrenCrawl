@@ -4,19 +4,38 @@
 %%%%
 Ashenzari
 
-While it seems inconceivable that the divine could be shackled, Ashenzari is
-just that: bound to the sky for eternity, the unbudging god is all-knowing,
-all-seeing. Devoted worshippers are allowed to grasp shreds of this knowledge
-and foresight, but be warned: to Ashenzari, power and blessing and curse are
-all the same thing.
+All of time is just an instant; everything is temporary. Ashenzari asks that
+his worshippers realise this and take it to their core. Whether you live for
+a day or a century, every moment is precious. Devoted worshippers accept that
+they shall die and that their equipment will rust away into nothing and in time
+even Ashenzari will be forgotten. In return for realizing this; those followers
+are allowed to see the fullness of reality; with skill beyond their years and
+sight far beyond their natural vision.
+%%%%
+Ashenzari extra
+
+Ashenzari provides worshippers with a bounty of knowledge about their
+surroundings. Followers are able to glimpse the shape of the dungeon around
+them, and can sense portals to other realms. They can detect nearby items and
+traps, and can sense monsters and gain an indication of how dangerous they
+are. While equipped with cursed equipment, they can also identify on sight the
+properties of other items of that type that are found.
 %%%%
 Beogh
 
-Beogh is an evil deity, worshipped by the cave orcs native to the dungeon. Only
+Beogh is xenophobic deity, worshipped by the cave orcs native to the dungeon. Only
 orcs may devote their service to Beogh, and they must prove their devotion with
 bloodshed. Especially fervent devotees of Beogh will find orcish followers
 flocking to their banner: it is an age of signs and portents, and the orcs have
 become increasingly certain that the coming of their Messiah is nigh.
+%%%%
+Bahamut & Tiamat
+
+Once representing warring factions of Dragons, Drakes and Draconians; these two now 
+work together and accept the worship of all sorts of serpents. Amongst player races 
+only Draconians may join their service. Bahamut offers abilities to strength the existing 
+draconic heritage of worshippers, while Tiamat offers abilities to adapt to various 
+situations through using properties of other kinds of dragons.
 %%%%
 Cheibriados
 
@@ -30,7 +49,7 @@ time and its needless disturbances.
 Dithmenos
 
 Dithmenos the Shadowed desires all to be darkness. Followers of Dithmenos gain
-a strange and otherwordly affinity to the shadows of their environment. This
+a strange and otherworldly affinity to the shadows of their environment. This
 god despises the physical world and constantly seeks to encroach on it.
 Dithmenos therefore rewards those who wield death and destruction while
 gradually consuming them with darkness.
@@ -91,7 +110,8 @@ the powers of death. An evil god, Kikubaaqudgha requires worshippers to cause
 the death and destruction of as many creatures as possible. In exchange,
 Kikubaaqudgha offers great assistance to the aspiring necromancer: spellbooks
 filled with dark magic, protection against necromantic backlash, and an endless
-supply of bodies taken from Kikubaaqudgha's vast mausoleum.
+supply of bodies taken from Kikubaaqudgha's vast mausoleum. Kikubaaqudgha's
+followers can convert to the Yredelemnul while keeping some piety.
 %%%%
 Lugonu
 
@@ -177,7 +197,7 @@ absolutely forbidden the use of spell magic.
 %%%%
 Uskayaw
 
-Uskayaw the Reveler is a god of ecstatic dance. On the surface, Uskayaw
+Uskayaw the Reveller is a god of ecstatic dance. On the surface, Uskayaw
 appreciates many forms of worship, but in the dungeon most worshippers stick to
 the dance of combat. Uskayaw appreciates the passion and rhythm of combat,
 rewarding followers for each strike they deliver and for the damage they deal
@@ -202,11 +222,12 @@ capricious. There is nothing a follower can do to influence Xom's mood.
 Yredelemnul
 
 Yredelemnul the Dark is a god worshipped by those who seek powers over death
-and the undead. Followers can raise legions of servile undead, and gain a
-number of other useful powers with which to make better use of the souls of
+and the undead. Followers can raise legions of horrific abominations, and gain 
+a number of other useful powers with which to make better use of the souls of
 the living. Yredelemnul especially favours those who would destroy holy
 creatures, which oppose the realm of undeath, and the nonliving, which exist
-outside of it.
+outside of it. Yredelemnul's followers can convert to the Kikubaaqudgha while 
+keeping some piety.
 %%%%
 Zin
 
@@ -234,6 +255,19 @@ their own, who may be blessed by Beogh in battle and can be recalled as needed.
 Eventually, followers will gain the power to walk on water. Beogh will
 sometimes directly intervene to save a follower's life, and the chosen of
 Beogh will eventually be able to resurrect other fallen orcs.
+%%%%
+Bahamut & Tiamat powers
+
+Followers of Bahamut & Tiamat will be offered the choice of a Bahamut power or 
+a Tiamat deleterious multiple times as they gain favour. Bahamut may protect you from 
+various deletirious effects of the dungeon, strengthen your draconic breath, grant 
+you a horde of allied drakes, promote your draconian colour to a stronger colour 
+and brand one of your weapons with dragon slaying. Tiamat may quicken your movements 
+in response to powerful and fiery attacks, allow you breath effects you normally 
+couldn't access, grant you a single powerful drake as a mount, change your draconian 
+colour to other common colours multiple times and grant you the book of the dragon, 
+with a wizardry bonus for the spells within. You may mix and match these offerings 
+as you wish, but choices at each offering tier are permanent.
 %%%%
 Cheibriados powers
 
@@ -277,7 +311,7 @@ sunlight and eventually rainstorms.
 %%%%
 Gozag powers
 
-For Gozag, both flesh and food are inferior to wealth, and therefore all
+For Gozag, flesh, spirit and even sustenance are inferior to wealth, and therefore all
 monsters are turned to gold upon death. Other monsters may then be briefly
 distracted by imaginings of great wealth. Stalwarts can purchase immediate help
 in the form of potions, and may also pay to attract shopkeepers into the
@@ -310,18 +344,21 @@ and armour; and mutate followers to better reflect Jiyva's image.
 Wu Jian powers
 
 Disciples of the Council learn to perform three martial techniques while moving
-around in combat. They will also be taught to move at unfathomable speeds for
-short distances, and become able to summon a storm of golden clouds to increase
-their precision and damage for as long as they keep using martial attacks.
+around in combat. Martial techniques are incompatible with more elaborate
+methods of moving, and do not combine with charging, digging, hopping, or
+rampaging. They will also be taught to move at unfathomable speeds for short
+distances, and become able to summon a storm of golden clouds to increase their
+precision and damage for as long as they keep using martial attacks.
 %%%%
 Kikubaaqudgha powers
 
 Kikubaaqudgha will send corpses to followers, and enhance servants' necromantic
 prowess with gifts of spellbooks. Kikubaaqudgha will protect followers from the
-effects of necromantic miscasts, and may even shield them from unholy torment.
-Especially fervent followers may invoke torment themselves by sacrificing a
-cadaver, and Kikubaaqudgha will eventually allow followers to either receive
-the Necronomicon, or to have their weapon imbued with pain.
+effects of necromantic miscasts, death curses, and may even shield them from
+unholy torment. Especially fervent followers may cast necromantic rituals, 
+special spells that cost a small amount of piety on success, and 
+Kikubaaqudgha will eventually allow followers to either receive the Necronomicon, 
+or to have their weapon imbued with pain.
 %%%%
 Lugonu powers
 
@@ -355,7 +392,7 @@ Okawaru powers
 
 Followers of Okawaru will gain the ability to temporarily increase their skills
 in combat, and, much later, to deal much faster blows. Okawaru will eventually
-gift followers with ammunition, weapons and armour.
+gift followers with weapons and armour.
 %%%%
 Pakellas powers
 
@@ -452,13 +489,15 @@ playthings...
 %%%%
 Yredelemnul powers
 
-Yredelemnul gives followers the power to raise skeletons and corpses, to recall
-undead followers to their vicinity, and to heal by draining the life force of
-living creatures. With sufficient piety, Yredelemnul can be called upon to
-mirror a follower's injuries onto attackers. Eventually, followers will gain
-the power to bind a monster's soul, and make it fight for them instead.
-Yredelemnul will sporadically gift followers increasingly powerful undead
-servants.
+Yredelemnul gives followers the power to craft unholy abominations, to recall
+these twisted creations to their vicinity, and to mirror a follower's injuries 
+onto attackers. Eventually, followers will gain the power to bind the soul of 
+an intelligent living, demonic or holy creature, and make it fight for them 
+instead. This process makes them leave any former diety and any priestly 
+powers they may possess will change to those of a servant of Yredelemnul 
+or the allied necromantic god, Kikubaaqudha. With sufficient piety, 
+Yredelemnul can be called upon to heal devotees by draining the life force 
+of living, holy and demonic creatures. 
 %%%%
 Zin powers
 
@@ -478,10 +517,20 @@ track of them, never ending the hunt.
 Beogh wrath
 
 Blasphemers against the word of Beogh find themselves assaulted by waves of
-orcish warriors, or by dancing electric weapons. Beogh may also simply smite
+orcish warriors, or by dancing orc-slaying weapons. Beogh may also simply smite
 such blasphemers – and when smiting true sinners, Beogh has a heavy hand
 indeed! Those who still worship Beogh will also find their followers regularly
 deserting them.
+%%%%
+Bahamut & Tiamat wrath
+
+Those who aggrieve the twin gods will find themselves assaulted by waves of
+draconic kin: dragons, drakes, hydrae and draconian warriors. It may have been 
+long ago that these deities warred amongst themselves, but their united armies 
+fight fervently against betrayers. Additionally; the benefits of your draconian
+colour may be stripped away for a time, you may be petrified, your enemies 
+may be raised to a haste against you, and you may be compelled to roaring until 
+you run out of breath.
 %%%%
 Cheibriados wrath
 
@@ -565,7 +614,7 @@ Makhleb wrath
 
 Those who invite the fury of Makhleb are buried in demons and destruction.
 The greatest punishments are reserved for the strongest sinners; crystal spears
-and Executioners are hurled with abandon only at those Makhleb finds truly
+and oxarmordthar are hurled with abandon only at those Makhleb finds truly
 deserving!
 %%%%
 Nemelex Xobeh wrath
@@ -626,7 +675,7 @@ Uskayaw wrath
 Uskayaw's wrath turns the powers of the dance against the offender. The prude
 will find their foes going berserk and will be forced to helplessly watch as
 foes execute their own solos. When the dance is getting too slow, Uskayaw will
-cause noise to attract more revelers.
+cause noise to attract more revellers.
 %%%%
 Vehumet wrath
 
@@ -661,8 +710,8 @@ Wu Jian extra
   .......       .......
 
   .......       ...<lightred>@</lightred>... (*) <lightred>Whirlwind</lightred>: Move between two tiles adjacent to
-  ...<lightred>@</lightred>O..  -->  ....O.. an enemy to strike them lightly. The dizzying
-  .......       ....... motion pins monsters in place for one action.
+  ...<lightred>@</lightred>O..  -->  ....O.. an enemy to strike them lightly. Multiple adjacent
+  .......       ....... foes can be attacked simultaneously this way.
 
   ..#....       ..#.... (**) <lightred>Wall Jump</lightred>: Vault off a nearby wall and
   ..#<lightred>@</lightred>O..  -->  ..#.O<lightred>@</lightred>. strike enemies adjacent to the landing spot. Vaulting

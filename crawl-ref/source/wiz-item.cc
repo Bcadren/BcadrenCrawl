@@ -29,7 +29,6 @@
 #include "makeitem.h"
 #include "mapdef.h"
 #include "message.h"
-#include "misc.h"
 #include "mon-death.h"
 #include "options.h"
 #include "orb-type.h"
@@ -43,6 +42,7 @@
 #include "spl-util.h"
 #include "stash.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "terrain.h"
 #include "unicode.h"
 #include "view.h"
@@ -63,7 +63,7 @@ static void _make_all_books()
         if (thing == NON_ITEM)
             continue;
 
-        item_def book(mitm[thing]);
+        item_def book(env.item[thing]);
 
         set_ident_flags(book, ISFLAG_KNOW_TYPE);
         set_ident_flags(book, ISFLAG_IDENT_MASK);
@@ -99,9 +99,9 @@ void wizard_create_spec_object()
 
     do
     {
-        mprf(MSGCH_PROMPT, ") - weapons     ( - missiles  [ - armour  / - wands    ?  - scrolls");
-        mprf(MSGCH_PROMPT, "= - jewellery   ! - potions   : - books   | - staves   }  - miscellany");
-        mprf(MSGCH_PROMPT, "X - corpses     %% - food      $ - gold    0  - the Orb");
+        mprf(MSGCH_PROMPT, ") - weapons    ( - missiles   [ - armours  ] - shields  / - wands");
+        mprf(MSGCH_PROMPT, "? - scrolls    = - jewellery  ! - potions  : - books    | - staves");
+        mprf(MSGCH_PROMPT, "} - miscellany X - corpses    %% - food     $ - gold     0  - the Orb");
         mprf(MSGCH_PROMPT, "ESC - exit");
 
         msgwin_prompt("What class of item? ");
@@ -128,7 +128,7 @@ void wizard_create_spec_object()
         mpr("Could not allocate item.");
         return;
     }
-    item_def& item(mitm[thing_created]);
+    item_def& item(env.item[thing_created]);
 
     // turn item into appropriate kind:
     if (class_wanted == OBJ_ORBS)
@@ -233,7 +233,7 @@ void wizard_create_spec_object()
         // orig_monnum is used in corpses for things like the Animate
         // Dead spell, so leave it alone.
         if (class_wanted != OBJ_CORPSES)
-            origin_acquired(mitm[thing_created], AQ_WIZMODE);
+            origin_acquired(env.item[thing_created], AQ_WIZMODE);
         canned_msg(MSG_SOMETHING_APPEARS);
 
         // Tell the stash tracker.
@@ -498,7 +498,7 @@ void wizard_tweak_object()
 static bool _item_type_can_be_artefact(int type)
 {
     return type == OBJ_WEAPONS || type == OBJ_ARMOURS || type == OBJ_JEWELLERY
-           || type == OBJ_BOOKS || type == OBJ_SHIELDS;
+           || type == OBJ_BOOKS || type == OBJ_SHIELDS || type == OBJ_STAVES;
 }
 
 static bool _make_book_randart(item_def &book)
@@ -508,7 +508,7 @@ static bool _make_book_randart(item_def &book)
     do
     {
         mprf(MSGCH_PROMPT, "Make book fixed [t]heme or fixed [l]evel? ");
-        type = toalower(getchk());
+        type = toalower(getch_ck());
     }
     while (type != 't' && type != 'l');
 
@@ -568,7 +568,7 @@ void wizard_create_all_artefacts(bool override_unique)
             if (islot == NON_ITEM)
                 break;
 
-            item_def &tmp_item = mitm[islot];
+            item_def &tmp_item = env.item[islot];
             make_item_unrandart(tmp_item, index);
             tmp_item.quantity = 1;
         }
@@ -586,7 +586,7 @@ void wizard_create_all_artefacts(bool override_unique)
                 continue;
             }
         }
-        item_def &item = mitm[islot];
+        item_def &item = env.item[islot];
         set_ident_flags(item, ISFLAG_IDENT_MASK);
 
         if (!is_artefact(item))
@@ -613,7 +613,7 @@ void wizard_create_all_artefacts(bool override_unique)
     int islot = get_mitm_slot();
     if (islot != NON_ITEM)
     {
-        item_def& item = mitm[islot];
+        item_def& item = env.item[islot];
         item.clear();
         item.base_type = OBJ_MISCELLANY;
         item.sub_type  = MISC_HORN_OF_GERYON;
@@ -699,11 +699,9 @@ void wizard_make_object_randart()
         return;
     }
 
-    // Remove curse flag from item, unless worshipping Ashenzari.
+    do_uncurse_item(item);
     if (have_passive(passive_t::want_curses))
-        do_curse_item(item, true);
-    else
-        do_uncurse_item(item);
+        apply_curse(item, ARTP_FRAGILE);
 
     // If it was equipped, requip the item.
     if (eq != EQ_NONE)
@@ -748,7 +746,7 @@ void wizard_identify_pack()
     mpr("You feel a rush of knowledge.");
     identify_inventory();
     you.wield_change  = true;
-    you.redraw_quiver = true;
+    quiver::set_needs_redraw();
 }
 
 static void _forget_item(item_def &item)
@@ -757,6 +755,14 @@ static void _forget_item(item_def &item)
     unset_ident_flags(item, ISFLAG_IDENT_MASK);
     item.flags &= ~(ISFLAG_SEEN | ISFLAG_HANDLED | ISFLAG_THROWN
                     | ISFLAG_DROPPED | ISFLAG_NOTED_ID | ISFLAG_NOTED_GET);
+    if (is_artefact(item) && item.props.exists(KNOWN_PROPS_KEY))
+    {
+        ASSERT(item.props.exists(KNOWN_PROPS_KEY));
+        CrawlVector &known = item.props[KNOWN_PROPS_KEY].get_vector();
+        ASSERT(known.size() == ART_PROPERTIES);
+        for (vec_size i = 0; i < ART_PROPERTIES; i++)
+            known[i] = static_cast<bool>(false);
+    }
 }
 
 void wizard_unidentify_pack()
@@ -767,7 +773,7 @@ void wizard_unidentify_pack()
             _forget_item(item);
 
     you.wield_change  = true;
-    you.redraw_quiver = true;
+    quiver::set_needs_redraw();
 
     // Forget things that nearby monsters are carrying, as well.
     // (For use with the "give monster an item" wizard targeting
@@ -780,7 +786,7 @@ void wizard_unidentify_pack()
 void wizard_list_items()
 {
     mpr("Item stacks (by location and top item):");
-    for (const auto &item : mitm)
+    for (const auto &item : env.item)
     {
         if (item.defined() && !item.held_by_monster() && item.link != NON_ITEM)
         {
@@ -796,12 +802,12 @@ void wizard_list_items()
     const coord_def start(1,1), end(GXM-1, GYM-1);
     for (rectangle_iterator ri(start, end); ri; ++ri)
     {
-        int item = igrd(*ri);
+        int item = env.igrid(*ri);
         if (item != NON_ITEM)
         {
             mprf("%3d at (%2d,%2d): %s%s", item, ri->x, ri->y,
-                 mitm[item].name(DESC_PLAIN, false, false, false).c_str(),
-                 mitm[item].flags & ISFLAG_MIMIC ? " mimic" : "");
+                 env.item[item].name(DESC_PLAIN, false, false, false).c_str(),
+                 env.item[item].flags & ISFLAG_MIMIC ? " mimic" : "");
         }
     }
 }
@@ -865,7 +871,7 @@ static void _debug_acquirement_stats(FILE *ostat)
         mpr("Too many items on level.");
         return;
     }
-    mitm[p].base_type = OBJ_UNASSIGNED;
+    env.item[p].base_type = OBJ_UNASSIGNED;
 
     clear_messages();
     mpr("[a] Weapons [b] Armours   [c] Jewellery [d] Books");
@@ -914,22 +920,21 @@ static void _debug_acquirement_stats(FILE *ostat)
     {
         if (kbhit())
         {
-            getchk();
+            getch_ck();
             mpr("Stopping early due to keyboard input.");
             break;
         }
 
-        int item_index = NON_ITEM;
+        const int item_index = acquirement_create_item(type, AQ_WIZMODE, true,
+                you.pos());
 
-        if (!acquirement(type, AQ_WIZMODE, true, &item_index, true)
-            || item_index == NON_ITEM
-            || !mitm[item_index].defined())
+        if (item_index == NON_ITEM || !env.item[item_index].defined())
         {
             mpr("Acquirement failed, stopping early.");
             break;
         }
 
-        item_def &item(mitm[item_index]);
+        item_def &item(env.item[item_index]);
 
         acq_calls++;
         total_quant += item.quantity;
@@ -1017,10 +1022,10 @@ static void _debug_acquirement_stats(FILE *ostat)
     const int e_order[] =
     {
         EQ_WEAPON0, EQ_WEAPON1, EQ_BODY_ARMOUR, EQ_HELMET, EQ_CLOAK,
-        EQ_GLOVES, EQ_BOOTS, EQ_AMULET, EQ_RIGHT_RING, EQ_LEFT_RING,
-        EQ_RING_ONE, EQ_RING_TWO, EQ_RING_THREE, EQ_RING_FOUR,
+        EQ_GLOVES, EQ_BARDING, EQ_BOOTS, EQ_CYTOPLASM, EQ_AMULET, EQ_RIGHT_RING, 
+        EQ_LEFT_RING, EQ_RING_ONE, EQ_RING_TWO, EQ_RING_THREE, EQ_RING_FOUR,
         EQ_RING_FIVE, EQ_RING_SIX, EQ_RING_SEVEN, EQ_RING_EIGHT,
-        EQ_RING_AMULET
+        EQ_RING_LEFT_TENDRIL, EQ_RING_RIGHT_TENDRIL, EQ_RING_AMULET
     };
 
     bool naked = true;
@@ -1119,8 +1124,8 @@ static void _debug_acquirement_stats(FILE *ostat)
             "electrocution",
 #if TAG_MAJOR_VERSION == 34
             "orc slaying",
-            "dragon slaying",
 #endif
+            "dragon slaying",
             "venom",
             "protection",
             "draining",
@@ -1147,6 +1152,7 @@ static void _debug_acquirement_stats(FILE *ostat)
             "reaping",
             "silver",
             "acid",
+            "spectral",
             "INVALID",
 #if TAG_MAJOR_VERSION > 34
             "confuse",
@@ -1192,9 +1198,7 @@ static void _debug_acquirement_stats(FILE *ostat)
             "resistance",
             "positive energy",
             "archmagi",
-#if TAG_MAJOR_VERSION == 34
             "preservation",
-#endif
             "reflection",
             "spirit shield",
             "archery",
@@ -1204,6 +1208,8 @@ static void _debug_acquirement_stats(FILE *ostat)
             "repulsion",
             "cloud immunity",
             "high priest",
+            "harm",
+            "rampaging",
         };
 
         const int non_art = acq_calls - num_arts;
@@ -1238,6 +1244,8 @@ static void _debug_acquirement_stats(FILE *ostat)
                 "poison magic",
                 "earth magic",
                 "air magic",
+                "evocation",
+                "ritual",
             };
             COMPILE_CHECK(ARRAYSZ(names) == SPSCHOOL_LAST_EXPONENT + 1);
 
@@ -1387,7 +1395,7 @@ static void _debug_rap_stats(FILE *ostat)
     {
         if (kbhit())
         {
-            getchk();
+            getch_ck();
             mpr("Stopping early due to keyboard input.");
             break;
         }
@@ -1456,6 +1464,7 @@ static void _debug_rap_stats(FILE *ostat)
                 / (float) MAX_TRIES;
             mprf("%4.1f%% done.", curr_percent / 10.0);
             viewwindow();
+            update_screen();
         }
 
     }
@@ -1550,6 +1559,7 @@ static void _debug_rap_stats(FILE *ostat)
         "ARTP_SHIELDING",
         "ARTP_INACCURACY",
         "ARTP_HARM",
+        "ARTP_RAMPAGING",
     };
     COMPILE_CHECK(ARRAYSZ(rap_names) == ARTP_NUM_PROPERTIES);
 
@@ -1643,7 +1653,7 @@ void wizard_draw_card()
 void wizard_identify_all_items()
 {
     wizard_identify_pack();
-    for (auto &item : mitm)
+    for (auto &item : env.item)
         if (item.defined())
             set_ident_flags(item, ISFLAG_IDENT_MASK);
     for (auto& entry : env.shop)
@@ -1654,7 +1664,7 @@ void wizard_identify_all_items()
         object_class_type i = (object_class_type)ii;
         if (!item_type_has_ids(i))
             continue;
-        for (int j = 0; j < get_max_subtype(i); j++)
+        for (const auto j : all_item_subtypes(i))
             set_ident_type(i, j, true);
     }
 }
@@ -1662,7 +1672,7 @@ void wizard_identify_all_items()
 void wizard_unidentify_all_items()
 {
     wizard_unidentify_pack();
-    for (auto &item : mitm)
+    for (auto &item : env.item)
         if (item.defined())
             _forget_item(item);
     for (auto& entry : env.shop)
@@ -1673,7 +1683,7 @@ void wizard_unidentify_all_items()
         object_class_type i = (object_class_type)ii;
         if (!item_type_has_ids(i))
             continue;
-        for (int j = 0; j < get_max_subtype(i); j++)
+        for (const auto j : all_item_subtypes(i))
             set_ident_type(i, j, false);
     }
 }

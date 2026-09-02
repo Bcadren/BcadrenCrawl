@@ -14,15 +14,14 @@ Randomly translocates the user a short distance.
 Breathe Dispelling Energy ability
 
 Breathes a bolt of dispelling energy at a targeted creature, possibly removing
-some of its enchantments. The range of the bolt is decreased by one for every
-creature it strikes.
+some of its enchantments.
 %%%%
 Breathe Fire ability
 
 {{
     local desc = "Breathes a blast of fire at a targeted creature"
 
-    if you.race() == "Red Draconian" then
+    if you.race() == "Draconian" then
         desc = desc .. ", leaving a cloud of flames at the endpoint"
     end
 
@@ -34,6 +33,10 @@ Breathe Fire ability
 Breathe Frost ability
 
 <Chilling Breath spell>
+%%%%
+Twisted Reanimation ability
+
+<Twisted Resurrection spell>
 %%%%
 Breathe Poison Gas ability
 
@@ -52,20 +55,94 @@ for a short time. It may also splash onto other nearby creatures on impact.
 Breathe Steam ability
 
 Breathes a jet of steam at a targeted location, which will scald any creatures
-it hits and will also obscure vision. The range of the jet is decreased by one
-for every creature it strikes.
+it hits and will also obscure vision.
 %%%%
 Breathe Noxious Fumes ability
 
-Breathes a blast of noxious fumes at a targeted creature. The range of the blast
-is decreased by one for every creature it strikes.
+Breathes a blast of noxious fumes at a targeted creature.
+%%%%
+Breathe Fog ability
+
+Breathes a massive cone of fog; obscuring vision completely in the direction of 
+the cone.
+%%%%
+Breathe Drain ability
+
+Breathes a puff of negative energy, draining those that it hits.
+%%%%
+Breathe Foul Miasma ability
+
+Breathes a bolt of terrible rot, leaving clouds of foul miasma in its wake. 
+The range of the bolt is decreased by one for every creature it strikes.
+%%%%
+Breathe Silver Splinters ability
+
+Breathes a cone of silver splinters, dealing damage sharply reduced by AC. 
+Chaotic creatures, such as malmutators recieve additional damage from the 
+blessed silver.
+%%%%
+Breathe Metal Splinters ability
+
+Breathes a cone of metal splinters, dealing damage sharply reduced by AC.
+%%%%
+Breathe Blast of Wind ability
+
+Breathes a sharp pushing wind, dealing no damage (except collision damage), 
+but blowing everything away from the user.
+%%%%
+Breathe Vampiric Fog ability
+
+Breathes a cone of vampiric fog, a strange crimson cloud that drains the 
+life and experience of those that touch it and transfers a portion of the 
+damage dealt to the creator of those clouds.
+%%%%
+Breathe Blessed Flames ability
+
+Breathes a blast of blessed fire, leaving blessed flame clouds in its wake. 
+The range of the blast is decreased by one for every creature it strikes.
+%%%%
+Breathe Butterflies ability
+
+Breathes a gust of fairy dust, which coalesces into harmless butterflies 
+on every empty tile it crosses. Additional butterflies swarm to surround 
+you. As the dust surrounds summoned creatures it will increase their time 
+in this world or abjure them, depending on their attitude towards you. 
+The range of the dust is decreased by one for every creature it crosses.
+%%%%
+Breathe Bone Shards ability
+
+Breathes a cone of bone shards, dealing damage sharply reduced by AC.
+%%%%
+Breathe Seething Chaos ability
+
+Breathes a bolt of chaotic energy; which may deal damage of any type or even 
+heal those struck by it, followed immediately by a random buff or debuff to 
+those targets. The range of the bolt is decreased by one for every creature 
+it strikes.
+%%%%
+Breathe Spectral Mist ability
+
+Breathes a cone of spectral mist, a strange cloud type that drains the living 
+and heals the undead. As the clouds dissipate, short lived spectral creatures 
+come to the aid of the user.
+%%%%
+Breathe Mutagenic Radition ability
+
+Breathes a fountain on uncontrolled magic directed at a single target. The 
+victim caught in this blast will find itself malmutated.
+%%%%
+Breathe Dart ability
+
+Breathes a small amount of magical potential that forms into a rudimentary 
+stone dart. Deals physical damage to those struck. Replaced by a more potent 
+breath as you grow.
 %%%%
 Bat Form ability
 
 Transforms the user into a swift-moving vampire bat, increasing evasion but
 substantially weakening melee attacks.
 
-While tranformed, any equipped weapons, armour and rings are melded, and the
+While transformed, any equipped weapons, armour and rings are melded, and the
 user becomes unable to cast spells.
 %%%%
 Fly ability
@@ -74,12 +151,12 @@ Starts flight. During flight you can safely cross water and similar obstacles.
 Be warned, though, that some forms of flight are temporary and may expire at
 inopportune moments.
 %%%%
-Hellfire Blast ability
+Hurl Hellfire ability
 
-Blasts a targeted enemy with damnation. These unholy forces harm the victim and
+Blasts a targeted enemy with hellfire. These unholy forces harm the victim and
 anyone adjacent, and are not affected by any means of protection, such as armour
 or resistances. However, certain creatures, usually those able to invoke
-damnation themselves, are entirely unscathed by damnation.
+hellfire themselves, are entirely unscathed by hellfire.
 %%%%
 Cancel Portal Projectile ability
 
@@ -102,8 +179,8 @@ action will cancel the Dig status.
 %%%%
 Shaft Self ability
 
-Sends you to a random position one to two floors down, as if you jumped into a
-shaft trap. It takes some time to dig the shaft.
+Sends you to a random position one to three floors down, as if you jumped into
+a shaft trap. It takes some time to dig the shaft.
 %%%%
 Plant Roots ability
 
@@ -119,6 +196,12 @@ You spend several turns digging your roots back out of the ground. If you are
 interrupted you can choose to stop or to continue; continuing opens you up to
 several turns of attacks, while stopping causes the hole you were digging to
 collapse completely nulling the progress you made to uproot yourself.
+%%%%
+Rolling Charge ability
+
+Roll at a foe uncurl, and strike! The further you go, the more momentum 
+will be added to the force of your strike. You roll with sufficient speed 
+to dodge traps and harmful terrain along the way
 %%%%
 Evoke Blink ability
 
@@ -156,6 +239,10 @@ Create a mighty thunderclouds around the user.
 End Transformation ability
 
 Reverts you to your normal form.
+%%%%
+End Uprising ability
+
+Stops channeling necromantic energy through your steps.
 %%%%
 # Zin
 Recite ability
@@ -219,10 +306,23 @@ One. Demon weapons will be converted into a more powerful sacred weapon. This
 blessing may only be used once, and it cannot be used on artefact weapons.
 %%%%
 # Kikubaaqudgha
-Receive Corpses ability
+Open Crypts ability
 
-Creates one or more reanimatable monster corpses nearby. The number and
-freshness of these are dependent on Necromancy skill.
+Beseeches Kikubaaqudgha to create additional reanimatable monster corpses nearby 
+when you cast spells that require them to use.
+
+Whenever you cast Simulacrum without a corpse, Animate Dead with insufficient corpses 
+(based on a threshold that scales with piety) or Corpse Rot when a corpse could miasma 
+a vulnerable enemy you will spend three piety and place these corpses in appropriate 
+places as part of the spell cast.
+
+The quality of corpses scales with necromancy skill; the amount for non-simulacrum 
+casts scales similarly. Simulacrum is heavy weighted for stronger monsters at high 
+skill to offset the lack of multiple corpses.
+%%%%
+Close Crypts ability
+
+Stops requesting additional corpses on suitable spellcasts. 
 %%%%
 Torment ability
 
@@ -266,11 +366,8 @@ skeletons cannot leave the level they were created on.
 %%%%
 Drain Life ability
 
-# Note: part of this description duplicates the Drain Life spell description.
-
-Drains the life force of any nearby creatures, healing the user depending on
-the damage dealt. The amount of life force drained is increased by Invocations
-skill.
+[[Drain Life spell]] The amount of life force drained is increased by
+Invocations skill.
 %%%%
 Enslave Soul ability
 
@@ -280,9 +377,11 @@ long as they are relatively uninjured. The duration of the mark is dependent on
 Invocations skill. If the monster dies while still marked, its soul will become
 yours.
 
-The enslaved soul will retain the monster's faculties, equipment and abilities,
-as well as some of its innate healing. However, only one soul can be enslaved
-at a time.
+The enslaved soul will retain the monster's faculties and abilities, as well as 
+some of its innate healing. Yredelemnul will provide them with suitable gear for 
+their new form, matching items that they held most dear in life. 
+
+Only one soul can be enslaved at a time.
 %%%%
 # Okawaru
 Heroism ability
@@ -308,13 +407,13 @@ demon hostile.
 %%%%
 Major Destruction ability
 
-Shoots a random harmful beam or explosion at the targeted creature. Damage and
-accuracy are increased by Invocations skill.
+[[Major Destruction spell]] Damage and accuracy are increased by Invocations
+skill.
 %%%%
 Greater Servant of Makhleb ability
 
-Summons a major demon. Failing to use this ability correctly will turn the
-demon hostile.
+[[Greater Servant of Makhleb spell]] Failing to use this ability correctly will
+turn the demon hostile.
 %%%%
 # Sif Muna
 Divine Energy ability
@@ -420,7 +519,7 @@ nearby creatures and the damage dealt to those affected.
 Banish ability
 
 Attempts to banish a creature into the Abyss. If the attempt succeeds, you gain
-some piety and half the creature's experience value. Invocations skill makes it
+some piety and the creature's full experience value. Invocations skill makes it
 harder to resist.
 %%%%
 Corrupt ability
@@ -463,8 +562,7 @@ draw these cards in the order you chose.
 # Beogh
 Smiting ability
 
-Smites any targeted enemy within sight, with no direct line of fire required.
-The strength of the smiting is increased by Invocations skill.
+[[Smiting spell]] The strength of the smiting is increased by Invocations skill.
 %%%%
 Recall Orcish Followers ability
 
@@ -504,9 +602,8 @@ up completely, revealing the dungeon floor.
 Growth ability
 
 Uses food to grow a ring of plants around yourself. If a complete ring cannot
-be formed (because you do not have enough food), plants will grow on squares
-adjacent to you that are close to monsters. The plants you create gain bonus
-health proportional to your Invocations skill.
+be formed, plants will grow on squares adjacent to you that are close to monsters. 
+The plants you create gain bonus health proportional to your Invocations skill.
 %%%%
 Rain ability
 
@@ -553,23 +650,64 @@ second you departed. Invocations skill increases the amount of time that passes
 while you're gone.
 %%%%
 # Jiyva
-Request Jelly ability
-
-Creates a neutral jelly that will wander the floor and digest items.
-%%%%
 Slimify ability
 
-Coats a wielded weapon or your fists with slime, turning the next living or
-corporeal undead monster hit into a neutral slime.
+All slime the player can see rushes to coat a wielded weapon or your fists with slime. 
+The first monster you hit will turn into a neutral slime; ending the effect.
 %%%%
-Cure Bad Mutation ability
+Oozing Slime Mount ability
 
-Removes a randomly selected bad mutation.
+You summon a massive slime creature and ride upon its back. This mount moves fairly 
+slowly but it leaves a constant trail of slime as it moves. Additionally it converts 
+nearby walls into slimy walls and can dig through slimy walls.
+%%%%
+Set Stat Targets ability
+
+Inform Jiyva how you'd like your stats to be manipulated. First time is free, after 
+that, each call costs a small amount of piety.
+%%%%
+Dissolution ability
+
+Turn all nearby non-artefact floor items into viscuous, corrosive ooze and vastly increase 
+the ooze from killing monsters for a time.
+%%%%
+# Jiyva Mutations
+Spawn Eyeballs ability
+
+You release many of the eyeballs within your flesh as their own creatures.
+The amount and quality of the eyeballs summoned scale with your experience level 
+and invocations skill.
+%%%%
+Silent Scream ability
+
+One of your demonic mouths lets out a foul demonic screech, which silences all other 
+sound in the environment and damages all monsters caught within its radius. The duration 
+of this scream scales with your experience level and invocations skill.
+%%%%
+Frost Burst ability
+
+You fire icy spines in all directions around you. The spines immediately burst into hails
+of icy particles. The base damage of the shots and the explosions scale with your 
+experience level and invocations skill.
+%%%%
+Corrosive Wave ability
+
+You fire out a massive wave of corrosive ooze from within your body at a monster, knocking it 
+back and covering a large area in slime. The base damage and the amount of time the slime pools 
+remain scale with your experience level and invocations skill.
+%%%%
+Fluid Rush ability
+
+You melt completely into a rapidly moving current of ooze, rushing through enemies to land at a 
+location of your choosing. Those you pass through in the rush are damaged and potentially corroded. 
+Slime pools and fire clouds are left in your wake. The base damage and the amount of time the slime 
+pools and flame clouds remain scale with your experience level and invocations skill.
 %%%%
 # Ashenzari
 Scrying ability
 
-Provides astral sight, allowing you to see through walls.
+Toggles your astral sight; instantly switching between able to see through
+walls and limited to your natural vision.
 %%%%
 Transfer Knowledge ability
 
@@ -590,10 +728,11 @@ Shadow Form ability
 
 Transforms you into a swirling mass of dark shadows. While in this form, you
 are permanently invisible and are immune to poison, draining, torment, and
-hostile enchantments. All incoming damage will be halved, and you will bleed
-smoke on any incoming attack. However, your ability to deal damage in melee and
-with ranged attacks will be halved, your spellcasting power will be greatly
-hampered, and your skills will be further drained when taking damage.
+hostile enchantments. All incoming damage is halved and you bleed smoke on 
+any incoming attack. However, your ability to deal damage in melee
+and with ranged attacks is halved, your spellcasting power is greatly
+hampered, and your skills are further drained when taking damage.
+
 Invocations skill increases the duration of the transformation.
 %%%%
 # Gozag
@@ -816,7 +955,7 @@ overall increase is determined by the size of your donation.
 %%%%
 Curse Item ability
 
-Curses a chosen item, at the cost of a scroll of remove curse.
+Curses a chosen item with sacred fragility.
 %%%%
 Recall Ancestor ability
 
@@ -867,17 +1006,91 @@ the landing spot and taking two turns to complete the motion.
 %%%%
 Serpent's Lash ability
 
-Allows you to move at supernatural speeds, making any movements up to a
+Allows you to move at supernatural speeds, making any normal movements up to a
 distance of two tiles instantly. Martial attacks performed under the effect of
 Serpent's Lash are more damaging and never miss.
 %%%%
 Heavenly Storm ability
 
-Invokes a storm of heavenly clouds. While the storm rages, striking enemies
-with martial attacks provides an increasing bonus to melee damage and accuracy.
-The bonus fades over time, and the storm lasts until the bonus has faded
-completely. The heavenly clouds prevent invisibility, and obscure the vision of
-those outside the storm.
+Invokes a storm of heavenly clouds. While the storm rages, your combat
+accuracy and damage are substantially increased, and striking enemies with
+martial attacks increases this bonus. The storm weakens over time and fades
+away once the bonus reaches zero. The heavenly clouds prevent invisibility, and obscure the vision of those outside the storm.
+%%%%
+Choose Bahamut's Protection ability
+
+Bahamut will passively protect you against slowing, petrification, sleep and confusion 
+for as long as you worship Bahamut & Tiamat. This choice is permanent.
+%%%%
+Choose Tiamat's Retribution ability
+
+Upon taking a significantly damaging hit, Tiamat may quicken your movements in reprisal. 
+Odds are higher on fiery hits as the heat warming your cold blood makes speeding up easier. 
+This haste chance persists as long as you worship Bahamut & Tiamat. This choice is permanent.
+%%%%
+Choose Bahamut's Refined Breath ability
+
+<Enhanced Breath ability>
+%%%%
+Enhanced Breath ability
+
+The power of Bahamut will empower the strength of your natural breath ability; it's base 
+power increased by your skill with Invocations and additional effects are applied depending 
+on your base breath.
+%%%%
+Choose Tiamat's Adaptive Breath ability
+
+<Adaptive Breath ability>
+%%%%
+Adaptive Breath ability
+
+Tiamat grants you a choice of three random breaths to use in place of your own. More exotic 
+and higher damage breaths are more likely with higher invocations skill.
+%%%%
+Choose Bahamut's Drake Mount ability
+
+<Drake Mount ability>
+%%%%
+Drake Mount ability
+
+You summon a single rime drake and ride upon its back. It takes many hits in your place. Melees along 
+with you once per turn and fires its icy breath along the same trajectory as your spell and ranged attacks,
+as long as it has it's breath. It's slightly faster than average, but is not affected by any of your gear bonuses 
+neither for speed, nor for resistances.
+%%%%
+Choose Tiamat's Summon Drakes ability
+
+<Summon Drakes ability>
+%%%%
+Summon Drakes ability
+
+You summon three to five drakes or similar creatures. The quality of your summons and their duration 
+depends on your invocations skill.
+%%%%
+Choose Bahamut's Promotion ability
+
+Your draconian colour will permanently be upgraded to a rarer colour; granting bonuses to more spell 
+schools and a generally stronger breath power. This change is permanent.
+%%%%
+Choose Tiamat's Transformation ability
+
+<Change Draconian Colour ability>
+%%%%
+Change Draconian Colour ability
+
+Tiamat will present you with your choice of three other draconian colours to transform yourself into. 
+You may transform as often as you have enough piety and mana to do so.
+%%%%
+Brand Weapon with Dragonslaying ability
+
+Permanently blesses a weapon of your choice with an enchantment against drakes and dragons. 
+This blessing may only be used once, and it cannot be used on artefact weapons.
+%%%%
+Receive Book of the Dragon ability
+
+Grants you the Book of the Dragon, a spellbook containing the most sacred spells
+for dragonkin. The sacred "Dragon's Call" spell can only be found through this 
+power or the omniscience of Sif Muna.
 %%%%
 Hop ability
 

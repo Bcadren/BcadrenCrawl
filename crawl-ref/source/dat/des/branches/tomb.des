@@ -16,10 +16,10 @@ end
 function tomb_1_mummy_priest_set(e, chamber)
   e.mons("mummy priest w:30 / revenant w:5 / lich w:5 / nothing w:30")
   if chamber then
-    e.mons("greater mummy / ancient lich w:1 / nothing w:11")
+    e.mons("royal mummy / ancient lich w:1 / nothing w:11")
     e.mons("obsidian statue / orange crystal statue")
   else
-    e.mons("greater mummy")
+    e.mons("royal mummy")
   end
 end
 
@@ -29,7 +29,7 @@ end
 
 function tomb_mummy_priest_set(e)
   e.mons("mummy priest w:20 / lich w:2 / revenant w:2")
-  e.mons("greater mummy / ancient lich w:1")
+  e.mons("royal mummy / ancient lich w:1")
 end
 
 function tomb_guardian_set(e, include_nothing)
@@ -40,8 +40,6 @@ function tomb_guardian_set(e, include_nothing)
   if dgn.persist.tomb_guardian_sets == nil then
     dgn.persist.tomb_guardian_sets = { 0, 0, 0, 0, 0, 0 }
   end
-  -- HACK: for save compat, double up the monster sets
-  -- Remove when TAG_MAJOR_VERSION > 34!
   local sets =
     {
       "ushabti w:119 / guardian mummy w:79 / mummy w:28 / " ..
@@ -50,12 +48,15 @@ function tomb_guardian_set(e, include_nothing)
           "skeletal warrior w:8 / ancient champion w:8 / bennu w:8",
       "guardian mummy w:98 / mummy w:18 / skeletal warrior w:38  / " ..
           "ancient champion w:28 / bennu w:28",
+-- start TAG_MAJOR_VERSION == 34
+      -- HACK: for save compat, double up the monster sets
       "ushabti w:119 / guardian mummy w:79 / mummy w:28 / " ..
           "skeletal warrior w:8 / ancient champion w:8 / bennu w:8",
       "guardian mummy w:119 / death scarab band w:79 / mummy w:28 / " ..
           "skeletal warrior w:8 / ancient champion w:8 / bennu w:8",
       "guardian mummy w:98 / mummy w:18 / skeletal warrior w:38  / " ..
           "ancient champion w:28 / bennu w:28",
+-- end TAG_MAJOR_VERSION
     }
   local nothing = " / nothing w:248"
   local which_set = 0
@@ -90,7 +91,7 @@ function tomb_1_centre_setup(e)
   tomb_guardian_set(e, true)
   tomb_1_mummy_priest_set(e, true)
 
-  e.kfeat("^ = alarm trap w:5 / dispersal trap / net trap / zot trap")
+  e.kfeat("^ = alarm trap w:5 / congregation trap / net trap / zot trap")
   e.subst(". = ^ .:490")
 
   e.lua_marker(">", hatch_name("tomb2_entry"))
@@ -118,7 +119,7 @@ function tomb_1_stairs_setup(e)
   tomb_1_mummy_priest_set(e)
 
   e.subst(". = 3:12 ^ .:230")
-  e.kfeat("^ = alarm trap / dispersal trap / net trap / zot trap")
+  e.kfeat("^ = alarm trap / congregation trap / net trap / zot trap")
 end
 
 --[[
@@ -141,16 +142,16 @@ function tomb_2_ambush_setup(e)
   e.nsubst("S = 1:< / *:.")
 
   e.subst(". =  ^ .:740")
-  e.kfeat("^ = alarm trap / dispersal trap / net trap / zot trap")
+  e.kfeat("^ = alarm trap / congregation trap / net trap / zot trap")
 end
 
 function tomb_3_khufu(e, glyph)
-  e.kmons(glyph ..  " = Khufu w:3 / greater mummy, greater mummy")
+  e.kmons(glyph ..  " = Khufu w:3 / royal mummy, royal mummy")
 end
 
 --[[
 Setup for Tomb:3 rune vaults. For monsters, it places a guardian monster set on
-'1', a mummy priest set on '2', and a greater mummy set on '3'. Places about 12
+'1', a mummy priest set on '2', and a royal mummy set on '3'. Places about 12
 appropriate traps on-average.
 
 Vaults should place an 'O' glyph for the golden rune and can optionally place a
@@ -165,7 +166,7 @@ function tomb_3_rune_setup(e)
 
   tomb_3_khufu(e, "K")
 
-  e.kfeat("^ = alarm trap / dispersal trap / net trap / zot trap")
+  e.kfeat("^ = alarm trap / congregation trap / net trap / zot trap")
   e.subst(". = ^ .:490")
 end
 
@@ -342,7 +343,7 @@ ORIENT: float
 TAGS: tomb_entry no_monster_gen no_item_gen no_wall_fixup
 NSUBST: R = 7:r / *:.
 SUBST: r = xx..., . = ....s
-KITEM: s = stone q:1 / large rock q:1 w:5
+KITEM: s = gold q:1
 RTILE: x = wall_pebble_darkgray
 KFEAT: O = enter_tomb
 MAP
@@ -466,7 +467,7 @@ TAGS:     no_dump
 SUBVAULT: A : tomb_1_centre
 SUBVAULT: B : tomb_1_hall_stairs
 : tomb_guardian_set(_G, true)
-MONS:     greater mummy / nothing
+MONS:     royal mummy / nothing
 MONS:     sphinx / nothing
 MONS:     obsidian statue / orange crystal statue
 NSUBST:   ( = 1:( / *:.
@@ -477,14 +478,13 @@ SUBST:    J = J:750 5, O = O:750 5
 SUBST:    K = K:550 5, P = P:550 5
 SUBST:    L = L:300 5, Q = Q:300 5
 : end
-SUBST:    FIJKLMNOPQ = G
+KFEAT:    FIJKLMNOPQ = sarcophagus
 # Add greater mummies and traps to the long hall. About 16 greater mummies and
 # 6 traps on-average.
 SUBST:    ' = 2:24 ^ .:210
 COLOUR:   FIJKLMNOPQ = yellow
 TILE:     FIJKL = dngn_sarcophagus_pedestal_left
 TILE:     MNOPQ = dngn_sarcophagus_pedestal_right
-: set_feature_name("granite_statue", "sarcophagus")
 : set_feature_name("escape_hatch_down", "one-way staircase leading down")
 MAP
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -598,11 +598,10 @@ TAGS:    tomb_1_centre unrand no_hmirror
 TILE:    F  = dngn_sarcophagus_pedestal_left
 TILE:    M  = dngn_sarcophagus_pedestal_right
 COLOUR:  FM = yellow
-SUBST:   FM = G
+KFEAT:   FM = sarcophagus
 SUBST:   _  = V:70 5
 NSUBST:  >  = > / | / * / _
 : tomb_1_centre_setup(_G)
-: set_feature_name("granite_statue", "sarcophagus")
 MAP
 >1..c..c.................c..c..1>
 1...c..c.4.............4.c..c...1
@@ -631,14 +630,13 @@ TAGS:    tomb_1_centre unrand no_hmirror
 TILE:    F  = dngn_sarcophagus_pedestal_left
 TILE:    M  = dngn_sarcophagus_pedestal_right
 COLOUR:  FM = yellow
-SUBST:   FM = G
+KFEAT:   FM = sarcophagus
 SUBST:   _  = V:70 5
 SHUFFLE: ABCD, EHIJ, de, fg, hi, jk
 SHUFFLE: NOPQRSTU, WXYZ6789
 SUBST:   AEdfhjNW = c, egik = +, BCDHIJOPQRSTUXYZ6789 = .
 NSUBST:  >  = > / | / * / _
 : tomb_1_centre_setup(_G)
-: set_feature_name("granite_statue", "sarcophagus")
 MAP
 ...D............3............E...
 .F.D....2.....F...M.....2....E.M.
@@ -850,7 +848,7 @@ SUBST:    HI = .
 # rooms.
 SUBST:    T = ^..., ' = ^ ':210, ' = 1:5 2:5 3:1 .:89
 SUBST:    " = ^ ":130, " = 2:3 3:1 .:96
-KFEAT:    ^ = alarm trap / net trap / zot trap / dispersal trap
+KFEAT:    ^ = alarm trap / net trap / zot trap / congregation trap
 #
 # Number of ' symbols is 211+3=214, hence statistically in the lower
 # circumference we'll have 10.7 mummies, another 10.7 guardian mummies
@@ -1054,7 +1052,7 @@ SUBST:    DE = .
 MARKER:   F = lua:hatch_name("tomb3_exit_1")
 MARKER:   H = lua:hatch_name("tomb3_exit_2")
 SUBST:    FH = <
-KFEAT:    ^ = alarm trap / net trap / zot trap / dispersal trap
+KFEAT:    ^ = alarm trap / net trap / zot trap / congregation trap
 : set_border_fill_type("permarock_wall")
 : set_feature_name("escape_hatch_down", "one-way staircase leading down")
 : set_feature_name("escape_hatch_up", "one-way staircase leading up")
@@ -1235,7 +1233,7 @@ cccccccc+cccc................cccc+ccccccc
              ................
 ENDMAP
 
-# Remove all below when TAG_MAJOR > 35
+# start TAG_MAJOR_VERSION == 34
 
 ##############################################################################
 # <<5>> Tomb save compat vaults.
@@ -1268,7 +1266,7 @@ SUBST:    d=", e=", f="
 # rooms.
 SUBST:    T = ^..., ' = ^ ':210, ' = 1:5 2:5 3:1 .:89
 SUBST:    " = ^ ":130, " = 2:3 3:1 .:96
-KFEAT:    ^ = alarm trap / net trap / zot trap w:5 / dispersal trap w:5
+KFEAT:    ^ = alarm trap / net trap / zot trap w:5 / congregation trap w:5
 : set_border_fill_type("permarock_wall")
 #
 MAP
@@ -1356,7 +1354,7 @@ KITEM:    * = * no_pickup
 # the loot pile. Add traps to treasure rooms and the arrival area.
 SUBST:    ' = $., $ = |:1 *:2 $:17, . = ^ .:240
 NSUBST:   | = 1:d / *:|
-KFEAT:    ^ = alarm trap / net trap / zot trap / dispersal trap
+KFEAT:    ^ = alarm trap / net trap / zot trap / congregation trap
 : set_border_fill_type("permarock_wall")
 MAP
 ccccccccccccccccccccccccccccccccccccccccccc
@@ -1405,7 +1403,7 @@ TAGS:  tomb_3_rune_stone_stairs unrand
 : tomb_mummy_priest_set(_G)
 KMASK: O = no_item_gen
 KITEM: O = golden rune of Zot
-KMONS: K = Khufu w:3 / greater mummy, greater mummy
+KMONS: K = Khufu w:3 / royal mummy, royal mummy
 MAP
 ccccccccccccccccccccccccccccccccccccccccc
 cccccc.............................cccccc
@@ -1428,3 +1426,5 @@ ccccccc............................cccccc
 cccccccc+ccc..................ccc+ccccccc
              ................
 ENDMAP
+
+# end TAG_MAJOR_VERSION

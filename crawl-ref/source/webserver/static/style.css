@@ -1,3 +1,9 @@
+html, body, #loader {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     background: black;
     color: white;
@@ -11,6 +17,10 @@ body {
 
 #crt {
     display: inline-block;
+}
+
+#lobby {
+    padding: 8px;
 }
 
 #lobby_body {
@@ -116,6 +126,24 @@ body {
     position: relative;
 }
 
+#play_now {
+    padding-top: 10px;
+}
+
+#admin_panel {
+    border: 1px solid lightgray;
+    padding: 10px;
+}
+
+#admin_panel_button {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+#admin_panel #announcement_text {
+    width: 60%;
+}
+
 .floating_dialog {
     position: absolute;
     left: 50px;
@@ -169,6 +197,14 @@ body {
 
 #reset_pw_submit {
     float: right;
+}
+
+#change_cur_password,#change_new_password,#change_repeat_password {
+    float: right;
+}
+
+#chpw_form label {
+    float: left;
 }
 
 .text {

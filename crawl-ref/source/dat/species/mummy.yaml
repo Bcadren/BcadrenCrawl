@@ -1,7 +1,7 @@
 TAG_MAJOR_VERSION: 34
 enum: SP_MUMMY
 monster: MONS_MUMMY
-name: Mummy
+name: "Mummy"
 difficulty: False
 difficulty_priority: 20
 aptitudes:
@@ -18,7 +18,6 @@ aptitudes:
   slings: -2
   bows: -2
   crossbows: -2
-  throwing: -2
   armour: -2
   dodging: -2
   stealth: -1
@@ -48,6 +47,7 @@ mutations:
     MUT_COLD_RESISTANCE: 1
     MUT_TORMENT_RESISTANCE: 1
     MUT_UNBREATHING: 1
+    MUT_HEAT_VULNERABILITY: 1
   13:
     MUT_NECRO_ENHANCER: 1
   26:
@@ -55,6 +55,7 @@ mutations:
 fake_mutations:
   - long: You do not eat or drink.
     short: no food or potions
-  - long: Your flesh is vulnerable to fire.
-    short: fire vulnerability
-create_enum: False
+
+# start TAG_MAJOR_VERSION == 34
+create_enum: false
+# end TAG_MAJOR_VERSION

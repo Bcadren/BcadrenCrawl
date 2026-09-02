@@ -1,0 +1,73 @@
+enum: SP_FAIRY
+monster: MONS_FAIRY
+name: "Fairy"
+adjective: "Fae"
+genus: "Fae"
+difficulty: Advanced
+difficulty_priority: 40
+species_flags:
+  - hairless
+aptitudes:
+  xp: -1
+  hp: 0
+  mp_mod: 0
+  mr: 8
+  fighting : False
+  short_blades: False
+  long_blades: False
+  axes: False
+  whips_and_flails: False
+  polearms: False
+  maces_and_staves: False
+  unarmed_combat: False
+  slings: False
+  bows: False
+  crossbows: False
+  armour: False
+  dodging: 3
+  stealth: -2
+  shields: False
+  spellcasting: 1
+  translocations: 1
+  fire_magic: 1
+  poison_magic: -1
+size: tiny
+str: 2
+int: 10
+dex: 12
+levelup_stat_frequency: 4
+levelup_stats:
+  - int
+  - dex
+mutations:
+  1:
+    MUT_SLOW: 1
+    MUT_INSUBSTANTIAL: 1
+    MUT_BIG_WINGS: 1
+    MUT_FAIRY_LIGHT: 1
+fake_mutations:
+  - long: You are too small to use any gear.
+    short: no armour or weapons
+  - long:  You can wear a single ring or amulet completely around your body.
+    short: only one jewelry slot
+  - long: You are incapable of melee of any kind.
+    short: no melee attacks
+  - long: Your magic reserves are extremely low but spells that normally cost one mana are free and all other spells cost one mana.
+    short: fairy magic
+  - long: You are extremely frail but all attacks that strike you do exactly one damage.
+    short: fairy shield
+  - long: The effect of potions and godly healing effects is reduced to match your tiny health and magic reserves.
+    short: decreased potion and divine healing
+recommended_jobs:
+  - JOB_FIRE_ELEMENTALIST
+  - JOB_ICE_ELEMENTALIST
+  - JOB_AIR_ELEMENTALIST
+  - JOB_EARTH_ELEMENTALIST
+  - JOB_SUMMONER
+recommended_weapons:
+  - SK_UNARMED_COMBAT
+altar_action: float above
+
+# start TAG_MAJOR_VERSION == 34
+create_enum: false
+# end TAG_MAJOR_VERSION

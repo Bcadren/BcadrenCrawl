@@ -30,7 +30,7 @@
 {{
 function interest_check(e)
   if you.in_branch("D") then
-    if you.absdepth() > 9 then
+    if you.absdepth() > 6 then
       e.tags('extra')
     end
   else
@@ -50,7 +50,7 @@ NAME:    jmf_multi_god_temple
 TAGS:    transparent
 SHUFFLE: abc
 SUBST:   a:+, b:x, c:x
-DEPTH:   D:8-, Vaults
+DEPTH:   D:4-, Vaults
 MAP
 ............
 .axxxxxxxxa.
@@ -68,7 +68,7 @@ ENDMAP
 
 NAME:  jmf_multi_god_temple2
 TAGS:  transparent
-DEPTH: D:8-, Vaults
+DEPTH: D:4-, Vaults
 MAP
 ............
 ..vvvvvvvv..
@@ -90,9 +90,9 @@ ENDMAP
 
 NAME:   basic_altar
 TAGS:   allow_dup extra no_monster_gen transparent decor
-DEPTH:  5-
+DEPTH:  2-
 CHANCE: 20% (Orc)
-CHANCE: 10% (Snake, Forest)
+CHANCE: 10% (Snake)
 CHANCE: 8% (D, Elf)
 CHANCE: 5% (Lair, Slime, Vaults, Crypt)
 CHANCE: 1% (Zot)
@@ -146,7 +146,7 @@ MAP
 ENDMAP
 
 NAME:  lemuel_oklob_altar
-DEPTH: D:6-, Lair, Snake, Shoals
+DEPTH: D:4-, Lair, Snake, Shoals
 MONS:  oklob plant, plant
 MAP
  2
@@ -158,7 +158,7 @@ NAME:  lemuel_tele_altar
 TAGS:  transparent decor
 DEPTH: D:2-, Vaults
 SUBST: Y = X x
-KFEAT: X = known teleport trap
+KFEAT: X = teleport trap
 KMASK: _C = opaque
 MAP
 ...........
@@ -177,7 +177,7 @@ ENDMAP
 NAME:  lemuel_statue_altar
 TAGS:  transparent decor
 DEPTH: D:2-, Orc, Depths, Vaults, Elf, Crypt
-: if you.absdepth() < 10 then
+: if you.absdepth() < 5 then
 SUBST: F = G
 : end
 SUBST: F = G:99 F:1
@@ -188,6 +188,7 @@ KMONS: F = orange crystal statue
 : end
 : interest_check(_G)
 KMASK: _>C = opaque
+KPROP: _>C = no_tele_into
 MAP
 .........
 .ccccccc.
@@ -215,7 +216,7 @@ ENDMAP
 # This is the generic version. A special version may occur for Orc, almost always
 # to Beogh. Only one of these can come up.
 NAME:  david_defended_altar_elf
-DEPTH: D:7-14, Elf
+DEPTH: D:4-7, Elf
 MONS:  patrolling deep elf mage / w:30 nothing
 TAGS:  uniq_defended_altar transparent
 MAP
@@ -229,7 +230,7 @@ ENDMAP
 # The mix of deep and shallow water is intended to keep the centaurs from
 # escaping without requiring the player to be able to cross deep water.
 NAME:  lemuel_centaur_altar
-DEPTH: D:7-15, Shoals, Lair
+DEPTH: D:4-, Shoals, Lair
 TAGS:  no_pool_fixup no_monster_gen
 MONS:  patrolling centaur
 MAP
@@ -246,9 +247,9 @@ xxx...@..xxxx
 ENDMAP
 
 NAME:  lemuel_angel_altar
-DEPTH: D:3-, Vaults
+DEPTH: D:2-, Vaults
 TAGS:  no_trap_gen
-: if you.absdepth() > 12 then
+: if you.absdepth() > 5 then
 MONS: patrolling Daeva / patrolling Angel
 KFEAT:  n = iron_grate
 : else
@@ -271,6 +272,26 @@ MAP
    .....
 ENDMAP
 
+NAME:   amcnicky_altar_gilded
+TAGS:   transparent no_monster_gen
+DEPTH:  D:3-, Lair, Orc, Elf, Crypt
+SUBST: q = qr
+KITEM: q = gold q:1-2
+KITEM: p = gold q:5-10
+KITEM: r = gold q:3-5
+KFEAT: + = closed_clear_door
+MAP
+.........
+.mmmmmmm.
+.m.qrq.m.
+.mqrprqm.
+.+rpCprm.
+.mqrprqm.
+.m.qrq.m.
+.mmmmmmm.
+.........
+ENDMAP
+
 ##############################################################################
 # III   Altars to minor gods
 #
@@ -284,16 +305,16 @@ ENDMAP
 #       access the altar early.
 #
 NAME:  lemuel_hellish_altar
-DEPTH: D:8-, Crypt, Geh
+DEPTH: D:4-, Crypt, Geh
 TAGS:  no_monster_gen
-MONS:  rust devil / orange demon
-MONS:  hell beast / red devil
-MONS:  iron imp
+MONS:  taeringu / nychdod
+MONS:  helvityr / cythraul
+MONS:  haearbwca
 MONS:  hellion
 SUBST: 2 = 23
 SUBST: 2 = 12
 SUBST: 3 = 3L
-: if you.absdepth() >14 then
+: if you.absdepth() > 7 then
 SUBST: 1 = 1:20 4
 : end
 SUBST: L = l.
@@ -331,9 +352,9 @@ MARKER:     P  = lua:fog_machine { cloud_type="blue smoke", walk_dist=1, \
 : if crawl.coinflip() then
 KFEAT:      _ = altar_lugonu
 KFEAT:      P = enter_abyss
-: kmons("1 = kobold w:" .. you.absdepth() .. " ; quick blade ego:distortion " ..
+: kmons("1 = kobold w:" .. you.absdepth() .. " ; tanto ego:distortion " ..
 :       "w:6 | rapier ego:distortion | short sword ego:distortion / kobold "   ..
-:       "w:80 ; short sword | rapier | quick blade w:3")
+:       "w:80 ; short sword | rapier | tanto w:3")
 : else
 KFEAT:      _ = altar_xom
 :   if crawl.one_chance_in(4) then
@@ -341,9 +362,9 @@ KMONS:      P = orange crystal statue
 :   else
 KFEAT:      P = enter_abyss / fountain_sparkling / stone_arch
 :   end
-: kmons("1 = kobold w:" .. you.absdepth() .. " ; quick blade ego:chaos " ..
+: kmons("1 = kobold w:" .. you.absdepth() .. " ; tanto ego:chaos " ..
 :       "w:6 | rapier ego:chaos | short sword ego:chaos / kobold w:80 ;"  ..
-:       "short sword | rapier | quick blade w:3")
+:       "short sword | rapier | tanto w:3")
 : end
 MAP
   ccccc
@@ -361,11 +382,62 @@ cccyy..yycc
      @@
 ENDMAP
 
+# Authors note: this could be a good candidate for expansion into a group
+# of vault layouts that share a weight allocation, each with a different
+# 'pattern' of hand-crafted corruption layouts
+#
+NAME:     amcnicky_altar_lugonu_corruption
+TAGS:     transparent no_monster_gen
+# Lugonu cares not about moderate vault placement
+DEPTH:    D:3-, Vaults, Lair, Orc, Elf, Crypt, Depths, Slime:1-4, Shoals,\
+            Spider, Snake, Swamp, Zot:1-4
+: if crawl.coinflip() then
+SUBST:    ' = ccc'.
+: else
+SUBST:    ' = c'.
+: end
+SUBST:    z = zz.
+# Ordered chaos, like the abyss builder
+COLOUR:   ' : blue / green / cyan / red / magenta / brown / \
+              lightblue / lightgreen / lightcyan / lightred / lightmagenta / \
+              yellow
+COLOUR:   uq : blue / green / cyan / red / magenta / brown / \
+              lightblue / lightgreen / lightcyan / lightred / lightmagenta / \
+              yellow
+COLOUR:   z : blue / green / cyan / red / magenta / brown / \
+              lightblue / lightgreen / lightcyan / lightred / lightmagenta / \
+              yellow
+COLOUR:   c : blue / green / cyan / red / magenta / brown / \
+              lightblue / lightgreen / lightcyan / lightred / lightmagenta / \
+              yellow
+FTILE:    'upqrzc : floor_nerves
+NSUBST:   u = 1=p / 1=r / 1=q / 2=q...
+KFEAT:    p = altar_lugonu
+KFEAT:    r = enter_abyss
+KMONS:    q = lurking_horror
+MARKER:   r = lua:fog_machine { cloud_type="purple smoke", walk_dist=1, \
+            size=1, pow_max=5, delay=10, buildup_amnt=7, buildup_time=7, \
+            spread_rate=2, start_clouds=1, colour="purple" }
+TILE:     c : wall_abyss
+MAP
+ .'z'''c.
+.cc'z''cc.
+.c'z'z''''.
+.z''u'z''''.
+.'z'u''z'zz.
+.'uu'u''z''.
+.''u'''z''.
+.c''z'z'z''.
+ .cc'z'z''c.
+  .c''z'''.
+   .'z'z'.
+    .'z'.
+ENDMAP
 
 ### Altars possibly to Beogh #################################################
 
 NAME:  david_defended_altar_orc
-DEPTH: D:7-14, Orc
+DEPTH: D:3-7, Orc
 MONS:  patrolling orc priest
 TAGS:  uniq_defended_altar transparent
 KFEAT: _ = altar_beogh / w:1 altar_okawaru / w:1 altar_makhleb / w:1 altar_trog
@@ -382,16 +454,14 @@ ENDMAP
 
 NAME:   jiyva_altar_1
 TAGS:   transparent
-DEPTH:  D:8-
+DEPTH:  D:4-
 KFEAT:  _ = altar_jiyva
-: if you.depth() > 9 then
 NSUBST: 1 = 3:1 / *:2
-: elseif you.depth() > 11 then
-NSUBST: 1 = 2:1 / *:2
-: elseif you.depth() > 13 then
-NSUBST: 1 = 1:1 / *:2
-: end
-MONS:  jelly, slime creature
+NSUBST: . = 6:a / 4:b / *:.
+KFEAT: a12 = slimy_water
+KMONS: 1 = jelly
+KMONS: 2 = slime creature
+KFEAT: b = slimeshroom
 MAP
 .....
 ..1..
@@ -403,7 +473,7 @@ ENDMAP
 ### Ecumenical altars ########################################################
 
 NAME:   chequers_ecumenical_altar_simple
-DEPTH:  D:2-3
+DEPTH:  D:2
 TAGS:  uniq_ecumenical_altar chance_ecumenical_altar transparent
 CHANCE: 10%
 KFEAT:  _ = altar_ecumenical
@@ -417,7 +487,7 @@ MAP
 ENDMAP
 
 NAME: chequers_ecumenical_altar_simple_redux
-DEPTH: D:2-3
+DEPTH: D:2
 TAGS:  uniq_ecumenical_altar chance_ecumenical_altar transparent
 CHANCE: 10%
 KFEAT:  _ = altar_ecumenical
@@ -433,7 +503,7 @@ MAP
 ENDMAP
 
 NAME:   chequers_ecumenical_altar_grove
-DEPTH:  D:2-3
+DEPTH:  D:2
 TAGS:   uniq_ecumenical_altar chance_ecumenical_altar transparent
 CHANCE: 10%
 WEIGHT: 5
@@ -464,7 +534,7 @@ MAP
 ENDMAP
 
 NAME: chequers_ecumenical_altar_lobes
-DEPTH: D:2-3
+DEPTH: D:2
 TAGS:  uniq_ecumenical_altar chance_ecumenical_altar
 CHANCE: 10%
 WEIGHT: 5
@@ -491,7 +561,7 @@ xxxtGpppp..ppppGtxxx
 ENDMAP
 
 NAME: chequers_ecumenical_altar_twisty
-DEPTH: D:2-3
+DEPTH: D:2
 TAGS:  uniq_ecumenical_altar chance_ecumenical_altar transparent
 CHANCE: 10%
 WEIGHT: 5
@@ -512,7 +582,7 @@ xx.x
 ENDMAP
 
 NAME: chequers_ecumenical_altar_island
-DEPTH: D:2-3
+DEPTH: D:2
 TAGS:  uniq_ecumenical_altar chance_ecumenical_altar
 CHANCE: 10%
 KFEAT: _ = altar_ecumenical

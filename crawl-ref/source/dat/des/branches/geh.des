@@ -43,7 +43,7 @@ ENDMAP
 
 NAME:  lemuel_hellion_isle
 DEPTH: Geh
-MONS:  hellion, brimstone fiend
+MONS:  hellion, rhuddgoch
 SUBST: L = l.
 SUBST: 1 = l:2 1
 MAP
@@ -71,7 +71,7 @@ NAME:    hangedman_generic_boss_arena
 TAGS:    no_monster_gen
 DEPTH:   Geh, !Geh:$
 MONS:    hell knight, hellion, balrug, balrug
-MONS:    hell hound, sun demon, hell hog
+MONS:    hell hound, sturnulos, hell hog
 KFEAT:   L = l
 SHUFFLE: dD, eE / fF / 56, 56 / 65 / 55 / 66 / 77 / '', ABC / 234 / <<<, 234 / 322
 NSUBST:  < : 1:) / 1:( / 1:[[[<<>
@@ -140,30 +140,30 @@ NAME:    hangedman_elemental_grid_stream
 TAGS:    transparent no_monster_gen no_pool_fixup patrolling allow_dup
 DEPTH:   Geh, Coc, Zot:1-4
 :  if you.in_branch("Geh") then
-KMONS:   1 = brimstone fiend w:9 / hell sentinel w:1
+KMONS:   1 = rhuddgoch w:9 / gwarchodwr w:1
 KMONS:   2 = hellion / balrug
-KMONS:   34 = smoke demon / red devil
+KMONS:   34 = mygdarth / cythraul
 KMONS:   56 = skeletal warrior ; broad axe ego:molten ident:type | \
          halberd ego:molten ident:type w:7 | morningstar ego:molten ident:type
 KMONS:   7 = hell knight
 SUBST:   w = l, W = .
 KPROP:   l = no_cloud_gen
 :  elseif you.in_branch("Coc") then
-KMONS:   1 = ice fiend
-KMONS:   2 = blizzard demon
-KMONS:   34 = ice devil
+KMONS:   1 = Vetrifl
+KMONS:   2 = cenysus
+KMONS:   34 = rypuiwel
 KMONS:   56 = reaper ; scythe ego:freezing ident:type / shard shrike w:5
 KMONS:   7 = alligator snapping turtle skeleton / anaconda simulacrum / \
          golden dragon simulacrum w:5 / iron troll simulacrum w:5 / hydra simulacrum
-KMONS:   0 = skeletal warrior ; hunting sling ego:freezing ident:type . sling bullet
+KMONS:   0 = skeletal warrior ; hunting sling ego:freezing ident:type
 SUBST:   l = w, W = .
 :  else
 KMONS:   1 = shard shrike
 KMONS:   2 = seven-headed hydra simulacrum / eight-headed hydra simulacrum
 KMONS:   3 = orb of fire / hellephant w:5
 KMONS:   4 = draconian scorcher
-KMONS:   5 = red draconian ; cloak . mace ego:freezing ident:type
-KMONS:   6 = white draconian ; cloak . mace ego:molten ident:type
+KMONS:   5 = golden draconian ; cloak . mace ego:freezing ident:type
+KMONS:   6 = golden draconian ; cloak . mace ego:molten ident:type
 KFEAT:   1 = w
 KFEAT:   3 = l
 NSUBST:  0 = 1:5 / 1:6
@@ -193,20 +193,20 @@ TAGS:    no_monster_gen no_pool_fixup allow_dup
 DEPTH:   Geh, Coc, Zot, !Geh:$, !Coc:$, !Zot:$, Abyss
 SHUFFLE: 123456, }] / }] / {[ / **
 :  if you.in_branch("Geh") then
-MONS:    brimstone fiend / balrug / hellion
-MONS:    sun demon / smoke demon / hell knight
+MONS:    rhuddgoch / balrug / hellion
+MONS:    sturnulos / mygdarth / hell knight
 SUBST:   w = l, f = F, %* = ., 2 = 1, 3456 = 2
 :  elseif you.in_branch("Coc") then
-MONS:    ice fiend / blizzard demon / shard shrike / \
+MONS:    Vetrifl / cenysus / shard shrike / \
          reaper ; scythe ego:freezing ident:type
 MONS:    eight-headed hydra simulacrum w:2 / \
          seven-headed hydra simulacrum w:2 / \
-         ice dragon simulacrum w:3 / freezing wraith w:3 / ice devil
+         ice dragon simulacrum w:3 / freezing wraith w:3 / rypuiwel
 SUBST:   l = w, F = f, %* = ., 2 = 1, 3456 = 2
 :  elseif you.in_branch("Abyss") then
-MONS:    blizzard demon / frost giant / dancing weapon ; battleaxe ego:freezing ident:type w:5
+MONS:    cenysus / frost giant / dancing weapon ; battleaxe ego:freezing ident:type w:5
 MONS:    simulacrum w:12 / white draconian / water elemental w:5 / \
-         white very ugly thing w:15 / ice devil w:8
+         white very ugly thing w:15 / rypuiwel w:8
 MONS:    balrug / hellion / fire crab w:5 / hellephant w:5
 MONS:    hell hound w:8 / red draconian / fire elemental w:5 / \
          red very ugly thing w:15 / efreet w:12
@@ -214,8 +214,8 @@ SUBST:   * = *||, {}[] = ***|, xc = xxxccb, 5 = 2, 6 = 4
 :  else
 KMONS:   123 = fire dragon
 KMONS:   456 = ice dragon
-KMONS:   789 = red draconian ; cloak . long sword ego:freezing ident:type
-KMONS:   ABC = white draconian ; cloak . long sword ego:molten ident:type
+KMONS:   789 = golden draconian ; cloak . long sword ego:freezing ident:type
+KMONS:   ABC = golden draconian ; cloak . long sword ego:molten ident:type
 KMONS:   D = golden dragon
 SUBST:   c : c:5 b:2 n:1
 SHUFFLE: 123456 / 1784AB / 789ABC / 1D'4D'
@@ -411,7 +411,7 @@ ENDMAP
 NAME:   geh_old
 TAGS:   no_rotate
 ORIENT: encompass
-MONS:   patrolling Asmodeus, brimstone fiend, Balrug, molten gargoyle
+MONS:   patrolling Asmodeus, rhuddgoch, Balrug, molten gargoyle
 : serpent_of_hell_setup(_G)
 : geh_setup(_G)
 MAP
@@ -485,10 +485,10 @@ ENDMAP
 NAME:   geh_mu
 ORIENT: encompass
 TAGS:   no_rotate
-MONS:   patrolling Asmodeus, brimstone fiend
-MONS:   balrug, sun demon, hellion, fire giant
+MONS:   patrolling Asmodeus, rhuddgoch
+MONS:   balrug, sturnulos, hellion, fire giant
 KMONS:  7 = molten gargoyle
-KMONS:  8 = red devil
+KMONS:  8 = cythraul
 # Place one Serpent in the inner circle.
 : serpent_of_hell_setup(_G)
 KFEAT:  D = lava
@@ -570,6 +570,7 @@ NAME:    evilmike_geh
 ORIENT:  encompass
 SHUFFLE: ([{<
 KMASK:   . = no_monster_gen
+KPROP:   mlLR = no_tele_into
 NSUBST:  A = 1:+ / *=+cc
 SUBST:   B = ccc+
 SHUFFLE: CI / ''
@@ -579,13 +580,13 @@ SUBST:   CE = +, IF : cc+
 SUBST:   N : ncc
 SUBST:   '" = -
 SHUFFLE: O1$ / *3|
-MONS:    patrolling asmodeus, brimstone fiend, brimstone fiend
-MONS:    sun demon, balrug, hellion, fire giant
-KMONS:   8 = sun demon / efreet / w:20 molten gargoyle
+MONS:    patrolling asmodeus, rhuddgoch, rhuddgoch
+MONS:    sturnulos, balrug, hellion, fire giant
+KMONS:   8 = sturnulos / efreet / w:20 molten gargoyle
 KMONS:   9 = efreet
 NSUBST:  l = 10:R / 25:V / *:l
 SUBST:   R = RRV
-KMONS:   R = patrolling smoke demon
+KMONS:   R = patrolling mygdarth
 KMONS:   V = fire vortex
 : serpent_of_hell_setup(_G)
 SUBST:   4 = 444499566-
@@ -677,8 +678,8 @@ ENDMAP
 
 NAME:    geh_grunt
 ORIENT:  encompass
-MONS:    patrolling Asmodeus, Brimstone Fiend, balrug
-MONS:    hellion, sun demon, fire giant, red devil / crimson imp w:20
+MONS:    patrolling Asmodeus, rhuddgoch, balrug
+MONS:    hellion, sturnulos, fire giant, cythraul / llaibwca w:20
 KMONS:   9 = molten gargoyle
 SHUFFLE: {[(<
 SUBST:   - = ll.
@@ -770,14 +771,14 @@ TAGS: no_vmirror no_monster_gen
 WEIGHT: 0
 ORIENT: encompass
 MONS: patrolling Asmodeus
-MONS: smoke demon w:9 / sun demon w:9 / hellion w:1 / balrug w:1
-MONS: hell knight / fire giant w:2, Brimstone Fiend, fire giant / balrug w:2
-MONS: red devil / sun demon w:1 / smoke demon w:1, hellion
+MONS: mygdarth w:9 / sturnulos w:9 / hellion w:1 / balrug w:1
+MONS: hell knight / fire giant w:2, rhuddgoch, fire giant / balrug w:2
+MONS: cythraul / sturnulos w:1 / mygdarth w:1, hellion
 NSUBST: 2  = 10:2 / *:.
 NSUBST: 4  = 2:4 / *:.
 KFEAT:  g  = iron_grate
 NSUBST: l  = 3:L / *:l
-KMONS:  G  = cacodemon
+KMONS:  G  = titivilus
 KMONS:  L  = flying skull
 KFEAT:  GL = lava
 KITEM:  A  = any weapon good_item / any armour good_item
@@ -829,11 +830,11 @@ ENDMAP
 
 NAME:    geh_hangedman
 ORIENT:  encompass
-MONS:    patrolling Asmodeus, brimstone fiend, balrug
+MONS:    patrolling Asmodeus, rhuddgoch, balrug
 MONS:    hellion, fire giant, hell knight, hell hog
-KMONS:   y = red devil w:20 / fire elemental / salamander
+KMONS:   y = cythraul w:20 / fire elemental / salamander
 KMONS:   Y = molten gargoyle
-KMONS:   zZ = sun demon / efreet / smoke demon w:5 / \
+KMONS:   zZ = sturnulos / efreet / mygdarth w:5 / \
               fire dragon skeleton w:5
 KITEM:   $ = $ no_pickup
 KFEAT:   yYZ = lava
@@ -933,8 +934,8 @@ ENDMAP
 
 NAME:    geh_grunt_pentagon
 ORIENT:  encompass
-MONS:    patrolling Asmodeus, Brimstone Fiend, balrug
-MONS:    hellion, sun demon, fire giant, red devil / crimson imp w:20
+MONS:    patrolling Asmodeus, rhuddgoch, balrug
+MONS:    hellion, sturnulos, fire giant, cythraul / llaibwca w:20
 KMONS:   9 = molten gargoyle
 SHUFFLE: {[(
 SUBST:   - = ll.

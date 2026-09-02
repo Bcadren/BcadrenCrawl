@@ -15,6 +15,7 @@
 #include "act-iter.h"
 #include "areas.h"
 #include "cloud.h"
+#include "colour.h"
 #include "directn.h"
 #include "env.h"
 #include "item-prop.h"
@@ -40,9 +41,13 @@ spret cast_iood(actor *caster, int pow, bolt *beam, float vx, float vy,
     fail_check();
 
     int mtarg = !beam ? MHITNOT :
-                beam->target == you.pos() ? MHITYOU : mgrd(beam->target);
+        beam->target == you.pos() ? int{ MHITYOU } : env.mgrid(beam->target);
+    bool chaos = determine_chaos(caster, SPELL_IOOD);
+    bool menace = caster->staff() && staff_enhances_spell(caster->staff(), SPELL_IOOD)
+                                  && (get_staff_facet(*caster->staff()) == SPSTF_MENACE);
 
-    monster *mon = place_monster(mgen_data(MONS_ORB_OF_DESTRUCTION,
+    monster *mon = place_monster(mgen_data(
+                chaos ? MONS_ORB_OF_CHAOS : MONS_ORB_OF_DESTRUCTION,
                 (is_player) ? BEH_FRIENDLY :
                     ((monster*)caster)->friendly() ? BEH_FRIENDLY : BEH_HOSTILE,
                 coord_def(),
@@ -82,7 +87,7 @@ spret cast_iood(actor *caster, int pow, bolt *beam, float vx, float vy,
 
     mon->props[IOOD_KC].get_byte() = (is_player) ? KC_YOU :
         ((monster*)caster)->friendly() ? KC_FRIENDLY : KC_OTHER;
-    mon->props[IOOD_POW].get_short() = pow;
+    mon->props[IOOD_POW].get_short() = chaos ? pow * 1.25 : menace ? pow * 1.5 : pow;
     mon->flags &= ~MF_JUST_SUMMONED;
     mon->props[IOOD_CASTER].get_string() = caster->as_monster()
         ? caster->name(DESC_A, true)
@@ -230,6 +235,15 @@ static void _iood_stop(monster& mon, bool msg = true)
     if (!mon.alive())
         return;
 
+    if (mon.has_ench(ENCH_ROLLING))
+    {
+        // Deduct the energy first - the move they made that just stopped
+        // them was a speed 14 move.
+        mon.lose_energy(EUT_MOVE);
+        mon.del_ench(ENCH_ROLLING, !msg);
+        return;
+    }
+
     if (msg)
         simple_monster_message(mon, " falls apart.");
     dprf("iood: dissipating");
@@ -265,22 +279,104 @@ static void _fuzz_direction(const actor *caster, monster& mon, int pow)
 // Alas, too much differs to reuse beam shield blocks :(
 static bool _iood_shielded(monster& mon, actor &victim)
 {
-    if (!victim.shielded() || victim.incapacitated())
+    const int pro_block = victim.shield_bonus();
+
+    if (pro_block <= 0 || victim.incapacitated())
         return false;
 
     const int to_hit = 15 + (mons_is_projectile(mon.type) ?
         mon.props[IOOD_POW].get_short()/12 : mon.get_hit_dice()/2);
     const int con_block = random2(to_hit + victim.shield_block_penalty());
-    const int pro_block = victim.shield_bonus();
     dprf("iood shield: pro %d, con %d", pro_block, con_block);
     return pro_block >= con_block;
 }
 
+static bool _boulder_hit(monster& mon, const coord_def &pos)
+{
+    actor *victim = actor_at(pos);
+    if (victim)
+    {
+        simple_monster_message(mon, (string(" smashes into ")
+            + victim->name(DESC_THE) + "!").c_str());
+
+        int dam = victim->apply_ac(roll_dice(3, 20), 60);
+        if (victim->is_player())
+            ouch(dam, KILLED_BY_ROLLING, 0U, nullptr, you.can_see(mon), mon.name(DESC_A).c_str());
+        else
+            victim->hurt(&mon, dam);
+    }
+
+    noisy(5, pos);
+    return victim && victim->alive();
+}
+
+dice_def iood_damage(int pow, int dist, bool random)
+{
+    bool for_display = (dist == INFINITE_DISTANCE);
+    if (for_display)
+        dist = 0;
+
+    pow = pow * 10 + pow * dist;
+    if (random)
+        pow = div_rand_round(pow, 10);
+    else
+        pow = div_round_up(pow, 10);
+    pow = stepdown_value(pow, 30, 30, 200, -1);
+    if (dist < 4 && !for_display)
+        pow = pow * (dist*2+3) / 10;
+    return dice_def(9, pow / 4);
+}
+
 static bool _iood_hit(monster& mon, const coord_def &pos, bool big_boom = false)
 {
+    if (mon.has_ench(ENCH_ROLLING))
+        return _boulder_hit(mon, pos);
+
+    bool chaos = (mon.type == MONS_ORB_OF_CHAOS);
+
     bolt beam;
-    beam.name = "icy sphere";
-    beam.flavour = BEAM_DEVASTATION;
+    if (chaos)
+    {
+        beam.name = "entropic orb";
+        beam.real_flavour = BEAM_CHAOTIC_DEVASTATION;
+        beam.flavour = BEAM_CHAOTIC_DEVASTATION;
+        beam.fake_flavour();
+
+        // Normal bolt bounce doesn't work, but entropic spheres should be allowed to bolt bounce.
+        if (env.grid(pos) == DNGN_CRYSTAL_WALL)
+        {
+            if (coinflip())
+            {
+                mpr("The entropic orb bounces off the crystal wall.");
+                return false;
+            }
+            else
+            {
+                beam.real_flavour = BEAM_ICY_DEVASTATION;
+                beam.flavour = BEAM_ICY_DEVASTATION;
+            }
+        }
+        else if (cell_is_solid(pos) && !actor_at(pos) && !feat_is_tree(env.grid(pos)))
+        {
+            if (one_chance_in(5))
+            {
+                mpr("The entropic orb bounces off the wall.");
+                return false;
+            }
+            else
+            {
+                beam.real_flavour = BEAM_ICY_DEVASTATION;
+                beam.flavour = BEAM_ICY_DEVASTATION;
+            }
+        }
+    }
+    else
+    {
+        beam.name = "icy sphere";
+        beam.real_flavour = BEAM_ICY_DEVASTATION;
+        beam.flavour = BEAM_ICY_DEVASTATION;
+        beam.colour = WHITE;
+    }
     beam.attitude = mon.attitude;
 
     actor *caster = actor_by_mid(mon.summoner);
@@ -302,22 +398,18 @@ static bool _iood_hit(monster& mon, const coord_def &pos, bool big_boom = false)
             beam.reflector = rmon ? refl_mid : caster->mid;
         }
     }
-    beam.colour = WHITE;
     beam.glyph = dchar_glyph(DCHAR_FIRED_BURST);
     beam.range = 1;
     beam.source = pos;
     beam.target = pos;
     beam.hit = AUTOMATIC_HIT;
     beam.source_name = mon.props[IOOD_CASTER].get_string();
+    beam.origin_spell = SPELL_IOOD;
 
     int pow = mon.props[IOOD_POW].get_short();
     const int dist = mon.props[IOOD_DIST].get_int();
-    pow = div_rand_round(pow * 10 + pow * dist, 10);
-    pow = stepdown_value(pow, 30, 30, 200, -1);
     ASSERT(dist >= 0);
-    if (dist < 4)
-        pow = pow * (dist*2+3) / 10;
-    beam.damage = dice_def(9, pow / 4);
+    beam.damage = iood_damage(pow, dist);
 
     if (dist > 7)
         beam.name = "huge " + beam.name;
@@ -341,7 +433,8 @@ static bool _iood_hit(monster& mon, const coord_def &pos, bool big_boom = false)
 // returns true if the orb is gone
 bool iood_act(monster& mon, bool no_trail)
 {
-    ASSERT(mons_is_projectile(mon.type));
+    bool iood = mons_is_projectile(mon.type);
+    ASSERT(iood || mon.has_ench(ENCH_ROLLING));
 
     float x = mon.props[IOOD_X];
     float y = mon.props[IOOD_Y];
@@ -364,8 +457,7 @@ bool iood_act(monster& mon, bool no_trail)
     // If the target is gone, the orb continues on a ballistic course since
     // picking a new one would require intelligence.
 
-    // IOODs can't home in on a submerged creature.
-    if (foe && !foe->submerged())
+    if (foe)
     {
         const coord_def target = foe->pos();
         float dx = target.x - x;
@@ -427,7 +519,7 @@ move_again:
         return true;
     }
 
-    if (mon.props.exists(IOOD_FLAWED))
+    if (iood && mon.props.exists(IOOD_FLAWED))
     {
         const actor *caster = actor_by_mid(mon.summoner);
         if (!caster || caster->pos().origin() ||
@@ -441,8 +533,10 @@ move_again:
     if (pos == mon.pos())
         return false;
 
+    bool chaos = mon.type == MONS_ORB_OF_CHAOS;
+
     if (!no_trail)
-        place_cloud(CLOUD_COLD, starting_pos, 2 + random2(3), &mon);
+        place_cloud(iood ? chaos ? CLOUD_CHAOS : CLOUD_COLD : CLOUD_DUST, starting_pos, 2 + random2(3), &mon);
 
     actor *victim = actor_at(pos);
     if (cell_is_solid(pos) || victim)
@@ -451,14 +545,21 @@ move_again:
             && you.see_cell(pos)
             && you.see_cell(starting_pos))
         {
-            mprf("%s hits %s", mon.name(DESC_THE, true).c_str(),
+            mprf("%s hits %s.", mon.name(DESC_THE, true).c_str(),
                  feature_description_at(pos, false, DESC_A).c_str());
+
+            if (!iood) // boulders need to stop now
+            {
+                _iood_stop(mon);
+                // Can't hurt rock worms anyway.
+                return true;
+            }
         }
 
         monster* mons = (victim && victim->is_monster()) ?
             (monster*) victim : 0;
 
-        if (mons && mons_is_projectile(victim->type))
+        if (mons && iood && mons_is_projectile(victim->type))
         {
             // Weak orbs just fizzle instead of exploding.
             if (mons->props[IOOD_DIST].get_int() < 2
@@ -494,17 +595,38 @@ move_again:
             }
         }
 
-        if (mons && (mons->submerged() || mons->type == MONS_BATTLESPHERE))
+        if (mons && mon.has_ench(ENCH_ROLLING) && mons->has_ench(ENCH_ROLLING))
         {
-            // Try to swap with the submerged creature.
+            if (mon.observable())
+                mpr("The boulders collide with a stupendous crash!");
+            else
+                mpr("You hear a loud crashing sound!");
+            noisy(20, pos);
+
+            // Remove ROLLING and add DAZED
+            _iood_stop(mon);
+            _iood_stop(*mons);
+            if (!mon.clarity())
+                mon.add_ench(ENCH_CONFUSION);
+            if (!mons->clarity())
+                mons->add_ench(ENCH_CONFUSION);
+            return true;
+        }
+
+        if (mons && ((mons->type == MONS_BATTLESPHERE) || (mons->type == MONS_CEILING_CRAWLER)))
+        {
+            if (mons->type == MONS_CEILING_CRAWLER)
+                mprf("%s passes under %s", mon.name(DESC_THE).c_str(), mons->name(DESC_THE).c_str());
+
+            // Try to swap with the battlesphere.
             if (mon.swap_with(mons))
             {
-                dprf("iood: Swapping with a submerged monster.");
+                dprf("iood: Swapping with a battlesphere.");
                 return false;
             }
             else // if swap fails, move ahead
             {
-                dprf("iood: Boosting above a submerged monster (can't swap).");
+                dprf("iood: Boosting above a battlesphere (swap failed).");
                 mon.lose_energy(EUT_MOVE);
                 goto move_again;
             }
@@ -522,7 +644,7 @@ move_again:
                     simple_monster_message(*mons, (" blocks "
                         + mon.name(DESC_THE, true) + ".").c_str());
                 }
-                victim->shield_block_succeeded(&mon);
+                victim->shield_block_succeeded();
                 _iood_stop(mon);
                 return true;
             }
@@ -548,10 +670,10 @@ move_again:
                 {
                     if (shield && shield_reflects(*shield))
                     {
-                        mprf("%s reflects %s with %s %s!",
+                        mprf("%s reflects %s off %s %s!",
                              victim->name(DESC_THE, true).c_str(),
                              mon.name(DESC_THE, true).c_str(),
-                             mon.pronoun(PRONOUN_POSSESSIVE).c_str(),
+                             victim->pronoun(PRONOUN_POSSESSIVE).c_str(),
                              shield->name(DESC_PLAIN).c_str());
                         ident_reflector(shield);
                     }
@@ -568,11 +690,11 @@ move_again:
                 }
                 else
                 {
-                    mprf("%s bounces off thin air!",
+                    mprf("%s bounces off of thin air!",
                          mon.name(DESC_THE, true).c_str());
                 }
             }
-            victim->shield_block_succeeded(&mon);
+            victim->shield_block_succeeded();
 
             // mid_t is unsigned so won't fit in a plain int
             mon.props[IOOD_REFLECTOR] = (int64_t) victim->mid;
@@ -589,7 +711,29 @@ move_again:
         }
 
         if (_iood_hit(mon, pos))
+        {
+            if (!iood)
+                _iood_stop(mon);
             return true;
+        }
+        else if (iood)
+        {
+            mon.props[IOOD_VX] = vx = -vx;
+            mon.props[IOOD_VY] = vy = -vy;
+
+            mon.lose_energy(EUT_MOVE);
+            goto move_again;
+        }
+    }
+
+    // Boulders stop at lava/water to prevent unusual behaviour;
+    // skimming across the water like a pebble could be justifiable, but
+    // it raises too many questions.
+    if (!iood && (!feat_has_solid_floor(env.grid(pos)) || feat_is_water(env.grid(pos))))
+    {
+        mprf("%s screeches to a halt.", mon.name(DESC_THE, true).c_str());
+        _iood_stop(mon, false);
+        return true;
     }
 
     if (!mon.move_to_pos(pos))
@@ -647,6 +791,14 @@ static bool _iood_catchup_move(monster& mon)
         return true;
     }
 
+    // Boulder doesn't travel over water/lava.
+    if (mon.has_ench(ENCH_ROLLING)
+        && (!feat_has_solid_floor(env.grid(pos)) || feat_is_water(env.grid(pos))))
+    {
+        _iood_stop(mon, false);
+        return true;
+    }
+
     if (!mon.move_to_pos(pos))
     {
         _iood_stop(mon);
@@ -687,4 +839,18 @@ void iood_catchup(monster* mons, int pturns)
     for (int i = 0; i < moves; ++i)
         if (_iood_catchup_move(mon))
             return;
+}
+
+void boulder_start(monster *mon, bolt *beam)
+{
+    mon->add_ench(ENCH_ROLLING);
+    // Work out x/y/vx/vy from beam
+    beam->choose_ray();
+    mon->props["iood_x"].get_float() = beam->ray.r.start.x - 0.5;
+    mon->props["iood_y"].get_float() = beam->ray.r.start.y - 0.5;
+    mon->props["iood_vx"].get_float() = mons_is_fleeing(*mon) ?
+        -beam->ray.r.dir.x : beam->ray.r.dir.x;
+    mon->props["iood_vy"].get_float() = mons_is_fleeing(*mon) ?
+        -beam->ray.r.dir.y : beam->ray.r.dir.y;
+    iood_act(*mon);
 }

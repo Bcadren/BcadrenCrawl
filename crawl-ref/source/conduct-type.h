@@ -30,6 +30,7 @@ enum conduct_type
     DID_UNCLEAN,                          // Zin (used unclean weapon/magic)
     DID_CHAOS,                            // Zin (used chaotic weapon/magic)
     DID_DESECRATE_ORCISH_REMAINS,         // Beogh
+    DID_DESTROY_ORCISH_IDOL,              // Beogh
     DID_KILL_SLIME,                       // Jiyva
     DID_KILL_PLANT,                       // Fedhas
     DID_HASTY,                            // Cheibriados
@@ -38,12 +39,14 @@ enum conduct_type
     DID_ROT_CARRION,                      // Fedhas (a corpse rotted)
     DID_SOULED_FRIEND_DIED,               // Zin
     DID_ATTACK_IN_SANCTUARY,              // Zin
-    DID_KILL_NONLIVING,
+    DID_KILL_ELEMENTAL,
     DID_EXPLORATION,                      // Ashenzari, wrath timers
     DID_DESECRATE_HOLY_REMAINS,           // Zin/Ely/TSO/Yredelemnul
     DID_SEE_MONSTER,                      // TSO
     DID_SACRIFICE_LOVE,                   // Ru
     DID_CHANNEL,                          // Pakellas
     DID_HURT_FOE,                         // Uskayaw
+    DID_KILL_CONSTRUCT,
+    DID_WIZARDLY_ITEM,                    // Trog
     NUM_CONDUCTS
 };

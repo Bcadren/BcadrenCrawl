@@ -256,7 +256,7 @@ corpse
 
 Et kadaver. Du kan slagte det for at få spiselige kødklumper.
 %%%%
-crystal plate armour
+crystal plate
 
 En utroligt tung, men ekstremt effektiv krystallinsk rustning.
 %%%%
@@ -661,29 +661,6 @@ Denne skriftrulle lader læseren teleportere en kort distance med præcis
 kontrol. Vær opmærksom på, at kontrolleret teleportation vil besmitte den
 teleporterede med magisk energi.
 %%%%
-scroll of brand weapon
-
-Denne skriftrulle fortryller et valgfrit våben, så det bliver langt mere
-effektivt til at forvolde skade på dine fjender. Den kan gøre de midlertidige
-præg, som visse besværgelser giver, permanente, eller den kan bruges på et
-permanent præget våben for at vælge et nyt, tilfældigt præg.
-
-Præg som er tæt knyttet til en af guderne (Trog, Lugonu, Kikubaaqudgha, Den
-Strålende) kan ikke fikseres på denne måde. Xom ville på den anden side ikke
-lade så oplagt en mulighed for løjer gå til spilde.
-%%%%
-scroll of curse armour
-
-Denne skriftrulle kaster en forbandelse på et båret stykke rustning.
-%%%%
-scroll of curse jewellery
-
-Denn. skriftrulle kaster en forbandelse på en amulet eller ring, du har på.
-%%%%
-scroll of curse weapon
-
-Denne skriftrulle kaster en forbandelse på dit våben.
-%%%%
 scroll of enchantment
 
 Denne skriftrulle fortryller et stykke rustning. De fleste former for rustning
@@ -733,11 +710,6 @@ scroll of random uselessness
 
 Det er let at glemme denne skriftrulles essentielle ubrugelighed, når det
 lykkes overhovedet at få den til at virke.
-%%%%
-scroll of remove curse
-
-Denne skriftrulle fjerner forbandelserne fra de ting, du bruger, når du læser
-den.
 %%%%
 scroll of silence
 
@@ -937,7 +909,7 @@ En velsignet trefork, som er formet af rensende flammer, med tre takker, som
 symboliserer de tre hellige guders samlede kraft. Den er et yndet våben for Den
 Strålendes tjenere.
 %%%%
-troll leather armour
+troll leather
 
 En rustning, som er lavet af det stive og noprede skind fra en helt almindelig
 trold. Det regenerer lige så langsomt bærerens kød ved hjælp af magi (med

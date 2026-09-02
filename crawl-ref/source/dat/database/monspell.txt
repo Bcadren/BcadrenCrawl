@@ -200,6 +200,15 @@ unseen Call of Chaos cast
 Wind Blast cast
 
 @The_monster@ conjures a fierce blast of wind!
+%%%%
+Harpoon Shot cast
+
+@The_monster@ fires a harpoon shot @at@ @target@.
+%%%%
+Throw Klown Pie cast
+
+@The_monster@ pies you viciously!
+%%%%
 #################################################
 # These have special hard-coded messaging.
 #################################################
@@ -280,6 +289,54 @@ Searing Breath cast
 
 @The_monster@ breathes @beam@ @at@ @target@.
 %%%%%
+Spectral Cloud natural cast
+
+@The_monster@ breathes a wave of spectral mist around @target@.
+%%%%
+Holy Breath natural cast
+
+@The_monster@ breathes a cleansing blast of sacred flames @at@ @target@.
+%%%%
+Bone Shards natural cast
+
+@The_monster@ violently exhales sharpened bits of bone @at@ @target@.
+%%%%
+Memory Shard cast
+
+@The_monster@ casts a shard from the mists of memory @at@ @target@.
+%%%%
+Silver Splinters natural cast
+
+@The_monster@ violently exhales rough splinters of silver @at@ @target@.
+%%%%
+Triple Breath cast
+
+@The_monster@ exhales plumes of fire, frost and poison @at@ @target@.
+%%%%
+Miasma Breath natural cast
+
+@The_monster@ exhales a sickening wave of foul miasma around @target@.
+%%%%
+Summon Butterflies natural cast
+
+@The_monster@ exhales a sparkly dust that coalesces into butterflies.
+%%%%
+Chaotic Breath cast
+
+@The_monster@ exhales scintillating particles of pure chaos @at@ @target@.
+%%%%
+Vampiric Breath cast
+
+@The_monster@ exhales a wave of sinister vampiric fog around @target@.
+%%%%
+Radiation Breath draconian cast
+
+@The_monster@ exhales a wave of pure magical radiation @at@ @target@.
+%%%%
+Breathe Dart cast
+
+@The_monster@ spits out a magical stone dart @at@ @target@.
+%%%%
 Electrical Bolt cast
 
 @The_monster@ shoots out a bolt of @beam@ @at@ @target@!
@@ -287,6 +344,10 @@ Electrical Bolt cast
 Spit Lava cast
 
 @The_monster@ spits lava @at@ @target@.
+%%%%%
+Antimagic Spit cast
+
+@The_monster@ spits magic disrupting venom @at@ @target@.
 %%%%
 Spit Poison cast
 
@@ -331,6 +392,10 @@ Slug Dart cast
 Petrification Gaze cast
 
 @The_monster@ gazes piercingly through @target@!
+%%%%
+chaos butterfly cast
+
+@The_monster@ beats its wings. A gust of chaos comes forth.
 ########################################################################
 # Unique monsters
 ########################################################################
@@ -496,6 +561,12 @@ wretched star cast
 
 @The_monster@ glows turbulently.
 %%%%
+silver star cast
+
+@The_monster@ shines blindingly.
+
+@The_monster@ seems to fold into itself.
+%%%%
 thrashing horror cast
 
 @The_monster@ churns violently!
@@ -539,6 +610,10 @@ Sleep dream sheep cast
 Metal Splinters war gargoyle cast
 
 @The_monster@ launches @beam@ @at@ @target@.
+%%%%
+Splinterspray cast
+
+@The_monster@ hurls a spray of @beam@ @at@ @target@.
 %%%%
 Crystal Bolt crystal guardian cast
 
@@ -648,6 +723,18 @@ Warning Cry howler monkey cast
 
 @The_monster@ hoots and howls with incredible vigour!
 %%%%
+unseen Warning Cry gibbering mound cast
+
+Horrid eldritch gibbering echoes through the dungeon!
+%%%%
+Warning Cry gibbering mound cast
+
+@The_monster@ gibbers a loud, echoing eldritch prayer!
+%%%%
+Sentinel's Mark gibbering mound cast
+
+@The_monster@ stares @at@ @target@ and chants from many mouths!
+%%%%
 unseen Warning Cry vault sentinel cast
 
 You hear a note loudly blown on a horn!
@@ -663,6 +750,10 @@ Fireball hell hog cast
 Throw Barbs peacekeeper cast
 
 @The_monster@ hurls a @beam@ @at@ @target@.
+%%%%
+Woodweal cast
+
+@The_monster@ touches a tree and draws upon its vitality.
 %%%%
 ########################################################################
 # Monster species and genus messages.
@@ -751,6 +842,10 @@ Static Discharge shock serpent cast
 Corrupting Pulse wretched star cast
 
 @The_monster@ pulses with an eldritch light!
+%%%%
+Holy Suppression silver star cast
+
+@The_monster@ lets out a burst of cleansing silver light!
 ###########################################################################
 # Generic messages for priests and wizards which have been polymorphed into
 # something without hands.

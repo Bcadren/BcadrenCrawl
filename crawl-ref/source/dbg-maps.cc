@@ -22,6 +22,7 @@
 #include "shopping.h"
 #include "state.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "view.h"
 
 #ifdef DEBUG_STATISTICS
@@ -84,8 +85,8 @@ static bool _do_build_level()
 
     watchdog();
 
-    no_messages mx;
-    if (kbhit() && key_is_escape(getchk()))
+    msg::suppress mx;
+    if (kbhit() && key_is_escape(getch_ck()))
     {
         mprf(MSGCH_WARN, "User requested cancel");
         return false;
@@ -116,7 +117,7 @@ static bool _do_build_level()
             {
                 const coord_def pos(x, y);
 
-                objstat_record_feature(grd[x][y], map_masked(pos, MMT_VAULT));
+                objstat_record_feature(env.grid[x][y], map_masked(pos, MMT_VAULT));
 
                 monster *mons = monster_at(pos);
                 if (mons)
@@ -131,16 +132,16 @@ static bool _do_build_level()
                 }
             }
 
-            if (grd[x][y] == DNGN_RUNED_DOOR)
-                grd[x][y] = DNGN_CLOSED_DOOR;
-            else if (grd[x][y] == DNGN_RUNED_CLEAR_DOOR)
-                grd[x][y] = DNGN_CLOSED_CLEAR_DOOR;
+            if (env.grid[x][y] == DNGN_RUNED_DOOR)
+                env.grid[x][y] = DNGN_CLOSED_DOOR;
+            else if (env.grid[x][y] == DNGN_RUNED_CLEAR_DOOR)
+                env.grid[x][y] = DNGN_CLOSED_CLEAR_DOOR;
         }
 
 
     // Record floor items for objstat.
     if (crawl_state.obj_stat_gen)
-        for (auto &item : mitm)
+        for (auto &item : env.item)
             if (item.defined())
                 objstat_record_item(item);
 
@@ -296,7 +297,7 @@ void mapstat_report_map_success(const string &map_name)
     success_count[map_name]++;
 }
 
-void mapstat_report_error(const map_def &map, const string &err)
+void mapstat_report_error(const map_def &/*map*/, const string &err)
 {
     last_error = err;
 }
@@ -318,7 +319,7 @@ static void _report_available_random_vaults(FILE *outf)
         clear_messages();
         mprf("Examining random maps at %s", lvl.describe().c_str());
         mapstat_report_random_maps(outf, lvl);
-        if (kbhit() && key_is_escape(getchk()))
+        if (kbhit() && key_is_escape(getch_ck()))
             break;
         fprintf(outf, "---------------------------------\n");
     }

@@ -45,7 +45,9 @@ zombie_lernaean_hydra10
 zombie_elf MONS_ZOMBIE_ELF
 zombie_fawn MONS_ZOMBIE_FAUN
 zombie_guardian_serpent MONS_ZOMBIE_GUARDIAN_SERPENT
+zombie_hornet MONS_ZOMBIE_HORNET
 zombie_lindwurm MONS_ZOMBIE_LINDWURM
+zombie_meliai MONS_ZOMBIE_MELIAI
 zombie_merfolk MONS_ZOMBIE_MERFOLK
 zombie_minotaur MONS_ZOMBIE_MINOTAUR
 zombie_salamander MONS_ZOMBIE_SALAMANDER
@@ -93,6 +95,7 @@ skeleton_turtle MONS_SKELETON_TURTLE
 skeleton_bat MONS_SKELETON_BAT
 skeleton_bird MONS_SKELETON_BIRD
 skeleton_fish MONS_SKELETON_FISH
+skeleton_pufferfish MONS_SKELETON_PUFFERFISH
 skeleton_centaur MONS_SKELETON_CENTAUR
 skeleton_naga MONS_SKELETON_NAGA
 skeleton_snake MONS_SKELETON_SNAKE
@@ -154,4 +157,5 @@ spectral_hydra2
 spectral_hydra3
 spectral_hydra4
 spectral_hydra5
+spectral_scorpion MONS_SPECTRAL_SCORPION
 %rim 1

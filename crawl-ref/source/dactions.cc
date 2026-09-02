@@ -9,21 +9,26 @@
 
 #include "act-iter.h"
 #include "attitude-change.h"
+#include "cloud.h"
 #include "coordit.h"
 #include "decks.h"
 #include "dungeon.h"
 #include "god-companions.h" // hepliaklqana_ancestor
 #include "god-passive.h"
-#include "items.h"
 #include "libutil.h"
 #include "mapmark.h"
 #include "map-knowledge.h"
 #include "message.h"
 #include "mon-behv.h"
 #include "mon-death.h"
+#include "mon-place.h"
 #include "mon-transit.h"
 #include "religion.h"
 #include "state.h"
+#include "terrain.h"
+#include "tile-env.h"
+#include "rltiles/tiledef-dngn.h"
+#include "tag-version.h"
 #include "view.h"
 
 static void _daction_hog_to_human(monster *mon, bool in_transit);
@@ -85,12 +90,6 @@ bool mons_matches_daction(const monster* mon, daction_type act)
 
     switch (act)
     {
-    case DACT_ALLY_UNHOLY_EVIL:
-        return mon->wont_attack() && mon->evil();
-    case DACT_ALLY_UNCLEAN_CHAOTIC:
-        return mon->wont_attack() && (mon->how_unclean() || mon->how_chaotic());
-    case DACT_ALLY_SPELLCASTER:
-        return mon->wont_attack() && mon->is_actual_spellcaster();
     case DACT_ALLY_YRED_SLAVE:
         // Changed: we don't force enslavement of those merely marked.
         return is_yred_undead_slave(*mon);
@@ -178,11 +177,26 @@ void apply_daction_to_mons(monster* mon, daction_type act, bool local,
         bool in_transit)
 {
     // Transiting monsters exist outside the normal monster list (env.mons or
-    // menv for short). Be careful not to write them into the monster grid, by,
+    // env.mons for short). Be careful not to write them into the monster grid, by,
     // for example, calling monster::move_to_pos on them.
     // See _daction_hog_to_human for an example.
     switch (act)
     {
+        case DACT_KILL_JIYVA:
+            if (mon->type == MONS_DISSOLUTION)
+                monster_die(*mon, KILL_DISMISSED, NON_MONSTER);
+            if (player_in_branch(BRANCH_SLIME) && (mons_genus(mon->type) == MONS_JELLY || mons_genus(mon->type) == MONS_FLOATING_EYE))
+            {
+                if (one_chance_in(10) && !mon->is_summoned() && !bool(mon->flags & MF_NO_REWARD))
+                {
+                    monster_die(*mon, KILL_DISMISSED, NON_MONSTER);
+                    mons_place(mgen_data(MONS_SLIME_REMNANT, BEH_HOSTILE, mon->pos(), MHITYOU,
+                        MG_NONE, GOD_JIYVA));
+                }
+                else
+                    mon->add_ench(mon_enchant(ENCH_SLOWLY_DYING, 1, 0, 80 + random2(40)));
+            }
+            break;
         case DACT_ALLY_YRED_SLAVE:
             if (mon->type == MONS_ZOMBIE)
             {
@@ -190,9 +204,6 @@ void apply_daction_to_mons(monster* mon, daction_type act, bool local,
                 monster_die(*mon, KILL_DISMISSED, NON_MONSTER);
                 break;
             }
-        case DACT_ALLY_UNHOLY_EVIL:
-        case DACT_ALLY_UNCLEAN_CHAOTIC:
-        case DACT_ALLY_SPELLCASTER:
         case DACT_ALLY_BEOGH:
         case DACT_ALLY_SLIME:
         case DACT_ALLY_PLANT:
@@ -275,9 +286,6 @@ static void _apply_daction(daction_type act)
 
     switch (act)
     {
-    case DACT_ALLY_UNHOLY_EVIL:
-    case DACT_ALLY_UNCLEAN_CHAOTIC:
-    case DACT_ALLY_SPELLCASTER:
     case DACT_ALLY_YRED_SLAVE:
     case DACT_ALLY_BEOGH:
     case DACT_ALLY_HEPLIAKLQANA:
@@ -304,15 +312,65 @@ static void _apply_daction(daction_type act)
     case DACT_REAUTOMAP:
         reautomap_level();
         break;
-    case DACT_REMOVE_JIYVA_ALTARS:
+    case DACT_KILL_JIYVA:
         for (rectangle_iterator ri(1); ri; ++ri)
         {
-            if (grd(*ri) == DNGN_ALTAR_JIYVA)
-                grd(*ri) = DNGN_FLOOR;
+            if (env.grid(*ri) == DNGN_ALTAR_JIYVA)
+                env.grid(*ri) = DNGN_RUINED_PLINTH;
+
+            if (env.grid(*ri) == DNGN_SLIMY_WALL)
+            {
+                env.grid(*ri) = DNGN_ROCK_WALL;
+                env.grid_colours(*ri) = LIGHTGRAY;
+                tile_env.flv(*ri).feat_idx =
+                    store_tilename_get_index("wall_ruined_slime");
+                tile_env.flv(*ri).feat = TILE_WALL_RUINED_SLIME;
+            }
+
+            if (env.grid(*ri) == DNGN_SLIMESHROOM)
+            {
+                tile_env.flv(*ri).feat_idx =
+                    store_tilename_get_index("dngn_deadshroom");
+                tile_env.flv(*ri).feat = TILE_DNGN_DEADSHROOM;
+            }
+
+            if (env.grid(*ri) == DNGN_SLIMY_WATER || env.grid(*ri) == DNGN_DEEP_SLIMY_WATER)
+                env.grid(*ri) = DNGN_FLOOR;
+
+            if (you.where_are_you == BRANCH_SLIME)
+            {
+                env.grid_colours(*ri) = WHITE;
+                tile_env.flv(*ri).floor_idx =
+                    store_tilename_get_index("floor_ruined_slime");
+                tile_env.flv(*ri).floor = TILE_FLOOR_RUINED_SLIME;
+
+                if (env.grid(*ri) == DNGN_STONE_WALL)
+                {
+                    env.grid_colours(*ri) = DARKGRAY;
+                    tile_env.flv(*ri).feat_idx =
+                        store_tilename_get_index("stone_wall_ruined_slime");
+                    tile_env.flv(*ri).feat = TILE_STONE_WALL_RUINED_SLIME;
+                }
+
+                if (!feat_is_solid(env.grid(*ri)))
+                {
+                    if (one_chance_in(20))
+                        place_cloud(CLOUD_SALT, *ri, INFINITE_DURATION, &you, 2);
+                    if (one_chance_in(100) && !actor_at(*ri))
+                        mons_place(mgen_data(MONS_SLIME_REMNANT, BEH_HOSTILE, *ri, MHITYOU,
+                            MG_NONE, GOD_JIYVA));
+                }
+            }
+        }
+        if (you.where_are_you == BRANCH_SLIME)
+        {
+            for (auto &item : env.item)
+                if (item.is_type(OBJ_RUNES, RUNE_SLIME))
+                    item.sub_type = RUNE_RUINS;
         }
         break;
     case DACT_ROT_CORPSES:
-        for (auto &item : mitm)
+        for (auto &item : env.item)
             if (item.is_type(OBJ_CORPSES, CORPSE_BODY))
                 item.freshness = 1; // thoroughly rotten
         break;
@@ -330,7 +388,7 @@ static void _apply_daction(daction_type act)
             if (feat->feat == DNGN_ABANDONED_SHOP)
             {
                 // TODO: clear shop data out?
-                grd(feat->pos) = DNGN_ABANDONED_SHOP;
+                env.grid(feat->pos) = DNGN_ABANDONED_SHOP;
                 view_update_at(feat->pos);
                 env.markers.remove(feat);
             }
@@ -350,6 +408,9 @@ static void _apply_daction(daction_type act)
     case DACT_HOLY_PETS_GO_NEUTRAL:
     case DACT_ALLY_MAKHLEB:
     case DACT_ALLY_TROG:
+    case DACT_ALLY_UNHOLY_EVIL:
+    case DACT_ALLY_UNCLEAN_CHAOTIC:
+    case DACT_ALLY_SPELLCASTER:
 #endif
     case NUM_DACTION_COUNTERS:
     case NUM_DACTIONS:
@@ -408,9 +469,9 @@ static void _daction_hog_to_human(monster *mon, bool in_transit)
     *mon = orig;
 
     // If the hog is in transit, then it is NOT stored in the normal
-    // monster list (env.mons or menv for short). We cannot call move_to_pos
+    // monster list (env.mons or env.mons for short). We cannot call move_to_pos
     // on such a hog, because move_to_pos will attempt to update the
-    // monster grid (env.mgrid or mgrd for short). Since the hog is not
+    // monster grid (env.mgrid or env.mgrid for short). Since the hog is not
     // stored in the monster list, this will corrupt the grid. The transit code
     // will update the grid properly once the transiting hog has been placed.
     if (!in_transit)

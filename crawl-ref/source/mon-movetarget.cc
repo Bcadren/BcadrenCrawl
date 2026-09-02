@@ -3,7 +3,6 @@
 #include "mon-movetarget.h"
 
 #include "act-iter.h"
-#include "branch.h"
 #include "coord.h"
 #include "coordit.h"
 #include "env.h"
@@ -160,9 +159,7 @@ bool try_pathfind(monster* mon)
     // shallow water. Retreating monsters retry every turn.
     if (target_is_unreachable(mon) && !one_chance_in(12)
         && !(mon->can_cling_to_walls() && one_chance_in(4)))
-    {
         return false;
-    }
 
 #ifdef DEBUG_PATHFIND
     mprf("%s: Target out of reach! What now?",
@@ -205,7 +202,7 @@ bool try_pathfind(monster* mon)
 #endif
     const int range = mon->friendly() ? 1000 : mons_tracking_range(mon);
 
-    if (range > 0 && dist > range)
+    if (dist > range)
     {
         mon->travel_target = MTRAV_UNREACHABLE;
 #ifdef DEBUG_PATHFIND
@@ -221,8 +218,7 @@ bool try_pathfind(monster* mon)
          targpos.x, targpos.y, range);
 #endif
     monster_pathfind mp;
-    if (range > 0)
-        mp.set_range(range);
+    mp.set_range(range);
 
     if (mp.init_pathfind(mon, targpos))
     {
@@ -244,7 +240,7 @@ bool try_pathfind(monster* mon)
 static bool _is_level_exit(const coord_def& pos)
 {
     // All types of stairs.
-    if (feat_is_stair(grd(pos)))
+    if (feat_is_stair(env.grid(pos)))
         return true;
 
     // Teleportation and shaft traps.
@@ -287,17 +283,17 @@ static int _merfolk_avatar_water_score(coord_def p, bool& deep)
 
     for (adjacent_iterator ai(p); ai; ++ai)
     {
-        if (grd(*ai) == DNGN_SHALLOW_WATER)
+        if (env.grid(*ai) == DNGN_SHALLOW_WATER)
         {
             score++;
             near_floor = true;
         }
-        else if (grd(*ai) == DNGN_DEEP_WATER)
+        else if (env.grid(*ai) == DNGN_DEEP_WATER)
         {
             score++;
             deep = true;
         }
-        else if (feat_has_solid_floor(grd(*ai)))
+        else if (feat_has_solid_floor(env.grid(*ai)))
             near_floor = true;
     }
 
@@ -310,7 +306,7 @@ static int _merfolk_avatar_water_score(coord_def p, bool& deep)
         score += 6;
 
     // Slightly prefer standing in deep water, if possible
-    if (grd(p) == DNGN_DEEP_WATER)
+    if (env.grid(p) == DNGN_DEEP_WATER)
         score++;
 
     return score;
@@ -334,7 +330,7 @@ bool find_merfolk_avatar_water_target(monster* mon)
     // If our current location is good enough, don't bother moving towards
     // some other spot which might be somewhat better
     if (_merfolk_avatar_water_score(mon->pos(), deep) >= 12 && deep
-        && grd(mon->pos()) == DNGN_DEEP_WATER)
+        && env.grid(mon->pos()) == DNGN_DEEP_WATER)
     {
         mon->firing_pos = mon->pos();
         return true;
@@ -363,7 +359,7 @@ bool find_merfolk_avatar_water_target(monster* mon)
         int best_num = 0;
         for (radius_iterator ri(mon->pos(), LOS_NO_TRANS); ri; ++ri)
         {
-            if (!feat_is_water(grd(*ri)))
+            if (!feat_is_water(env.grid(*ri)))
                 continue;
 
             const int dist = grid_distance(mon->pos(), *ri);
@@ -601,7 +597,7 @@ static bool _choose_random_patrol_target_grid(monster* mon)
     for (radius_iterator ri(mon->patrol_point, you.current_vision, C_SQUARE, true);
          ri; ++ri)
     {
-        if (!in_bounds(*ri) || !mon->can_pass_through_feat(grd(*ri)))
+        if (!in_bounds(*ri) || !mon->can_pass_through_feat(env.grid(*ri)))
             continue;
 
         // Don't bother moving to squares (currently) occupied by a
@@ -1060,10 +1056,25 @@ bool can_go_straight(const monster* mon, const coord_def& p1,
     if (grid_distance(p1, p2) > get_los_radius())
         return false;
 
-    // XXX: Hack to improve results for now. See FIXME above.
     ray_def ray;
-    if (!find_ray(p1, p2, ray, opacity_mons_immob(mon)))
-        return false;
+    if (mons_class_primary_habitat(mon->type) == HT_ROCK)
+    {
+        if (!find_ray(p1, p2, ray, opacity_rocky()))
+            return false;
+    }
+    else if (mons_class_primary_habitat (mon->type) == HT_STEEL
+          || mons_class_primary_habitat(mon->type) == HT_INCORPOREAL
+          || mons_is_draconian_job(mon->type)
+        && mons_class_primary_habitat(draco_or_demonspawn_subspecies(*mon)) == HT_INCORPOREAL)
+    {
+        if (!find_ray(p1, p2, ray, opacity_steel()))
+            return false;
+    }
+    else
+    {
+        if (!find_ray(p1, p2, ray, opacity_mons_immob(mon)))
+            return false;
+    }
 
     while (ray.advance() && ray.pos() != p2)
         if (!_can_safely_go_through(mon, ray.pos()))

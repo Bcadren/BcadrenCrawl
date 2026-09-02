@@ -5,6 +5,7 @@
 
 #include "AppHdr.h"
 
+#include "player-equip.h" // activate_item
 #include "player-reacts.h"
 
 #include <algorithm>
@@ -30,111 +31,74 @@
 #include "abyss.h" // abyss_maybe_spawn_xp_exit
 #include "act-iter.h"
 #include "areas.h"
+#include "artefact.h"
+#include "attack.h" // attack_strength_punctuation
 #include "beam.h"
-#include "cio.h"
 #include "cloud.h"
 #include "clua.h"
 #include "colour.h"
-#include "command.h"
 #include "coord.h"
 #include "coordit.h"
-#include "crash.h"
 #include "database.h"
 #include "dbg-util.h"
 #include "delay.h"
-#include "describe.h"
 #ifdef DGL_SIMPLE_MESSAGING
 #include "dgl-message.h"
 #endif
-#include "dgn-overview.h"
-#include "dgn-shoals.h"
 #include "dlua.h"
 #include "dungeon.h"
 #include "env.h"
 #include "evoke.h"
 #include "exercise.h"
-#include "fight.h"
 #include "files.h"
-#include "fineff.h"
 #include "food.h"
-#include "fprop.h"
 #include "god-abil.h"
 #include "god-companions.h"
-#include "god-conduct.h"
-#include "god-item.h"
 #include "god-passive.h"
-#include "god-prayer.h"
-#include "hints.h"
-#include "initfile.h"
 #include "invent.h"
-#include "item-name.h"
 #include "item-prop.h"
-#include "items.h"
-#include "item-status-flag-type.h"
 #include "item-use.h"
 #include "level-state-type.h"
 #include "libutil.h"
-#include "luaterp.h"
-#include "macro.h"
-#include "map-knowledge.h"
-#include "mapmark.h"
 #include "maps.h"
-#include "melee-attack.h"
 #include "message.h"
-#include "misc.h"
 #include "mon-abil.h"
-#include "mon-act.h"
 #include "mon-cast.h"
 #include "mon-death.h"
 #include "mon-place.h"
 #include "mon-tentacle.h"
 #include "mon-util.h"
 #include "mutation.h"
-#include "options.h"
+#include "nearby-danger.h"
 #include "ouch.h"
-#include "output.h"
 #include "player.h"
 #include "player-stats.h"
-#include "quiver.h"
 #include "random.h"
 #include "religion.h"
 #include "shopping.h"
 #include "shout.h"
 #include "skills.h"
-#include "species.h"
 #include "spl-cast.h"
 #include "spl-clouds.h"
 #include "spl-damage.h"
 #include "spl-goditem.h"
 #include "spl-other.h"
-#include "spl-selfench.h"
 #include "spl-summoning.h"
 #include "spl-transloc.h"
 #include "spl-util.h"
-#include "stairs.h"
-#include "startup.h"
-#include "stash.h"
 #include "state.h"
 #include "status.h"
 #include "stepdown.h"
 #include "stringutil.h"
-#include "tags.h"
-#include "target.h"
 #include "terrain.h"
-#include "throw.h"
 #ifdef USE_TILE
-#include "tiledef-dngn.h"
+#include "rltiles/tiledef-dngn.h"
 #include "tilepick.h"
 #endif
-#include "timed-effects.h"
 #include "transform.h"
 #include "traps.h"
 #include "travel.h"
-#include "version.h"
-#include "viewchar.h"
-#include "viewgeom.h"
 #include "view.h"
-#include "viewmap.h"
 #include "xom.h"
 
 /**
@@ -211,6 +175,7 @@ static void _decrement_petrification(int delay)
     if (_decrement_a_duration(DUR_PETRIFIED, delay) && !you.paralysed())
     {
         you.redraw_evasion = true;
+        you.redraw_resists = true;
 
         string flesh_equiv = get_form()->flesh_equivalent.empty() ?
                                         "flesh" :
@@ -225,12 +190,21 @@ static void _decrement_petrification(int delay)
         
         if (you.species == SP_GARGOYLE || you.form == transformation::statue)
             mprf(MSGCH_DURATION, "Your stony form becomes more flexible, allowing you to move again.");
+        else if (you.species == SP_MOLTEN_GARGOYLE)
+            mprf(MSGCH_DURATION, "You melt back into molten rock.");
         else
             mprf(MSGCH_DURATION, "You turn to %s and can move again.",
                 flesh_equiv.c_str());
 
         if (you.props.exists(PETRIFIED_BY_KEY))
             you.props.erase(PETRIFIED_BY_KEY);
+    }
+
+    if (_decrement_a_duration(DUR_MOUNT_PETRIFIED, delay))
+    {
+        you.redraw_evasion = true;
+
+        mprf(MSGCH_DURATION, "Your %s returns to flesh and can move again.", you.mount_name(true).c_str());
     }
 
     if (you.duration[DUR_PETRIFYING])
@@ -240,11 +214,34 @@ static void _decrement_petrification(int delay)
         if ((dur -= delay) <= 0)
         {
             dur = 0;
-            you.fully_petrify(nullptr);
+            you.fully_petrify();
         }
         else if (dur < 15 && old_dur >= 15)
             mpr("Your limbs are stiffening.");
     }
+
+    if (you.duration[DUR_MOUNT_PETRIFYING])
+    {
+        int &dur = you.duration[DUR_MOUNT_PETRIFYING];
+        int old_dur = dur;
+        if ((dur -= delay) <= 0)
+        {
+            dur = 0;
+            you.fully_petrify(nullptr, false, true);
+        }
+        else if (dur < 15 && old_dur >= 15)
+            mpr("Your mount is stiffening.");
+    }
+}
+
+static void _decrement_gravitation(int delay)
+{
+    if (!you.duration[DUR_GRAVITATION])
+        return;
+
+    attract_monsters();
+    if (_decrement_a_duration(DUR_GRAVITATION, delay))
+        mpr("You feel less attractive to monsters.");
 }
 
 static void _decrement_paralysis(int delay)
@@ -259,6 +256,7 @@ static void _decrement_paralysis(int delay)
         {
             mprf(MSGCH_DURATION, "You can move again.");
             you.redraw_evasion = true;
+            you.redraw_resists = true;
             you.duration[DUR_PARALYSIS_IMMUNITY] = roll_dice(1, 3)
             * BASELINE_DELAY;
             if (you.props.exists(PARALYSED_BY_KEY))
@@ -435,7 +433,7 @@ static void _handle_uskayaw_time(int time_taken)
     // timer down to a minimum of 0, at which point it becomes eligible to
     // trigger again.
     if (audience_timer == -1 || (you.piety >= piety_breakpoint(2)
-            && x_chance_in_y(time_taken, time_taken * 10 + audience_timer)))
+            && x_chance_in_y(time_taken, 100 + audience_timer)))
     {
         uskayaw_prepares_audience();
     }
@@ -443,7 +441,7 @@ static void _handle_uskayaw_time(int time_taken)
         you.props[USKAYAW_AUDIENCE_TIMER] = max(0, audience_timer - time_taken);
 
     if (bond_timer == -1 || (you.piety >= piety_breakpoint(3)
-            && x_chance_in_y(time_taken, time_taken * 10 + bond_timer)))
+            && x_chance_in_y(time_taken, 100 + bond_timer)))
     {
         uskayaw_bonds_audience();
     }
@@ -461,16 +459,20 @@ void player_reacts_to_monsters()
         update_can_currently_train();
 
     if (you.duration[DUR_FIRE_SHIELD] > 0)
-        manage_fire_shield(you.time_taken);
+        manage_fire_shield();
+
+    if (you.mounted() && you.mount == mount_type::slime)
+        jiyva_passive_slime();
 
     check_monster_detect();
 
-    if (have_passive(passive_t::detect_items) || you.has_mutation(MUT_JELLY_GROWTH)
+    if (have_passive(passive_t::detect_items)
         || you.get_mutation_level(MUT_STRONG_NOSE) > 0)
     {
         detect_items(-1);
     }
 
+    _decrement_gravitation(you.time_taken);
     _decrement_paralysis(you.time_taken);
     _decrement_petrification(you.time_taken);
     if (_decrement_a_duration(DUR_SLEEP, you.time_taken))
@@ -505,7 +507,10 @@ static void _handle_recitation(int step)
                          you.attribute[ATTR_RECITE_TYPE], step).c_str());
 
     if (apply_area_visible(zin_recite_to_single_monster, you.pos()))
+    {
         viewwindow();
+        update_screen();
+    }
 
     // Recite trains more than once per use, because it has a
     // long timer in between uses and actually takes up multiple
@@ -565,7 +570,19 @@ static void _decrement_simple_duration(duration_type dur, int delay)
     }
 }
 
+static void _silence_damage()
+{
+    const int dam = 2 + div_rand_round(you.experience_level + you.skill(SK_INVOCATIONS), 9);
 
+    for (rectangle_iterator ri(you.pos(), you.silence_radius()); ri; ++ri)
+    {
+        if (monster * mon = monster_at(*ri))
+        {
+            mon->hurt(&you, dam, BEAM_MMISSILE, KILLED_BY_BEAM, "", "silent scream");
+            mprf("Your scream echoes through %s%s", mon->name(DESC_THE).c_str(), attack_strength_punctuation(dam).c_str());
+        }
+    }
+}
 
 /**
  * Decrement player durations based on how long the player's turn lasted in aut.
@@ -602,7 +619,11 @@ static void _decrement_durations()
 
     // Possible reduction of silence radius.
     if (you.duration[DUR_SILENCE])
+    {
+        if (you.props.exists(DEMON_SCREAM) && you.props[DEMON_SCREAM].get_bool() == true)
+            _silence_damage();
         invalidate_agrid();
+    }
     // and liquefying radius.
     if (you.duration[DUR_LIQUEFYING])
         invalidate_agrid();
@@ -614,16 +635,18 @@ static void _decrement_durations()
         you.duration[DUR_TRANSFORMATION] = 1;
     }
 
-    // Vampire bat transformations are permanent (until ended), unless they
-    // are uncancellable (polymorph wand on a full vampire).
-    if (you.species != SP_VAMPIRE || you.form != transformation::bat
-        || you.duration[DUR_TRANSFORMATION] <= 5 * BASELINE_DELAY
-        || you.transform_uncancellable)
+    if (_decrement_a_duration(DUR_TRANSFORMATION, delay, nullptr, random2(3),
+                                "Your transformation is almost over."))
     {
-        if (_decrement_a_duration(DUR_TRANSFORMATION, delay, nullptr, random2(3),
-                                  "Your transformation is almost over."))
+        untransform();
+    }
+
+    if (you.mounted())
+    {
+        if (_decrement_a_duration(DUR_MOUNTED, delay, "Your mount expires.", random2(3),
+            "Your mount's time in this world is almost up."))
         {
-            untransform();
+            dismount();
         }
     }
 
@@ -658,12 +681,11 @@ static void _decrement_durations()
 
     dec_ambrosia_player(delay);
     dec_channel_player(delay);
-    dec_slow_player(delay);
+    dec_slow_player(delay, false);
+    if (you.mounted())
+        dec_slow_player(delay, true);
     dec_berserk_recovery_player(delay);
     dec_haste_player(delay);
-
-    if (you.duration[DUR_LIQUEFYING] && !you.stand_on_solid_ground())
-        you.duration[DUR_LIQUEFYING] = 1;
 
     for (int i = 0; i < NUM_STATS; ++i)
     {
@@ -706,6 +728,16 @@ static void _decrement_durations()
         tornado_damage(&you, min(delay, you.duration[DUR_TORNADO]));
         if (_decrement_a_duration(DUR_TORNADO, delay,
                                   "The winds around you start to calm down."))
+        {
+            you.duration[DUR_TORNADO_COOLDOWN] = random_range(35, 45);
+        }
+    }
+
+    if (you.duration[DUR_CHAOSNADO])
+    {
+        tornado_damage(&you, min(delay, you.duration[DUR_CHAOSNADO]));
+        if (_decrement_a_duration(DUR_CHAOSNADO, delay,
+            "The winds around you start to calm down."))
         {
             you.duration[DUR_TORNADO_COOLDOWN] = random_range(35, 45);
         }
@@ -756,7 +788,13 @@ static void _decrement_durations()
     }
 
     if (you.duration[DUR_WATER_HOLD])
-        handle_player_drowning(delay);
+        handle_player_drowning(delay, DUR_WATER_HOLD);
+        
+    if (you.duration[DUR_SWALLOWED])
+        handle_player_drowning(delay, DUR_SWALLOWED);
+
+    if (you.duration[DUR_AIR_HOLD])
+        handle_player_drowning(delay, DUR_AIR_HOLD);
 
     if (you.duration[DUR_FLAYED])
     {
@@ -816,17 +854,27 @@ static void _decrement_durations()
     {
         extract_manticore_spikes(
             make_stringf("You %s the barbed spikes from your body.",
-                you.berserk() ? "rip and tear" : "carefully extract").c_str());
+                you.berserk() ? "rip and tear" : "carefully extract").c_str(), false);
+        extract_manticore_spikes(
+            make_stringf("You %s the barbed spikes from your mount's flesh.",
+                you.berserk() ? "rip and tear" : "carefully extract").c_str(), true);
     }
 
     if (!env.sunlight.empty())
         process_sunlights();
 
-    if (!you.duration[DUR_ANCESTOR_DELAY]
-        && in_good_standing(GOD_HEPLIAKLQANA)
-        && hepliaklqana_ancestor() == MID_NOBODY)
+    if (!you.duration[DUR_ANCESTOR_DELAY])
     {
-        _try_to_respawn_ancestor();
+        if (in_good_standing(GOD_HEPLIAKLQANA)
+            && hepliaklqana_ancestor() == MID_NOBODY)
+        {
+            _try_to_respawn_ancestor();
+        }
+        if (in_good_standing(GOD_YREDELEMNUL)
+            && (you.enslaved_soul != MONS_NO_MONSTER))
+        {
+            yred_respawn_enslaved_soul();
+        }
     }
 
     const bool sanguine_armour_is_valid = sanguine_armour_valid();
@@ -835,10 +883,10 @@ static void _decrement_durations()
     else if (!sanguine_armour_is_valid && you.duration[DUR_SANGUINE_ARMOUR])
         you.duration[DUR_SANGUINE_ARMOUR] = 1; // expire
 
-    if (you.attribute[ATTR_HEAVENLY_STORM]
-        && !you.duration[DUR_HEAVENLY_STORM])
+    if (you.props.exists(WU_JIAN_HEAVENLY_STORM_KEY))
     {
-        end_heavenly_storm(); // we shouldn't hit this, but just in case
+        ASSERT(you.duration[DUR_HEAVENLY_STORM]);
+        wu_jian_heaven_tick();
     }
 
     // these should be after decr_ambrosia, transforms, liquefying, etc.
@@ -852,7 +900,7 @@ static void _decrement_durations()
  */
 static void _rot_ghoul_players()
 {
-    if (you.species != SP_GHOUL)
+    if (!you.get_mutation_level(MUT_ROTTING_BODY))
         return;
 
     int resilience = 400;
@@ -869,6 +917,103 @@ static void _rot_ghoul_players()
         mprf(MSGCH_WARN, "You feel your flesh rotting away.");
         rot_hp(1);
     }
+}
+
+static bool _activation_loop(int slot, vector<string> *eq_list)
+{
+    bool plural = false;
+    if (you.melded[slot] || you.equip[slot] == -1 || you.activated[slot])
+        return false;
+    const item_def &arm = you.inv[you.equip[slot]];
+    if (armour_type_prop(arm.sub_type, ARMF_REGENERATION)
+        || is_artefact(arm) && artefact_property(arm, ARTP_REGENERATION))
+    {
+        equipment_type base_slot = get_armour_slot(static_cast<armour_type>(arm.sub_type));
+
+        eq_list->push_back(
+            base_slot != EQ_BODY_ARMOUR ?
+            item_slot_name(base_slot) :
+            is_artefact(arm) ? get_artefact_name(arm) : "armour");
+
+        if (base_slot == EQ_GLOVES || base_slot == EQ_BOOTS)
+            plural = true;
+        you.activated.set(slot);
+    }
+    return plural;
+}
+
+// Some equipment only begins to function when some condition is met, e.g., full
+// health is reached.
+static void _update_equipment_attunement_by_health()
+{
+    if (you.hp != you.hp_max)
+        return;
+
+    if (you.wearing(EQ_AMULET, AMU_ACROBAT, true, true, true) < you.wearing(EQ_AMULET, AMU_ACROBAT))
+    {
+        mprf("Your amulet attunes itself to your body. You feel like doing "
+            "cartwheels.");
+        activate_item(OBJ_JEWELLERY, AMU_ACROBAT);
+    }
+
+    if (you.wearing(EQ_AMULET, AMU_REFLECTION, true, true, true) < you.wearing(EQ_AMULET, AMU_REFLECTION))
+    {
+        mprf("Your amulet attunes itself to your body. You feel a shielding "
+            "aura gather around you.");
+        activate_item(OBJ_JEWELLERY, AMU_REFLECTION);
+        you.redraw_armour_class = true;
+    }
+
+    if (you.get_mutation_level(MUT_NO_REGENERATION))
+        return;
+
+    vector<string> eq_list;
+    bool plural = false;
+
+    if (you.wearing(EQ_AMULET, AMU_REGENERATION, true, true, true) < you.wearing(EQ_AMULET, AMU_REGENERATION))
+    {
+        eq_list.push_back("amulet");
+        activate_item(OBJ_JEWELLERY, AMU_REGENERATION);
+    }
+
+    for (int slot = EQ_MIN_ARMOUR; slot <= EQ_MAX_ARMOUR; ++slot)
+        plural |= _activation_loop(slot, &eq_list);
+
+    if (you.get_mutation_level(MUT_CYTOPLASMIC_SUSPENSION))
+        plural |= _activation_loop(EQ_CYTOPLASM, &eq_list);
+
+    if (you.get_mutation_level(MUT_AMORPHOUS_BODY))
+    {
+        for (int slot = EQ_FIRST_MORPH; slot <= EQ_LAST_MORPH; ++slot)
+            plural |= _activation_loop(slot, &eq_list);
+    }
+
+    if (eq_list.empty())
+        return;
+
+    plural = plural || eq_list.size() > 1;
+    string eq_str = comma_separated_line(eq_list.begin(), eq_list.end());
+    mprf("Your %s attune%s to your body as you begin to regenerate "
+         "more quickly.", eq_str.c_str(), plural ? " themselves" : "s itself");
+}
+
+// Amulet of magic regeneration needs to be worn while at full magic before it
+// begins to function.
+static void _update_mana_regen_amulet_attunement()
+{
+    if (you.wearing(EQ_AMULET, AMU_MANA_REGENERATION)
+        && player_regenerates_mp())
+    {
+        if (you.magic_points == you.max_magic_points
+            && you.props[MANA_REGEN_AMULET_ACTIVE].get_int() == 0)
+        {
+            you.props[MANA_REGEN_AMULET_ACTIVE] = 1;
+            mpr("Your amulet attunes itself to your body and you begin to "
+                "regenerate magic more quickly.");
+        }
+    }
+    else
+        you.props[MANA_REGEN_AMULET_ACTIVE] = 0;
 }
 
 // cjo: Handles player hp and mp regeneration. If the counter
@@ -905,7 +1050,23 @@ static void _regenerate_hp_and_mp(int delay)
 
     ASSERT_RANGE(you.hit_points_regeneration, 0, 100);
 
-    update_amulet_attunement_by_health();
+    _update_equipment_attunement_by_health();
+
+    // Mount HP Regeneration
+    if (you.mounted() && (you.mount_hp < you.mount_hp_max))
+        you.mount_hp_regen += div_rand_round(mount_regen() * delay, BASELINE_DELAY);
+    
+    while (you.mount_hp_regen >= 100)
+    {
+        if (you.mount_hp < you.mount_hp_max)
+        {
+            you.mount_hp++;
+            you.redraw_hit_points = true;
+        }
+        you.mount_hp_regen -= 100;
+    }
+
+    ASSERT_RANGE(you.mount_hp_regen, 0, 100);
 
     // MP Regeneration
     if (!player_regenerates_mp())
@@ -926,7 +1087,7 @@ static void _regenerate_hp_and_mp(int delay)
 
     ASSERT_RANGE(you.magic_points_regeneration, 0, 100);
 
-    update_mana_regen_amulet_attunement();
+    _update_mana_regen_amulet_attunement();
 }
 
 void player_reacts()
@@ -938,6 +1099,9 @@ void player_reacts()
     // Too annoying for regular diagnostics.
     mprf(MSGCH_DIAGNOSTICS, "stealth: %d", stealth);
 #endif
+
+    if (you.attribute[ATTR_SHADOWS])
+        shadow_lantern_effect();
 
     if (you.has_mutation(MUT_DEMONIC_GUARDIAN))
         check_demonic_guardian();
@@ -983,6 +1147,8 @@ void player_reacts()
     abyss_maybe_spawn_xp_exit();
 
     actor_apply_cloud(&you);
+    actor_apply_cloud(&you, true);
+    actor_apply_toxic_bog(&you);
 
     if (!you.airborne())
         actor_apply_terrain(&you, env.grid(you.pos()));
@@ -991,7 +1157,7 @@ void player_reacts()
         slime_wall_damage(&you, you.time_taken);
 
     // Icy shield and armour melt over lava.
-    if (grd(you.pos()) == DNGN_LAVA)
+    if (env.grid(you.pos()) == DNGN_LAVA)
         maybe_melt_player_enchantments(BEAM_FIRE, you.time_taken);
 
     // Handle starvation before subtracting hunger for this turn (including
@@ -1023,7 +1189,9 @@ void player_reacts()
 
     dec_disease_player(you.time_taken);
     if (you.duration[DUR_POISONING])
-        handle_player_poison(you.time_taken);
+        handle_player_poison(you.time_taken, false);
+    if (you.duration[DUR_MOUNT_POISONING])
+        handle_player_poison(you.time_taken, true);
 
     // Reveal adjacent mimics.
     for (adjacent_iterator ai(you.pos(), false); ai; ++ai)
@@ -1039,9 +1207,9 @@ void player_reacts()
         qazlal_storm_clouds();
 }
 
-void extract_manticore_spikes(const char* endmsg)
+void extract_manticore_spikes(const char* endmsg, bool mount)
 {
-    if (_decrement_a_duration(DUR_BARBS, you.time_taken, endmsg))
+    if (!mount && _decrement_a_duration(DUR_BARBS, you.time_taken, endmsg))
     {
         // Note: When this is called in _move player(), ATTR_BARBS_POW
         // has already been used to calculated damage for the player.
@@ -1051,4 +1219,6 @@ void extract_manticore_spikes(const char* endmsg)
 
         you.props.erase(BARBS_MOVE_KEY);
     }
+    if (mount && _decrement_a_duration(DUR_MOUNT_BARBS, you.time_taken, endmsg))
+        you.props.erase(BARBS_MOVE_KEY);
 }

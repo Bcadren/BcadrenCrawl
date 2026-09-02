@@ -18,7 +18,6 @@
 #include "env.h"
 #include "hints.h"
 #include "libutil.h"
-#include "map-knowledge.h"
 #include "mon-util.h"
 #include "options.h"
 #include "stringutil.h"
@@ -36,7 +35,7 @@ static bool _mon_needs_auto_exclude(const monster* mon, bool sleepy = false)
     // These include the base monster's name in their name, but we don't
     // want things in the auto_exclude option to match them.
     if (mon->type == MONS_PILLAR_OF_SALT || mon->type == MONS_BLOCK_OF_ICE
-        || mon->type == MONS_TEST_STATUE)
+        || mons_class_is_test(mon->type)) // don't autoexclude test statues/spawners
     {
         return false;
     }
@@ -72,13 +71,15 @@ static bool _need_auto_exclude(const monster* mon, bool sleepy = false)
 
 // Nightstalker reduces LOS, so reducing the maximum exclusion radius
 // only makes sense. This is only possible because it's a permanent
-// mutation; other sources of LOS reduction should not have this effect.
+// mutation; the lantern of Shadows should not have this effect.
+// TODO: update the radiuses on wield/unwield, we already need to do that
+// when gaining/losing nightstalker.
 // Similarly, Barachim's LOS increase.
 static int _get_full_exclusion_radius()
 {
     // XXX: dedup with update_vision_range()!
     return LOS_DEFAULT_RANGE - you.get_mutation_level(MUT_NIGHTSTALKER)
-                             + (you.species == SP_BARACHI ? 1 : 0);
+                             + you.get_mutation_level(MUT_DAYSTRIDER);
 }
 
 /**
@@ -390,6 +391,8 @@ static void _exclude_update(const coord_def &p)
 {
 #ifdef USE_TILE
     _tile_exclude_gmap_update(p);
+#else
+    UNUSED(p);
 #endif
     _exclude_update();
 }
@@ -447,7 +450,7 @@ void cycle_exclude_radius(const coord_def &p)
 {
     if (travel_exclude *exc = curr_excludes.get_exclude_root(p))
     {
-        if (feat_is_door(grd(p)) && env.map_knowledge(p).known())
+        if (feat_is_door(env.grid(p)) && env.map_knowledge(p).known())
         {
             _exclude_gate(p, exc->radius == 0);
             return;
@@ -664,6 +667,7 @@ void marshallExcludes(writer& outf, const exclude_set& excludes)
 
 void unmarshallExcludes(reader& inf, int minorVersion, exclude_set &excludes)
 {
+    UNUSED(minorVersion);
     excludes.clear();
     int nexcludes = unmarshallShort(inf);
     if (nexcludes)

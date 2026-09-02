@@ -1,6 +1,6 @@
 enum: SP_GNOLL
 monster: MONS_GNOLL
-name: Gnoll
+name: "Gnoll"
 adjective: Canine
 genus: Dog
 difficulty: Intermediate
@@ -20,7 +20,6 @@ aptitudes:
   slings: 8
   bows: 8
   crossbows: 8
-  throwing: 8
   armour: 8
   dodging: 8
   stealth: 8
@@ -46,6 +45,7 @@ dex: 10
 levelup_stat_frequency: 4
 mutations:
   1:
+    MUT_SOFT_FLESH: 1
     MUT_STRONG_NOSE: 1
     MUT_FANGS: 1
 fake_mutations:
@@ -57,4 +57,7 @@ recommended_jobs:
   - JOB_ARCANE_MARKSMAN
   - JOB_TRANSMUTER
   - JOB_WANDERER
-create_enum: False
+  
+# start TAG_MAJOR_VERSION == 34
+create_enum: false
+# end TAG_MAJOR_VERSION

@@ -53,7 +53,8 @@ define(function () {
     // equipment_type
     exports.equip = {};
     val = 0;
-    exports.equip.WEAPON = val++;
+    exports.equip.WEAPON0 = val++;
+    exports.equip.WEAPON1 = val++;
     exports.equip.CLOAK = val++;
     exports.equip.HELMET = val++;
     exports.equip.GLOVES = val++;
@@ -71,6 +72,7 @@ define(function () {
     exports.equip.RING_SIX = val++;
     exports.equip.RING_SEVEN = val++;
     exports.equip.RING_EIGHT = val++;
+    exports.equip.RING_AMULET = val++;
     exports.equip.NUM_EQUIP = val++;
 
     // Tile flags.
@@ -179,7 +181,7 @@ define(function () {
     });
 
     fg_flags.flags.NET          = 0x00400000;
-    fg_flags.flags.POISON       = 0x00800000;
+    // 0x00800000 is used in the POISON 2-bit exclusive flags
     fg_flags.flags.WEB          = 0x01000000;
     fg_flags.flags.GLOWING      = 0x02000000;
     fg_flags.flags.STICKY_FLAME = 0x04000000;
@@ -196,7 +198,7 @@ define(function () {
     fg_flags.flags.ANIM_WEP     = [0, 0x4000];
     fg_flags.flags.SUMMONED     = [0, 0x8000];
     fg_flags.flags.PERM_SUMMON  = [0, 0x10000];
-    fg_flags.flags.DEATHS_DOOR  = [0, 0x20000];
+    fg_flags.flags.CONFUSED     = [0, 0x20000];
     fg_flags.flags.RECALL       = [0, 0x40000];
     fg_flags.flags.DRAIN        = [0, 0x80000];
     fg_flags.flags.IDEALISED    = [0, 0x100000];
@@ -206,6 +208,17 @@ define(function () {
     fg_flags.flags.SWIFT        = [0, 0x1000000];
     fg_flags.flags.PINNED       = [0, 0x2000000];
     fg_flags.flags.VILE_CLUTCH  = [0, 0x4000000];
+    fg_flags.flags.POSSESSABLE  = [0, 0x8000000];
+    fg_flags.flags.WRETCHED     = [0, 0x10000000];
+    fg_flags.flags.MUTE         = [0, 0x20000000];
+
+    // Three levels of poison in 2 bits.
+    fg_flags.exclusive_flags.push({
+        mask        : [0x00800000, 0x80000000],
+        POISON      : [0x00800000, 0],
+        MORE_POISON : [0, 0x80000000],
+        MAX_POISON  : [0x00800000, 0x80000000]
+    });
 
     // MDAM has 5 possibilities, so uses 3 bits.
     fg_flags.exclusive_flags.push({

@@ -14,7 +14,10 @@ enum monuse_flags
     MU_CONSUMABLES   = 0x0100, // Scrolls/Potions
     MU_MISC          = 0x0200, // Phials of Floods, etc.
 
-    // unused        = 0x0400,
+    MU_NO_GOLD       = 0x0400, // Even monsters that can't use items are allowed
+    // to pick up gold (part of Gozag flavour). These are the exceptions (mostly
+    // pseudomonsters that are actually projectiles.
+
     // unused        = 0x0800,
 
     MU_THROW_ROCK    = 0x1000,
@@ -27,9 +30,13 @@ enum monuse_flags
         | MU_WAND | MU_JEWELS | MU_CONSUMABLES | MU_MISC,
         // Mask to check if it has any equipment slots at all.
 
+    MU_WIELD_MASK = MU_WEAPON_MELEE | MU_WEAPON_RANGED | MU_ARMOUR | MU_SHIELD
+    | MU_WAND | MU_JEWELS | MU_CONSUMABLES | MU_MISC,
+    // Mask to check if it has any equipment slots at all.
+
     MU_WEAPONS = MU_WEAPON_MELEE | MU_WEAPON_RANGED,
     MU_MELEE   = MU_DOOR | MU_WEAPON_MELEE | MU_ARMOUR | MU_SHIELD | MU_JEWELS,
-    MU_EVOKE   = MU_JEWELS | MU_WAND | MU_CONSUMABLES | MU_MISC,
+    MU_EVOKE   = MU_WAND | MU_CONSUMABLES | MU_MISC,
     MU_ALL     = MU_MELEE | MU_WEAPON_RANGED | MU_EVOKE,
 };
 

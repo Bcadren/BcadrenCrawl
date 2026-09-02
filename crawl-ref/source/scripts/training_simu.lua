@@ -1,6 +1,6 @@
 -- A skill training simulator
 -- To simulate the skill progression of a Minotaur Fighter starting with a
--- hand axe, run it with:
+-- hatchet, run it with:
 -- crawl -script training_simu MiFi handaxe 2> results.csv
 
 local function print_skills()

@@ -5,17 +5,21 @@
 
 #pragma once
 
+#include <vector>
+
 #include "enum.h"
 #include "mgen-data.h"
 #include "player.h"
 #include "religion-enum.h"
+
+using std::vector;
 
 #define MAX_PIETY      200
 #define HALF_MAX_PIETY (MAX_PIETY / 2)
 
 #define MAX_PENANCE    200
 
-#define NUM_VEHUMET_GIFTS 13
+#define NUM_VEHUMET_GIFTS 15
 
 #define NUM_PIETY_STARS 6
 
@@ -27,6 +31,7 @@ enum class lifesaving_chance
 };
 
 bool is_evil_god(god_type god);
+bool is_necro_god(god_type god);
 bool is_good_god(god_type god);
 bool is_chaotic_god(god_type god);
 bool is_unknown_god(god_type god);
@@ -39,7 +44,7 @@ bool is_unavailable_god(god_type god);
 god_type random_god();
 
 int piety_breakpoint(int i);
-string god_name(god_type which_god, bool long_name = false);
+string god_name(god_type which_god, bool long_name = false, bool sidebar = false);
 string god_name_jiyva(bool second_name = false);
 string wu_jian_random_sifu_name();
 god_type str_to_god(const string &name, bool exact = true);
@@ -50,8 +55,10 @@ bool xp_penance(god_type god);
 void dec_penance(int val);
 void dec_penance(god_type god, int val);
 
+void leave_xom();
 void excommunication(bool voluntary = false, god_type new_god = GOD_NO_GOD);
 
+void jiyva_setup();
 bool gain_piety(int pgn, int denominator = 1, bool should_scale_piety = true);
 void dock_piety(int pietyloss, int penance);
 void god_speaks(god_type god, const char *mesg);
@@ -61,6 +68,7 @@ void handle_god_time(int /*time_delta*/);
 int god_colour(god_type god);
 colour_t god_message_altar_colour(god_type god);
 int gozag_service_fee();
+string cannot_join_god_reason(god_type god);
 bool player_can_join_god(god_type which_god);
 void join_religion(god_type which_god);
 void god_pitch(god_type which_god);
@@ -109,7 +117,9 @@ lifesaving_chance elyvilon_lifesaving();
 bool god_protects_from_harm();
 bool jiyva_is_dead();
 void set_penance_xp_timeout();
-bool fedhas_protects(const monster& target);
+void inc_gift_timeout(int val);
+bool fedhas_protects_species(monster_type mc);
+bool fedhas_protects(const monster* target);
 bool fedhas_neutralises(const monster& target);
 void nemelex_death_message();
 
@@ -122,16 +132,13 @@ bool is_orcish_follower(const monster& mon);
 bool is_fellow_slime(const monster& mon);
 bool is_follower(const monster& mon);
 
-// Vehumet gift interface.
-bool vehumet_is_offering(spell_type spell);
-void vehumet_accept_gift(spell_type spell);
-
 mgen_data hepliaklqana_ancestor_gen_data();
 string hepliaklqana_ally_name();
-int hepliaklqana_ally_hp();
+int hepliaklqana_ally_hp(bool knight_boost);
 
 void upgrade_hepliaklqana_ancestor(bool quiet_force = false);
 void upgrade_hepliaklqana_weapon(monster_type mtyp, item_def &item);
+void upgrade_hepliaklqana_bow(monster_type mtyp, item_def &item);
 void upgrade_hepliaklqana_shield(const monster& ancestor, item_def &item);
 
 bool god_hates_attacking_friend(god_type god, const monster& fr);
@@ -160,8 +167,8 @@ public:
     god_iterator();
 
     operator bool() const;
-    const god_type operator*() const;
-    const god_type operator->() const;
+    god_type operator*() const;
+    god_type operator->() const;
     god_iterator& operator++();
     god_iterator operator++(int);
 

@@ -166,7 +166,7 @@ skin of Zhor
 
 Eine stinkende Haus von einem fremdartigen Tier.
 %%%%
-salamander hide armour
+salamander hide
 
 Eine lederne Rüstung aus der Haut eines Salamanders hergestellt.
 %%%%

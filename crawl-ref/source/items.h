@@ -5,9 +5,15 @@
 
 #pragma once
 
+#include <vector>
+
 #include "equipment-type.h"
 #include "god-type.h"
 #include "mon-inv-type.h"
+#include "item-prop.h"
+#include "tag-version.h"
+
+using std::vector;
 
 // Ways to get items, other than finding them on the ground or looting them
 // from slain monsters.
@@ -84,6 +90,7 @@ void destroy_item(item_def &item, bool never_created = false);
 void destroy_item(int dest, bool never_created = false);
 void lose_item_stack(const coord_def& where);
 
+string item_message(vector<const item_def *> const &items);
 void item_check();
 void request_autopickup(bool do_pickup = true);
 void id_floor_items();
@@ -140,7 +147,7 @@ bool item_needs_autopickup(const item_def &, bool ignore_force = false);
 bool can_autopickup();
 
 bool need_to_autopickup();
-void autopickup();
+void autopickup(bool forced = false);
 
 void set_item_autopickup(const item_def &item, autopickup_level_type ap);
 int item_autopickup_level(const item_def &item);
@@ -211,3 +218,15 @@ private:
     monster& mon;
     mon_inv_type type;
 };
+
+/** All non-removed item subtypes for the specified base type */
+static inline vector<int> all_item_subtypes(object_class_type base)
+{
+    vector<int> subtypes;
+    for (int i = 0; i < get_max_subtype(base); ++i)
+    {
+        if (!item_type_removed(base, i))
+            subtypes.push_back(i);
+    }
+    return subtypes;
+}

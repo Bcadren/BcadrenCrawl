@@ -36,13 +36,13 @@ The contents of this text are:
                 level_map_cursor_step
 3-e     Viewport Display Options.
                 view_max_width, view_max_height, view_lock_x,
-                view_lock_y, view_lock, center_on_scroll,
+                view_lock_y, view_lock, centre_on_scroll,
                 symmetric_scroll, scroll_margin_x, scroll_margin_y,
                 scroll_margin
 3-f     Travel and Exploration.
                 travel_delay, explore_delay, rest_delay, travel_avoid_terrain,
                 explore_greedy, explore_stop, explore_stop_pickup_ignore,
-                explore_wall_bias, travel_key_stop,
+                explore_wall_bias, travel_key_stop, travel_one_unsafe_move,
                 tc_reachable, tc_dangerous, tc_disconnected, tc_excluded,
                 tc_exclude_circle, runrest_ignore_message,
                 runrest_stop_message, runrest_safe_poison,
@@ -52,9 +52,9 @@ The contents of this text are:
 3-g     Command Enhancements.
                 auto_switch, travel_open_doors, easy_unequip, equip_unequip,
                 jewellery_prompt, easy_confirm, simple_targeting,
-                allow_self_target, auto_butcher, confirm_butcher,
-                easy_eat_chunks, easy_quit_item_prompts, ability_menu,
-                sort_menus, spell_slot, item_slot, ability_slot,
+                allow_self_target, auto_butcher, auto_butcher_max_chunks,
+                confirm_butcher, easy_eat_chunks, easy_quit_item_prompts,
+                ability_menu, sort_menus, spell_slot, item_slot, ability_slot,
                 autofight_stop, autofight_warning, autofight_hunger_stop,
                 autofight_hunger_stop_undead, autofight_throw,
                 autofight_throw_nomove, autofight_fire_stop, autofight_caught,
@@ -68,11 +68,14 @@ The contents of this text are:
                 status_caption_colour, enemy_hp_colour, clear_messages,
                 show_more, small_more, show_newturn_mark, show_game_time,
                 equip_bar, animate_equip_bar, item_stack_summary_minimum,
-                mlist_min_height, mlist_allow_alternate_layout, msg_min_height,
-                msg_max_height, messages_at_top, skill_focus,
-                msg_condense_repeats, msg_condense_short, show_travel_trail,
-                monster_list_colour, view_delay, force_more_message,
-                flash_screen_message, use_animations, darken_beyond_range
+                mlist_min_height, mlist_allow_alternate_layout,
+                monster_item_view_coordinates, monster_item_view_features,
+                msg_min_height, msg_max_height, msg_webtiles_height,
+                messages_at_top, msg_condense_repeats, msg_condense_short,
+                show_travel_trail, skill_focus, default_show_all_skills,
+                monster_list_colour, view_delay, use_animations,
+                darken_beyond_range, force_more_message, flash_screen_message,
+                cloud_status
 3-i     Colours (messages and menus)
                 menu_colour, message_colour
 3-j     Missiles.
@@ -104,13 +107,15 @@ The contents of this text are:
                 tile_key_repeat_delay, tile_tooltip_ms, tile_tag_pref,
                 tile_full_screen, tile_window_width, tile_window_height,
                 tile_map_pixels, tile_cell_pixels, tile_force_overlay,
+                tile_overlay_col, tile_overlay_alpha_percent, tile_full_screen,
                 tile_single_column_menus, tile_font_crt_file,
                 tile_font_stat_file, tile_font_msg_file, tile_font_tip_file,
                 tile_font_lbl_file, tile_font_crt_family, tile_font_stat_family,
                 tile_font_msg_family, tile_font_lbl_family, tile_font_crt_size,
                 tile_font_stat_size, tile_font_msg_size, tile_font_tip_size,
-                tile_font_lbl_size, tile_font_ft_light, tile_show_minihealthbar,
-                tile_show_minimagicbar, tile_show_demon_tier, tile_water_anim,
+                tile_font_lbl_size, tile_font_ft_light, glyph_mode_font, 
+				glyph_mode_font_size, tile_show_minihealthbar, tile_show_minimagicbar, 
+                tile_show_demon_tier, tile_water_anim,
                 tile_misc_anim, tile_realtime_anim, tile_show_player_species,
                 tile_layout_priority, tile_display_mode,
                 tile_level_map_hide_messages, tile_level_map_hide_sidebar,
@@ -701,7 +706,7 @@ view_max_height = 21 (max 71)
 * Note that using large viewports can slow the game down.
 
 view_lock_x = true
-        Keeps the player character centered horizontally in the
+        Keeps the player character centred horizontally in the
         viewport, continuously scrolling the viewport to match the
         PC's movements. If this is not set, the player character can
         move horizontally within the viewport, and the viewport will
@@ -709,13 +714,13 @@ view_lock_x = true
         left or right edge.
 
 view_lock_y = true
-        Keeps the character centered vertically in the viewport.
+        Keeps the character centred vertically in the viewport.
 
 view_lock = true
         Aliased option that sets both view_lock_x and view_lock_y.
 
-center_on_scroll = false
-        If this is set, the viewport centers on the player character
+centre_on_scroll = false
+        If this is set, the viewport centres on the player character
         whenever it scrolls (this option is irrelevant if view_lock_x
         and view_lock_y are set).
 
@@ -724,7 +729,7 @@ symmetric_scroll = true
         with the character movement that caused the scroll.
 
         To illustrate, let's say the PC is at the lower edge of the
-        viewport, but is near the horizontal center. Now the PC moves
+        viewport, but is near the horizontal centre. Now the PC moves
         diagonally down and right, forcing the viewport to scroll up
         one line. If symmetric_scroll is set, the viewport will also
         scroll left one column to match the PC's diagonal movement. If
@@ -732,7 +737,7 @@ symmetric_scroll = true
         not horizontally. symmetric_scroll can be less disorienting
         than free scrolling.
 
-        This option is not relevant if view_lock or center_on_scroll
+        This option is not relevant if view_lock or centre_on_scroll
         are set.
 
 scroll_margin_x = 2
@@ -864,6 +869,10 @@ explore_wall_bias = 0
 travel_key_stop = true
         If set to true then travel will stop at any keypress.
 
+travel_one_unsafe_move = false
+        If set to true then travel will make one move before conducting safety
+        checks for nearby danger.
+
 tc_reachable      = blue
 tc_dangerous      = cyan
 tc_disconnected   = darkgrey
@@ -955,7 +964,7 @@ rest_wait_percent = 100
         it will stop resting when this percent of maximum HP or MP is refilled.
         Resting after this point will still rest up to 100%.
 
-explore_auto_rest = false
+explore_auto_rest = true
         If true, auto-explore waits until your HP and MP are both at
         rest_wait_percent before moving.
 
@@ -963,7 +972,7 @@ auto_exclude += <monster name>, <monster name>, ...
         (List option)
         Whenever you encounter a sleeping or stationary monster during
         exploration that is included in this list, a travel exclusion is
-        automatically set centered on this monster, meaning autoexplore won't
+        automatically set centred on this monster, meaning autoexplore won't
         ever bring you into its line of sight. If the monster dies or wakes up
         while you are in sight, this exclusion is automatically removed again.
 
@@ -983,12 +992,18 @@ wall_jump_prompt = false
 
 auto_switch = false
         This option will allow you to automatically switch to an appropriate
-        weapon when firing or attacking in melee, as long as the one you are
-        wielding and the one you switch to are both in slot 'a' or 'b'.
+        weapon when attacking in melee, as long as the one you are wielding
+        and the one you switch to are both in slot 'a' or 'b'.
 
-travel_open_doors = true
-        If this is set to false, autoexplore/travel will not open doors,
-        instead stopping in front of them.
+travel_open_doors = (avoid | approach | open)
+        Configure how autoexplore/travel interacts with doors.
+           avoid = Autoexplore/travel will treat closed doors like walls. If
+                   the only way for exploration or travel to continue is through
+                   a closed door, it will stop by a closed door.
+        approach = Autoexplore/travel will not open doors, instead stopping
+                   in front of any door in its path.
+            open = Autoexplore/travel will open doors. (default)
+        This does not affect runed doors, which are always avoided.
 
 easy_unequip = true
         Allows auto removal of armour and jewellery when dropping it.
@@ -1019,22 +1034,50 @@ simple_targeting = false
         If set to true, disables smart targeting for explosion and bouncing
         bolt spells, making them automatically target the closest monster in
         range rather than trying to find a spot that affects multiple monsters
-        while avoiding the player.
+        while avoiding the player. This applies to target selection when
+        zapping as well as autotarget selection for quivered spells.
 
 allow_self_target = (yes | no | prompt)
         Allow targeting yourself with risky magic (e.g., the spell Bolt of Fire
         or a wand of paralysis.)
+
+always_use_static_targeters = false
+        A static targeter shows the possible area of effect for a spell that
+        does not have controllable targeting. If this option is set to true,
+        static targeters are shown when casting via `z` and `Z`. When false,
+        they are shown only via `Z` and via the fire interface. Targeters are
+        never shown when firing via AUTOFIRE (shift-tab, `p`) and other
+        autoattack commands.
+
+force_targeter = hailstorm, starburst, ignition
+        Force showing a targeter for the listed spells when casting normally,
+        even if the spell isn't targeted. This for practical purposes only has
+        an effect on statically targeted spells, such as the ones in the
+        default value; it is particularly useful for spells with an unusual
+        targeting pattern. If "all" appears in the options list, the rest of
+        the list (however constructed) will be ignored, and targeters will
+        be shown with every spell.
+
+>>>>>>> 2bc0b21477 (Add fine-grained rc control over static targeters)
+allow_self_target = prompt
+        Allow targeting yourself with risky magic (e.g., the spell Bolt of Magma
+        or a wand of paralysis.) Values: (yes | no | prompt).
+>>>>>>> 413aeb54f4 (Improve autotargeting for various quivered spells)
         When set to 'yes', you are a valid target. When set to 'no', you cannot
         target yourself with such spells. When set to 'prompt' (the default),
         you will be required to confirm self-targeting. This option has no
         effect on area-effect spells, such as Mephitic Cloud, where you are
         always a valid target.
 
-auto_butcher = very hungry
+auto_butcher = true
         If this is set to true, you will automatically travel to and attempt to
         butcher edible corpses. Can also be set to a hunger threshold ('very
         full', 'full', 'satiated', 'hungry', 'very hungry', or 'near starving')
         to enable automatic butchery only when at that state or hungrier.
+
+auto_butcher_max_chunks = 0
+        If this is set to a nonzero value, automatic butchering will not
+        be done if you have more than this many chunks in your inventory.
 
 confirm_butcher = (always | never | auto)
         If auto (default) you will be prompted for which corpses to butcher if
@@ -1244,9 +1287,8 @@ ability_slot ^= <regex>:<ability letters>
 
 autofight_stop = 50
         Autofight will not act if your HP is at or lower than this
-        percentage of your max HP. For example, to remove this stop
-        you would want:
-            autofight_stop = 0
+        percentage of your max HP. Disabled when set to 0. This setting applies
+        both to autofight and to autofire.
 
 autofight_warning = 0
         Enforce a minimum time (in milliseconds) between autofight commands.
@@ -1290,9 +1332,14 @@ autofight_hunger_stop_undead = false
           : end
 
 autofight_throw = false
-        If your quiver contains a throwable item, autofight will throw it
-        at enemies out of melee range. Without this option, only a wielded
-        launcher (a bow, crossbow, sling or blowgun) will be considered.
+        If your quiver contains contains a fireable action that does direct
+        damage to the enemy, regular CMD_AUTOFIGHT (i.e., tab on the default
+        binding) will trigger it at enemies out of melee range. Without this
+        option, only a wielded launcher (a bow, crossbow or sling) will be
+        triggered by CMD_AUTOFIGHT. If an action that does direct damage is
+        quivered but out of range, you will move towards the enemy. If an
+        action is quivered that does not do direct damage, CMD_AUTOFIGHT will
+        ignore it entirely.
 
 autofight_throw_nomove = true
         This works same as above, except only for ===hit_closest_nomove rather
@@ -1336,8 +1383,8 @@ automagic_fight = false
 
 automagic_stop = 0
         Similar to autofight_stop, if magic points are below this number
-        (percentage of total), casting is prevented. What happens depends
-        on automagic_fight setting.
+        (percentage of total), casting via autofight/autofire is prevented.
+        Disabled when set to 0.
 
 fail_severity_to_confirm = 3
         Ask for confirmation when attempting to cast a spell where a miscast
@@ -1492,6 +1539,21 @@ mlist_allow_alternate_layout = false
         than using the fixed position below the stat area.
         This option is not supported in the tiles build.
 
+monster_item_view_coordinates = false
+        Display player-centred coordinates in the ^x view description.
+
+monster_item_view_features += <regex>, <regex>
+        (List option)
+        Display features matching the <regex> in the ^x view description. Each
+        <regex> is a regular expression describing a dungeon feature. This
+        regex should match the description when using the 'x' command. In case
+        the regex matches several descriptions, all such features are listed.
+
+        Two special keywords are active here, if any pattern matches the string
+        "stair" all features that can be interacted with using the stair
+        commands are shown; if any pattern matches "trap" all trap features
+        (including webs) are shown.
+
 msg_min_height = 7
         You can reduce this to give more space to the map display. The
         minimum value is 5. In console, if this value is large enough
@@ -1514,7 +1576,7 @@ msg_webtiles_height = -1
 
 messages_at_top = false
         Put the message window at the top of the screen. This moves
-        the last message close to the center of the view when not
+        the last message close to the centre of the view when not
         using clear_messages=true.
 
 msg_condense_repeats = true
@@ -1531,7 +1593,9 @@ msg_condense_short = true
 
 show_travel_trail = false (defaults to true for online servers)
         When set to true, the path taken during autoexplore or travel
-        will be highlighted. If a travel trail is currently being displayed,
+        will be highlighted. The console colour and glyph of the travel trail
+        can be further configured using the feature option to override the
+        "travel trail" feature. If a travel trail is currently being displayed,
         the Clear Map command (Ctrl-C) clears the trail instead of the map
         (pressing it a second time then clears the map as usual).
 
@@ -1675,8 +1739,8 @@ menu_colour ^= <match>:<colour>:<regex>, <colour>:<regex>, ...
         The following apply only to items of certain base types, whether
         identified or not:
            inedible        (You cannot eat this, or get no nutrition from it.)
-           preferred       (The food type your character prefers, for example
-                            for herbivores/carnivores.)
+           preferred       (The food type your character prefers. For example,
+                            Ghouls prefer chunks to rations.)
            poisonous       (Chunks/corpses that are poisonous.)
            mutagenic       (Chunks/corpses that are mutagenic.)
            contaminated    (Chunks/corpses that give reduced nutrition.)
@@ -1730,37 +1794,47 @@ message_colour ^= <colour>:<channel>:<regex>, <colour>:<regex>, ...
         If you don't want to see a message at all, you can mute it:
              message_colour += mute:You start resting
 
-3-j     Missiles.
------------------
+3-j     Quivers, firing, and ammo.
+----------------------------------
 
 fire_items_start = a
         Sets the first inventory item to consider when selecting
         missiles to fire. The default is a.
 
-fire_order  = launcher, return
-fire_order += javelin / tomahawk / stone / rock / net
-fire_order += inscribed
+fire_order  = launcher, inscribed, spell, evokable, ability
         (Ordered list option)
-        Controls the order of items autoselected for firing. Items
+        Controls the order of items when cycling the quiver. Types
         should be separated by commas and items that appear first get
-        higher priority.
+        higher priority. Absent action types are not used when cycling
+        the quiver. This option also affects autoquivering on game start.
 
-        Items in any position may be slash-separated to indicate that
-        these are of equal priority. If this is the case, the first item
-        in your inventory that fits one of these will be picked for
-        firing.
-
-        'launcher' refers to firing the appropriate missile for the
-        wielded weapon (i.e. crossbow, bow, sling, blowgun). You'll almost
-        certainly want it first, as it'll be ignored when you're not
-        wielding a ranged weapon. 'return' refers to (identified)
-        weapons of returning.
+        'launcher' refers to firing the appropriate missile for a
+        wielded weapon (i.e. crossbow, bow, sling). 'throwing' refers to
+        all throwing ammo. Specific throwing ammo types can be refered to
+        by name ('javelin', 'boomerang', 'stone', 'rock', 'net', 'dart'),
+        but order of these only affects order internal to throwing ammo
+        types; 'inscribed' can also be used to control the order of ammo
+        that has been inscribed with "+f". See the "Inscriptions" section of
+        Crawl's manual for more information about inscriptions. Ammo types
+        can be separated with a "/" to indicate that inventory order should
+        determine cycle order.
 
         'inscribed' refers to any item with the "+f" inscription. See
         the "Inscriptions" section of Crawl's manual for more information
         about inscriptions.
 
-(See also pickup_thrown in 3-a.)
+fail_severity_to_quiver = 2
+        Exclude spells with this miscast level or higher from quiver cycling
+        and automatic quivering. -1 can be used to exclude spells entirely from
+        automatic quivering.
+
+launcher_autoquiver = true
+        If set to true, change the main quiver to launcher ammo on wielding
+        that launcher; if set to false, the main quiver is unaffaceted by
+        wielding a launcher. (Firing via tab or `v` still work.). This also
+        affects rare artefacts that may be evoked.
+
+(See also pickup_thrown in 3-a, and the various autofight settings in 3-g.)
 
 3-k     Message Channels.
 -------------------------
@@ -2030,6 +2104,13 @@ tile_window_height = -90
         will auto-size the window. If set to a negative number (default), it
         will use the screen's resolution, minus the given value.
 
+game_scale = 1
+        An integer scale value between 1 and 8 that will increase the size of
+        all UI elements. This can be used to simulate high-dpi rendering on
+        high resolution displays that don't directly support high-dpi, or adjust
+        scaling for very large displays. For a 4k display, we recommend a value
+        of 3 or 4, and a 2k display will typically look best with 2. Local tiles only.
+
 tile_map_pixels = 0
         The maximum number of pixels each minimap square should take up. If you
         have a low resolution, and feel like the inventory is too small, you
@@ -2063,6 +2144,18 @@ tile_force_overlay = false
         tile_font_msg_size smaller will make the overlay smaller while retaining
         the same number of lines. Increase the view_max_height option if you
         find yourself with unused screen estate.
+
+tile_overlay_col = #646464
+        Background color of the message window overlay, as when
+        tile_force_overlay is set to true. Used in conjunction with
+        tile_overlay_alpha_percent.
+
+tile_overlay_alpha_percent = 40
+        Transparency value for the message window overlay background, as when
+        tile_force_overlay is set to true. Setting this option to 0 will cause
+        the message window to only display text without any background. And
+        setting this option to 100 will force an opaque backgroud to the
+        message window.
 
 tile_full_screen = auto
         Setting this option to true or false will force full screen mode to be
@@ -2111,6 +2204,16 @@ tile_font_lbl_size  = 14
 
 tile_font_ft_light = false
         Selects 'light' font hinting.
+
+glyph_mode_font = monospace
+        Font used to render the dungeon in glyph mode for WebTiles. If set to
+        monospace (default) or the font is not available, the browser's default
+        monospaced font will be used.
+        This option is only available on WebTiles.
+
+glyph_mode_font_size = 24
+        Font size (in points) for the dungeon view in glyph mode for WebTiles.
+        This option is only available on WebTiles.
 
 tile_show_minihealthbar = true
 tile_show_minimagicbar  = true
@@ -2267,7 +2370,7 @@ dump_message_count = 20
 
 dump_order  = header,hiscore,stats,misc,inventory,
 dump_order += skills,spells,overview,mutations,messages,screenshot,
-dump_order += monlist,kills,notes,skill_gains,action_counts
+dump_order += monlist,kills,notes,screenshots,skill_gains,action_counts
         (Ordered list option)
         Controls the order of sections in the dump.
 
@@ -2293,7 +2396,7 @@ these in the dump or morgue files. Below are options for tweaking this behaviour
 The following events are logged:
         - Gaining or losing a level
         - Entering a dungeon level for the first time
-        - Memorizing a spell of higher level than any learned before
+        - Memorising a spell of higher level than any learned before
         - Becoming a worshipper of a god
         - Abandoning a god
         - Being put under penance and being forgiven
@@ -2492,12 +2595,13 @@ feature -= <regex> , <regex>
         to override the above display_char options, or also to distinguish
         among subtypes of a character.
 
-        'magic' always refers to magic mapping. So the <magicmap symbol>
-        entry determines what symbol will be used for features only
-        detected via magic mapping.
+        'magic' refers to magic mapping. So the <magicmap symbol>
+        entry determines what symbol will be used for features
+        detected via magic mapping. The <magicmap symbol> will also be used
+        for stone stairs with unknown destination and unvisited transporters.
 
-        'emphasised_colour' refers to the colour used to highlight
-        stone stairs with unknown destination; for non-stair features,
+        'emphasised_colour' refers to the colour used to highlight stone stairs
+        and transporters with unknown destination; for non-stair features,
         setting emphasis colours does nothing useful.
 
         Leading parameters in the {...} list can be omitted by leaving
@@ -2761,7 +2865,8 @@ use_fake_cursor = true
         targeting screens instead of relying on the term to draw the
         cursor. Use this if your term cannot show a cursor over
         darkgrey/black squares.
-        On non-Unix builds this option defaults to false.
+        On non-Unix builds this option defaults to false, and setting it to
+        to true may have unpredictable results.
 
 
 6-  Lua.
@@ -2872,3 +2977,53 @@ The above caveat applies to the "wiz_mode" option as well. Instead of
 conditionalized wiz_mode, you can add to the command line
 "-extra-opt-last wiz_mode=yes" to make any new game start in wizard
 mode.
+
+7-  Recommended Options for Blind Players.
+==========================================
+
+The following settings are recommended to facilitate using crawl in console
+with a screenreader.
+
+Disable animations and view delays so the screen updates immediately after each
+command:
+    view_delay = 0
+    travel_delay = -1
+    rest_delay = -1
+    use_animations = 0
+
+Place messages at the top of the screen and remove message condensing for
+easier screen reading:
+    messages_at_top = true
+    clear_messages = true
+    msg_condense_short = false
+
+Make the player cursor easier to track with screen reading, by setting a custom
+symbol for the player:
+    use_fake_player_curosr = false
+    show_player_species = false
+    mon_glyph += player:x263A
+
+Use mouse input clicks for automove (see the discussion of the mouse_input
+option for terminal configuration specifics):
+    mouse_input = true
+
+Allow auto-travel/move to advance one step even when monsters are present:
+    travel_one_unsafe_move = true
+
+List player-relative coordinates in the ^x display:
+    monster_item_view_coordinates = true
+
+The ^x display can list a customizable set of features controlled with regular
+expressions. For example, to include all water in ^x set:
+    monster_item_view_features += water
+
+Mark the path taken by auto-travel and the exploration horizon with special
+characters:
+    show_travel_trail = true
+    feature += travel trail {x25AA}
+    feature += explore horizon {x25AB}
+
+Set a separate glyph for unvisited stairs and transporters:
+    feature += stone staircase leading up {<,x25C2}
+    feature += stone staircase leading down {>,x25B8}
+    feature += transporter {xA9, x25CE}

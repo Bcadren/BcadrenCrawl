@@ -39,7 +39,7 @@ function dis_divider(e, water)
    e.tags("dis_divider no_rotate no_hmirror unrand")
    e.orient("north")
    e.depth("Dis:$")
-   e.kmons("1 = hell sentinel")
+   e.kmons("1 = gwarchodwr")
    e.kmons("2 = iron dragon / iron giant w:5")
    if water then
       e.kfeat("2w = deep_water")
@@ -68,7 +68,7 @@ default-depth: Dis, !Dis:$
 
 NAME:   lemuel_mystery_crypt
 ORIENT: float
-MONS:   guardian mummy w:6 / ushabti w:4 / mummy priest / greater mummy, lich
+MONS:   guardian mummy w:6 / ushabti w:4 / mummy priest / royal mummy, lich
 NSUBST: 1:1=}> / 1=)> / 1=]> / *=1
 # occasionally (12.5%), all downstairs are in this vault
 : dis_statues(_G)
@@ -116,9 +116,9 @@ ENDMAP
 
 NAME: grunt_dis_stairs_iron_hall
 TAGS: transparent patrolling
-MONS: iron dragon / quicksilver dragon, reaper w:7 / tormentor w:6
+MONS: iron dragon / quicksilver dragon, reaper w:7 / poenydio w:6
 MONS: iron troll
-MONS: rust devil / nothing, iron imp / nothing
+MONS: taeringu / nothing, haearbwca / nothing
 {{
     dgn.persist.grunt_iron_hall_animated = false
     local trap_marker = TriggerableFunction:new {
@@ -136,8 +136,7 @@ MONS: rust devil / nothing, iron imp / nothing
     lua_marker(']', trap_marker)
     lua_marker(')', trap_marker)
     lua_marker('G', props_marker {trap_statue=1,
-                                  veto_dig="veto",
-                                  veto_shatter="veto"})
+                                  veto_destroy="veto"})
     set_feature_name("granite_statue", "iron statue")
 }}
 SUBST: d = 3
@@ -182,7 +181,7 @@ NSUBST:  P = 1:{ / 1:} / 1 : [:1 ]:1 %:16, Q = 1:{ / 1 : [:8 <:1 / 1 : (:1 %:8
 NSUBST:  RS = 1:} / 1 : ]:8 >:1 / 1 : ):1 %:8
 SUBST:   I = G, ~ : wv., ` : wv., ^ = ., % : %:9 .:1, % = %:499 |:1
 : if you.in_branch("Dis") then
-KMONS:   01 = tormentor
+KMONS:   01 = poenydio
 KMONS:   23 = reaper
 KMONS:   45 = hellion
 KMONS:   67 = quicksilver dragon
@@ -191,16 +190,16 @@ KMONS:   AB = dancing weapon ; great sword good_item | battleaxe good_item | \
                                glaive good_item | great mace good_item
 KMONS:   CD = war gargoyle
 KMONS:   E = lich
-KMONS:   F = executioner
-KMONS:   ! = rust devil / skeletal warrior / hell knight / skeleton w:15
-KMONS:   ? = patrolling iron imp
+KMONS:   F = oxarmordth
+KMONS:   ! = taeringu / skeletal warrior / hell knight / skeleton w:15
+KMONS:   ? = patrolling haearbwca
 : dgn.delayed_decay(_G, '%', 'human corpse / human skeleton, \
 :                             human corpse / human skeleton')
 : else
 KMONS:   01 = ghost moth
 KMONS:   23 = golden dragon
 KMONS:   4567 = nonbase draconian
-KMONS:   89 = killer klown
+KMONS:   89 = killer klown band
 KMONS:   AB = curse toe
 KMONS:   CD = electric golem
 KMONS:   E = orb of fire
@@ -246,12 +245,12 @@ NAME:    hangedman_dis_monolith
 TAGS:    transparent layout_city
 ORIENT:  float
 MONS:    patrolling quicksilver dragon / patrolling iron dragon / \
-         patrolling executioner
-MONS:    patrolling hell sentinel
-MONS:    rust devil w:15 / skeletal warrior / iron dragon skeleton w:5 / \
+         patrolling oxarmordth
+MONS:    patrolling gwarchodwr
+MONS:    taeringu w:15 / skeletal warrior / iron dragon skeleton w:5 / \
          iron dragon zombie w:5 / iron troll skeleton w:5 / \
          iron troll zombie w:5 / hell knight w:15
-MONS:    hellion / tormentor / reaper / ancient champion / \
+MONS:    hellion / poenydio / reaper / ancient champion / \
          dancing weapon w:20 ; great sword good_item | battleaxe good_item | \
                                glaive good_item | great mace good_item
 SHUFFLE: ABa / CDb / EFc
@@ -280,7 +279,7 @@ TAGS:    transparent
 SHUFFLE: }])
 NSUBST:  a = + / v, b = + / v, c = + / v, d = + / v
 SUBST:   2 = 2., 0 = 0.
-KMONS:   12 = hell sentinel / executioner
+KMONS:   12 = gwarchodwr / oxarmordth
 MAP
   v v v v   v v v v
   vvvavvv   vvvdvvv
@@ -572,7 +571,7 @@ ENDMAP
 NAME:   kennysheep_iron_temple
 ORIENT: centre
 TAGS:   transparent no_rotate no_vmirror no_monster_gen
-MONS:   hell sentinel, iron golem
+MONS:   gwarchodwr, iron golem
 MARKER: F = lua:fog_machine { cloud_type = "flame", pow_min = 100, \
                               pow_max = 100, delay = 10, size = 1, \
                               delay = 10, size = 1, walk_dist = 0, \
@@ -618,14 +617,14 @@ TAGS:    transparent no_pool_fixup layout_type_city layout_type_passages
 DEPTH:   Dis, !Dis:$
 ORIENT:  float
 MONS:    skeletal warrior / vampire w:6 / wight w:2          / \
-         zombie / skeleton / hell hound / rust devil w:14    / \
-         red devil / ice devil w:16 / sun demon w:6          / \
-         hellwing / soul eater w:6
-MONS:    reaper / hellion / tormentor / executioner w:2      / \
+         zombie / skeleton / hell hound / taeringu w:14    / \
+         cythraul / rypuiwel w:16 / sturnulos w:6          / \
+         vlerk / saelneytandi w:6
+MONS:    reaper / hellion / poenydio / oxarmordth w:2      / \
          bone dragon / lich / ancient champion               / \
-         balrug w:2 / blizzard demon w:2 / shadow demon w:2  / \
+         balrug w:2 / cenysus w:2 / cysgodol w:2  / \
          iron dragon w:2 / quicksilver dragon w:2
-KFEAT:   Z = known zot trap
+KFEAT:   Z = zot trap
 # Standard floor spawn equipment drops, not real loot.
 KITEM:   d = battleaxe no_pickup / great mace no_pickup      / \
              great sword no_pickup / glaive no_pickup        / \
@@ -723,9 +722,9 @@ vBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBv
 ENDMAP
 
 NAME:    dis_old
-MONS:    patrolling Dispater, brimstone fiend, Ice Fiend
-MONS:    rust devil, war gargoyle, iron dragon / iron giant w:5
-KMONS:   7 = hell sentinel
+MONS:    patrolling Dispater, rhuddgoch, Vetrifl
+MONS:    taeringu, war gargoyle, iron dragon / iron giant w:5
+KMONS:   7 = gwarchodwr
 KMONS:   8 = quicksilver dragon
 : serpent_of_hell_setup(_G)
 SHUFFLE: 23
@@ -766,10 +765,10 @@ ENDMAP
 
 NAME:    dis_mu
 KFEAT:   o = granite_statue
-MONS:    patrolling Dispater, brimstone fiend, ice fiend, rust devil
+MONS:    patrolling Dispater, rhuddgoch, Vetrifl, taeringu
 MONS:    war gargoyle, iron dragon / iron giant w:5, iron troll
 KMONS:   8 = iron golem
-KMONS:   9 = hell sentinel
+KMONS:   9 = gwarchodwr
 KMONS:   0 = quicksilver dragon
 : serpent_of_hell_setup(_G)
 SHUFFLE: 23
@@ -783,8 +782,7 @@ MARKER:  o = lua:monster_on_death { \
             message_seen="The iron statue comes to life!", \
             message_unseen="You hear a grinding sound.", \
             monster_place_feature=dgn.fnum("granite_statue"), \
-            veto_dig="veto", \
-            veto_shatter="veto" \
+            veto_destroy="veto" \
          }
 KITEM:   | = superb_item no_pickup
 : dis_castle(_G)
@@ -823,9 +821,9 @@ MAP
 ENDMAP
 
 NAME:    dis_grunt
-MONS:    patrolling Dispater, Hell Sentinel, iron dragon / iron giant w:5
-MONS:    rust devil / iron imp w:20
-MONS:    iron troll, quicksilver dragon, cacodemon
+MONS:    patrolling Dispater, gwarchodwr, iron dragon / iron giant w:5
+MONS:    taeringu / haearbwca w:20
+MONS:    iron troll, quicksilver dragon, titivilus
 SHUFFLE: AP / BQ / CR / DS / ET
 SUBST:   A = 1, BC = 2, DE = 7
 SUBST:   P = O, QRST = .
@@ -834,11 +832,11 @@ TILE:    G = dngn_statue_iron_golem
 COLOUR:  G = cyan
 KMONS:   8 = iron golem
 KMONS:   9 = war gargoyle
-ITEM:    plate armour good_item / crystal plate armour good_item w:3
+ITEM:    plate armour good_item / crystal plate good_item w:3
 ITEM:    any weapon good_item
-KMONS:   K = Hell Sentinel
+KMONS:   K = gwarchodwr
 KITEM:   K = |
-KMONS:   J = Hell Sentinel
+KMONS:   J = gwarchodwr
 KITEM:   J = $
 : serpent_of_hell_setup(_G)
 : dis_castle(_G)
@@ -1001,12 +999,12 @@ ENDMAP
 ##############################################################################
 NAME:    dis_st
 ORIENT:  encompass
-MONS:    patrolling Dispater, brimstone fiend, ice fiend, hell sentinel
+MONS:    patrolling Dispater, rhuddgoch, Vetrifl, gwarchodwr
 MONS:    iron troll, iron dragon / iron giant w:2
-MONS:    cacodemon / ancient champion w:8
+MONS:    titivilus / ancient champion w:8
 NSUBST:  A = 1:+ / *:v, B = 1:+ / *:v
 NSUBST:  S = 1:( / 1:[ / 1:{ / *:.
-# four hell sentinels in Dispater's building
+# four gwarchodwrs in Dispater's building
 NSUBST:  _ = 4:4 / *:.
 NSUBST:  5 = 1:5 / 1:. / * = 5., 6 = 1:6 / 1:. / * = 6., 7 = 1:7 / 1:. / * = 7.
 NSUBST:  8 = 2:4 / 1:6 / 1:7 / 4 = 4.. / 4 = 67. / *:.
@@ -1096,13 +1094,13 @@ ENDMAP
 NAME:    dis_hangedman
 TAGS:    no_monster_gen
 ORIENT:  encompass
-MONS:    rust devil w:40 / skeletal warrior
-MONS:    war gargoyle, brimstone fiend, ice fiend, hell sentinel
+MONS:    taeringu w:40 / skeletal warrior
+MONS:    war gargoyle, rhuddgoch, Vetrifl, gwarchodwr
 MONS:    patrolling iron dragon / patrolling quicksilver dragon / \
          patrolling iron giant w:5
 MONS:    patrolling Dispater
 KMONS:   8 = vampire knight w:8 / hell knight band w:8 / ancient champion w:18 / \
-         reaper w:6 / cacodemon w:2 / executioner w:6 / balrug w:4 / \
+         reaper w:6 / titivilus w:2 / oxarmordth w:6 / balrug w:4 / \
          dancing weapon w:12 ; great mace good_item | glaive good_item | \
                                battleaxe good_item | great sword w:15 good_item
 NSUBST:  - = 1:+ / 1 : v:14 +:1 / *:v, = = 1:+ / 1 : v:14 +:1 / *:v
@@ -1189,10 +1187,10 @@ ENDMAP
 ##############################################################################
 NAME:    dis_grunt_layers
 ORIENT:  encompass
-MONS:    patrolling Dispater, Hell Sentinel
+MONS:    patrolling Dispater, gwarchodwr
 MONS:    iron dragon / iron giant w:5 / quicksilver dragon w:5
-MONS:    rust devil / iron imp w:20, iron troll
-MONS:    brimstone fiend, ice fiend
+MONS:    taeringu / haearbwca w:20, iron troll
+MONS:    rhuddgoch, Vetrifl
 SHUFFLE: {([<
 NSUBST:  2 = 3:6 / 3:7 / *:2
 NSUBST:  P = 1:1 / *:2

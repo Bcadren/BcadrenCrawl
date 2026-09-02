@@ -21,7 +21,6 @@ aptitudes:
   slings: 1
   bows: 1
   crossbows: 1
-  throwing: 1
   armour: False
   dodging: 1
   stealth: 4
@@ -49,8 +48,8 @@ species_flags:
   - hairless
 mutations:
   1:
+    MUT_SOFT_FLESH: 1
     MUT_CAMOUFLAGE: 1
-    MUT_GELATINOUS_BODY: 1
 fake_mutations:
   - long: You cannot wear most types of armour.
     short: almost no armour
@@ -62,6 +61,10 @@ recommended_jobs:
   - JOB_FIRE_ELEMENTALIST
   - JOB_EARTH_ELEMENTALIST
   - JOB_VENOM_MAGE
+
+# start TAG_MAJOR_VERSION == 34
+create_enum: false
+# end TAG_MAJOR_VERSION
+
 walking_verb: Wriggl
 altar_action: curl up in front of
-create_enum: False

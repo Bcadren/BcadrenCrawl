@@ -1,5 +1,6 @@
+TAG_MAJOR_VERSION: 34
 enum: SP_BLACK_DRACONIAN
-monster: MONS_BLACK_DRACONIAN
+monster: MONS_BLUE_DRACONIAN
 name: "Black Draconian"
 short_name: "Dr"
 adjective: "Draconian"
@@ -12,20 +13,35 @@ aptitudes:
   hp: 1
   mp_mod: 0
   mr: 3
-  fighting: 1
-  slings: -1
-  bows: -1
-  crossbows: -1
-  throwing: -1
+  fighting: 2
+  short_blades: -2
+  long_blades: -2
+  axes: -2
+  whips_and_flails: -2
+  polearms: -2
+  maces_and_staves: -2
+  slings: -2
+  bows: -2
+  crossbows: -2
   armour: False
-  dodging: -1
-  spellcasting: -1
-  hexes: -1
-  charms: -1
+  dodging: -2
+  stealth: -2
+  shields: -2
+  unarmed_combat: -1
+  spellcasting: 2
+  hexes: -2
+  charms: -2
+  summoning: -2
+  translocations: -2
+  transmutations: -2
+  necromancy: -2
+  fire_magic: -2
+  ice_magic: -2
+  earth_magic: -2
+  poison_magic: -2
   invocations: 1
   # Black Draconian specific
-  air_magic: 2
-  earth_magic: -2
+  air_magic: 3
 str: 10
 int: 8
 dex: 6
@@ -40,4 +56,7 @@ mutations:
 fake_mutations:
   - long: You can breathe wild blasts of lightning.
     short: breathe lightning
-create_enum: False
+
+# start TAG_MAJOR_VERSION == 34
+create_enum: false
+# end TAG_MAJOR_VERSION

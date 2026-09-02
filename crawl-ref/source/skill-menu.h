@@ -5,9 +5,14 @@
 
 #pragma once
 
+#include <vector>
+
 #include "enum.h"
 #include "menu.h"
+#include "precision-menu.h"
 #include "skills.h"
+
+using std::vector;
 
 // Skill Menu
 
@@ -59,7 +64,7 @@ class SkillTextTileItem : public TextTileItem
 public:
     SkillTextTileItem() {};
 protected:
-    bool handle_mouse(const MouseEvent& me) override;
+    bool handle_mouse(const wm_mouse_event& me) override;
 };
 #endif
 
@@ -156,7 +161,7 @@ public:
     void clear_targets();
     void set_target_mode();
     void cancel_set_target();
-    int read_skill_target(skill_type sk, int keyn);
+    int read_skill_target(skill_type sk);
     void select(skill_type sk, int keyn);
     void toggle(skill_menu_switch sw);
 

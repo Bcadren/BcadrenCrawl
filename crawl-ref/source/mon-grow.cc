@@ -32,7 +32,9 @@ static const monster_level_up mon_grow[] =
     monster_level_up(MONS_ORC_WARRIOR, MONS_ORC_KNIGHT),
     monster_level_up(MONS_ORC_KNIGHT, MONS_ORC_WARLORD),
     monster_level_up(MONS_ORC_PRIEST, MONS_ORC_HIGH_PRIEST),
+    monster_level_up(MONS_ORC_HIGH_PRIEST, MONS_ORC_CLERIC),
     monster_level_up(MONS_ORC_WIZARD, MONS_ORC_SORCERER),
+    monster_level_up(MONS_ORC_SORCERER, MONS_ORC_CLERIC),
 };
 
 mons_experience_levels::mons_experience_levels()
@@ -160,12 +162,8 @@ bool monster::gain_exp(int exp, int max_levels_to_gain)
     if (get_experience_level() >= MAX_MONS_HD)
         return false;
 
-    // Only natural monsters can level-up.
-    if (!(holiness() & MH_NATURAL))
-        return false;
-
-    // Only monsters that you can gain XP from can level-up.
-    if (!mons_class_gives_xp(type) || is_summoned())
+    // Derived undead cannot level-up.
+    if (mons_class_is_zombified(type))
         return false;
 
     // Avoid wrap-around.
@@ -197,9 +195,8 @@ bool monster::gain_exp(int exp, int max_levels_to_gain)
                       + mexplevs[get_experience_level() + 1]) / 2;
     }
 
-    // If the monster has leveled up to a monster that will be angered
-    // by the player, handle it properly.
-    player_angers_monster(this);
+    if (props.exists(YRED_HD_KEY))
+        props[YRED_HD_KEY] = props[YRED_HD_KEY].get_int() + levels_gained;
 
     return levels_gained > 0;
 }

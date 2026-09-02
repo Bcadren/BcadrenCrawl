@@ -5,10 +5,12 @@
 
 #pragma once
 
+#include "mon-ench.h"
 #include "player.h"
-
-void gift_ammo_to_orc(monster* orc, bool initial_gift = false);
 
 bool bless_follower(monster* follower = nullptr,
                     god_type god = you.religion,
                     bool force = false);
+
+// BCADNOTE: Weird place for this. Consider moving to a different package.
+bool increase_ench_duration(monster* mon, mon_enchant ench, const int increase);

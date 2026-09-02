@@ -385,6 +385,9 @@ function TroveMarker:search_for_rune(marker, pname, dry_run)
   elseif you.have_rune(item.plus1) then
     if dry_run ~= nil then crawl.mpr("Accepting " .. item.ego_type .. ".") end
     return true
+  elseif item.plus1 == 3 and you.have_rune(19) then 
+    if dry_run ~= nil then crawl.mpr("Accepting the Cracked Rune of Zot.") end
+    return true
   else
     if dry_run ~= nil then crawl.mpr("No " .. item.ego_type .. ".") end
     return false

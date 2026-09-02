@@ -104,7 +104,7 @@ NAME:   lemuel_nasty_pond
 DEPTH:  Tar
 TAGS:   no_pool_fixup no_rotate
 MONS:   withered plant
-MONS:   oklob plant, death ooze, necrophage, blizzard demon / green death
+MONS:   oklob plant, death ooze, necrophage, cenysus / gwyrdd
 SUBST:  W:w.
 SUBST:  Z:w.
 SUBST:  w = w .:1
@@ -133,7 +133,7 @@ ENDMAP
 NAME: grunt_tartarus_stairs_gauntlet_trap
 DEPTH: Tar, !Tar:$
 TAGS: generate_awake patrolling no_trap_gen
-MONS: Tzitzimitl, shadow demon / reaper, soul eater, necrophage, shadow imp
+MONS: Tzitzimitl, cysgodol / reaper, saelneytandi, necrophage, cysgobwca
 {{
     dgn.persist.grunt_gauntlet_trap_triggered = false
     local trap_marker = TriggerableFunction:new {
@@ -180,10 +180,10 @@ TAGS:    transparent no_monster_gen
 DEPTH:   Tar, !Tar:$, Zot:1-4
 : if you.in_branch("Tar") then
 KMONS:   12 = patrolling reaper
-KMONS:   34 = patrolling tormentor
-KMONS:   56 = patrolling shadow demon
+KMONS:   34 = patrolling poenydio
+KMONS:   56 = patrolling cysgodol
 KMONS:   7 = skeletal warrior
-KMONS:   8 = patrolling shadow imp
+KMONS:   8 = patrolling cysgobwca
 KMONS:   AB = lich
 KMONS:   CD : vampire mage / mummy priest
 KMONS:   EF : shadow dragon w:5 / death drake
@@ -197,9 +197,9 @@ KMONS:   8 = patrolling death cob
 KMONS:   ABCD = shadow dragon
 KMONS:   EF = death drake
 : end
-KMONS:   0 = soul eater
+KMONS:   0 = saelneytandi
 KMONS:   Z = obsidian statue
-KFEAT:   Z = known zot trap
+KFEAT:   Z = zot trap
 SHUFFLE: 1234, 12 / 34 / 56, ABCD, AB / CD / EF, {'" / {'" / }`_, {', }`, GHI
 SUBST:   { : -_= |:3, } : -= |:2, ' : |:1 .:4, " = ., Z = Z:1 c:8
 SUBST:   G : O:20 X, H : O X:50, I = X, X : xc
@@ -240,7 +240,7 @@ ENDMAP
 NAME:    hangedman_restless_catacombs
 TAGS:    no_monster_gen
 DEPTH:   Tar, !Tar:$
-MONS:    soul eater, patrolling curse skull
+MONS:    saelneytandi, patrolling curse skull
 MONS:    skeletal warrior / phantasmal warrior w:6 / \
          shadow wraith w:4 / guardian mummy w:4 / \
          ushabti w:2 / death ooze w:4
@@ -563,7 +563,7 @@ TAGS:    no_monster_gen
 DEPTH:   Tar, !Tar:$
 ORIENT:  float
 MONS:    shadow w:6 / shadow wraith / wraith w:6
-MONS:    soul eater, tormentor / shadow demon w:12
+MONS:    saelneytandi, poenydio / cysgodol w:12
 MONS:    patrolling lost soul
 KMONS:   56 = flayed ghost
 KMONS:   78 = eidolon
@@ -612,7 +612,7 @@ MONS:    zombie / skeleton / spectral thing w:4
 MONS:    jiangshi / phantasmal warrior w:4 / shadow wraith w:4, vampire mage
 MONS:    vampire knight ; demon whip | demon trident | demon blade . \
                           plate armour | chain mail
-MONS:    soul eater, tormentor w:3 / shadow demon w:1, silent spectre
+MONS:    saelneytandi, poenydio w:3 / cysgodol w:1, silent spectre
 KMONS:   9 = reaper / lorocyproca w:6
 KMONS:   J = Jory w:9 / tzitzimitl w:1, tzitzimitl
 NSUBST:  J = 1:J / *:9, 8 = 1:6 / * = 5:19 6:1
@@ -643,14 +643,17 @@ ENDMAP
 
 NAME:    tar_old
 ORIENT:  encompass
-MONS:    patrolling Ereshkigal, reaper, shadow demon, shadow
+MONS:    patrolling Ereshkigal, reaper, cysgodol, shadow
 MONS:    lich / ancient lich, shadow dragon / death drake w:1, tzitzimitl
 KMONS:   8 = ghoul
 KMONS:   9 = vampire mage / vampire knight
-KMONS:   0 = soul eater
+KMONS:   0 = saelneytandi
 KMONS:   Z = skeleton / zombie
 SUBST:   ? = ?..., ? = 2., 0 = 002
 SHUFFLE: 3569
+SHUFFLE: ABCD
+SUBST: BCD = x
+KFEAT: AE = runed_door
 : serpent_of_hell_setup(_G)
 : tar_setup(_G)
 MAP
@@ -662,18 +665,18 @@ xxxx.................cccc..........ccc............................xxxx
 xxxx.............ccccc..cccc.....ccc.cccc.........................xxxx
 xxxx...........ccc.........ccccccc.....cc.........................xxxx
 xxxx.........ccc........6...........V..cc.........................xxxx
-xxxx........cc4........................cc...........xxxxxxxx......xxxx
+xxxx........cc4........................cc...........xxAAAAxx......xxxx
 xxxx........cc44xxx++xxx......D........cc..........xx......xx.....xxxx
 xxxx........ccxxx......xxx.......ccc++ccc....6....xx........xx....xxxx
-xxxx........cxx..........xxx.....ccc44ccc.........x..........x....xxxx
-xxxx........cx............xx....cccc44cc.........xx.9......7.xx...xxxx
-xxxx.......ccx.G........G.xxx7ccc..c44c..........x....||||....x...xxxx
-xxxx.......cxx............xxxcc..................x....||||....x...xxxx
-xxxx......ccx..............xxc...................xx.9......9.xx...xxxx
-xxxx......ccx..G........G..xxc..x.........x.......x..........x....xxxx
+xxxx........cxx..........xxx.....ccc44ccc........xx..........xx...xxxx
+xxxx........cx............xx....cccc44cc.........D,.9......7..B...xxxx
+xxxx.......ccx.G........G.xxx7ccc..c44c..........D....||||....B...xxxx
+xxxx.......cxx............xxxcc..................D....||||....B...xxxx
+xxxx......ccx..............xxc...................D..9......9..B...xxxx
+xxxx......ccx..G........G..xxc..x.........x......xx..........xx...xxxx
 xxxx......ccx..............xcc......??............xx........xx....xxxx
 xxxx.......cxx............xxc......2222............xx......xx.....xxxx
-xxxx.......ccx.G........G.xcc.......??..............xxxxxxxx......xxxx
+xxxx.......ccx.G........G.xcc.......??..............xxCCCCxx......xxxx
 xxxx........cx7..........7xc......................................xxxx
 xxxx........cxx....17....xxc....x.........x.......................xxxx
 xxxx........ccxxx......xxxcc......................................xxxx
@@ -684,24 +687,24 @@ xxxx..........cccccccccccc......x.........x............V..........xxxx
 xxxx..............................................................xxxx
 xxxx...........................................cccccccccccccccc...xxxx
 xxxx...........................................cccccccccccccccc...xxxx
-xxxx..................................6........cc$$$$$xx|||||cc...xxxx
-xxxx.......3........V...........x.........x....cc$$$$$xx|||||cc...xxxx
-xxxx................................7..........ccxxcccccccccccc...xxxx
-xxxx...........................................ccxxcccccccccccc...xxxx
-xxxx...........................................cc44744xx00000cc...xxxx
-xxxx.......ccccccccc+ccccccccc.................cc44444xx88888cc...xxxx
-xxxx.......c.................c..x.........x..ccccccccccccxxxxcc...xxxx
-xxxx.......c.x.x.x.x.x.x.x.x.c.................ccccccccccxxxxcc...xxxx
-xxxx.......c.................c......................+........cc...xxxx
-xxxx.......cx5x.x.x.x.x.x.x5xc......................+........cc...xxxx
-xxxx.......c.................c.................ccccccccccxxxxcc...xxxx
-xxxx.......c.x.x.x.x5x.x.x.x.c..x.........x..ccccccccccccxxxxcc...xxxx
-xxxx.......c.................c.................ccZZZZZxx88888cc...xxxx
-xxxx.......cxxxxxxx.x.xxxxxxxc.................ccZZZZZxx00000cc...xxxx
-xxxx.......c$$$$$$x....x$$$||c.................ccxxcccccccccccc...xxxx
-xxxx.......c$x$$x$xx.x.x$x$x|c.................ccxxcccccccccccc...xxxx
-xxxx.......c||||||+....+$$$||c..x....3....x....cc||xx444xx|||cc...xxxx
-xxxx.......ccccccccccccccccccc.................cc||xx444xx|7|cc...xxxx
+xxxx..................................6........cc$$$$$EE|||||cc...xxxx
+xxxx.......3........V...........x.........x....cc$$$$$EE|||||cc...xxxx
+xxxx................................7..........ccEEcccccccccccc...xxxx
+xxxx...........................................ccEEcccccccccccc...xxxx
+xxxx...........................................cc44744EE00000cc...xxxx
+xxxx.......ccccccccc+ccccccccc.................cc44444EE88888cc...xxxx
+xxxx.......c.................c..x.........x..ccccccccccccccEEcc...xxxx
+xxxx.......c.x.x.x.x.x.x.x.x.c.................ccccccccccccEEcc...xxxx
+xxxx.......c.................c......................EE.......cc...xxxx
+xxxx.......cx5x.x.x.x.x.x.x5xc......................EE.......cc...xxxx
+xxxx.......c.................c.................ccccccccccccEEcc...xxxx
+xxxx.......c.x.x.x.x5x.x.x.x.c..x.........x..ccccccccccccccEEcc...xxxx
+xxxx.......c.................c.................ccZZZZZEE88888cc...xxxx
+xxxx.......cxxxxxxx.x.xxxxxxxc.................ccZZZZZEE00000cc...xxxx
+xxxx.......c$$$$$$x....x$$$||c.................ccEEcccccccccccc...xxxx
+xxxx.......c$x$$x$xx.x.x$x$x|c.................ccEEcccccccccccc...xxxx
+xxxx.......c||||||+....+$$$||c..x....3....x....cc||EE444EE|||cc...xxxx
+xxxx.......ccccccccccccccccccc.................cc||EE444EE|7|cc...xxxx
 xxxx...........................................cccccccccccccccc...xxxx
 xxxx...........................................cccccccccccccccc...xxxx
 xxxx..............................................................xxxx
@@ -722,9 +725,9 @@ ENDMAP
 ##############################################################################
 NAME:     tar_mu
 ORIENT:   encompass
-MONS:     patrolling Ereshkigal, tzitzimitl, reaper, soul eater, shadow demon
+MONS:     patrolling Ereshkigal, tzitzimitl, reaper, saelneytandi, cysgodol
 MONS:     shadow dragon, shadow wraith
-KMONS:    8 = shadow imp
+KMONS:    8 = cysgobwca
 : serpent_of_hell_setup(_G)
 SUBVAULT: = : tar_mu_maze
 # position of the loot chamber varies
@@ -732,7 +735,7 @@ SHUFFLE:  AB
 SUBST:    A = %
 SUBST:    B = x
 KFEAT:    % = .
-KMONS:    % = soul eater w:20 / shadow wraith w:15 / reaper w:5 / nothing w:20
+KMONS:    % = saelneytandi w:20 / shadow wraith w:15 / reaper w:5 / nothing w:20
 KITEM:    % = | / $
 SUBST:    4 = 3333444455566778
 KMONS:    s = eidolon
@@ -813,7 +816,7 @@ KFEAT:    L = zot trap
 KMONS:    M = tzitzimitl
 KFEAT:    N = floor
 KITEM:    N = superb_item
-KMONS:    N = patrolling tzitzimitl / patrolling soul eater
+KMONS:    N = patrolling tzitzimitl / patrolling saelneytandi
 KFEAT:    P = floor
 KITEM:    P = star_item
 KMONS:    P = patrolling reaper / nothing
@@ -879,7 +882,7 @@ ENDMAP
 
 NAME:   tar_minmay_river
 ORIENT: encompass
-MONS:   patrolling Ereshkigal, reaper, shadow demon, tzitzimitl, soul eater
+MONS:   patrolling Ereshkigal, reaper, cysgodol, tzitzimitl, saelneytandi
 FTILE:  "5!?^ = floor_green_bones
 SUBST:  5 = 5:10 3:1
 NSUBST: " = 2:4 / 4:3
@@ -1005,7 +1008,7 @@ ORIENT: encompass
 
 NAME:    tar_grunt_ereshkigal
 TAGS:    tar_grunt_ereshkigal unrand
-MONS:    patrolling Ereshkigal, Tzitzimitl, shadow demon / reaper
+MONS:    patrolling Ereshkigal, Tzitzimitl, cysgodol / reaper
 MONS:    lich / ancient lich w:5
 KMASK:   O = no_item_gen
 KITEM:   O = bone rune of Zot
@@ -1055,7 +1058,7 @@ ENDMAP
 
 NAME: tar_grunt_big_loot
 TAGS: tar_grunt_big_loot unrand
-MONS: Tzitzimitl / shadow dragon, shadow demon / reaper
+MONS: Tzitzimitl / shadow dragon, cysgodol / reaper
 MONS: lich / w:5 ancient lich
 MAP
 ..................
@@ -1080,7 +1083,7 @@ ENDMAP
 
 NAME:   tar_grunt_small_loot
 TAGS:   tar_grunt_small_loot allow_dup unrand no_exits
-MONS:   shadow demon w:20 / reaper w:15 / shadow wraith w:10 / soul eater w:5
+MONS:   cysgodol w:20 / reaper w:15 / shadow wraith w:10 / saelneytandi w:5
 NSUBST: x = 1:m / *:x
 MAP
 cccxccc
@@ -1234,14 +1237,14 @@ ENDMAP
 
 NAME:    tar_grunt_mons_1
 TAGS:    tar_grunt_mons_1 transparent allow_dup unrand
-MONS:    shadow imp
+MONS:    cysgobwca
 MAP
 1
 ENDMAP
 
 NAME:    tar_grunt_mons_2
 TAGS:    tar_grunt_mons_2 transparent allow_dup unrand
-MONS:    soul eater
+MONS:    saelneytandi
 MAP
 1
 ENDMAP
@@ -1252,8 +1255,8 @@ ENDMAP
 
 NAME:     tar_grunt_cathedral
 ORIENT:   encompass
-MONS:     patrolling Ereshkigal, patrolling tzitzimitl, reaper, shadow demon
-MONS:     lich / ancient lich w:5, shadow dragon, shadow wraith / soul eater
+MONS:     patrolling Ereshkigal, patrolling tzitzimitl, reaper, cysgodol
+MONS:     lich / ancient lich w:5, shadow dragon, shadow wraith / saelneytandi
 NSUBST:   K = 1:D / *:.
 : serpent_of_hell_setup(_G)
 NSUBST:   P = 1:O / *:|

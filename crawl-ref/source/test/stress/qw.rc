@@ -164,7 +164,7 @@ df += scrolls? of (blinking|amnesia)
 df += scrolls? of (curse armour|curse jewellery|curse weapon)
 df += scrolls? of (immolation|noise|random uselessness|torment)
 # keep: curing,heal wounds,haste,cancellation,resistance,experience,
-#       might,restore abilities
+#       might,beneficial mutation,cure mutation,restore abilities
 ae += potions? of (brilliance|magic|berserk rage)
 ae += potions? of (flight|invisibility|agility)
 ae += potions? of (ambrosia|decay|degeneration|mutation)
@@ -647,9 +647,6 @@ function armour_value(it, cur, it2)
         value = value + 150
       end
     end
-    if name:find("hide") and not name:find("salamander hide") then
-      value = value + 100*it.ac - 50
-    end
   end
   return value+val1,value+val2
 end
@@ -1112,7 +1109,7 @@ local scary_monsters = {
   {17, "Arachne"},
   {17, "deep troll"},
   {17, "thorn hunter"},
-  {17, "sun demon"},
+  {17, "sturnulos"},
   {17, "white ugly thing"},
   {17, "white very ugly thing"},
 
@@ -1169,11 +1166,11 @@ local scary_monsters = {
   {100, "desc", "' illusion"},
   {100, "oklob plant"},
   {100, "hellion"},
-  {100, "tormentor"},
-  {100, "Hell Sentinel"},
-  {100, "Ice Fiend"},
+  {100, "POENYDIO"},
+  {100, "gwarchodwr"},
+  {100, "Vetrifl"},
   {100, "Tzitzimitl"},
-  {100, "Brimstone Fiend"},
+  {100, "rhuddgoch"},
   {100, "curse toe"},
   {100, "curse skull"},
   {100, "Tiamat"},
@@ -1207,7 +1204,7 @@ local bia_monsters = {
   {15, "ice dragon"},
   {15, "Snorg"},
   {15, "death yak"},
-  {15, "red devil"},
+  {15, "cythraul"},
 
   {17, "desc", "hydra"},
 
@@ -1223,7 +1220,7 @@ local bia_monsters = {
   {20, "Asterion"},
   {20, "orb spider"},
   {20, "thorn hunter"},
-  {20, "sun demon"},
+  {20, "sturnulos"},
   {20, "Polyphemus"},
 
   {100, "deep troll shaman"},
@@ -1247,9 +1244,9 @@ local bia_monsters = {
   {100, "desc", "'s ghost"},
   {100, "desc", "' ghost"},
   {100, "oklob plant"},
-  {100, "Hell Sentinel"},
-  {100, "Ice Fiend"},
-  {100, "Brimstone Fiend"},
+  {100, "gwarchodwr"},
+  {100, "Vetrifl"},
+  {100, "rhuddgoch"},
   {100, "Tzitzimitl"},
   {100, "Tiamat"},
   {100, "orb of fire"},
@@ -1293,7 +1290,7 @@ local fire_resistance_monsters = {
 } -- hack
 
 local cold_resistance_monsters = {
-  {100, "Ice Fiend"},
+  {100, "Vetrifl"},
 } -- hack
 
 local elec_resistance_monsters = {
@@ -1703,7 +1700,7 @@ function is_ranged(m)
     return true
   end
   local name = m:name()
-  if name == "Maurice" or name == "crimson imp" or name == "boulder beetle" then
+  if name == "Maurice" or name == "llaibwca" or name == "boulder beetle" then
     return true
   end
   return false
@@ -1822,7 +1819,7 @@ function count_sgd(r)
     for y = -r,r do
       m = monster_array[x][y]
       if m and m:is_safe()
-       and contains_string_in(m:name(), {"Executioner","green death","blizzard demon","balrug","cacodemon"}) then
+       and contains_string_in(m:name(), {"oxarmordth","gwyrdd","cenysus","balrug","cacodemon"}) then
         i = i+1
       end
     end
@@ -1840,7 +1837,7 @@ function count_hostile_sgd(r)
     for y = -r,r do
       m = monster_array[x][y]
       if m and not m:is_safe() and m:is("summoned")
-       and contains_string_in(m:name(), {"Executioner","green death","blizzard demon","balrug","cacodemon"}) then
+       and contains_string_in(m:name(), {"oxarmordth","gwyrdd","cenysus","balrug","cacodemon"}) then
         i = i+1
       end
     end

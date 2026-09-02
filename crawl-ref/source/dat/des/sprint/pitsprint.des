@@ -9,19 +9,19 @@
 {{
 
 function base_monster_setup(e)
-  e.kmons("A = goblin / frilled lizard / giant cockroach / ooze / ball python /\
+  e.kmons("A = goblin / cinder newt / giant cockroach / ooze / ball python /\
            bat / kobold / rat / leopard gecko / gnoll band /\
            hobgoblin / jackal band / worm / adder / quokka /\
            gnoll shaman band / orc band / orc priest band / worker ant /\
            floating eye / hound / iguana / ogre / orc wizard band /\
            phantom / scorpion / skeleton / gnoll sergeant band /\
-           centaur / jelly / water moccasin / ice beast / crimson imp /\
+           centaur / jelly / water moccasin / ice beast / llaibwca /\
            necrophage / quasit / zombie / sky beast / deep elf mage /\
            bullfrog / mummy / orc warrior band / wight band /\
            hungry ghost / big kobold band /\
            warg / wolf / porcupine / black bear /\
-           river rat / flying skull / iron imp /\
-           white imp / ufetubus / fire bat")
+           sewer rat / flying skull / haearbwca /\
+           gwybwca / ufetubus / fire bat")
   e.kmons("B = steam dragon / crocodile / hippogriff /\
            killer bee band / hornet / eye of draining / manticore /\
            wyvern / troll / two-headed ogre / yak band /\
@@ -40,8 +40,8 @@ function base_monster_setup(e)
            merfolk band w:5 / merfolk siren w:3 / sea snake / snapping turtle /\
            tarantella / jumping spider / demonic crawler /\
            small abomination / guardian mummy / spriggan /\
-           orange demon / hellwing / smoke demon / ynoxinul / ice devil /\
-           red devil / centaur band")
+           nychdod / vlerk / mygdarth / ynoxinul / rypuiwel /\
+           cythraul / centaur band")
   e.kmons("C = eye of devastation / hydra / skeletal warrior band w:5 /\
            catoblepas / vampire / wandering mushroom /\
            guardian serpent / rakshasa w:5 / slime creature band w:5 /\
@@ -56,13 +56,13 @@ function base_monster_setup(e)
            wind drake / deep elf mage w:3 / shapeshifter / zombie /\
            skeleton / death knight / eidolon / elephant band w:5 /\
            death yak band w:5 / insubstantial wisp band w:5 / swamp dragon /\
-           merfolk avatar / alligator snapping turtle / anaconda / nagaraja /\
+           merfolk avatar / alligator snapping turtle / blood boa / nagaraja /\
            merfolk javelineer band w:5 / merfolk impaler band w:5 /\
            merfolk aquamancer band w:5 / ghost moth / emperor scorpion /\
            vampire knight / vampire mage / large abomination /\
            spriggan druid / spriggan rider / death cob /\
            hell hound band w:5 / neqoxec / simulacrum / sixfirhy /\
-           chaos spawn / ice devil / sun demon / rust devil /\
+           chaos elemental / rypuiwel / sturnulos / taeringu /\
            hell hog band w:5 / alligator band w:5 / minotaur")
   e.kmons("D = fire dragon w:20 / yaktaur band w:5 / ice dragon w:20 /\
            ugly thing band w:5 / sphinx / iron troll /\
@@ -78,41 +78,41 @@ function base_monster_setup(e)
            mummy priest / spriggan air mage / spriggan berserker /\
            spriggan defender / base draconian w:70 / nonbase draconian w:5 /\
            base draconian band w:5 / lorocyproca / daeva / angel /\
-           profane servitor / soul eater / hell beast / cherub / apis / ophan /\
-           balrug / green death / blizzard demon / deep elf blademaster /\
+           profane servitor / saelneytandi / helvityr / cherub / apis / ophan /\
+           balrug / gwyrdd / cenysus / deep elf blademaster /\
            deep elf master archer / war gargoyle")
   e.kmons("E = lich / tentacled monstrosity / golden dragon /\
            iron dragon / quicksilver dragon / titan / acid blob /\
            azure jelly / golden eye / ancient lich w:5 /\
-           death ooze / reaper / greater mummy w:3 / curse toe / ghost moth /\
+           death ooze / reaper / royal mummy w:3 / curse toe / ghost moth /\
            killer klown / nonbase draconian w:15 /\
            nonbase draconian band w:15 / storm dragon / shadow dragon /\
-           hellephant / balrug w:5 / deep elf blademaster / cacodemon /\
-           deep elf master archer / blizzard demon / executioner /\
-           green death / hellion / tormentor / iron elemental w:3 /\
-           death drake w:2 / hell sentinel w:2 / brimstone fiend w:2 /\
-           ice fiend w:2 / tzitzimitl w:2 / moth of wrath w:5 /\
+           hellephant / balrug w:5 / deep elf blademaster / titivilus /\
+           deep elf master archer / cenysus / oxarmordth /\
+           gwyrdd / hellion / poenydio / iron elemental w:3 /\
+           death drake w:2 / gwarchodwr w:2 / rhuddgoch w:2 /\
+           Vetrifl w:2 / tzitzimitl w:2 / moth of wrath w:5 /\
            balrug band w:5")
-  e.kmons("F = orb of fire / electric golem / ancient lich / greater mummy /\
-           hell sentinel / brimstone fiend / ice fiend / tzitzimitl /\
+  e.kmons("F = orb of fire / electric golem / ancient lich / royal mummy /\
+           gwarchodwr / rhuddgoch / Vetrifl / tzitzimitl /\
            pandemonium lord w:20 / pearl dragon / titan")
-  e.kmons("G = goblin / frilled lizard / giant cockroach / ooze /\
+  e.kmons("G = goblin / cinder newt / giant cockroach / ooze /\
            ball python /\
            bat / kobold / rat / leopard gecko / gnoll /\
            hobgoblin / jackal band /  adder / quokka /\
            orc / worker ant / floating eye / skeleton /\
-           zombie / river rat / ufetubus")
+           zombie / sewer rat / ufetubus")
   e.kmons("H = Sigmund / Jessica / Blork the orc / Crazy Yiuf / Duvessa band /\
            Edmund / Ijyb / Grinder / Pikel band / Purgy / Terence / Menkaure /\
            Prince Ribbit")
   e.kmons("I = Erica / Erolcha / Eustachio / Gastronok / Grum band / Harold /\
            Joseph / Josephine band / Maurice / Psyche / Sonja / Urug")
-  e.kmons("J = Agnes / Aizul / Azrael band / Donald / Frances / Kirke band /\
+  e.kmons("J = Agnes / Aizul / Maalik band / Donald / Frances / Circe band /\
            Nergalle / Nessos / Ilsuiw band / Arachne / Polyphemus / Rupert /\
            Saint Roka band / Snorg")
   e.kmons("K = Louise / Nikola / Frederick / Boris / Margery band /\
            Dissolution / Xtahua / the Lernaean hydra / Jory / Mennas / Mara")
-  e.kmons("L = Khufu band / Tiamat band / Murray / Mnoleg / Gloorx Vloq /\
+  e.kmons("L = Khufu band / Livarra band / Murray / Mnoleg / Gloorx Vloq /\
            Lom Lobon / Cerebov w:5 / Dispater / Asmodeus / Antaeus /\
            Ereshkigal / Ignacio / Geryon / the Royal Jelly /\
            the Serpent of Hell")
@@ -130,17 +130,17 @@ function base_monster_setup(e)
   e.kmons("Q = skeleton / zombie / skeletal warrior band /\
            ghoul / vampire knight / vampire mage band / lich w:5 / eidolon /\
            guardian mummy / mummy priest w:5")
-  e.kmons("R = greater mummy w:3 / mummy priest / lich / ancient lich /\
+  e.kmons("R = royal mummy w:3 / mummy priest / lich / ancient lich /\
            ghoul band / skeletal warrior band / vampire knight /\
            vampire mage band")
-  e.kmons("S = orange demon / hellwing / smoke demon / ynoxinul /\
-           red devil / sixfirhy / chaos spawn / ice devil w:20 / sun demon /\
-           rust devil / neqoxec band / green death w:5 / blizzard demon w:5 /\
-           balrug w:5 / cacodemon w:5 / hell beast / reaper w:5 / soul eater /\
+  e.kmons("S = nychdod / vlerk / mygdarth / ynoxinul /\
+           cythraul / sixfirhy / rypuiwel w:20 / sturnulos /\
+           taeringu / neqoxec band / gwyrdd w:5 / cenysus w:5 /\
+           balrug w:5 / titivilus w:5 / helvityr / reaper w:5 / saelneytandi /\
            lorocyproca")
-  e.kmons("T = balrug / blizzard demon / green death / reaper / cacodemon /\
-           lorocyproca / brimstone fiend / ice fiend / tzitzimitl /\
-           hell sentinel / executioner")
+  e.kmons("T = balrug / cenysus / gwyrdd / reaper / titivilus /\
+           lorocyproca / rhuddgoch / Vetrifl / tzitzimitl /\
+           gwarchodwr / oxarmordth")
   e.kmons("U = place:Slime:$ / slime creature band /\
            death ooze / azure jelly / acid blob /\
            floating eye w:3 / eye of draining w:3 / eye of devastation /\
@@ -171,7 +171,7 @@ function general_item_setup(e)
           scroll of acquirement q:1 w:1 ident:all /\
           scroll of enchantment ident:all q:4 w:2 /\
           scroll of enchantment ident:all q:4 w:2 /\
-          scroll of brand weapon ident:all")
+          scroll of bless item ident:all")
   e.kitem("| = superb_item ident:all w:66 / star_item ident:all w:33")
   e.kitem("* = star_item ident:all w:66 / any ident:all w:33")
   e.kitem("% = any ident:all")
@@ -180,9 +180,9 @@ function general_item_setup(e)
           potion of agility ident:all / potion of haste ident:all /\
           potion of resistance ident:all w:5 /\
           potion of brilliance ident:all / potion of berserk rage ident:all /\
-          potion of mutation ident:all")
+          potion of cure mutation ident:all")
   e.kitem("? = scroll of blinking ident:all /\
-          scroll of remove curse ident:all /\
+          scroll of bless item ident:all /\
           scroll of fog ident:all / scroll of fear ident:all /\
           scroll of enchantment ident:all q:2 /\
           scroll of enchantment ident:all q:2")
@@ -418,7 +418,7 @@ function armoury_setup(e)
           great mace plus:3 not_cursed ident:all /\
           demon whip plus:3 not_cursed ident:all w:5 /\
           giant spiked club plus:3 not_cursed ident:all /\
-          quick blade plus:5 not_cursed ident:all /\
+          tanto plus:5 not_cursed ident:all /\
           great sword plus:3 not_cursed ident:all /\
           double sword plus:3 not_cursed ident:all /\
           demon blade plus:3 not_cursed ident:all w:3 /\
@@ -447,8 +447,8 @@ function armoury_setup(e)
           any armour good_item ident:all w:20")
   e.kitem("c = any weapon good_item ident:all")
   e.kitem("d = any armour good_item ident:all")
-  e.kitem("e = arrow q:50 mundane ident:all")
-  e.kitem("f = bolt q:50 mundane ident:all")
+  e.kitem("e = scroll of random uselessness")
+  e.kitem("f = scroll of random uselessness")
   e.subst("c = ccc(")
   e.subst("d = ddd[")
   e.lua_marker('~', props_marker {
@@ -500,10 +500,10 @@ function coven_setup(e)
   e.kitem("d = potion of heal wounds q:5 ident:all")
   e.kitem("e = potion of haste q:5 ident:all")
   e.kitem("f = any wand good_item ident:all")
-  e.kitem("g = staff of energy ident:all")
-  e.kitem("h = staff of power ident:all")
+  e.kitem("g = crystal ball of energy")
+  e.kitem("h = crystal ball of energy")
   e.kitem("i = crystal ball of energy")
-  e.kitem("j = potion of mutation ident:all")
+  e.kitem("j = potion of cure mutation ident:all")
   e.lua_marker('~', props_marker {
            door_description_suffix=" to the Coven (Very Hard)",
            })
@@ -615,7 +615,7 @@ ENDMAP
 # The Storerooms
 ################################################################################
 NAME:     storerooms_1
-TAGS:     the_storerooms
+TAGS:     the_storerooms unrand
 SUBVAULT: Z : storerooms_room_a
 SUBVAULT: Y : storerooms_room_b
 SUBVAULT: T : the_temple
@@ -623,11 +623,10 @@ SUBVAULT: U : equipment_1
 # Initial consumables
 KITEM: a = ration q:8
 KITEM: b = scroll of summoning ident:all q:1, \
-       scroll of amnesia q:5 ident:all, \
-       scroll of remove curse q:3 ident:all, \
+       potion of amnesia q:5 ident:all, \
+       scroll of bless item ident:all, \
        scroll of vulnerability q:2 ident:all
-KITEM: c = staff of energy ident:all, \
-       stone q:10
+KITEM: c = crystal ball of energy ident:all
 KITEM: d = potion of invisibility ident:all q:2, \
        potion of berserk rage ident:all q:2, \
        potion of magic q:2 ident:all
@@ -709,10 +708,10 @@ vvvvvvvvvvvvvvvvvvvvv
 ENDMAP
 
 NAME:  equipment_1
-TAGS:  equipment_1
+TAGS:  equipment_1 unrand
 KITEM: a = dagger plus:2 ident:all not_cursed, /\
            falchion plus:2 ident:all not_cursed
-KITEM: b = hand axe plus:2 ident:all not_cursed, /\
+KITEM: b = hatchet plus:2 ident:all not_cursed, /\
            mace plus:2 ident:all not_cursed
 KITEM: c = trident plus:2 ident:all not_cursed, /\
            quarterstaff plus:2 ident:all not_cursed
@@ -729,13 +728,14 @@ TAGS:  equipment_2
 KITEM: a = dagger ego:electrocution ident:all not_cursed /\
        dagger ego:draining ident:all not_cursed /\
        dagger ego:venom ident:all not_cursed
-KITEM: b = hand axe ego:freezing ident:all not_cursed /\
-       hand axe ego:vorpal ident:all not_cursed
+KITEM: b = hatchet ego:freezing ident:all not_cursed /\
+       hatchet ego:vorpal ident:all not_cursed
 KITEM: c = mace ego:vorpal ident:all not_cursed /\
        mace ego:protection ident:all not_cursed /\
        flail ego:vorpal ident:all not_cursed /\
        flail ego:protection ident:all not_cursed
-KITEM: d = trident ego:vorpal ident:all not_cursed
+KITEM: d = trident ego:vorpal ident:all not_cursed /\
+       trident ego:dragon_slaying ident:all not_cursed
 KITEM: e = quarterstaff ego:protection ident:all not_cursed /\
        quarterstaff ego:speed ident:all not_cursed
 KITEM: f = long sword ego:holy_wrath ident:all not_cursed /\
@@ -756,7 +756,7 @@ ENDMAP
 
 
 NAME:  storerooms_room_a_1
-TAGS:  storerooms_room_a
+TAGS:  storerooms_room_a unrand
 SUBVAULT: U : equipment_2
 TILE:  v = dngn_metal_wall_cyan
 : general_setup(_G)
@@ -774,7 +774,7 @@ G1vUUUUU
 ENDMAP
 
 NAME:  storerooms_room_a_2
-TAGS:  storerooms_room_a
+TAGS:  storerooms_room_a unrand
 SUBVAULT: U : equipment_2
 TILE:  v = dngn_metal_wall_cyan
 : general_setup(_G)
@@ -792,7 +792,7 @@ v&v....G
 ENDMAP
 
 NAME:  storerooms_room_a_3
-TAGS:  storerooms_room_a
+TAGS:  storerooms_room_a unrand
 SUBVAULT: U : equipment_2
 TILE:  v = dngn_metal_wall_cyan
 : general_setup(_G)
@@ -810,7 +810,7 @@ v&v..v&v
 ENDMAP
 
 NAME:  storerooms_room_a_4
-TAGS:  storerooms_room_a
+TAGS:  storerooms_room_a unrand
 SUBVAULT: U : equipment_2
 TILE:  v = dngn_metal_wall_cyan
 : general_setup(_G)
@@ -828,7 +828,7 @@ G....v&v
 ENDMAP
 
 NAME:  storerooms_room_a_5
-TAGS:  storerooms_room_a
+TAGS:  storerooms_room_a unrand
 SUBVAULT: U : equipment_2
 TILE:  v = dngn_metal_wall_cyan
 : general_setup(_G)
@@ -846,7 +846,7 @@ G......G
 ENDMAP
 
 NAME:  storerooms_room_a_6
-TAGS:  storerooms_room_a
+TAGS:  storerooms_room_a unrand
 SUBVAULT: U : equipment_2
 TILE:  v = dngn_metal_wall_cyan
 : general_setup(_G)
@@ -864,7 +864,7 @@ vvvv&vvv
 ENDMAP
 
 NAME:  storerooms_room_b_1
-TAGS:  storerooms_room_b
+TAGS:  storerooms_room_b unrand
 TILE:  v = dngn_metal_wall_cyan
 : general_setup(_G)
 : general_item_setup(_G)
@@ -880,7 +880,7 @@ MAP
 ENDMAP
 
 NAME:  storerooms_room_b_2
-TAGS:  storerooms_room_b
+TAGS:  storerooms_room_b unrand
 TILE:  v = dngn_metal_wall_cyan
 : general_setup(_G)
 : general_item_setup(_G)
@@ -896,7 +896,7 @@ MAP
 ENDMAP
 
 NAME:  storerooms_room_b_3
-TAGS:  storerooms_room_b
+TAGS:  storerooms_room_b unrand
 TILE:  v = dngn_metal_wall_cyan
 : general_setup(_G)
 : general_item_setup(_G)
@@ -912,7 +912,7 @@ MAP
 ENDMAP
 
 NAME:  storerooms_room_b_4
-TAGS:  storerooms_room_b
+TAGS:  storerooms_room_b unrand
 TILE:  v = dngn_metal_wall_cyan
 : general_setup(_G)
 : general_item_setup(_G)
@@ -928,7 +928,7 @@ MAP
 ENDMAP
 
 NAME:  storerooms_room_b_5
-TAGS:  storerooms_room_b
+TAGS:  storerooms_room_b unrand
 TILE:  v = dngn_metal_wall_cyan
 : general_setup(_G)
 : general_item_setup(_G)
@@ -944,7 +944,7 @@ v.v1v.1
 ENDMAP
 
 NAME:  storerooms_room_b_6
-TAGS:  storerooms_room_b
+TAGS:  storerooms_room_b unrand
 TILE:  v = dngn_metal_wall_cyan
 : general_setup(_G)
 : general_item_setup(_G)
@@ -961,9 +961,10 @@ ENDMAP
 
 
 NAME:    temple_room_1
-TAGS:    the_temple
+TAGS:    the_temple unrand
 KFEAT:   a = altar_ashenzari
 KFEAT:   b = altar_beogh
+KFEAT:   B = altar_bahamut_and_tiamat
 KFEAT:   c = altar_cheibriados
 KFEAT:   d = altar_dithmenos
 KFEAT:   e = altar_elyvilon
@@ -991,9 +992,9 @@ KFEAT:   ' = altar_the_shining_one
 : general_item_setup(_G)
 : base_monster_setup(_G)
 MAP
-abcdefghj.
-klmnoqrst.
-uvwxyz'...
+abBcdefgh.
+jklmnoqrs.
+tuvwxyz'..
 ENDMAP
 
 ################################################################################
@@ -1003,7 +1004,7 @@ ENDMAP
 # the Entrance Room
 ################################################################################
 NAME:    entrance_room_1
-TAGS:    the_entrance_hall
+TAGS:    the_entrance_hall unrand
 COLOUR:  v = lightgrey
 TILE:    v = wall_crypt_metal
 : general_setup(_G)
@@ -1045,7 +1046,7 @@ ENDMAP
 
 
 NAME:    main_hall_1
-TAGS:    the_main_hall
+TAGS:    the_main_hall unrand
 COLOUR:  v = lightgrey
 TILE:    v = wall_crypt_metal
 : general_setup(_G)
@@ -1095,6 +1096,7 @@ ENDMAP
 # 37
 # 27 '2', 7 '1', 3 '3'
 NAME:    metal_vault_1
+TAGS:    unrand
 : metal_vault_setup(_G)
 : general_setup(_G)
 : general_item_setup(_G)
@@ -1120,6 +1122,7 @@ ENDMAP
 # 37
 # 27 '2', 7 '1', 3 '3'
 NAME:    metal_vault_2
+TAGS:    unrand
 : metal_vault_setup(_G)
 : general_setup(_G)
 : general_item_setup(_G)
@@ -1145,6 +1148,7 @@ ENDMAP
 # 36
 # 27 '2', 6 '1', 3 '3'
 NAME:    metal_vault_3
+TAGS:    unrand
 : metal_vault_setup(_G)
 : general_setup(_G)
 : general_item_setup(_G)
@@ -1170,6 +1174,7 @@ ENDMAP
 # 36
 # 26 '2', 7 '1', 3 '3'
 NAME:    metal_vault_4
+TAGS:    unrand
 : metal_vault_setup(_G)
 : general_setup(_G)
 : general_item_setup(_G)
@@ -1195,6 +1200,7 @@ ENDMAP
 # 37
 # 28 '2', 6 '1', 3 '3'
 NAME:    metal_vault_5
+TAGS:    unrand
 : metal_vault_setup(_G)
 : general_setup(_G)
 : general_item_setup(_G)
@@ -1220,6 +1226,7 @@ ENDMAP
 # 37
 # 27 '2', 7 '1', 3 '3'
 NAME:    metal_vault_6
+TAGS:    unrand
 : metal_vault_setup(_G)
 : general_setup(_G)
 : general_item_setup(_G)
@@ -1245,6 +1252,7 @@ ENDMAP
 # 35
 # 26 '2', 6 '1', 3 '3'
 NAME:    metal_vault_7
+TAGS:    unrand
 WEIGHT:  5
 : metal_vault_setup(_G)
 : general_setup(_G)
@@ -1271,6 +1279,7 @@ ENDMAP
 # 35
 # 26 '2', 6 '1', 3 '3'
 NAME:    metal_vault_8
+TAGS:    unrand
 WEIGHT:  5
 : metal_vault_setup(_G)
 : general_setup(_G)
@@ -1301,6 +1310,7 @@ ENDMAP
 # 44
 # 17 '3', 24 '4', 3 '5'
 NAME:   steel_vault_1
+TAGS:    unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1326,6 +1336,7 @@ ENDMAP
 # 44
 # 17 '3', 24 '4', 3 '5'
 NAME:   steel_vault_2
+TAGS:    unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1352,6 +1363,7 @@ ENDMAP
 # 44
 # 17 '3', 24 '4', 3 '5'
 NAME:   steel_vault_3
+TAGS:    unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1377,6 +1389,7 @@ ENDMAP
 # 44
 # 17 '3', 24 '4', 3 '5'
 NAME:   steel_vault_4
+TAGS:    unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1402,6 +1415,7 @@ ENDMAP
 # 44
 # 16 '3', 25 '4', 3 '5'
 NAME:   steel_vault_5
+TAGS:    unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1431,6 +1445,7 @@ ENDMAP
 # 47
 # 20 '4', 27 '5'
 NAME:   crystal_vault_1
+TAGS:    unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1454,6 +1469,7 @@ ENDMAP
 # 46
 # 20 '4', 26 '5'
 NAME:   crystal_vault_2
+TAGS:    unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1478,6 +1494,7 @@ ENDMAP
 # 20 '4', 27 '5'
 NAME:   crystal_vault_3
 WEIGHT: 5
+TAGS:    unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1501,6 +1518,7 @@ ENDMAP
 # 47
 # 20 '4', 27 '5'
 NAME:   crystal_vault_4
+TAGS:    unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1525,6 +1543,7 @@ ENDMAP
 # 20 '4', 27 '5'
 NAME:   crystal_vault_5
 WEIGHT: 5
+TAGS:    unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1549,6 +1568,7 @@ ENDMAP
 # 20 '4', 27 '5'
 NAME:   crystal_vault_6
 WEIGHT: 5
+TAGS:    unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1576,6 +1596,7 @@ ENDMAP
 # 42
 # 21 '5', 21 '6'
 NAME:   iron_vault_1
+TAGS:    unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1603,6 +1624,7 @@ ENDMAP
 # 42
 # 21 '5', 21 '6'
 NAME:   iron_vault_2
+TAGS:    unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1630,6 +1652,7 @@ ENDMAP
 # 44
 # 21 '5', 23 '6'
 NAME:   iron_vault_3
+TAGS:    unrand
 WEIGHT: 5
 : general_setup(_G)
 : general_item_setup(_G)
@@ -1658,6 +1681,7 @@ ENDMAP
 # 43
 # 21 '5', 22 '6'
 NAME:   iron_vault_4
+TAGS:    unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1685,6 +1709,7 @@ ENDMAP
 # 42
 # 20 '5', 22 '6'
 NAME:   iron_vault_5
+TAGS:    unrand
 WEIGHT: 5
 : general_setup(_G)
 : general_item_setup(_G)
@@ -1717,7 +1742,7 @@ ENDMAP
 # The Armoury
 ################################################################################
 NAME:    armoury_1
-TAGS:    the_armoury
+TAGS:    the_armoury unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1740,7 +1765,7 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv>>v
 ENDMAP
 
 NAME:    armoury_2
-TAGS:    the_armoury
+TAGS:    the_armoury unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1763,7 +1788,7 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv>>v
 ENDMAP
 
 NAME:    armoury_3
-TAGS:    the_armoury
+TAGS:    the_armoury unrand
 WEIGHT:  5
 : general_setup(_G)
 : general_item_setup(_G)
@@ -1793,7 +1818,7 @@ ENDMAP
 # 25
 # 6 '4', 19 '0'
 NAME:   the_coven_1
-TAGS:   the_coven
+TAGS:   the_coven unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1819,7 +1844,7 @@ ENDMAP
 # 25
 # 6 '4', 19 '0'
 NAME:   the_coven_2
-TAGS:   the_coven
+TAGS:   the_coven unrand
 WEIGHT: 5
 : general_setup(_G)
 : general_item_setup(_G)
@@ -1846,7 +1871,7 @@ ENDMAP
 # 25
 # 6 '4', 19 '0'
 NAME:   the_coven_3
-TAGS:   the_coven
+TAGS:   the_coven unrand
 : general_setup(_G)
 : general_item_setup(_G)
 : base_monster_setup(_G)
@@ -1874,7 +1899,7 @@ ENDMAP
 # Mini-Vaults
 ################################################################################
 NAME:   mini_pit_1
-TAGS:   the_minivault
+TAGS:   the_minivault unrand
 COLOUR: v = white
 TILE:   v = wall_cobalt_stone
 : general_setup(_G)
@@ -1899,7 +1924,7 @@ vvvvvvvv
 ENDMAP
 
 NAME:   grid_room_1
-TAGS:   the_grid_vault
+TAGS:   the_grid_vault unrand
 NSUBST: + = 1:& / *:v
 COLOUR: v = white
 TILE:   v = wall_cobalt_stone
@@ -1930,7 +1955,7 @@ vvvvvvvvvv~~vvvvvvvvvv
 ENDMAP
 
 NAME:   hallway_of_sentries
-TAGS:   the_hallway_of_sentries
+TAGS:   the_hallway_of_sentries unrand
 KFEAT:  & = closed_door
 MARKER: & = lua:restrict_door()
 TILE:   v = dngn_metal_wall_cyan
@@ -1977,7 +2002,7 @@ v<v
 ENDMAP
 
 NAME:   the_vestibule_1
-TAGS:   the_vestibule
+TAGS:   the_vestibule unrand
 COLOUR: v = magenta
 TILE:   v = dngn_metal_wall_blue
 : general_setup(_G)
@@ -2009,7 +2034,7 @@ ENDMAP
 # The Silver Pit
 ################################################################################
 NAME:   silver_pit
-TAGS:   the_silver_pit
+TAGS:   the_silver_pit unrand
 KITEM:  2ABCDE = silver rune of zot
 KITEM:  1abcde = superb_item ident:all w:66 / star_item ident:all w:33 /\
         any ident:all w:133
@@ -2059,7 +2084,7 @@ ENDMAP
 # The Golden Pit
 ################################################################################
 NAME:   golden_pit
-TAGS:   the_golden_pit
+TAGS:   the_golden_pit unrand
 KITEM:  2ABCD = golden rune of zot
 KITEM:  1abcd = superb_item ident:all w:66 / star_item ident:all w:33 /\
         any ident:all w:33
@@ -2068,7 +2093,7 @@ KMONS:  A = titan
 # I'm sorry if you get an undead pit here
 KMONS:  b = zombie w:20 / skeleton w:20 / simulacrum w:20 /\
         ancient lich w:5 / vampire knight / mummy priest / lich /\
-        greater mummy / bone dragon / ghoul / skeletal warrior /\
+        royal mummy / bone dragon / ghoul / skeletal warrior /\
         guardian mummy
 KMONS:  B = ancient lich
 KMONS:  c = fire dragon / ice dragon / shadow dragon / iron dragon w:5 /\
@@ -2106,7 +2131,7 @@ ENDMAP
 # 65
 # ~13 '7', 13 '6', ~12 '0', 4 '5', 23 '9'
 NAME:    final_vault
-TAGS:    the_final_vault
+TAGS:    the_final_vault unrand
 KMONS:   98 = patrolling orb guardian
 KITEM:   8 = orb of zot
 SUBST:   0 = 65., 7 = 5.

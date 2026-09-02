@@ -28,7 +28,7 @@ skin of Zhor
 
 Garip bir hayvanın kokan derisi
 %%%%
-salamander hide armour
+salamander hide
 
 Salamander derisinden yapılma zırh
 %%%%

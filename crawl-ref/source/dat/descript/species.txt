@@ -7,7 +7,7 @@ learners and can hop long distances, but are otherwise slow and easily seen.
 Centaur
 
 Swift, strong and bulky, Centaurs are particularly skilled with ranged
-weaponry.
+weaponry; but are terrible at being stealthy and defending themselves.
 %%%%
 Deep Dwarf
 
@@ -30,8 +30,16 @@ mutations as they grow.
 %%%%
 Draconian
 
-Draconians are versatile hybrids. They mature when reaching level 7 and develop
-a colour.
+Draconians are harsh inflexible warriors. When reaching level 7, they develop a colour. 
+They have difficulty learning skills other than those they are bred to specialize in
+and these specialties are a mystery until a few levels into their maturity.
+%%%%
+Fairy
+
+Fairies are tiny insubstantial balls of light; too tiny to use almost any gear at 
+all and extremely low on mana and frail. Their magical auras protect them from damage 
+reducing all damage to a single hit point and reduce the cost of their spells and 
+abilities to cost a single mana point or less.
 %%%%
 Formicid
 
@@ -88,23 +96,35 @@ Beginning as tiny saplings they grow to massive trees as they gain experience.
 %%%%
 Merfolk
 
-Half fish, half human, Merfolk are citizens of both water and land. They are
-strong combatants, and adept at using magic to assist in battle.
+A humanoid, whose legs turn into a fishtail in water; Merfolk are
+strong combatants, and adept at using magic to assist in battle. Their ties 
+to water and ever changing form make them particularly adept with spears, 
+ice magic and transmutation; but they have issues with solid armour and 
+other elements of magic.
 %%%%
 Minotaur
 
 Minotaurs are large muscular humans with bovine heads. They excel at all forms
 of close and ranged combat.
 %%%%
+Molten Gargoyle
+
+Made of living magma, Molten Gargoyles have a preternatural affinity for fire 
+and earth. They have very low health; but their liquid bodies mold to fit 
+into any armour perfectly and they can breathe blasts of liquid rock at their 
+foes.
+%%%%
 Mummy
 
-Compelled to walk by an ancient curse, Mummies are adept at Necromancy but
-learn other skills very slowly. They are unable to consume any food or potions.
+Ancient preserved royals and priests. Time has only increased their wisdom and intellect; 
+though their bodies have become weaker and they cannot consume any food or potions.
 %%%%
 Naga
 
-Nagas are hybrids; human from the chest up, with a scaly, muscular torso
-trailing off like that of a snake. They move slowly but are naturally resilient.
+Nagas are hybrids; a base race (most commonly human) from the chest up, with a scaly, 
+muscular torso trailing off like that of a snake. They move slowly but are naturally 
+bulky. They are poor with defensive skills, great at being sneaky and using venomous 
+magic, the rest of their aptitudes are fairly average.
 %%%%
 Octopode
 
@@ -115,6 +135,17 @@ Ogre
 
 Large, strong, and extremely robust, Ogres are competent at all forms of melee.
 They are not merely brutes, as they are comfortable with spellcasting.
+%%%%
+Oozomorph
+
+Semi-humanoid intelligent masses of slime, Oozomorphs can reshape their bodies to 
+use any combination of equipment. Extremely adaptable, they are equally capable in 
+melee combat and magic.
+%%%%
+Rock Troll
+
+A smaller relative of trolls, capable of using human-sized armours and known for 
+their rough craggy hide and ability to curl into a ball and roll.
 %%%%
 Spriggan
 
@@ -133,17 +164,17 @@ stabbers and casters.
 %%%%
 Vine Stalker
 
-Frail symbionts, Vine Stalkers cannot regain health from potions.
+Grafted with a plant symbiont, Vine Stalkers are frailer than others of their species.
 Their magical reserves absorb damage, and they pack a magic-restoring bite.
 %%%%
 Silent Spectre
 
-Ephermal spirits surrounded by an uncanny silence. They cannot read scrolls
+Ephemeral spirits surrounded by an uncanny silence. They cannot read scrolls
 aloud, but are adept at casting with gestures.
 %%%%
 Goblin
 
-Small creatures, adept at all skills; but physically and mentally 
+Small creatures, adept at all skills, but physically and mentally 
 deficient. Gods take pity on them, granting greater invocations power.
 They have an increased resistance to mutagenic effects.
 %%%%

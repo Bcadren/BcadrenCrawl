@@ -6,10 +6,13 @@
 #pragma once
 
 #include <deque>
+#include <vector>
 
 #include "command-type.h"
 #include "enum.h"
 #include "KeymapContext.h"
+
+using std::vector;
 
 class key_recorder;
 typedef deque<int> keyseq;
@@ -37,8 +40,7 @@ private:
     vector<bool> prev_pause_status;
 };
 
-int getchm(int (*rgetch)() = nullptr);       // keymaps applied (ie for prompts)
-int getchm(KeymapContext context, int (*rgetch)() = nullptr);
+int getchm(KeymapContext context = KMC_DEFAULT);
 
 int get_ch();
 
@@ -69,7 +71,7 @@ void macro_buf_add(const keyseq &actions,
 int macro_buf_get();
 
 void macro_buf_add_cmd(command_type cmd, bool reverse = false);
-void macro_buf_add_with_keymap(int key, KeymapContext mc);
+void macro_buf_add_with_keymap(keyseq keys, KeymapContext mc);
 
 void process_command_on_record(command_type cmd);
 
@@ -80,6 +82,21 @@ string get_userfunction(int key);
 
 void add_key_recorder(key_recorder* recorder);
 void remove_key_recorder(key_recorder* recorder);
+
+class key_recorder_raii
+{
+public:
+    key_recorder_raii(key_recorder* recorder) : m_recorder(recorder)
+    {
+        add_key_recorder(m_recorder);
+    }
+    ~key_recorder_raii()
+    {
+        remove_key_recorder(m_recorder);
+    }
+private:
+    key_recorder *m_recorder;
+};
 
 bool is_processing_macro();
 bool has_pending_input();
@@ -94,7 +111,11 @@ void init_keybindings();
 command_type name_to_command(string name);
 string  command_to_name(command_type cmd);
 
+int function_keycode_fixup(int keycode);
+bool keycode_is_printable(int keycode);
+string keycode_to_name(int keycode);
 string keyseq_to_str(const keyseq &seq);
+keyseq parse_keyseq(string s);
 
 command_type  key_to_command(int key, KeymapContext context);
 int           command_to_key(command_type cmd);

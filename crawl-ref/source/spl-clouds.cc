@@ -18,26 +18,60 @@
 #include "env.h"
 #include "fprop.h"
 #include "fight.h"
-#include "god-conduct.h"
+#include "god-abil.h"
 #include "items.h"
 #include "level-state-type.h"
-#include "losglobal.h"
 #include "message.h"
 #include "mon-behv.h" // ME_WHACK
 #include "ouch.h"
 #include "prompt.h"
 #include "random-pick.h"
+#include "religion.h"
+#include "rot.h"
 #include "shout.h"
+#include "spl-cast.h"
 #include "spl-util.h"
 #include "target.h"
 #include "terrain.h"
-#include "viewchar.h"
+
+// Random Cloud type to be created by a chaos magic tick.
+cloud_type chaos_cloud(bool player)
+{
+    if (one_chance_in(3))
+        return CLOUD_CHAOS;
+
+    cloud_type retval;
+
+    retval = random_choose_weighted(30, CLOUD_FIRE,
+                                     8, CLOUD_MEPHITIC,
+                                    30, CLOUD_COLD,
+                                    10, CLOUD_POISON,
+                                     6, CLOUD_PETRIFY,
+                                    15, CLOUD_HOLY,
+                                     4, CLOUD_RAIN,
+                                    18, CLOUD_MUTAGENIC,
+                                    20, CLOUD_ACID,
+                                    20, CLOUD_STORM);
+
+    if (player && !is_good_god(you.religion) && retval == CLOUD_HOLY)
+        retval = random_choose_weighted(20, CLOUD_NEGATIVE_ENERGY,
+                                        10, CLOUD_SPECTRAL,
+                                         5, CLOUD_HOLY,
+                                         5, CLOUD_MIASMA);
+    return retval;
+}
 
 spret conjure_flame(const actor *agent, int pow, const coord_def& where,
                          bool fail)
 {
+    const int range = (!agent || agent->is_player()) ? spell_range(SPELL_CONJURE_FLAME, pow)
+                                                     : mon_spell_range(SPELL_CONJURE_FLAME, agent->as_monster());
+
+    if (agent->is_monster())
+        pow *= 8;
+
     // FIXME: This would be better handled by a flag to enforce max range.
-    if (grid_distance(where, agent->pos()) > spell_range(SPELL_CONJURE_FLAME, pow)
+    if (grid_distance(where, agent->pos()) > range
         || !in_bounds(where))
     {
         if (agent->is_player())
@@ -49,7 +83,7 @@ spret conjure_flame(const actor *agent, int pow, const coord_def& where,
     {
         if (agent->is_player())
         {
-            const char *feat = feat_type_name(grd(where));
+            const char *feat = feat_type_name(env.grid(where));
             mprf("You can't place the cloud on %s.", article_a(feat).c_str());
         }
         return spret::abort;
@@ -100,8 +134,9 @@ spret conjure_flame(const actor *agent, int pow, const coord_def& where,
     }
     else
     {
+        bool chaos = determine_chaos(agent, SPELL_CONJURE_FLAME);
         const int durat = min(5 + (random2(pow)/2) + (random2(pow)/2), 23);
-        place_cloud(CLOUD_FIRE, where, durat, agent);
+        place_cloud(chaos ? chaos_cloud(agent->is_player()) : CLOUD_FIRE, where, durat, agent);
         if (you.see_cell(where))
         {
             if (agent->is_player())
@@ -131,10 +166,20 @@ spret cast_poisonous_vapours(int pow, const dist &beam, bool fail)
         return spret::success; // still losing a turn
     }
 
-    if (actor_cloud_immune(*mons, CLOUD_POISON) && mons->observable())
+    const bool possible_chaos = determine_chaos(&you, SPELL_POISONOUS_VAPOURS, false);
+    const bool chaos = determine_chaos(&you, SPELL_POISONOUS_VAPOURS);
+
+    if ((!possible_chaos && actor_cloud_immune(*mons, CLOUD_POISON)) && mons->observable())
     {
         mprf("But poisonous vapours would do no harm to %s!",
              mons->name(DESC_THE).c_str());
+        return spret::abort;
+    }
+
+    if (possible_chaos && mons->cloud_immune() && mons->observable())
+    {
+        mprf("Clouds can do no harm to %s!",
+            mons->name(DESC_THE).c_str());
         return spret::abort;
     }
 
@@ -142,9 +187,8 @@ spret cast_poisonous_vapours(int pow, const dist &beam, bool fail)
         return spret::abort;
 
     cloud_struct* cloud = cloud_at(beam.target);
-    if (cloud && cloud->type != CLOUD_POISON)
+    if (cloud && cloud->type != CLOUD_POISON && cloud->type != CLOUD_MEPHITIC)
     {
-        // XXX: consider replacing the cloud instead?
         mpr("There's already a cloud there!");
         return spret::abort;
     }
@@ -155,14 +199,22 @@ spret cast_poisonous_vapours(int pow, const dist &beam, bool fail)
     if (cloud)
     {
         // Reinforce the cloud.
-        mpr("The poisonous vapours increase!");
+        mprf("The poisonous vapours %s!", chaos ? "aberrate" : "increase");
         cloud->decay += cloud_duration * 10; // in this case, we're using auts
         cloud->set_whose(KC_YOU);
+        cloud->type = CLOUD_POISON;
+        if (chaos)
+        {
+            cloud_type cl = CLOUD_POISON;
+            while (cl == CLOUD_POISON || cl == CLOUD_MEPHITIC)
+                cl = chaos_cloud(true);
+            cloud->type = cl;
+        }
     }
     else
     {
-        place_cloud(CLOUD_POISON, beam.target, cloud_duration, &you);
-        mprf("Poisonous vapours surround %s!", mons->name(DESC_THE).c_str());
+        place_cloud(chaos ? chaos_cloud(true) : CLOUD_POISON, beam.target, cloud_duration, &you);
+        mprf("%s vapours surround %s!", chaos ? "Random" : "Poisonous", mons->name(DESC_THE).c_str());
     }
 
     behaviour_event(mons, ME_WHACK, &you);
@@ -182,7 +234,7 @@ spret cast_big_c(int pow, spell_type spl, const actor *caster, bolt &beam,
 
     if (cell_is_solid(beam.target))
     {
-        const char *feat = feat_type_name(grd(beam.target));
+        const char *feat = feat_type_name(env.grid(beam.target));
         mprf("You can't place clouds on %s.", article_a(feat).c_str());
         return spret::abort;
     }
@@ -211,6 +263,13 @@ spret cast_big_c(int pow, spell_type spl, const actor *caster, bolt &beam,
             return spret::abort;
     }
 
+    if (determine_chaos(caster, spl))
+    {
+        beam.flavour = BEAM_CHAOTIC;
+        beam.name = "chaotic burst";
+        cty = CLOUD_CHAOS;
+    }
+
     beam.thrower           = KILL_YOU;
     beam.hit               = AUTOMATIC_HIT;
     beam.damage            = CONVENIENT_NONZERO_DAMAGE;
@@ -228,6 +287,22 @@ spret cast_big_c(int pow, spell_type spl, const actor *caster, bolt &beam,
     return spret::success;
 }
 
+/*
+ * A cloud_func that places an individual cloud as part of a cloud area. This
+ * function is called by apply_area_cloud();
+ *
+ * @param where       The location of the cloud.
+ * @param pow         The spellpower of the spell placing the clouds, which
+ *                    determines how long the cloud will last.
+ * @param spread_rate How quickly the cloud spreads.
+ * @param ctype       The type of cloud to place.
+ * @param agent       Any agent that may have caused the cloud. If this is the
+ *                    player, god conducts are applied.
+ * @param excl_rad    How large of an exclusion radius to make around the
+ *                    cloud.
+ * @returns           The number of clouds made, which is always 1.
+ *
+*/
 static int _make_a_normal_cloud(coord_def where, int pow, int spread_rate,
                                 cloud_type ctype, const actor *agent,
                                 int excl_rad)
@@ -239,6 +314,20 @@ static int _make_a_normal_cloud(coord_def where, int pow, int spread_rate,
     return 1;
 }
 
+/*
+ * Make a large area of clouds centered on a given place. This never creates
+ * player exclusions.
+ *
+ * @param ctype       The type of cloud to place.
+ * @param agent       Any agent that may have caused the cloud. If this is the
+ *                    player, god conducts are applied.
+ * @param where       The location of the cloud.
+ * @param pow         The spellpower of the spell placing the clouds, which
+ *                    determines how long the cloud will last.
+ * @param size        How large a radius of clouds to place from the `where'
+ *                    argument.
+ * @param spread_rate How quickly the cloud spreads.
+*/
 void big_cloud(cloud_type cl_type, const actor *agent,
                const coord_def& where, int pow, int size, int spread_rate)
 {
@@ -249,34 +338,39 @@ void big_cloud(cloud_type cl_type, const actor *agent,
 
 spret cast_ring_of_flames(int power, bool fail)
 {
+    targeter_radius hitfunc(&you, LOS_NO_TRANS, 1);
+    if (stop_attack_prompt(hitfunc, "make a ring of flames",
+                [](const actor *act) -> bool {
+                    return act->res_fire() < 3;
+                }))
+    {
+        return spret::abort;
+    }
+
     fail_check();
     you.increase_duration(DUR_FIRE_SHIELD,
                           6 + (power / 10) + (random2(power) / 5), 50,
                           "The air around you leaps into flame!");
-    manage_fire_shield(1);
+    you.redraw_resists = true;
+    manage_fire_shield();
     return spret::success;
 }
 
-void manage_fire_shield(int delay)
+void manage_fire_shield()
 {
     ASSERT(you.duration[DUR_FIRE_SHIELD]);
 
     // Melt ice armour entirely.
     maybe_melt_player_enchantments(BEAM_FIRE, 100);
 
-    // Remove fire clouds on top of you
-    if (cloud_at(you.pos()) && cloud_at(you.pos())->type == CLOUD_FIRE)
-        delete_cloud(you.pos());
+    const bool chaos = determine_chaos(&you, SPELL_RING_OF_FLAMES);
 
-    // Place fire clouds all around you
-    for (adjacent_iterator ai(you.pos()); ai; ++ai)
-        if (!cell_is_solid(*ai) && !cloud_at(*ai))
-            place_cloud(CLOUD_FIRE, *ai, 1 + random2(6), &you);
+    surround_actor_with_cloud(&you, chaos ? CLOUD_RANDOM : CLOUD_FIRE);
 }
 
 spret cast_corpse_rot(bool fail)
 {
-    if (!you.res_rotting())
+    if (!you.res_rotting() && !you.cloud_immune())
     {
         for (stack_iterator si(you.pos()); si; ++si)
         {
@@ -291,16 +385,110 @@ spret cast_corpse_rot(bool fail)
             }
         }
     }
+
     fail_check();
-    corpse_rot(&you);
-    return spret::success;
+    if (you.attribute[ATTR_KIKU_CORPSE])
+    {
+        // Drop a fair amount of low quality corpses for rotting.
+        const int pow = apply_invo_enhancer(you.skill(SK_NECROMANCY), false);
+        int count = div_rand_round(pow, 3);
+        count += div_rand_round(count, 3);
+        count += 1 + random2avg(count, 3);
+
+        vector<coord_def> targets;
+
+        for (radius_iterator ri(you.pos(), LOS_NO_TRANS, true); ri; ++ri)
+        {
+            monster * mons = monster_at(*ri);
+            if (mons && !mons->wont_attack() && !mons->res_rotting()
+                && !cell_is_solid(*ri) && !feat_destroys_items(env.grid(*ri))
+                && !mons->cloud_immune() && !cloud_at(*ri))
+            {
+                bool include = true;
+                for (stack_iterator si(*ri); si; ++si)
+                {
+                    if (si->is_type(OBJ_CORPSES, CORPSE_BODY))
+                    {
+                        include = false;
+                        break;
+                    }
+                }
+
+                if (include)
+                    targets.emplace_back(mons->pos());
+            }
+        }
+        
+        if (targets.size())
+        {
+            apply_invo_enhancer(10, true); // For the message.
+            mprf(MSGCH_GOD, "Kikubaaqudgha casts corpses upon the feet of your enemies!");
+            lose_piety(3);
+
+            // More possible targets than alloted corpses; clear extras at random.
+            while ((int)targets.size() > count)
+                targets.erase(targets.begin() + random2((int)targets.size()));
+            // Corpse slap valid targets
+            for (int i = 0; i < (int)targets.size(); i++)
+                place_kiku_corpse(random_kiku_monster(random2(pow)), targets[i]);
+
+            count -= (int)targets.size();
+
+            // Infinite loop protection for small areas, etc.
+            int tries = 100;
+            // Place additional corpses adjacent to targets.
+            while (tries--)
+            {
+                coord_def t = coord_def (0, 0);
+                for (adjacent_iterator ai(targets[random2(targets.size())]); ai; ++ai)
+                {
+                    if (cell_is_solid(*ai) || feat_destroys_items(env.grid(*ai))
+                        || cloud_at(*ai))
+                    {
+                        continue;
+                    }
+
+                    actor * act = actor_at(*ai);
+                    if (act && (act->wont_attack() || act->is_player()))
+                        continue;
+
+                    bool inc = true;
+                    for (stack_iterator si(*ai); si; ++si)
+                    {
+                        if (si->is_type(OBJ_CORPSES, CORPSE_BODY))
+                        {
+                            inc = false;
+                            break;
+                        }
+                    }
+
+                    if (inc)
+                    {
+                        if (t.origin() || grid_distance(you.pos(), t) > grid_distance(you.pos(), *ai))
+                            t = *ai;
+                    }
+                }
+
+                if (!t.origin())
+                {
+                    count--;
+                    place_kiku_corpse(random_kiku_monster(random2(pow)), t);
+                    if (count <= 0)
+                        tries = 0;
+                }
+            }
+        }
+    }
+
+    return corpse_rot(&you);
 }
 
-void corpse_rot(actor* caster)
+spret corpse_rot(actor* caster, bool actual)
 {
     // If there is no caster (god wrath), centre the effect on the player.
     const coord_def center = caster ? caster->pos() : you.pos();
     bool saw_rot = false;
+    int flies_count = 0;
 
     for (radius_iterator ri(center, LOS_NO_TRANS); ri; ++ri)
     {
@@ -308,6 +496,16 @@ void corpse_rot(actor* caster)
             for (stack_iterator si(*ri); si; ++si)
                 if (si->is_type(OBJ_CORPSES, CORPSE_BODY))
                 {
+                    if (!actual)
+                        return spret::success;
+
+                    if (coinflip())
+                    {
+                        spawn_flies(*si, false);
+                        if (you.see_cell(*ri))
+                            flies_count++;
+                    }
+
                     // Found a corpse. Skeletonise it if possible.
                     if (!mons_skeleton(si->mon_type))
                     {
@@ -327,10 +525,23 @@ void corpse_rot(actor* caster)
                 }
     }
 
+    if (!actual)
+        return spret::abort;
+
     if (saw_rot)
+    {
         mprf("You %s decay.", you.can_smell() ? "smell" : "sense");
-    else
-        canned_msg(MSG_NOTHING_HAPPENS);
+        if (flies_count)
+            mprf("Flies burst forth from the corpse%s.", flies_count > 1 ? "s" : "");
+    }
+    else if (caster && caster->is_player())
+    {
+        // Abort the spell for players; monsters and wrath fail silently
+        mpr("There is nothing fresh enough to decay nearby.");
+        return spret::abort;
+    }
+
+    return spret::success;
 }
 
 void holy_flames(monster* caster, actor* defender)
@@ -455,7 +666,8 @@ spret cast_cloud_cone(const actor *caster, int pow, const coord_def &pos,
         return spret::abort;
     }
 
-    const int range = spell_range(SPELL_CLOUD_CONE, pow);
+    const int range = (!caster || caster->is_player()) ? spell_range(SPELL_CLOUD_CONE, pow)
+                                                       : mon_spell_range(SPELL_CLOUD_CONE, caster->as_monster());
 
     targeter_shotgun hitfunc(caster, CLOUD_CONE_BEAM_COUNT, range);
 

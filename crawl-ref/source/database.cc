@@ -11,7 +11,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#ifndef TARGET_COMPILER_VC
+#if defined(UNIX) || defined(TARGET_COMPILER_MINGW)
 #include <unistd.h>
 #endif
 
@@ -23,7 +23,6 @@
 #include "random.h"
 #include "stringutil.h"
 #include "syscalls.h"
-#include "threads.h"
 #include "unicode.h"
 
 // TextDB handles dependency checking the db vs text files, creating the
@@ -450,6 +449,31 @@ static void _execute_embedded_lua(string &str)
     }
 }
 
+static void _substitute_descriptions(TextDB &db, string &str,
+                                     bool canonicalise_key, bool run_lua,
+                                     bool untranslated)
+{
+    // Replace all keys found between "[[" and "]]" with corresponding
+    // descriptions from the database.
+    string::size_type pos = str.find("[[");
+    while (pos != string::npos)
+    {
+        string::size_type end = str.find("]]", pos + 2);
+        if (end == string::npos)
+        {
+            mprf(MSGCH_DIAGNOSTICS, "Unbalanced [[, bailing.");
+            break;
+        }
+
+        string key = str.substr(pos + 2, end - pos - 2);
+        string result = _query_database(db, key, canonicalise_key,
+                                        run_lua, untranslated);
+        str.replace(pos, key.length() + 4, trim_string_right(result));
+
+        pos = str.find("[[", pos + result.length());
+    }
+}
+
 static void _trim_leading_newlines(string &s)
 {
     s.erase(0, s.find_first_not_of("\n"));
@@ -521,7 +545,7 @@ static void _store_text_db(const string &in, DBM *db)
     _parse_text_db(inf, db);
 }
 
-static string _chooseStrByWeight(string entry, int fixed_weight = -1)
+static string _chooseStrByWeight(const string &entry, int fixed_weight = -1)
 {
     vector<string> parts;
     vector<int>    weights;
@@ -726,6 +750,8 @@ static string _query_database(TextDB &db, string key, bool canonicalise_key,
         return _query_database(db, str.substr(1, str.size() - 3),
                                canonicalise_key, run_lua, untranslated);
     }
+
+    _substitute_descriptions(db, str, canonicalise_key, run_lua, untranslated);
 
     if (run_lua)
         _execute_embedded_lua(str);

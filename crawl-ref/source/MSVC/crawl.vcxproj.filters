@@ -58,6 +58,9 @@
     <ClCompile Include="..\butcher.cc">
       <Filter>cc</Filter>
     </ClCompile>
+	<ClCompile Include="..\chaos.cc">
+		<Filter>cc</Filter>
+	</ClCompile>
     <ClCompile Include="..\chardump.cc">
       <Filter>cc</Filter>
     </ClCompile>
@@ -415,6 +418,9 @@
     <ClCompile Include="..\skill-menu.cc">
       <Filter>cc</Filter>
     </ClCompile>
+    <ClInclude Include="..\season.cc">
+      <Filter>cc</Filter>
+    </ClInclude>
     <ClCompile Include="..\showsymb.cc">
       <Filter>cc</Filter>
     </ClCompile>
@@ -575,6 +581,9 @@
       <Filter>cc</Filter>
     </ClCompile>
     <ClCompile Include="..\mon-ench.cc">
+      <Filter>cc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mon-explode.cc">
       <Filter>cc</Filter>
     </ClCompile>
     <ClCompile Include="..\mon-death.cc">
@@ -913,6 +922,9 @@
     <ClCompile Include="..\movement.cc">
       <Filter>cc</Filter>
     </ClCompile>
+    <ClCompile Include="..\mount.cc">
+      <Filter>cc</Filter>
+    </ClCompile>
     <ClCompile Include="..\rltiles\tiledef-gui.cc">
       <Filter>rtiles_generated</Filter>
     </ClCompile>
@@ -1042,6 +1054,9 @@
       <Filter>h</Filter>
     </ClInclude>
     <ClInclude Include="..\canned-message-type.h">
+      <Filter>h</Filter>
+    </ClInclude>
+    <ClInclude Include="..\chaos.h">
       <Filter>h</Filter>
     </ClInclude>
     <ClInclude Include="..\chardump.h">
@@ -1827,6 +1842,9 @@
     <ClInclude Include="..\SDLMain.h">
       <Filter>h</Filter>
     </ClInclude>
+    <ClInclude Include="..\season.h">
+      <Filter>h</Filter>
+    </ClInclude>
     <ClInclude Include="..\seen-context-type.h">
       <Filter>h</Filter>
     </ClInclude>
@@ -2245,6 +2263,9 @@
       <Filter>h</Filter>
     </ClInclude>
     <ClInclude Include="..\wu-jian-attack-type.h">
+      <Filter>h</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mount.h">
       <Filter>h</Filter>
     </ClInclude>
     <ClInclude Include="..\movement.h">

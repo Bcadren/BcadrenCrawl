@@ -214,7 +214,7 @@ SUBST: * = "
 : end
 : local occupant = crawl.random2(3)
   : if occupant == 0 then
-MONS:  lich / w:8 ancient lich / w:5 greater mummy
+MONS:  lich / w:8 ancient lich / w:5 royal mummy
 KFEAT: * = altar_kikubaaqudgha / w:4 altar_sif_muna / w:1 altar_yredelemnul
 KITEM: " = gold, any wand / w:15 nothing, any scroll / nothing
 KFEAT: 8 = granite_statue / w:2 fountain_blood / w:1 floor
@@ -274,7 +274,7 @@ SUBST:   _ = _8
 SUBST:   2 = 2.
 SUBST:   3 = 3.
 NSUBST:  . = 5:% / *:.
-KITEM:   % = w:12 animal skin / club / hand axe /\
+KITEM:   % = w:12 animal skin / club / hatchet /\
              ration w:15 / nothing
 KFEAT:   8 = orcish_idol / w:5 floor
 KFEAT:   _ = altar_beogh / w:15 floor
@@ -331,12 +331,12 @@ TAGS: grated_community_mu_home grated_community_mu_home6 unrand
 FTILE:  12.c'+%$W8n~ = floor_grass_dirt_mix
 : if crawl.coinflip() then
 MONS:   patrolling centaur warrior, plant
-KITEM:  ' = q:1 arrow
-KITEM:  $ = centaur barding / nothing, q:30 arrow / any good_item
+KITEM:  ' = scroll of random uselessness
+KITEM:  $ = centaur barding / nothing, any good_item
 : else
 MONS:   patrolling yaktaur captain, plant
-KITEM:  ' = q:1 bolt
-KITEM:  $ = centaur barding / nothing, q:30 bolt / any good_item
+KITEM:  ' = scroll of random uselessness
+KITEM:  $ = centaur barding / nothing, any good_item
 :end
 SHUFFLE: %$
 SUBST:  % = %W

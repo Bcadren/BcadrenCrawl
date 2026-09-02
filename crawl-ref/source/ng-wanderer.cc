@@ -13,23 +13,6 @@
 
 static void _give_wanderer_weapon(skill_type wpn_skill, int plus)
 {
-    if (wpn_skill == SK_THROWING)
-    {
-        // Plus is set if we are getting a good item. In that case, we
-        // get curare here.
-        if (plus)
-        {
-            newgame_make_item(OBJ_MISSILES, MI_NEEDLE, 1 + random2(4),
-                              0, SPMSL_CURARE);
-        }
-        // Otherwise, we just get some poisoned needles.
-        else
-        {
-            newgame_make_item(OBJ_MISSILES, MI_NEEDLE, 5 + roll_dice(2, 5),
-                              0, SPMSL_POISONED);
-        }
-    }
-
     weapon_type sub_type;
 
     // Now fill in the type according to the random wpn_skill.
@@ -47,8 +30,8 @@ static void _give_wanderer_weapon(skill_type wpn_skill, int plus)
         sub_type = WPN_WHIP;
         break;
 
-    case SK_AXES:
-        sub_type = WPN_HAND_AXE;
+    case SK_AXES_HAMMERS:
+        sub_type = WPN_HAMMER;
         break;
 
     case SK_POLEARMS:
@@ -57,10 +40,6 @@ static void _give_wanderer_weapon(skill_type wpn_skill, int plus)
 
     case SK_MACES_STAVES:
         sub_type = WPN_QUARTERSTAFF;
-        break;
-
-    case SK_THROWING:
-        sub_type = WPN_BLOWGUN;
         break;
 
     case SK_BOWS:
@@ -77,11 +56,6 @@ static void _give_wanderer_weapon(skill_type wpn_skill, int plus)
     }
 
     newgame_make_item(OBJ_WEAPONS, sub_type, 1, plus);
-
-    if (sub_type == WPN_SHORTBOW)
-        newgame_make_item(OBJ_MISSILES, MI_ARROW, 15 + random2avg(21, 5));
-    else if (sub_type == WPN_HAND_CROSSBOW)
-        newgame_make_item(OBJ_MISSILES, MI_BOLT, 15 + random2avg(21, 5));
 }
 
 // The overall role choice for wanderers is a weighted chance based on
@@ -142,10 +116,14 @@ static skill_type _wanderer_role_skill_select(stat_type selected_role,
     {
     case STAT_DEX:
         // Duplicates are intentional.
-        selected_skill = random_choose(SK_FIGHTING, SK_FIGHTING,
-                                       SK_DODGING,
-                                       SK_STEALTH,
-                                       sk_1, sk_1);
+        do
+        {
+            selected_skill = random_choose(SK_FIGHTING, SK_FIGHTING,
+                                           SK_DODGING,
+                                           SK_STEALTH,
+                                           sk_1, sk_1);
+        } 
+        while (is_useless_skill(selected_skill));
         break;
 
     case STAT_STR:
@@ -166,8 +144,12 @@ static skill_type _wanderer_role_skill_select(stat_type selected_role,
 
     if (selected_skill == NUM_SKILLS)
     {
-        ASSERT(you.species == SP_FELID);
-        selected_skill = SK_UNARMED_COMBAT;
+        ASSERT(you.species == SP_FELID || you.species == SP_FAIRY);
+
+        if (you.species == SP_FELID)
+            selected_skill = SK_UNARMED_COMBAT;
+        else
+            selected_skill = SK_SPELLCASTING;
     }
 
     return selected_skill;
@@ -177,7 +159,7 @@ static skill_type _wanderer_role_weapon_select(stat_type role)
 {
     skill_type skill = NUM_SKILLS;
     const skill_type str_weapons[] =
-        { SK_AXES, SK_WHIPS_FLAILS, SK_BOWS, SK_CROSSBOWS };
+        { SK_AXES_HAMMERS, SK_WHIPS_FLAILS, SK_BOWS, SK_CROSSBOWS };
 
     int str_size = ARRAYSZ(str_weapons);
 
@@ -369,7 +351,7 @@ static bool exact_level_spell_filter(spschool discipline_1,
 static void _give_wanderer_minor_book(skill_type skill)
 {
     // Doing a rejection loop for this because I am lazy.
-    while (skill == SK_SPELLCASTING)
+    while (skill == SK_SPELLCASTING || is_removed_skill(skill))
     {
         int value = SK_LAST_MAGIC - SK_FIRST_MAGIC_SCHOOL + 1;
         skill = skill_type(SK_FIRST_MAGIC_SCHOOL + random2(value));
@@ -400,10 +382,9 @@ static void _good_potion_or_scroll()
         { { OBJ_SCROLLS, SCR_BLINKING },
             you.species == SP_FORMICID ? 0 : 1 },
         { { OBJ_POTIONS, POT_HEAL_WOUNDS },
-            (you.species == SP_MUMMY
-             || you.species == SP_VINE_STALKER) ? 0 : 1 },
+            (false) ? 0 : 1 }, // Placeholder in case of future potionless race.
         { { OBJ_POTIONS, POT_HASTE },
-            you.species == SP_MUMMY ? 0 : 1 },
+            (you.species == SP_FORMICID) ? 0 : 1 },
         { { OBJ_POTIONS, POT_BERSERK_RAGE },
             (you.species == SP_FORMICID
              || you.is_lifeless_undead(false)) ? 0 : 1},
@@ -428,7 +409,7 @@ static void _decent_potion_or_scroll()
         { { OBJ_SCROLLS, SCR_TELEPORTATION },
             you.species == SP_FORMICID ? 0 : 1 },
         { { OBJ_POTIONS, POT_CURING },
-            you.species == SP_MUMMY ? 0 : 1 },
+            (false) ? 0 : 1 }, // Placeholder
         { { OBJ_POTIONS, POT_LIGNIFY },
             you.is_lifeless_undead(false) || you.species == SP_LIGNIFITE ? 0 : 1 },
     };
@@ -446,7 +427,9 @@ static void _wanderer_random_evokable()
     {
         int selected_evoker =
               random_choose(MISC_BOX_OF_BEASTS, MISC_LAMP_OF_FIRE,
-                            MISC_FAN_OF_GALES, MISC_PHIAL_OF_FLOODS);
+                            MISC_FAN_OF_GALES, MISC_PHIAL_OF_FLOODS,
+                            MISC_PHANTOM_MIRROR, MISC_CONDENSER_VANE,
+                            MISC_LIGHTNING_ROD);
 
         newgame_make_item(OBJ_MISCELLANY, selected_evoker, 1);
     }
@@ -462,7 +445,7 @@ static void _wanderer_good_equipment(skill_type & skill)
 {
 
     const skill_type combined_weapon_skills[] =
-        { SK_AXES, SK_WHIPS_FLAILS, SK_BOWS, SK_CROSSBOWS,
+        { SK_AXES_HAMMERS, SK_WHIPS_FLAILS, SK_BOWS, SK_CROSSBOWS,
           SK_SHORT_BLADES, SK_LONG_BLADES, SK_MACES_STAVES, SK_UNARMED_COMBAT,
           SK_POLEARMS };
 
@@ -488,9 +471,8 @@ static void _wanderer_good_equipment(skill_type & skill)
     switch (skill)
     {
     case SK_WHIPS_FLAILS:
-    case SK_AXES:
+    case SK_AXES_HAMMERS:
     case SK_POLEARMS:
-    case SK_THROWING:
     case SK_SHORT_BLADES:
     case SK_LONG_BLADES:
     case SK_BOWS:
@@ -510,7 +492,7 @@ static void _wanderer_good_equipment(skill_type & skill)
         else
         {
             newgame_make_item(OBJ_ARMOURS, ARM_LEATHER_ARMOUR);
-            newgame_make_item(OBJ_MISSILES, MI_THROWING_NET, 2 + random2(3));
+            newgame_make_item(OBJ_WANDS, WAND_ENSNARE, 1, 15);
         }
         break;
 
@@ -561,7 +543,7 @@ static void _wanderer_decent_equipment(skill_type & skill,
                                        set<skill_type> & gift_skills)
 {
     const skill_type combined_weapon_skills[] =
-        { SK_AXES, SK_WHIPS_FLAILS, SK_BOWS, SK_CROSSBOWS,
+        { SK_AXES_HAMMERS, SK_WHIPS_FLAILS, SK_BOWS, SK_CROSSBOWS,
           SK_SHORT_BLADES, SK_LONG_BLADES, SK_MACES_STAVES, SK_UNARMED_COMBAT,
           SK_POLEARMS };
 
@@ -594,11 +576,10 @@ static void _wanderer_decent_equipment(skill_type & skill,
     switch (skill)
     {
     case SK_WHIPS_FLAILS:
-    case SK_AXES:
+    case SK_AXES_HAMMERS:
     case SK_POLEARMS:
     case SK_BOWS:
     case SK_CROSSBOWS:
-    case SK_THROWING:
     case SK_MACES_STAVES:
     case SK_SHORT_BLADES:
     case SK_LONG_BLADES:
@@ -663,7 +644,7 @@ static void _wanderer_cover_equip_holes()
 
         for (const item_def& i : you.inv)
         {
-            if (i.is_type(OBJ_WEAPONS, WPN_DAGGER))
+            if (i.base_type == OBJ_WEAPONS && item_attack_skill(i) == SK_SHORT_BLADES)
             {
                 has_dagger = true;
                 break;
@@ -691,7 +672,7 @@ void create_wanderer()
 
     // Regardless of roles, players get a couple levels in these skills.
     const skill_type util_skills[] =
-    { SK_THROWING, SK_STEALTH, SK_SHIELDS, SK_EVOCATIONS };
+    { SK_STEALTH, SK_SHIELDS, SK_EVOCATIONS };
 
     int util_size = ARRAYSZ(util_skills);
 

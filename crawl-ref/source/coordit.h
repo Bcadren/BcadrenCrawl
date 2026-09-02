@@ -3,6 +3,10 @@
 #include "coord-circle.h"
 #include "los-type.h"
 
+#include <vector>
+
+using std::vector;
+
 class rectangle_iterator : public iterator<forward_iterator_tag, coord_def>
 {
 public:
@@ -114,7 +118,7 @@ public:
 /* @class distance_iterator
  * Iterates over coordinates in integer ranges.
  *
- * Unlike other iterators, it tries hard to not favorize any
+ * Unlike other iterators, it tries hard to not favourite any
  * particular direction (unless fair = false, when it saves some CPU).
  */
 class distance_iterator : public iterator<forward_iterator_tag, coord_def>

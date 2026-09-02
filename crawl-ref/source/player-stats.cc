@@ -10,30 +10,29 @@
 #include "files.h"
 #include "god-passive.h"
 #include "hints.h"
-#include "item-status-flag-type.h"
-#include "item-use.h"
 #include "libutil.h"
 #include "macro.h"
 #ifdef TOUCH_UI
 #include "menu.h"
 #endif
 #include "message.h"
-#include "misc.h"
 #include "monster.h"
-#include "mon-util.h"
 #include "notes.h"
 #include "ouch.h"
+#include "options.h"
 #include "output.h"
 #include "player.h"
 #include "religion.h"
 #include "stat-type.h"
 #include "state.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #ifdef TOUCH_UI
-#include "tiledef-gui.h"
+#include "rltiles/tiledef-gui.h"
 #include "tilepick.h"
 #endif
 #include "transform.h"
+#include "view.h"
 
 int player::stat(stat_type s, bool nonneg) const
 {
@@ -94,7 +93,6 @@ int innate_stat(stat_type s)
     return you.max_stat(s, true);
 }
 
-
 static void _handle_stat_change(stat_type stat);
 
 /**
@@ -115,11 +113,11 @@ bool attribute_increase()
     Menu pop(MF_SINGLESELECT | MF_ANYPRINTABLE);
     MenuEntry * const status = new MenuEntry("", MEL_SUBTITLE);
     MenuEntry * const s_me = new MenuEntry("Strength", MEL_ITEM, 1, 'S');
-    s_me->add_tile(tile_def(TILEG_FIGHTING_ON, TEX_GUI));
+    s_me->add_tile(tile_def(TILEG_FIGHTING_ON));
     MenuEntry * const i_me = new MenuEntry("Intelligence", MEL_ITEM, 1, 'I');
-    i_me->add_tile(tile_def(TILEG_SPELLCASTING_ON, TEX_GUI));
+    i_me->add_tile(tile_def(TILEG_SPELLCASTING_ON));
     MenuEntry * const d_me = new MenuEntry("Dexterity", MEL_ITEM, 1, 'D');
-    d_me->add_tile(tile_def(TILEG_DODGING_ON, TEX_GUI));
+    d_me->add_tile(tile_def(TILEG_DODGING_ON));
 
     pop.set_title(new MenuEntry("Increase Attributes", MEL_TITLE));
     pop.add_entry(new MenuEntry(stat_gain_message + " Increase:", MEL_TITLE));
@@ -165,7 +163,10 @@ bool attribute_increase()
             keyin = pop.getkey();
 #else
             while ((keyin = getchm()) == CK_REDRAW)
+            {
                 redraw_screen();
+                update_screen();
+            }
 #endif
         }
         tried_lua = true;
@@ -212,6 +213,61 @@ bool attribute_increase()
     }
 }
 
+void calc_jiyva_stat_targets(int * target_stat)
+{
+    int cur_stat[NUM_STATS];
+    int stat_total = 0;
+
+    for (int x = 0; x < NUM_STATS; ++x)
+    {
+        cur_stat[x] = innate_stat(static_cast<stat_type>(x));
+        stat_total += cur_stat[x];
+    }
+
+    int remaining = stat_total;
+
+    for (int x = 0; x < NUM_STATS; ++x)
+    {
+        if (you.jiyva_stat_targets[x] == JSTAT_LOW)
+            target_stat[x] = 3;
+        else if (you.jiyva_stat_targets[x] == JSTAT_AVG)
+            target_stat[x] = stat_total / 5;
+        else
+            target_stat[x] = stat_total / 3;
+        remaining -= target_stat[x];
+    }
+
+    if (you.jiyva_stat_targets[STAT_STR] == you.jiyva_stat_targets[STAT_INT] &&
+        you.jiyva_stat_targets[STAT_INT] == you.jiyva_stat_targets[STAT_DEX])
+    {
+        for (int x = 0; x < NUM_STATS; ++x)
+            target_stat[x] = stat_total / 3;
+        remaining = 0;
+    }
+
+    int loops = 0;
+
+    while (remaining > 0)
+    {
+        int x = loops % 3;
+        if (you.jiyva_stat_targets[x] == JSTAT_AVG)
+        {
+            target_stat[x]++;
+            remaining--;
+        }
+        else if (you.jiyva_stat_targets[x] == JSTAT_MAX)
+        {
+            int y = min(remaining, 3);
+            target_stat[x] += y;
+            remaining -= y;
+        }
+        loops++;
+
+        if (loops > 300)
+            remaining = -10;
+    }
+}
+
 /*
  * Have Jiyva increase a player stat by one and decrease a different stat by
  * one.
@@ -223,73 +279,33 @@ bool attribute_increase()
 */
 void jiyva_stat_action()
 {
+    int target_stat[NUM_STATS];
     int cur_stat[NUM_STATS];
     int stat_total = 0;
-    int target_stat[NUM_STATS];
+
     for (int x = 0; x < NUM_STATS; ++x)
     {
         cur_stat[x] = you.stat(static_cast<stat_type>(x), false);
         stat_total += cur_stat[x];
     }
 
-    int evp = you.unadjusted_body_armour_penalty();
-    target_stat[STAT_STR] = max(9, evp);
-    target_stat[STAT_INT] = 9;
-    target_stat[STAT_DEX] = 9;
-    int remaining = stat_total - 18 - target_stat[0];
+    calc_jiyva_stat_targets(target_stat);
 
-    // Divide up the remaining stat points between Int and either Str or Dex,
-    // based on skills.
-    if (remaining > 0)
-    {
-        int magic_weights = 0;
-        int other_weights = 0;
-        for (skill_type sk = SK_FIRST_SKILL; sk < NUM_SKILLS; ++sk)
-        {
-            int weight = you.skills[sk];
-
-            if (sk >= SK_SPELLCASTING && sk < SK_INVOCATIONS)
-                magic_weights += weight;
-            else
-                other_weights += weight;
-        }
-        // We give pure Int weighting if the player is sufficiently
-        // focused on magic skills.
-        other_weights = max(other_weights - magic_weights / 2, 0);
-
-        // Now scale appropriately and apply the Int weighting
-        magic_weights = div_rand_round(remaining * magic_weights,
-                                       magic_weights + other_weights);
-        other_weights = remaining - magic_weights;
-        target_stat[STAT_INT] += magic_weights;
-
-        // Heavy armour weights towards Str, Dodging skill towards Dex.
-        int str_weight = 10 * evp;
-        int dex_weight = 10 + you.skill(SK_DODGING, 10);
-
-        // Now apply the Str and Dex weighting.
-        const int str_adj = div_rand_round(other_weights * str_weight,
-                                           str_weight + dex_weight);
-        target_stat[STAT_STR] += str_adj;
-        target_stat[STAT_DEX] += (other_weights - str_adj);
-    }
     // Add a little fuzz to the target.
     for (int x = 0; x < NUM_STATS; ++x)
         target_stat[x] += random2(5) - 2;
     int choices = 0;
     int stat_up_choice = 0;
     int stat_down_choice = 0;
-    // Choose a random stat shuffle that doesn't increase the l^2 distance to
-    // the (fuzzed) target.
+
     for (int gain = 0; gain < NUM_STATS; ++gain)
         for (int lose = 0; lose < NUM_STATS; ++lose)
         {
-            if (gain != lose && cur_stat[lose] > 1
-                && target_stat[gain] - cur_stat[gain] > target_stat[lose] - cur_stat[lose]
-                && cur_stat[gain] < MAX_STAT_VALUE && you.base_stats[lose] > 1)
+            if (gain != lose && cur_stat[lose] > 1 && cur_stat[gain] < MAX_STAT_VALUE
+                && abs(target_stat[gain] + 1 - cur_stat[gain]) > abs(target_stat[gain] - cur_stat[gain]) 
+                && abs(target_stat[lose] - 1 - cur_stat[lose]) > abs(target_stat[lose] - cur_stat[lose]))
             {
-                choices++;
-                if (one_chance_in(choices))
+                if (one_chance_in(choices++))
                 {
                     stat_up_choice = gain;
                     stat_down_choice = lose;
@@ -301,12 +317,15 @@ void jiyva_stat_action()
         simple_god_message("'s power touches on your attributes.");
         modify_stat(static_cast<stat_type>(stat_up_choice), 1, false);
         modify_stat(static_cast<stat_type>(stat_down_choice), -1, false);
+        flash_view_delay(UA_PLAYER, GREEN, 300);
     }
+    else
+        mpr("Nothing seems to change.");
 }
 
 static const char* descs[NUM_STATS][NUM_STAT_DESCS] =
 {
-    { "strength", "weakened", "weaker", "stronger" },
+    { "strength", "weakened", "weak", "strong" },
     { "intelligence", "dopey", "stupid", "clever" },
     { "dexterity", "clumsy", "clumsy", "agile" }
 };
@@ -406,13 +425,7 @@ static int _strength_modifier(bool innate_only)
         result += get_form()->str_mod;
     }
 
-    // mutations
-    result += 2 * (_mut_level(MUT_STRONG, innate_only)
-                   - _mut_level(MUT_WEAK, innate_only));
-#if TAG_MAJOR_VERSION == 34
-    result += _mut_level(MUT_STRONG_STIFF, innate_only)
-              - _mut_level(MUT_FLEXIBLE_WEAK, innate_only);
-#endif
+    result += you.mutated_stats[STAT_STR];
 
     return result;
 }
@@ -442,8 +455,15 @@ static int _int_modifier(bool innate_only)
     }
 
     // mutations
-    result += 2 * (_mut_level(MUT_CLEVER, innate_only)
-                   - _mut_level(MUT_DOPEY, innate_only));
+    result += you.mutated_stats[STAT_INT];
+
+    if (_mut_level(MUT_BIG_BRAIN, innate_only))
+    {
+        if (you.char_class == JOB_DEMONSPAWN)
+            result += you.get_experience_level() / 3;
+        else
+            result += 3;
+    }
 
     return result;
 }
@@ -475,15 +495,15 @@ static int _dex_modifier(bool innate_only)
         result += get_form()->dex_mod;
     }
 
-    // mutations
-    result += 2 * (_mut_level(MUT_AGILE, innate_only)
-                  - _mut_level(MUT_CLUMSY, innate_only));
-#if TAG_MAJOR_VERSION == 34
-    result += _mut_level(MUT_FLEXIBLE_WEAK, innate_only)
-              - _mut_level(MUT_STRONG_STIFF, innate_only);
-    result -= _mut_level(MUT_ROUGH_BLACK_SCALES, innate_only);
-#endif
-    result += 2 * _mut_level(MUT_THIN_SKELETAL_STRUCTURE, innate_only);
+    result += you.mutated_stats[STAT_DEX];
+
+    if (_mut_level(MUT_THIN_SKELETAL_STRUCTURE, false))
+    {
+        if (you.char_class == JOB_DEMONSPAWN)
+            result += 3 + you.get_experience_level() / 3;
+        else
+            result += 6;
+    }
 
     return result;
 }
@@ -501,7 +521,7 @@ static int _stat_modifier(stat_type stat, bool innate_only)
     }
 }
 
-static string _stat_name(stat_type stat)
+string stat_name(stat_type stat)
 {
     switch (stat)
     {
@@ -537,7 +557,7 @@ bool lose_stat(stat_type which_stat, int stat_loss, bool force)
         if (you.duration[DUR_DIVINE_STAMINA] > 0)
         {
             mprf("Your divine stamina protects you from %s loss.",
-                 _stat_name(which_stat).c_str());
+                 stat_name(which_stat).c_str());
             return false;
         }
     }
@@ -595,7 +615,7 @@ bool restore_stat(stat_type which_stat, int stat_gain,
     {
         mprf(recovery ? MSGCH_RECOVERY : MSGCH_PLAIN,
              "You feel your %s returning.",
-             _stat_name(which_stat).c_str());
+             stat_name(which_stat).c_str());
     }
 
     if (stat_gain == 0 || stat_gain > you.stat_loss[which_stat])

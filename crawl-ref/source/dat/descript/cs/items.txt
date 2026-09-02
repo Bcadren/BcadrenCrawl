@@ -79,7 +79,7 @@ corpse
 
 Mrtvola. Je možno ji nasekat na poživatelné kousky.
 %%%%
-crystal plate armour
+crystal plate
 
 Neuvěřitelně těžká, ale extrémně efektivní zbroj z křišťálu.
 %%%%

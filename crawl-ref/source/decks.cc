@@ -32,40 +32,29 @@
 #include "item-prop.h"
 #include "item-status-flag-type.h"
 #include "items.h"
-#include "item-use.h"
 #include "libutil.h"
 #include "macro.h"
 #include "message.h"
 #include "mon-cast.h"
 #include "mon-clone.h"
-#include "mon-death.h"
 #include "mon-place.h"
 #include "mon-poly.h"
 #include "mon-project.h"
-#include "mon-tentacle.h"
 #include "mon-util.h"
 #include "mutation.h"
-#include "nearby-danger.h"
 #include "notes.h"
 #include "output.h"
-#include "player-equip.h"
-#include "player-stats.h"
-#include "potion.h"
 #include "prompt.h"
 #include "random.h"
 #include "religion.h"
-#include "scroller.h"
 #include "spl-clouds.h"
 #include "spl-goditem.h"
 #include "spl-miscast.h"
 #include "spl-monench.h"
-#include "spl-other.h"
-#include "spl-selfench.h"
-#include "spl-summoning.h"
-#include "spl-transloc.h"
 #include "spl-wpnench.h"
 #include "state.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "teleport.h"
 #include "terrain.h"
 #include "transform.h"
@@ -488,9 +477,6 @@ static bool _check_buggy_deck(item_def& deck)
              << "A swarm of software bugs snatches the deck from you "
                 "and whisks it away." << endl;
 
-        if (deck.link == you.equip[EQ_WEAPON0])
-            unwield_item();
-
         dec_inv_item_quantity(deck.link, 1);
 
         return true;
@@ -543,9 +529,6 @@ static bool _check_buggy_deck(item_def& deck)
         strm << "Oops, all of the cards seem to be gone." << endl
              << "A swarm of software bugs snatches the deck from you "
                 "and whisks it away." << endl;
-
-        if (deck.link == you.equip[EQ_WEAPON0])
-            unwield_item();
 
         dec_inv_item_quantity(deck.link, 1);
 
@@ -716,6 +699,7 @@ bool deck_deal()
 
         evoke_deck(deck);
         redraw_screen();
+        update_screen();
     }
 
     // Nemelex doesn't like dealers with inadequate decks.
@@ -729,9 +713,6 @@ bool deck_deal()
     if (deck.quantity > 0)
     {
         mpr(_empty_deck_msg(deck.deck_rarity));
-        if (slot == you.equip[EQ_WEAPON0])
-            unwield_item();
-
         dec_inv_item_quantity(slot, 1);
     }
 
@@ -813,13 +794,13 @@ static void _describe_cards(vector<card_type> cards)
     auto title_hbox = make_shared<Box>(Widget::HORZ);
 #ifdef USE_TILE
         auto icon = make_shared<Image>();
-        icon->set_tile(tile_def(TILE_MISC_CARD, TEX_DEFAULT));
+        icon->set_tile(tile_def(TILE_MISC_CARD));
         title_hbox->add_child(move(icon));
 #endif
         auto title = make_shared<Text>(formatted_string(name, WHITE));
         title->set_margin_for_sdl(0, 0, 0, 10);
         title_hbox->add_child(move(title));
-        title_hbox->align_cross = Widget::CENTER;
+        title_hbox->set_cross_alignment(Widget::CENTER);
         title_hbox->set_margin_for_crt(first ? 0 : 1, 0);
         title_hbox->set_margin_for_sdl(first ? 0 : 20, 0);
         vbox->add_child(move(title_hbox));
@@ -845,9 +826,7 @@ static void _describe_cards(vector<card_type> cards)
     auto popup = make_shared<ui::Popup>(scroller);
 
     bool done = false;
-    popup->on(Widget::slots.event, [&done, &scroller](wm_event ev) {
-        if (ev.type != WME_KEYDOWN)
-            return false;
+    popup->on_keydown_event([&done, &scroller](const KeyEvent& ev) {
         done = !scroller->on_event(ev);
         return true;
     });
@@ -855,13 +834,10 @@ static void _describe_cards(vector<card_type> cards)
 #ifdef USE_TILE_WEB
     tiles.json_close_array();
     tiles.push_ui_layout("describe-cards", 0);
+    popup->on_layout_pop([](){ tiles.pop_ui_layout(); });
 #endif
 
     ui::run_layout(move(popup), done);
-
-#ifdef USE_TILE_WEB
-    tiles.pop_ui_layout();
-#endif
 }
 
 // Stack a deck: look at the next five cards, put them back in any
@@ -982,9 +958,7 @@ bool stack_five(int slot)
     for (unsigned int i = 0; i < draws.size(); i++)
     {
         MenuEntry * const entry = new MenuEntry(card_name(draws[i]), MEL_ITEM, 1, '1'+i);
-#ifdef USE_TILE
-        entry->add_tile(tile_def(TILE_MISC_CARD, TEX_DEFAULT));
-#endif
+        entry->add_tile(tile_def(TILE_MISC_CARD));
         menu.add_entry(entry);
     }
     menu.set_more(formatted_string::parse_string(
@@ -1087,6 +1061,7 @@ bool draw_three(int slot)
         {
             _describe_cards(draws);
             redraw_screen();
+            update_screen();
             need_prompt_redraw = true;
         }
         else if (keyin >= 'a' && keyin < 'a' + num_to_draw)
@@ -1103,19 +1078,14 @@ bool draw_three(int slot)
 
     you.wield_change = true;
 
-    // Make deck disappear *before* the card effect, since we
-    // don't want to unwield an empty deck.
+    // Make deck disappear *before* the card effect.
     const deck_rarity_type rarity = deck.deck_rarity;
     if (cards_in_deck(deck) == 0)
     {
         mpr(_empty_deck_msg(deck.deck_rarity));
-        if (slot == you.equip[EQ_WEAPON0])
-            unwield_item();
-
         dec_inv_item_quantity(slot, 1);
     }
 
-    // Note that card_effect() might cause you to unwield the deck.
     card_effect(draws[selected], rarity,
                 flags[selected] | CFLAG_SEEN, false);
 
@@ -1197,7 +1167,7 @@ static int _get_power_level(int power, deck_rarity_type rarity)
     return power_level;
 }
 
-static void _suppressed_card_message(god_type god, conduct_type done)
+static void _suppressed_card_message(conduct_type done)
 {
     string forbidden_act;
 
@@ -1278,7 +1248,7 @@ static void _velocity_card(int power, deck_rarity_type rarity)
                           else if (!(for_hostiles == ENCH_HASTE && haste_immune))
                           {
                               if (have_passive(passive_t::no_haste))
-                                  _suppressed_card_message(you.religion, DID_HASTY);
+                                  _suppressed_card_message(DID_HASTY);
                               else
                               {
                                   mon.add_ench(for_hostiles);
@@ -1303,7 +1273,7 @@ static void _velocity_card(int power, deck_rarity_type rarity)
                           else if (!(for_allies == ENCH_HASTE && haste_immune))
                           {
                               if (have_passive(passive_t::no_haste))
-                                  _suppressed_card_message(you.religion, DID_HASTY);
+                                  _suppressed_card_message(DID_HASTY);
                               else
                               {
                                   mon.add_ench(for_allies);
@@ -1369,7 +1339,7 @@ static void _shaft_card(int power, deck_rarity_type rarity)
 
     if (is_valid_shaft_level())
     {
-        if (grd(you.pos()) == DNGN_FLOOR)
+        if (env.grid(you.pos()) == DNGN_FLOOR)
         {
             place_specific_trap(you.pos(), TRAP_SHAFT);
             trap_at(you.pos())->reveal();
@@ -1399,7 +1369,7 @@ static void _stairs_card(int /*power*/, deck_rarity_type /*rarity*/)
     you.duration[DUR_REPEL_STAIRS_MOVE]  = 0;
     you.duration[DUR_REPEL_STAIRS_CLIMB] = 0;
 
-    if (feat_stair_direction(grd(you.pos())) == CMD_NO_CMD)
+    if (feat_stair_direction(env.grid(you.pos())) == CMD_NO_CMD)
         you.duration[DUR_REPEL_STAIRS_MOVE]  = 1000;
     else
         you.duration[DUR_REPEL_STAIRS_CLIMB] =  500; // more annoying
@@ -1408,7 +1378,7 @@ static void _stairs_card(int /*power*/, deck_rarity_type /*rarity*/)
 
     for (radius_iterator ri(you.pos(), LOS_DEFAULT, true); ri; ++ri)
     {
-        dungeon_feature_type feat = grd(*ri);
+        dungeon_feature_type feat = env.grid(*ri);
         if (feat_stair_direction(feat) != CMD_NO_CMD
             && feat != DNGN_ENTER_SHOP)
         {
@@ -1483,31 +1453,12 @@ static void _damaging_card(card_type card, int power, deck_rarity_type rarity,
         {
             if (is_good_god(you.religion))
             {
-                _suppressed_card_message(you.religion, DID_EVIL);
+                _suppressed_card_message(DID_EVIL);
                 return;
             }
 
-            mpr(prompt);
-
-            if (monster *ghost = _friendly(MONS_FLAYED_GHOST, 3))
-            {
-                apply_visible_monsters([&, ghost](monster& mons)
-                {
-                    if (mons.wont_attack()
-                        || !(mons.holiness() & MH_NATURAL))
-                    {
-                        return false;
-                    }
-
-
-                    flay(*ghost, mons, mons.hit_points * 2 / 5);
-                    return true;
-                }, ghost->pos());
-
-                ghost->foe = MHITYOU; // follow you around (XXX: rethink)
-                return;
-            }
-            // else, fallback to level 1
+            mpr("You reveal a symbol of torment!");
+            torment(&you, TORMENT_CARD_PAIN, you.pos());
         }
 
         ztype = painzaps[min(power_level, (int)ARRAYSZ(painzaps)-1)];
@@ -1522,7 +1473,7 @@ static void _damaging_card(card_type card, int power, deck_rarity_type rarity,
 
     if (card == CARD_PAIN && is_good_god(you.religion))
     {
-        _suppressed_card_message(you.religion, DID_EVIL);
+        _suppressed_card_message(DID_EVIL);
         return;
     }
 
@@ -1639,7 +1590,7 @@ static void _summon_demon_card(int power, deck_rarity_type rarity)
 
     if (is_good_god(you.religion))
     {
-        _suppressed_card_message(you.religion, DID_EVIL);
+        _suppressed_card_message(DID_EVIL);
         return;
     }
 
@@ -1652,14 +1603,16 @@ static void _summon_demon_card(int power, deck_rarity_type rarity)
 
     const bool hostile = one_chance_in(power_level + 4);
 
-    if (!create_monster(mgen_data(dct, hostile ? BEH_HOSTILE : BEH_FRIENDLY,
-                                  you.pos(), MHITYOU, MG_AUTOFOE)
-                        .set_summoned(&you, 5 - power_level, 0)))
+    monster * m = create_monster(mgen_data(dct, hostile ? BEH_HOSTILE : BEH_FRIENDLY,
+        you.pos(), MHITYOU, MG_AUTOFOE)
+        .set_summoned(&you, 5 - power_level, 0));
+
+    if (!m)
     {
         mpr("You see a puff of smoke.");
     }
     else if (hostile
-             && mons_class_flag(dct, M_INVIS)
+             && (mons_class_flag(dct, M_INVIS) || (m->flags & MF_INVIS))
              && !you.can_see_invisible())
     {
         mpr("You sense the presence of something unfriendly.");
@@ -1715,10 +1668,8 @@ static void _summon_dancing_weapon(int power, deck_rarity_type rarity)
     case 0:
         // Wimpy, negative-enchantment weapon.
         wpn.plus = random2(3) - 2;
-        wpn.sub_type = random_choose(WPN_QUARTERSTAFF, WPN_HAND_AXE);
-
-        set_item_ego_type(wpn, OBJ_WEAPONS,
-                          random_choose(SPWPN_VENOM, SPWPN_NORMAL));
+        wpn.sub_type = random_choose(WPN_QUARTERSTAFF, WPN_HAMMER);
+        wpn.brand = random_choose(SPWPN_VENOM, SPWPN_NORMAL);
         break;
     case 1:
         // This is getting good.
@@ -1726,20 +1677,15 @@ static void _summon_dancing_weapon(int power, deck_rarity_type rarity)
         wpn.sub_type = random_choose(WPN_LONG_SWORD, WPN_TRIDENT);
 
         if (coinflip())
-        {
-            set_item_ego_type(wpn, OBJ_WEAPONS,
-                              random_choose(SPWPN_MOLTEN, SPWPN_FREEZING));
-        }
+            wpn.brand = random_choose(SPWPN_MOLTEN, SPWPN_FREEZING);
         else
-            set_item_ego_type(wpn, OBJ_WEAPONS, SPWPN_NORMAL);
+            wpn.brand = SPWPN_NORMAL;
         break;
     default:
         // Rare and powerful.
         wpn.plus = random2(4) + 2;
         wpn.sub_type = random_choose(WPN_DEMON_TRIDENT, WPN_EXECUTIONERS_AXE);
-
-        set_item_ego_type(wpn, OBJ_WEAPONS,
-                          random_choose(SPWPN_SPEED, SPWPN_ELECTROCUTION));
+        wpn.brand = random_choose(SPWPN_SPEED, SPWPN_ELECTROCUTION);
     }
 
     item_colour(wpn); // this is probably not needed
@@ -1787,13 +1733,16 @@ static void _summon_flying(int power, deck_rarity_type rarity)
     {
         const bool hostile = one_chance_in(power_level + 4);
 
-        create_monster(
+        monster * m = create_monster(
             mgen_data(result,
                       hostile ? BEH_HOSTILE : BEH_FRIENDLY, you.pos(), MHITYOU,
                       MG_AUTOFOE).set_summoned(&you, 3, 0));
 
-        if (hostile && mons_class_flag(result, M_INVIS) && !you.can_see_invisible())
+        if (hostile && (mons_class_flag(result, M_INVIS) || (m->flags & MF_INVIS))
+            && !you.can_see_invisible())
+        {
             hostile_invis = true;
+        }
     }
 
     if (hostile_invis)
@@ -1895,7 +1844,7 @@ static void _cloud_card(int power, deck_rarity_type rarity)
             if (*ai == you.pos() || monster_at(*ai))
                 continue;
 
-            if (grd(*ai) == DNGN_FLOOR && !cloud_at(*ai))
+            if (env.grid(*ai) == DNGN_FLOOR && !cloud_at(*ai))
             {
                 const int cloud_power = 5 + random2((power_level + 1) * 3);
                 place_cloud(cloudy, *ai, cloud_power, &you);
@@ -1918,7 +1867,9 @@ static void _storm_card(int power, deck_rarity_type rarity)
 
     _friendly(MONS_AIR_ELEMENTAL, 3);
 
-    wind_blast(&you, (power_level == 0) ? 100 : 200, coord_def(), true);
+    wind_blast(&you, (power_level == 0) ? 100 : 200, coord_def(), 1);
+    redraw_screen(); // Update monster positions
+    update_screen();
 
     for (radius_iterator ri(you.pos(), 4, C_SQUARE, LOS_SOLID); ri; ++ri)
     {
@@ -1930,8 +1881,8 @@ static void _storm_card(int power, deck_rarity_type rarity)
         if (mons && mons->wont_attack())
             continue;
 
-        if ((feat_has_solid_floor(grd(*ri))
-             || grd(*ri) == DNGN_DEEP_WATER)
+        if ((feat_has_solid_floor(env.grid(*ri))
+             || env.grid(*ri) == DNGN_DEEP_WATER)
             && !cloud_at(*ri))
         {
             place_cloud(CLOUD_STORM, *ri,
@@ -1954,7 +1905,7 @@ static void _illusion_card(int power, deck_rarity_type rarity)
     mon->attitude = ATT_FRIENDLY;
     mon->set_position(you.pos());
     mon->mid = MID_PLAYER;
-    mgrd(you.pos()) = mon->mindex();
+    env.mgrid(you.pos()) = mon->mindex();
 
     mons_summon_illusion_from(mon, (actor *)&you, SPELL_NO_SPELL, power_level);
     mon->reset();
@@ -2009,16 +1960,22 @@ static void _wild_magic_card(int power, deck_rarity_type rarity)
         if (x_chance_in_y((power_level + 1) * 5 + random2(5),
                            mons->get_hit_dice()))
         {
+            // BCADDO: Revise if the skipping is necessary.
+            // skip summoning and tlocs, only destructive forces
             spschool type = random_choose(spschool::fire,
                                           spschool::ice,
                                           spschool::earth,
                                           spschool::air,
-                                          spschool::poison);
+                                          spschool::poison,
+                                          spschool::transmutation,
+                                          spschool::charms,
+                                          spschool::hexes,
+                                          spschool::necromancy);
 
-            MiscastEffect(mons, actor_by_mid(MID_YOU_FAULTLESS),
-                          {miscast_source::deck}, type,
-                          random2(power/15) + 5, random2(power),
-                          "a card of wild magic");
+            miscast_effect(*mons, &you,
+                           {miscast_source::deck}, type,
+                           3 * (power_level + 1), random2(70),
+                           "a card of wild magic");
 
             num_affected++;
         }
@@ -2044,7 +2001,7 @@ static void _wild_magic_card(int power, deck_rarity_type rarity)
 
 static void _torment_card()
 {
-    if (you.undead_or_demonic())
+    if (you.res_holy_energy() < 0)
         holy_word_player(HOLY_WORD_CARD);
     else
         torment_player(&you, TORMENT_CARDS);
@@ -2324,7 +2281,7 @@ void init_deck(item_def &item)
 
 void reclaim_decks_on_level()
 {
-    for (auto &item : mitm)
+    for (auto &item : env.item)
         if (item.defined() && is_deck(item))
             destroy_item(item.index());
 }

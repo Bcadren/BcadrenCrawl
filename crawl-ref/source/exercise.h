@@ -11,7 +11,6 @@
 
 void practise_hitting(const item_def *weapon);
 void practise_launching(const item_def &weapon);
-void practise_throwing(missile_type mi_type);
 void practise_stabbing();
 
 void practise_using_ability(ability_type abil);

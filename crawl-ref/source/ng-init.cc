@@ -8,6 +8,7 @@
 
 #include "AppHdr.h"
 
+#include "mpr.h"
 #include "ng-init.h"
 
 #include "branch.h"
@@ -17,11 +18,12 @@
 #include "item-name.h"
 #include "libutil.h"
 #include "maps.h"
+#include "ng-init-branches.h"
 #include "random.h"
 #include "religion.h"
-#include "spl-util.h"
 #include "state.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "unicode.h"
 
 #ifdef DEBUG_DIAGNOSTICS
@@ -72,30 +74,7 @@ void initialise_branch_depths()
         ASSERT(b->id == branch);
     }
 
-    for (branch_iterator it; it; ++it)
-    {
-        if (!branch_is_unfinished(it->id) && it->parent_branch != NUM_BRANCHES)
-        {
-            brentry[it->id] = level_id(it->parent_branch,
-                                       random_range(it->mindepth,
-                                                    it->maxdepth));
-        }
-    }
-
-    // You will get one of Shoals/Swamp and one of Spider/Snake.
-    // This way you get one "water" branch and one "poison" branch.
-    vector<branch_type> disabled_branch;
-    disabled_branch.push_back(random_choose(BRANCH_SWAMP, BRANCH_SHOALS));
-    disabled_branch.push_back(random_choose(BRANCH_SNAKE, BRANCH_SPIDER));
-
-    for (branch_type disabled : disabled_branch)
-    {
-        dprf("Disabling branch: %s", branches[disabled].shortname);
-        brentry[disabled].clear();
-    }
-
-    for (branch_iterator it; it; ++it)
-        brdepth[it->id] = it->numlevels;
+    initialise_brentry();
 }
 
 #define MAX_OVERFLOW_LEVEL 9
@@ -395,64 +374,10 @@ void initialise_temples()
     }
 }
 
-#if TAG_MAJOR_VERSION == 34
-static int _get_random_porridge_desc()
-{
-    return PDESCQ(PDQ_GLUGGY, one_chance_in(3) ? PDC_BROWN
-                                               : PDC_WHITE);
-}
-
-static int _get_random_coagulated_blood_desc()
-{
-    potion_description_qualifier_type qualifier = PDQ_NONE;
-    while (true)
-    {
-        switch (random2(4))
-        {
-        case 0:
-            qualifier = PDQ_GLUGGY;
-            break;
-        case 1:
-            qualifier = PDQ_LUMPY;
-            break;
-        case 2:
-            qualifier = PDQ_SEDIMENTED;
-            break;
-        case 3:
-            qualifier = PDQ_VISCOUS;
-            break;
-        }
-        potion_description_colour_type colour = (coinflip() ? PDC_RED
-                                                            : PDC_BROWN);
-
-        uint32_t desc = PDESCQ(qualifier, colour);
-
-        if (you.item_description[IDESC_POTIONS][POT_BLOOD] != desc)
-            return desc;
-    }
-}
-#endif
-
-static int _get_random_blood_desc()
-{
-    return PDESCQ(random_choose_weighted(2, PDQ_NONE,
-                                         1, PDQ_VISCOUS,
-                                         1, PDQ_SEDIMENTED), PDC_RED);
-}
-
 void initialise_item_descriptions()
 {
     // Must remember to check for already existing colours/combinations.
     you.item_description.init(255);
-
-    you.item_description[IDESC_POTIONS][POT_BLOOD]
-        = _get_random_blood_desc();
-#if TAG_MAJOR_VERSION == 34
-    you.item_description[IDESC_POTIONS][POT_BLOOD_COAGULATED]
-        = _get_random_coagulated_blood_desc();
-    you.item_description[IDESC_POTIONS][POT_PORRIDGE]
-        = _get_random_porridge_desc();
-#endif
 
     // The order here must match that of IDESC in describe.h
     const int max_item_number[6] = { NUM_WANDS,

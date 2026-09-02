@@ -7,5 +7,6 @@ enum gender_type
     GENDER_FEMALE,
     GENDER_YOU, // A person, not a gender, but close enough.
     GENDER_NEUTRAL,
+    GENDER_UNKNOWN,
     NUM_GENDERS
 };

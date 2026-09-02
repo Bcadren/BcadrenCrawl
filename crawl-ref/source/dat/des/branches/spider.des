@@ -96,8 +96,8 @@ ENDMAP
 NAME:   spider_nest_entry_web_field
 TAGS:   spider_entry patrolling no_monster_gen transparent
 KFEAT:  O = enter_spider_nest
-KFEAT:  ^ = known web trap / floor
-KFEAT:  ~ = known web trap / w:20 floor
+KFEAT:  ^ = web trap / floor
+KFEAT:  ~ = web trap / w:20 floor
 MAP
 ...~~~~~...
 .~~~~~~~~~.
@@ -440,12 +440,12 @@ KMONS:  1 = tarantella
 KMONS:  2* = jumping spider / orb spider w:5
 KMONS:  3| = ghost moth / moth of wrath
 KITEM:  | = any good_item
-KFEAT:  ` = known zot trap
-KFEAT:  ^ = web w:7 / known web trap w:1 / any trap w:1 / . w:7
+KFEAT:  ` = zot trap
+KFEAT:  ^ = web trap w:8 / any trap w:1 / . w:7
 :   if you.depth() == dgn.br_depth("Zot") - 1 then
-KFEAT:  ~ = zot trap w:20 / web w:8 / known web trap w:2 / . w:5
+KFEAT:  ~ = zot trap w:20 / web trap / . w:5
 :   else
-KFEAT:  ~ = zot trap w:15 / shaft trap / web w:4 / known web trap w:1 / . w:5
+KFEAT:  ~ = zot trap w:15 / shaft trap / web trap w:5 / . w:5
 :   end
 NSUBST: 4 = 1:122 / 1:112
 SUBST:  X = c
@@ -453,8 +453,8 @@ SUBST:  X = c
 KMONS:  2 = tarantella
 KMONS:  3 = orb spider
 KITEM:  | = superb_item / any good_item w:5
-KFEAT:  ` = known shaft trap
-KFEAT:  ^ = web w:9 / known web trap w:1 / . w:6
+KFEAT:  ` = shaft trap
+KFEAT:  ^ = web w:9 / web trap w:1 / . w:6
 KFEAT:  ~ = shaft trap w:15 / web / . w:5
 NSUBST: 4 = 1:2 / *:W
 SUBST:  X = x
@@ -841,8 +841,8 @@ ENDMAP
 NAME:   nicolae_crawler_farm
 DEPTH:  Spider
 TAGS:   no_monster_gen patrolling no_trap_gen
-MONS:   crimson imp w:50 / white imp w:25 / shadow imp w:15 / \
-        iron imp w:10 / nothing w:50
+MONS:   llaibwca w:50 / gwybwca w:25 / cysgobwca w:15 / \
+        haearbwca w:10 / nothing w:50
 MONS:   demonic crawler
 KPROP:  d' = no_tele_into
 SUBST:  d = c
@@ -1256,6 +1256,7 @@ NSUBST:  H = 1:X / *:x, I = 1:X / *:x, J = 1:X / *:x
 NSUBST:  K = 1:X / *:x, L = 1:X / *:x, M = 1:X / *:x
 NSUBST:  N = 1:X / *:x, O = 1:X / *:x, P = 1:X / *:x
 # Even random trimming can have weighed styles to it.
+# TODO: the z SUBST here can generate pockets that will force a veto
 SUBST:   z : ^<>, ^ = xx', < = xx''', > = x'
 SUBST:   y : XYZ, X = xx., Y = xx..., Z = x.
 SUBST:   X : %*|, % = xxx.., * = x., | = xx...
@@ -1295,11 +1296,12 @@ xyyyyyyyyyyyyyyyyxzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
 .....................HH.II....KK.LL..CCCC....NN...............
  .""..""..""..""........II.......LL..CxxC.MM.NN.OO.....DDDDDD.
                  ....................CxxC.MM....OO.PP..DxxxxD.
-                 @"".""."".""."".""..CCCC..........PP..DxxxxD"
-                                    ...................DxxxxD"
+                 @"".""."".""."".""..CCCC..........PP..DxxxxD.
+                                    ...................DxxxxD.
                                     @."".."".""."".""..DxxxxD.
                                                       .DDDDDD.
-                                                      ...""..
+                                                      ........
+                                                      ...""...
 ENDMAP
 
 NAME: nicolae_spider_webbed_stairs
@@ -1386,7 +1388,7 @@ MONS: redback / tarantella / jumping spider
 ITEM: robe good_item / cloak good_item, robe / cloak
 NSUBST: " = 2:1 / 2:2 / 1=2., ' = 1:2 / 1:3 / 6:4 / 4=234.. / 8:^
 NSUBST: - = 2=e% / 4=e%. / 3=%.
-KFEAT: ^ = known web trap
+KFEAT: ^ = web trap
 MAP
     ..........
    ..xxxxxxxx..
@@ -1429,7 +1431,7 @@ KITEM: - = plate armour / plate armour good_item w:1 / chain mail \
 KITEM: " = plate armour / plate armour good_item w:1 / chain mail \
            / chain mail good_item w:1 / scale mail / scale mail good_item w:1 \
            / ring mail / ring mail good_item w:1
-KFEAT: ^ = known web trap
+KFEAT: ^ = web trap
 NSUBST: ` = 4:2 / 4=2., ' = 2=*% / 5=%., . = 2:^ / 4=^.
 MAP
     ccccccccccccc
@@ -1522,12 +1524,12 @@ NSUBST: 4 = 3:3
 NSUBST: 7 = 3:1 / 1:2
 SUBST:  W = W..
 SUBST:  - = ....WWW^
-KFEAT:  ^ = known web trap
+KFEAT:  ^ = web trap
 TILE:   c = wall_brick_gray
 MAP
-    4    x       xx       x
-  ..4@xcxxx xxxxxxxxxxx xxx xx
- W4W.4Wcccxxxccxxxccccxxxcxxxxx
+    4 xxx        xx       x
+  ..4@xcxxxxxxxxxxxxxxx xxx xx
+ W4W.4Wcccxxccccxxccccxxxcxxxxx
  @..4W6W6ccccWWccccWWcccccccccxxxx
 W54.x6W6WcWWW.4..........444.ccccxx
 wW.xcccW666....W5.W....WWWWW..cccxx
@@ -1563,7 +1565,7 @@ MONS:   redback / nothing w:15
 MONS:   orb spider
 NSUBST: 8 = 2:c / *:7, " = 1:. / 1:c. / *:c
 SUBST:  - = .....WWW^
-KFEAT:  ^ = known web trap
+KFEAT:  ^ = web trap
 SHUFFLE: O12*
 TILE:   C = wall_brick_gray
 SUBST:  C = c
@@ -1607,7 +1609,7 @@ MONS:   wolf spider w:11 / redback / tarantella / jumping spider
 MONS:   orb spider / hornet, redback / nothing
 NSUBST: 1 = 2:1 / 1:1.. / *:4, 4 = 20:4 / 16:. / * = 44...
 SUBST:  2 = 12, " = ^^...6, - = .....w^^
-KFEAT:  ^ = known web trap
+KFEAT:  ^ = web trap
 SUBST:  C : cx
 TILE:   c = wall_brick_gray
 KMASK:  w = no_monster_gen
@@ -1666,7 +1668,7 @@ SUBST:   + = ^^^+
 SUBST:   " = ...xxW^
 SUBST:   - = ...cWW^^^
 SUBST:   . = .:20 x:2 ^:1
-KFEAT:   ^ = known web trap
+KFEAT:   ^ = web trap
 KFEAT:   _ = .
 SUBST:   c : cx
 SUBST:   C : c
@@ -1686,8 +1688,8 @@ xc-......_WwwCC--0.---CwwwW....-"-
 xc-..j.._-WwwC--3_9__-CCwwW..0.-"-
 xc-.j.j_-"-"wC-0_0d0_--CwwW....-"-
 xc-..._-"---_+3.9ddd9-CCwwW...f-"-
-xc- j.j_-"-"wC-0_0d0--CwwwW...g-"-
-xc-. j.._"WwwC--3_9--CCwwwW..g.-"@
+xc-.j.j_-"-"wC-0_0d0--CwwwW...g-"-
+xc-..j.._"WwwC--3_9--CCwwwW..g.-"@
 xcc......_WwwCC--0_-CCwwwWW....-"-
 xcc.......WwwwCC----CwwwwW....5-"-
 xcc.......WwwwwCCCCCCwwwWW...g.-"-
@@ -1799,7 +1801,7 @@ NSUBST: N = 4:W / c
 TILE:   M = wall_tomb
 COLOUR: M = yellow
 KFEAT:  M = stone_wall
-KFEAT:  P = clear_rock_wall
+KFEAT:  P = sarcophagus
 TILE:   c = wall_sandstone
 TILE:   P = dngn_sarcophagus_pedestal_left
 FTILE:  23+$OEGHNPS. = floor_sandstone:20 / none
@@ -1817,7 +1819,6 @@ MONS:   emperor scorpion, ghost moth, moth of wrath
 NSUBST: S = 8:1 / ., H = 2:5 / 1:6 / 1:7 / K
 SUBST:  K = 2 5:4 6:2 7:2 E:20, E = 3 4:30
 SUBST:  Q = W:15 .
-: set_feature_name("clear_rock_wall", "sarcophagus")
 MAP
   .....xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   .G.G.cccccccccccccccccccccccccccccccx

@@ -39,6 +39,7 @@ msc += $warning:floor suddenly vibrates
 msc += $warning:a sudden draft
 msc += $warning:intense greed
 msc += $warning:coins.*counted
+msc += $warning:brandishing
 msc += $warning:tolling.*bell
 msc += $warning:heat of battle
 msc += $warning:creaking.*portcullis
@@ -62,6 +63,7 @@ msc += $warning:whistling.*wind
 msc += $warning:rapidly growing quiet
 msc += $warning:slides
 msc += $warning:settles down
+msc += $warning:small and insubstantial
 
 msc += lightcyan:LOW MAGIC WARNING
 msc += $warning:fails to return
@@ -105,6 +107,7 @@ force_more_message += doesn't seem very happy
 force_more_message += You rejoin the land of the living
 force_more_message += You cannot cast spells when silenced
 force_more_message += You don't have the energy to cast that spell
+force_more_message += You don't have the energy to cast any spells
 force_more_message += This is a scroll of acquirement
 
 ## Reduce chance of draining because flight or form runs out:
@@ -176,9 +179,7 @@ force_more_message += will bless one of your weapons
 force_more_message += will bloody your weapon with pain
 force_more_message += will brand one of your weapons
 force_more_message += It is a scroll of amnesia
-force_more_message += It is a scroll of brand weapon
 force_more_message += It is a scroll of enchantment
-force_more_message += It is a scroll of identify
 force_more_message += You feel more experienced
 force_more_message += A flood of memories washes over you
 force_more_message += There's only one card left

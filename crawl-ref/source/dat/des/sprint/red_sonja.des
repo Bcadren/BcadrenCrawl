@@ -45,11 +45,11 @@ KMONS:  h = daeva
 KMONS:  i = 12-headed hydra
 KMONS:  k = golden dragon
 KMONS:  l = shadow dragon
-KMONS:  n = hellwing
+KMONS:  n = vlerk
 KMONS:  o = deep elf annihilator
 KMONS:  p = merfolk siren
 KMONS:  q = mummy priest
-KMONS:  s = Tiamat
+KMONS:  s = Livarra
 KMONS:  t = fire giant
 KMONS:  G = Lom Lobon
 KMONS:  u = redback
@@ -102,6 +102,7 @@ TAGS: red_sonja_temple no_item_gen no_trap_gen no_pool_fixup no_rotate no_hmirro
 # No Ashenzari or Beogh.
 MONS: jelly, yak
 KITEM: $ = gold q:27
+KFEAT: B = altar_bahamut_and_tiamat
 KFEAT: C = altar_cheibriados
 KFEAT: D = altar_dithmenos
 KFEAT: E = altar_elyvilon
@@ -120,16 +121,17 @@ KFEAT: V = altar_vehumet
 KFEAT: W = altar_wu_jian
 KFEAT: Y = altar_yredelemnul
 KFEAT: Z = altar_zin
+SHUFFLE: BCDEFHKNOQRSTUVYZ'
 KFEAT: ' = altar_the_shining_one
 KFEAT: s = any shop
 MAP
 xxxxx+xxxxx+x
-xxxx$$c$$$c*c
+x$$x$$c$G$c*c
 xEZxxxc$$cc*c
 x'OTFQcc+cW.+
 xK.s..2+...Sc
 xY..UHccV1x+x
-cDRCGNccx+x*x
+cDRCBNccx+x*x
 ccccccccx.xxx
 ENDMAP
 

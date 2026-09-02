@@ -5,9 +5,13 @@
 
 #pragma once
 
+#include <vector>
+
 #define RANDBOOK_SIZE 8
 #include "item-prop-enum.h"
 #include "spl-util.h" // spschool
+
+using std::vector;
 
 #define SPELL_LIST_KEY "spell_list"
 
@@ -21,22 +25,24 @@ int  spell_rarity(spell_type which_spell);
 bool is_rare_book(book_type type);
 void init_spell_rarities();
 bool is_player_spell(spell_type which_spell);
+bool is_player_book_spell(spell_type which_spell);
+bool is_wand_spell(spell_type spell);
 
 bool book_has_title(const item_def &book);
-
-void read_book(item_def &item);
 
 bool player_can_memorise(const item_def &book);
 bool can_learn_spell(bool silent = false);
 bool player_has_available_spells();
 bool learn_spell();
-bool learn_spell(spell_type spell, bool wizard = false);
+bool learn_spell(spell_type spell, bool wizard = false, bool interactive = true);
 
 string desc_cannot_memorise_reason(spell_type spell);
 
 spell_type spell_in_wand(wand_type wand);
+wand_type wand_from_spell(spell_type spell);
 vector<spell_type> spellbook_template(book_type book);
 vector<spell_type> spells_in_book(const item_def &book);
+bool spell_found_in_book(const book_type book, const spell_type spell);
 
 bool you_can_memorise(spell_type spell) PURE;
 bool has_spells_to_memorise(bool silent = true);

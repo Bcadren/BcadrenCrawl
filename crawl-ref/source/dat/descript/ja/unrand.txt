@@ -220,7 +220,7 @@ skin of Zhor
 
 ある奇妙な動物の悪臭を放つ皮だ。
 %%%%
-salamander hide armour
+salamander hide
 
 サラマンダーの皮でできたレザーアーマーだ。
 %%%%
@@ -365,7 +365,7 @@ Axe of Woe
 あなたの身体は限界を超えた力を発揮し、
 あなたの一挙手一投足はマクレブの意のままとなる。
 %%%%
-moon troll leather armour
+moon troll leather
 
 この革鎧は噂によれば、
 今は絶滅してしまったトロルの一種の皮に魔力を込めることで作られたものだという。

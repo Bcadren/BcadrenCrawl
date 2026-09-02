@@ -31,7 +31,7 @@ constexpr int hunger_threshold[HS_ENGORGED + 1] =
 
 bool eat_food(int slot = -1);
 
-void make_hungry(int hunger_amount, bool suppress_msg, bool magic = false);
+void make_hungry(int hunger_amount, bool suppress_msg);
 
 void lessen_hunger(int statiated_amount, bool suppress_msg, int max = - 1);
 
@@ -39,6 +39,7 @@ void set_hunger(int new_hunger_level, bool suppress_msg);
 
 bool is_bad_food(const item_def &food);
 bool is_noxious(const item_def &food);
+bool is_mutagenic(const item_def &item);
 bool is_inedible(const item_def &item, bool temp = true);
 bool is_preferred_food(const item_def &food);
 bool is_forbidden_food(const item_def &food);

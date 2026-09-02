@@ -8,6 +8,7 @@
 
 #include "spl-monench.h"
 
+#include "chaos.h"
 #include "env.h"
 #include "message.h"
 #include "spl-util.h"
@@ -37,7 +38,7 @@ int englaciate(coord_def where, int pow, actor *agent)
     }
 
     int duration = (roll_dice(3, pow) / 6
-                    - random2(victim->get_hit_dice()))
+                    - victim->get_hit_dice() / 2)
                     * BASELINE_DELAY;
 
     if (duration <= 0)

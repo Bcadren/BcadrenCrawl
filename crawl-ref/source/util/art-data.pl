@@ -67,6 +67,7 @@ my %field_type = (
     RND_TELE => "bool",
     SEEINV   => "bool",
     SKIP_EGO => "bool",
+	INACC    => "bool",
     SLAY     => "num",
     SPECIAL  => "bool",
     SLOW     => "bool",
@@ -88,6 +89,7 @@ my %field_type = (
     melee_effects_func => "func",
     launch_func        => "func",
     evoke_func         => "func",
+    targeted_evoke_func => "func",
 
     plus      => "num",
     plus2     => "num",
@@ -202,7 +204,7 @@ sub finish_art
         $funcs = {};
     }
 
-    foreach my $func_name (qw(equip unequip world_reacts evoke melee_effects launch))
+    foreach my $func_name (qw(equip unequip world_reacts targeted_evoke evoke melee_effects launch))
     {
         my $val;
         if ($funcs->{$func_name})
@@ -523,6 +525,7 @@ my @art_order = (
     "plus", "plus2", "COLOUR", "VALUE", "\n",
     "flags",
 
+# start TAG_MAJOR_VERSION == 34
     # Move FOG after FLY, and remove four copies of "unused", when
     # it is no longer the case that TAG_MAJOR_VERSION == 34
     "{", "BRAND", "AC", "EV", "STR", "INT", "DEX", "\n",
@@ -535,9 +538,22 @@ my @art_order = (
     "RMUT", "unused", "CORRODE", "DRAIN", "SLOW", "FRAGILE", "\n",
     "SHIELDING", "INACC", "HARM", "\n",
     "}",
+# end TAG_MAJOR_VERSION
+# start TAG_MAJOR_VERSION == 35
+#     "{", "BRAND", "AC", "EV", "STR", "INT", "DEX", "\n",
+#     "FIRE", "COLD", "ELEC", "POISON", "LIFE", "MAGIC", "\n",
+#     "SEEINV", "INV", "FLY", "FOG", "BLINK", "BERSERK",  "NOISES", "\n",
+#     "NOSPELL", "RND_TELE", "NOTELEP", "ANGRY", "\n",
+#     "MUTATE", "SLAY", "CURSE", "STEALTH", "MP", "\n",
+#     "BASE_DELAY", "HP", "CLARITY", "BASE_ACC", "BASE_DAM", "\n",
+#     "RMSL", "REGEN", "NO_UPGRADE", "RCORR", "\n",
+#     "RMUT", "CORRODE", "DRAIN", "SLOW", "FRAGILE", "\n",
+#     "SH", "HARM", "\n",
+#     "}",
+# end TAG_MAJOR_VERSION
 
     "equip_func", "unequip_func", "world_reacts_func", "melee_effects_func",
-    "launch_func", "evoke_func",
+    "launch_func", "evoke_func", "targeted_evoke_func"
 );
 
 sub art_to_str
@@ -757,6 +773,10 @@ sub write_tiles
         {
             $dir = "weapon";
         }
+		elsif ($type eq "OBJ_STAVES")
+        {
+            $dir = "weapon";
+        }
         elsif ($type eq "OBJ_ARMOURS")
         {
             $dir = "armour";
@@ -840,7 +860,8 @@ HEADER_END
         }
 
         my $part = "BODY";
-        if ($artefact->{base_type} eq "OBJ_WEAPONS" || $artefact->{base_type} eq "OBJ_SHIELDS")
+        if ($artefact->{base_type} eq "OBJ_WEAPONS" || $artefact->{base_type} eq "OBJ_SHIELDS"
+												    || $artefact->{base_type} eq "OBJ_STAVES")
         {
             $part = "HAND1";
         }
@@ -935,11 +956,11 @@ HEADER_END
  **********************************************************************/
 
 #include "AppHdr.h"
-#include "tiledef-unrand.h"
+#include "rltiles/tiledef-unrand.h"
 
 #include "art-enum.h"
-#include "tiledef-main.h"
-#include "tiledef-player.h"
+#include "rltiles/tiledef-main.h"
+#include "rltiles/tiledef-player.h"
 
 int unrandart_to_tile(int unrand)
 {
@@ -974,7 +995,7 @@ HEADER_END
     print TILES (" " x 4) . "{\n";
     foreach my $part (sort keys %parts)
     {
-			if ($part eq "HAND1")
+		if ($part eq "HAND1")
 		{
 			next;
 		}
@@ -1060,7 +1081,8 @@ my %valid_func = (
     world_reacts  => 1,
     melee_effects => 1,
     launch        => 1,
-    evoke         => 1
+    evoke         => 1,
+    targeted_evoke => 1
 );
 
 sub read_funcs

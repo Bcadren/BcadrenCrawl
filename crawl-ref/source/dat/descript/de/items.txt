@@ -259,7 +259,7 @@ corpse
 
 Eine Leiche. Du kannst sie schlachten, um essbare Fleischstücke zu erhalten.
 %%%%
-crystal plate armour
+crystal plate
 
 Ein unglaublich schwere aber extrem effektive kristalline Rüstung.
 %%%%
@@ -650,10 +650,6 @@ scroll of random uselessness
 Man wird leicht durch den Umstand geblendet das diese Schriftrolle überhaupt
 funktioniert, jedoch ist diese im wesentlichen nutzlos.
 %%%%
-scroll of remove curse
-
-Das Lesen dieser Schritrolle entfernt Flüche von Gegenständen, die du trägst.
-%%%%
 scroll of teleportation
 
 Liest man die Worte auf dieser Schriftrolle wird sie dich nach kurzer Zeit an
@@ -749,7 +745,7 @@ Ein seliger Dreizack, der durch die Reinigungsflamme mit drei Punkten geformt
 ist, die die vereinigte Kraft der drei heiligen Götter symbolisieren. Es ist
 eine begünstigte Waffe des Polierens von Jemandes Dienern.
 %%%%
-troll leather armour
+troll leather
 
 Rüstung von der steifen und knubbeligen Haut eines allgemeinen Trolls gemacht.
 Es regeneriert magisch das Fleisch seines Trägers an einer ziemlich langsamen

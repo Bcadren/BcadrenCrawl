@@ -14,7 +14,6 @@
 #include <cstring>
 
 #include "art-enum.h"
-#include "cloud.h"
 #include "coord.h"
 #include "coordit.h"
 #include "delay.h"
@@ -22,7 +21,6 @@
 #include "env.h"
 #include "fineff.h"
 #include "fprop.h"
-#include "god-abil.h"
 #include "god-passive.h" // passive_t::shadow_attacks
 #include "hints.h"
 #include "invent.h"
@@ -30,19 +28,18 @@
 #include "item-use.h"
 #include "melee-attack.h"
 #include "message.h"
-#include "mgen-data.h"
 #include "misc.h"
 #include "mon-behv.h"
 #include "mon-cast.h"
 #include "mon-place.h"
 #include "mon-util.h"
+#include "options.h"
 #include "ouch.h"
 #include "player.h"
 #include "prompt.h"
 #include "random-var.h"
 #include "religion.h"
 #include "shopping.h"
-#include "spl-miscast.h"
 #include "spl-summoning.h"
 #include "state.h"
 #include "stringutil.h"
@@ -66,17 +63,32 @@ int melee_confuse_chance(int HD)
 }
 
 // Quick wrapper for all the logic that follows a player attacking.
-static bool _handle_player_attack(actor * defender, bool simu, int atk_num, int eff_atk_num, bool * did_hit)
+static bool _handle_player_attack(actor * defender, bool simu, int atk_num,
+                                  int eff_atk_num, bool * did_hit,
+                                  wu_jian_attack_type wu, int wu_num, 
+                                  int roll_dist = 0)
 {
     melee_attack attk(&you, defender, atk_num, eff_atk_num);
+    if (wu != WU_JIAN_ATTACK_NONE)
+        attk.wu_jian_attack = wu;
+    
+    attk.wu_jian_number_of_targets = wu_num;
+    attk.roll_dist = roll_dist;
 
     if (simu)
         attk.simu = true;
 
-    // Check if the player is fighting with something unsuitable,
-    // or someone unsuitable.
+    // Check if the player is fighting someone unsuitable
+    if (!defender || !defender->alive())
+    {
+        if (eff_atk_num != 1)
+            you.turn_is_over = false;
+        return false;
+    }
+
+    // or with something unsuitable.
     if (you.can_see(*defender) && !simu
-        && !wielded_weapon_check(attk.weapon))
+        && !wielded_weapons_check())
     {
         if (eff_atk_num != 1)
             you.turn_is_over = false;
@@ -94,14 +106,93 @@ static bool _handle_player_attack(actor * defender, bool simu, int atk_num, int 
     if (did_hit)
         *did_hit = attk.did_hit;
 
+    if (attk.cancel_remaining)
+        return true;
+
     // A spectral weapon attacks whenever the player does
-    if (!simu && you.props.exists("spectral_weapon"))
+    if (!simu && you.props.exists("spectral_weapon") && (eff_atk_num == 0 || eff_atk_num == 2))
         trigger_spectral_weapon(&you, defender);
 
+    // BCADNOTE: Should Dithmenos copy mount's attacks?
     if (!simu && will_have_passive(passive_t::shadow_attacks))
         dithmenos_shadow_melee(defender);
 
     return true;
+}
+
+static actor * _hydra_target(actor * original_target)
+{
+    if (original_target->alive()
+        && adjacent(original_target->pos(), you.pos())
+        && !original_target->is_banished()
+        && !original_target->temp_attitude()) // If it's not hostile the melee attack charmed or pacified it.
+    {
+        return original_target;
+    }
+
+    int possible_targets = 0;
+    actor * target = nullptr;
+
+    for (adjacent_iterator ai(you.pos()); ai; ++ai)
+    {
+        actor * enemy = actor_at(*ai);
+
+        if (enemy && !enemy->wont_attack())
+        {
+            possible_targets++;
+            if (one_chance_in(possible_targets))
+                target = enemy;
+        }
+    }
+
+    return target;
+}
+
+static bool _handle_maws_attack(actor * target, bool simu, bool * did_hit, 
+                                wu_jian_attack_type wu, int wu_num, int roll_dist)
+{
+    const int lvl = you.get_mutation_level(MUT_JIBBERING_MAWS);
+
+    if (!lvl)
+        return false;
+
+    const int atks = lvl + random2(lvl * 2);
+    bool hit = false;
+
+    for (int i = 1; i <= atks; ++i)
+    {
+        target = _hydra_target(target);
+
+        if (!target)
+            return hit;
+
+        hit |= _handle_player_attack(target, simu, -1, i == atks ? 1 : 3, 
+                                     did_hit, wu, wu_num, roll_dist);
+    }
+    return hit;
+}
+
+// Hydra mount will keep attacking as long as there is a valid adjacent target (pseudocleave).
+static bool _handle_hydra_attack(actor * target, bool simu, bool * did_hit, wu_jian_attack_type wu, int wu_num)
+{
+    if (you.mount != mount_type::hydra)
+        return false;
+
+    bool hit = false;
+
+    for (int i = 1; i <= you.mount_heads; ++i)
+    {
+        target = _hydra_target(target);
+
+        if (!target)
+            return hit;
+
+        hit |= _handle_player_attack(target, simu, 2, i == you.mount_heads ? 1 : 3, did_hit, wu, wu_num, 0);
+
+        if (!you.mounted()) // Spines killed your hydra.
+            return hit;
+    }
+    return hit;
 }
 
 /**
@@ -121,7 +212,8 @@ static bool _handle_player_attack(actor * defender, bool simu, int atk_num, int 
  *
  * @return Whether the attack took time (i.e. wasn't cancelled).
  */
-bool fight_melee(actor *attacker, actor *defender, bool *did_hit, bool simu)
+bool fight_melee(actor *attacker, actor *defender, bool *did_hit,
+    bool simu, wu_jian_attack_type wu, int wu_num, int roll_dist)
 {
     ASSERT(attacker); // XXX: change to actor &attacker
     ASSERT(defender); // XXX: change to actor &defender
@@ -148,6 +240,15 @@ bool fight_melee(actor *attacker, actor *defender, bool *did_hit, bool simu)
     else if (attacker->is_player())
     {
         ASSERT(!crawl_state.game_is_arena());
+
+        if (you.species == SP_FAIRY && !you.duration[DUR_CONFUSING_TOUCH])
+        {
+            mpr("You're too small and insubstantial to effectively melee attack.");
+            stop_running();
+            you.turn_is_over = false;
+            return false;
+        }
+
         // Can't damage orbs this way.
         if (mons_is_projectile(defender->type) && !you.confused())
         {
@@ -158,43 +259,127 @@ bool fight_melee(actor *attacker, actor *defender, bool *did_hit, bool simu)
         // We're trying to hit a monster, break out of travel/explore now.
         interrupt_activity(activity_interrupt::hit_monster, defender->as_monster());
 
+        // BCADNOTE: The numbers involving auxilliary attacks are technically wrong for scorpion form
+        // and will need to be changed should it be possible to get auxilliaries in scorpion form.
         bool local_time = false; // Not sure this is necessary; but I'm going to use it.
+        bool attacked = false;
+        coord_def pos = defender->pos();
 
-        if (!you.weapon(0) || is_melee_weapon(*you.weapon(0)))
+        const bool life_one = you.weapon(0) && you.weapon(0)->is_type(OBJ_STAVES, STAFF_LIFE);
+        const bool life_two = you.weapon(1) && you.weapon(1)->is_type(OBJ_STAVES, STAFF_LIFE);
+        const bool ally = defender->wont_attack();
+
+        const bool skip_one = life_two && ally || life_one && !ally && !you_worship(GOD_ELYVILON);
+        const bool skip_two = life_one && ally || life_two && !ally && !you_worship(GOD_ELYVILON);
+
+        bool xtra_atk = (you.form == transformation::scorpion || you.get_mutation_level(MUT_JIBBERING_MAWS));
+        bool mount_atk = false;
+
+        if (you.mounted() && !you.petrified(true))
         {
-            if (!you.weapon(1) || is_melee_weapon(*you.weapon(1)))
+            if (you.duration[DUR_MOUNT_SLOW] || you.petrifying(true))
+            {
+                if (you.mount_energy >= 15)
+                {
+                    mount_atk = true;
+                    you.mount_energy -= 15;
+                }
+            }
+            else if (you.mount_energy >= 10)
+            {
+                mount_atk = true;
+                you.mount_energy -= 10;
+            }
+
+            if (skip_one || skip_two)
+                mount_atk = false;
+        }
+        
+        xtra_atk |= mount_atk;
+
+        if ((!you.weapon(0) || is_melee_weapon(*you.weapon(0))) && !skip_one)
+        {
+            attacked = true;
+            if ((!you.weapon(1) || is_melee_weapon(*you.weapon(1))) && !you.get_mutation_level(MUT_MISSING_HAND))
             {
                 if (you.weapon(0) && you.hands_reqd(*you.weapon(0)) == HANDS_TWO)
-                {
-                    return _handle_player_attack(defender, simu, 0, 2, did_hit);
-                }
-                else if (you.weapon(1) && you.hands_reqd(*you.weapon(1)) == HANDS_TWO)
-                    return _handle_player_attack(defender, simu, 1, 2, did_hit);
+                    local_time = _handle_player_attack(defender, simu, 0, xtra_atk ? 0 : 2, did_hit, wu, wu_num, roll_dist);
                 else
                 {
-                    coord_def pos = defender->pos();
-                    local_time = _handle_player_attack(defender, simu, 0, 0, did_hit);
-                    if (!defender->alive()
+                    local_time = _handle_player_attack(defender, simu, 0, 0, did_hit, wu, wu_num, roll_dist);
+                    if (defender->wont_attack() && life_one
+                        || !defender->alive()
                         || defender->pos() != pos
                         || defender->is_banished())
+                    {
                         return local_time;
+                    }
+
+                    if (skip_two) 
+                    {
+                        if (ally)
+                            return local_time;
+                    }
                     else
-                        return _handle_player_attack(defender, simu, 1, 1, did_hit) || local_time;
+                        local_time |= _handle_player_attack(defender, simu, 1, xtra_atk ? 3 : 1, did_hit, wu, wu_num, roll_dist);
                 }
             }
             else
-                return _handle_player_attack(defender, simu, 0, 2, did_hit);
+                local_time = _handle_player_attack(defender, simu, 0, xtra_atk ? 0 : 2, did_hit, wu, wu_num, roll_dist);
         }
-        else if (!you.weapon(1) || is_melee_weapon(*you.weapon(1)))
+        else if (!you.weapon(1) || is_melee_weapon(*you.weapon(1)) && !skip_two)
         {
-            if (!(you.weapon(0) && you.hands_reqd(*you.weapon(0)) == HANDS_TWO))
-                return _handle_player_attack(defender, simu, 1, 2, did_hit);
+            if (!(you.weapon(0) && you.hands_reqd(*you.weapon(0)) == HANDS_TWO) && !you.get_mutation_level(MUT_MISSING_HAND))
+            {
+                attacked = true;
+                local_time = _handle_player_attack(defender, simu, 1, xtra_atk ? 0 : 2, did_hit, wu, wu_num, roll_dist);
+            }
         }
 
-        mpr("You can't melee attack with what you're currently wielding.");
-        
-        you.turn_is_over = false;
-        return false;
+        if (!attacked)
+        {
+            mpr("You can't melee attack with what you're currently wielding.");
+
+            you.turn_is_over = false;
+            return false;
+        }
+        else
+        {
+            if (!defender->alive()
+                || defender->pos() != pos
+                || defender->is_banished()
+                || defender->wont_attack()) // If it's not hostile the melee attack charmed or pacified it.
+            {
+                return local_time;
+            }
+
+            if (you.form == transformation::scorpion)
+            {
+                local_time |= _handle_player_attack(defender, simu, 2, 3, did_hit, wu, wu_num);
+
+                if (!defender->alive()
+                    || defender->pos() != pos
+                    || defender->is_banished()
+                    || defender->temp_attitude()) // If it's not hostile the melee attack charmed or pacified it.
+                {
+                    return local_time;
+                }
+
+                local_time |= _handle_player_attack(defender, simu, 3, 1, did_hit, wu, wu_num);
+            }
+            else if (xtra_atk)
+            {
+                if (you.get_mutation_level(MUT_JIBBERING_MAWS))
+                    local_time |= _handle_maws_attack(defender, simu, did_hit, wu, wu_num, roll_dist);
+
+                if (you.mount == mount_type::hydra)
+                    local_time |= _handle_hydra_attack(defender, simu, did_hit, wu, wu_num);
+                else if (mount_atk)
+                    local_time |= _handle_player_attack(defender, simu, 2, 1, did_hit, wu, wu_num);
+            }
+        }
+
+        return local_time;
     }
 
     // If execution gets here, attacker != Player, so we can safely continue
@@ -210,9 +395,7 @@ bool fight_melee(actor *attacker, actor *defender, bool *did_hit, bool simu)
         return true;
     }
 
-    const int nrounds = attacker->as_monster()->has_hydra_multi_attack()
-        ? attacker->heads() + MAX_NUM_ATTACKS - 1
-        : MAX_NUM_ATTACKS;
+    const int nrounds = MAX_NUM_ATTACKS;
     coord_def pos = defender->pos();
 
     // Melee combat, tell attacker to wield its melee weapon.
@@ -220,11 +403,34 @@ bool fight_melee(actor *attacker, actor *defender, bool *did_hit, bool simu)
 
     int effective_attack_number = 0;
     int attack_number;
+    bool multiattacking = false;
+    int repeats = attacker->heads();
+    int held_attack_num = 0;
     for (attack_number = 0; attack_number < nrounds && attacker->alive();
          ++attack_number, ++effective_attack_number)
     {
         if (!attacker->alive())
             return false;
+
+        if (attacker->is_monster() && attacker->as_monster()->has_ench(ENCH_SWALLOWING))
+        {
+            attacker->lose_energy(EUT_MOVE);
+            return true;
+        }
+
+        if (attacker->is_monster() && attacker->as_monster()->has_hydra_multi_attack(attack_number))
+        {
+            multiattacking = true;
+            held_attack_num = attack_number;
+        }
+
+        if (multiattacking)
+        {
+            repeats--;
+            if (repeats <= 0)
+                multiattacking = false;
+            attack_number = held_attack_num;
+        }
 
         // Monster went away?
         if (!defender->alive()
@@ -279,7 +485,7 @@ bool fight_melee(actor *attacker, actor *defender, bool *did_hit, bool simu)
             coord_def hopspot = mons->pos() - (foepos - mons->pos()).sgn();
 
             bool found = false;
-            if (!monster_habitable_grid(mons, grd(hopspot)) ||
+            if (!monster_habitable_grid(mons, env.grid(hopspot)) ||
                 actor_at(hopspot))
             {
                 for (adjacent_iterator ai(mons->pos()); ai; ++ai)
@@ -288,7 +494,7 @@ bool fight_melee(actor *attacker, actor *defender, bool *did_hit, bool simu)
                         continue;
                     else
                     {
-                        if (monster_habitable_grid(mons, grd(*ai))
+                        if (monster_habitable_grid(mons, env.grid(*ai))
                             && !actor_at(*ai))
                         {
                             hopspot = *ai;
@@ -356,7 +562,7 @@ stab_type find_stab_type(const actor *attacker,
 {
     const monster* def = defender.as_monster();
 
-    // Stabbing intelligent monsters is unchivalric, and disabled under TSO!
+    // Stabbing monsters is unchivalric, and disabled under TSO!
     // When just checking for display purposes, still indicate when monsters
     // are sleeping/paralysed etc.
     if (actual && attacker && attacker->is_player()
@@ -468,9 +674,15 @@ static inline int get_resistible_fraction(beam_type flavour)
 {
     switch (flavour)
     {
+    case BEAM_CRYSTAL_SPEAR:
+    case BEAM_CRYSTAL_FIRE:
+    case BEAM_CRYSTAL_ICE:
+        return 20;
+
     // Drowning damage from water is resistible by being a water thing, or
     // otherwise asphyx resistant.
     case BEAM_WATER:
+    case BEAM_ACID_WAVE:
         return 40;
 
     // Assume ice storm and throw icicle are mostly solid.
@@ -478,8 +690,11 @@ static inline int get_resistible_fraction(beam_type flavour)
     case BEAM_ICE:
         return 40;
 
-    case BEAM_DEVASTATION:
-        return 20;
+    case BEAM_ICY_SHARDS:
+        return 70;
+
+    case BEAM_ICY_DEVASTATION:
+        return 30;
 
     case BEAM_LAVA:
         return 55;
@@ -495,42 +710,92 @@ static inline int get_resistible_fraction(beam_type flavour)
     }
 }
 
-static int _beam_to_resist(const actor* defender, beam_type flavour)
+static int _beam_to_resist(const actor* defender, beam_type flavour, bool mount)
 {
     switch (flavour)
     {
+        case BEAM_SLASH:
+            return defender->res_slash(mount);
+        case BEAM_BLUDGEON:
+            return defender->res_bludgeon(mount);
+        case BEAM_PIERCE:
+            return defender->res_pierce(mount);
+        case BEAM_CRYSTAL_FIRE:
         case BEAM_FIRE:
         case BEAM_LAVA:
-            return defender->res_fire();
-        case BEAM_DAMNATION:
-            return defender->res_damnation();
+            return defender->res_fire(mount);
+        case BEAM_HELLFIRE:
+            return defender->res_hellfire(mount);
         case BEAM_STEAM:
-            return defender->res_steam();
+            return max(defender->res_steam(mount), defender->res_fire(mount));
         case BEAM_COLD:
-        case BEAM_DEVASTATION:
+        case BEAM_ICY_DEVASTATION:
         case BEAM_FREEZE:
         case BEAM_ICE:
-            return defender->res_cold();
+        case BEAM_ICY_SHARDS:
+        case BEAM_CRYSTAL_ICE:
+            return defender->res_cold(mount);
         case BEAM_WATER:
-            return defender->res_water_drowning();
+            return defender->res_water_drowning(mount);
         case BEAM_ELECTRICITY:
-            return defender->res_elec();
+            return defender->res_elec(mount);
         case BEAM_NEG:
+        case BEAM_DRAIN:
         case BEAM_PAIN:
         case BEAM_MALIGN_OFFERING:
-            return defender->res_negative_energy();
+            return defender->res_negative_energy(mount);
         case BEAM_ACID:
-            return defender->res_acid();
+            return defender->res_acid(mount);
         case BEAM_POISON:
         case BEAM_POISON_ARROW:
-            return defender->res_poison();
+            return defender->res_poison(mount);
         case BEAM_HOLY:
-            return defender->res_holy_energy();
+            return defender->res_holy_energy(mount);
         default:
             return 0;
     }
 }
 
+static bool _is_physical_resist(beam_type flavour)
+{
+    switch (flavour)
+    {
+    case BEAM_BLUDGEON:
+    case BEAM_SLASH:
+    case BEAM_PIERCE:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static bool _dragonskin_affected (beam_type flavour)
+{
+    switch (flavour)
+    {
+    case BEAM_FIRE:
+    case BEAM_LAVA:
+    case BEAM_STEAM:
+    case BEAM_COLD:
+    case BEAM_ICY_DEVASTATION:
+    case BEAM_FREEZE:
+    case BEAM_ICE:
+    case BEAM_ICY_SHARDS:
+    case BEAM_ELECTRICITY:
+    case BEAM_NEG:
+    case BEAM_DRAIN:
+    case BEAM_PAIN:
+    case BEAM_MALIGN_OFFERING:
+    case BEAM_ACID:
+    case BEAM_POISON:
+    case BEAM_POISON_ARROW:
+    case BEAM_CRYSTAL_FIRE:
+    case BEAM_CRYSTAL_ICE:
+        return true;
+    default:
+        return false;
+    }
+}
 
 /**
  * Adjusts damage for elemental resists, electricity and poison.
@@ -546,15 +811,91 @@ static int _beam_to_resist(const actor* defender, beam_type flavour)
  * @param flavour       The type of attack having its damage adjusted.
  *                      (Does not necessarily imply the attack is a beam.)
  * @param rawdamage     The base damage, to be adjusted by resistance.
+ * @param mount         Checking the mount's resistance instead of the players (defender is a player).
  * @return              The amount of damage done, after resists are applied.
  */
-int resist_adjust_damage(const actor* defender, beam_type flavour, int rawdamage)
+int resist_adjust_damage(const actor* defender, beam_type flavour, int rawdamage, bool mount)
 {
-    const int res = _beam_to_resist(defender, flavour);
-    if (!res)
+    if (defender->is_fairy() && !mount)
         return rawdamage;
 
-    const bool is_mon = defender->is_monster();
+    int res = _beam_to_resist(defender, flavour, mount);
+    bool is_mon = defender->is_monster();
+
+    // This special case is like 90% for Tiamat; unless a different draconian picks up 
+    // her cloak since most monsters don't use armour for non-body slot; but it's good
+    // to make the unique more unique and future-proofing should we start handing out
+    // cloaks more often.
+    if (is_mon && res < 4)
+    {
+        item_def * cloak = defender->as_monster()->mslot_item(MSLOT_ARMOUR);
+
+        if (cloak && is_unrandom_artefact(*cloak, UNRAND_DRAGONSKIN)
+            && coinflip() && _dragonskin_affected(flavour) && res < 3)
+        {
+            res++;
+        }
+
+        item_def * ring = defender->as_monster()->mslot_item(MSLOT_JEWELLERY);
+
+        if (ring && ring->is_type(OBJ_JEWELLERY, AMU_CHAOS)
+            && _dragonskin_affected(flavour))
+        {
+            int x = random2(6);
+
+            switch (x)
+            {
+            case 0:
+            case 1:
+            case 2:
+                if (res < 3)
+                    res++;
+                break;
+            case 3:
+                res--;
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
+    // Special Cases
+    switch (flavour)
+    {
+    case BEAM_MALIGN_OFFERING:
+        // Part of a hack to make spectral clouds heal undead slightly
+        if (bool(defender->holiness(true, mount) & MH_UNDEAD))
+            res = 4;
+        break;
+    case BEAM_SPORE:
+        if (is_mon && defender->as_monster()->type == MONS_BALLISTOMYCETE)
+            return 0;
+        break;
+    case BEAM_AIR:
+        if (defender->airborne())
+            rawdamage += rawdamage / 2;
+        if (res > 0)
+            return 0;
+    case BEAM_HELLFIRE:
+        if (!is_mon && !mount && you.drac_colour == DR_BLOOD)
+            rawdamage /= 2;
+        // fallthrough
+    case BEAM_MEPHITIC:
+        if (res > 0)
+            return 0;
+        break;
+    case BEAM_MAGIC_CANDLE:
+    case BEAM_BLOOD:
+    case BEAM_FOG:
+    case BEAM_BUTTERFLY:
+    case BEAM_ENSNARE:
+        return 0;
+    default:
+        break;
+    }
+
+    is_mon |= mount; // Mounts act like monsters in this way.
 
     const int resistible_fraction = get_resistible_fraction(flavour);
 
@@ -565,6 +906,7 @@ int resist_adjust_damage(const actor* defender, beam_type flavour, int rawdamage
     {
         const bool immune_at_3_res = is_mon
                                      || flavour == BEAM_NEG
+                                     || flavour == BEAM_DRAIN
                                      || flavour == BEAM_PAIN
                                      || flavour == BEAM_MALIGN_OFFERING
                                      || flavour == BEAM_HOLY
@@ -573,7 +915,17 @@ int resist_adjust_damage(const actor* defender, beam_type flavour, int rawdamage
                                      // just the resistible part
                                      || flavour == BEAM_POISON_ARROW;
 
-        if (immune_at_3_res && res >= 3 || res > 3)
+        if (res > 3)
+        {
+            if (resistible > roll_dice(3, 6))
+            {
+                resistible *= 2;
+                resistible /= 3;
+            }
+            resistible = 1 + random2avg(resistible, 3);
+            return irresistible - resistible;
+        }
+        else if (immune_at_3_res && (res == 3))
             resistible = 0;
         else
         {
@@ -581,9 +933,10 @@ int resist_adjust_damage(const actor* defender, beam_type flavour, int rawdamage
             const int bonus_res = (is_boolean_resist(flavour) ? 1 : 0);
 
             // Monster resistances are stronger than player versions.
-            if (is_mon)
+            if (is_mon && !_is_physical_resist(flavour))
                 resistible /= 1 + bonus_res + res * res;
             else if (flavour == BEAM_NEG
+                     || flavour == BEAM_DRAIN
                      || flavour == BEAM_PAIN
                      || flavour == BEAM_MALIGN_OFFERING)
             {
@@ -594,9 +947,22 @@ int resist_adjust_damage(const actor* defender, beam_type flavour, int rawdamage
         }
     }
     else if (res < 0)
-        resistible = resistible * 15 / 10;
+        resistible = resistible * 3 / 2;
 
-    return max(resistible + irresistible, 0);
+    int fdam = resistible + irresistible;
+
+    // More special cases, these need the damage calced first.
+    switch (flavour)
+    {
+    case BEAM_ICY_SHARDS:
+        if (fdam > 0 && defender->is_icy())
+            fdam = 0;
+        break;
+    default:
+        break;
+    }
+
+    return fdam;
 }
 
 // Reduce damage by AC.
@@ -623,43 +989,61 @@ int apply_chunked_AC(int dam, int ac)
 
 ///////////////////////////////////////////////////////////////////////////
 
-bool wielded_weapon_check(item_def *weapon)
+bool wielded_weapons_check(string attack_verb)
 {
+    const item_def * weap0 = you.weapon(0);
+    const item_def * weap1 = you.weapon(1);
+    bool warn0 = true;
+    bool warn1 = true;
+    bool unarmed_warning = false;
     bool penance = false;
-    if (you.received_weapon_warning
-        || (weapon
-            && !needs_handle_warning(*weapon, OPER_ATTACK, penance)
-            && is_melee_weapon(*weapon))
-        || you.confused())
+
+    if (you.received_weapon_warning || you.confused())
+        return true;
+
+    if (weap0 && !is_melee_weapon(*weap0))
+        weap0 = nullptr;
+
+    if (weap1 && !is_melee_weapon(*weap1))
+        weap1 = nullptr;
+
+    if (!weap0 && !weap1 && (you.skill(SK_UNARMED_COMBAT) < 3))
+        unarmed_warning = true;
+
+    // Don't pester the player if they don't have any melee weapons yet.
+    if (!any_of(you.inv.begin(), you.inv.end(),
+                       [](item_def &it)
+                       { return is_melee_weapon(it) && can_wield(&it); }))
     {
         return true;
     }
 
-    // Don't pester the player if they're using UC, in treeform,
-    // or if they don't have any melee weapons yet.
-    if (!weapon
-        && (you.skill(SK_UNARMED_COMBAT) > 0
-            || you.form == transformation::tree
-            || !any_of(you.inv.begin(), you.inv.end(),
-                       [](item_def &it)
-                       { return is_melee_weapon(it) && can_wield(&it); })))
-    {
+    if (weap0 && !needs_handle_warning(*weap0, OPER_ATTACK, penance))
+        warn0 = false;
+
+    if (weap1 && !needs_handle_warning(*weap1, OPER_ATTACK, penance))
+        warn1 = false;
+
+    if (!weap0)
+        warn0 = false;
+
+    if (!weap1)
+        warn1 = false;
+
+    if (!warn0 && !warn1)
         return true;
-    }
 
     string prompt;
-    if (weapon)
-    {
-        if (weapon->base_type == OBJ_SHIELDS && !is_hybrid(weapon->sub_type) && you.skill(SK_UNARMED_COMBAT) > 1)
-            return true;
-        prompt = "Really attack while wielding " + weapon->name(DESC_YOUR) + "?";
-    }
-    else if ((!you.weapon(0) && !you.weapon(1))
-        || (!you.weapon(1) && you.weapon(0) && you.weapon(0)->base_type == OBJ_SHIELDS && !is_hybrid(you.weapon(0)->sub_type))
-        || (!you.weapon(0) && you.weapon(1) && you.weapon(1)->base_type == OBJ_SHIELDS && !is_hybrid(you.weapon(1)->sub_type)))
-        prompt = "Really attack barehanded?";
+    if (unarmed_warning)
+        prompt = make_stringf("Really %s unarmed?", attack_verb.c_str());
     else
-        return true;
+    {
+        prompt = make_stringf("Really %s while wielding %s%s%s?",
+            attack_verb.c_str(),
+            warn0 ? weap0->name(DESC_YOUR).c_str() : "",
+            warn0 && warn1 ? " and " : "",
+            warn1 ? weap1->name(DESC_YOUR).c_str() : "");
+    }
     if (penance)
         prompt += " This could place you under penance!";
 
@@ -704,6 +1088,45 @@ static bool _dont_harm(const actor &attacker, const actor &defender)
 }
 
 /**
+ * Force cleave attacks. Used for melee actions that don't have targets, e.g.
+ * attacking empty space (otherwise, cleaving is handled in melee_attack).
+ *
+ * @param target the nominal target of the original attack.
+ * @return whether there were cleave targets relative to the player and `target`.
+ */
+bool force_player_cleave(coord_def target)
+{
+    list<actor*> cleave_targets;
+    get_cleave_targets(you, target, cleave_targets);
+
+    if (!cleave_targets.empty())
+    {
+        targeter_cleave hitfunc(&you, target);
+        if (stop_attack_prompt(hitfunc, "attack"))
+            return true;
+
+        if (!you.fumbles_attack())
+            attack_cleave_targets(you, cleave_targets);
+        return true;
+    }
+
+    return false;
+}
+
+bool attack_cleaves(const actor &attacker, int which_attack)
+{
+    if (attacker.is_player()
+        && (you.form == transformation::hydra && you.heads() > 1
+            || you.duration[DUR_CLEAVE]))
+    {
+        return true;
+    }
+
+    const item_def* weap = attacker.weapon(which_attack);
+    return weap && (weapon_cleave(*weap) > CLEAVE_NONE);
+}
+
+/**
  * List potential cleave targets (adjacent hostile creatures), including the
  * defender itself.
  *
@@ -725,10 +1148,26 @@ void get_cleave_targets(const actor &attacker, const coord_def& def,
 
     const item_def* weap = attacker.weapon(which_attack);
 
-    if (weap && item_attack_skill(*weap) == SK_AXES
-            || attacker.is_player()
-               && (you.form == transformation::hydra && you.heads() > 1
-                   || you.duration[DUR_CLEAVE]))
+    cleave_type cleave = weap ? weapon_cleave(*weap)
+                              : CLEAVE_NONE;
+
+    if (cleave == CLEAVE_NONE && attack_cleaves(attacker, which_attack))
+        cleave = CLEAVE_ONE;
+
+    switch (cleave)
+    {
+    case CLEAVE_TWO:
+    {
+        for (rectangle_iterator ri(attacker.pos(), 2); ri; ++ri)
+        {
+            actor *target = actor_at(*ri);
+            if (target && attacker.see_cell_no_trans(*ri) &&
+                    !_dont_harm(attacker, *target) && (*ri != def))
+                targets.push_back(target);
+        }
+        break;
+    }
+    case CLEAVE_ONE:
     {
         const coord_def atk = attacker.pos();
         coord_def atk_vector = def - atk;
@@ -742,6 +1181,11 @@ void get_cleave_targets(const actor &attacker, const coord_def& def,
             if (target && !_dont_harm(attacker, *target))
                 targets.push_back(target);
         }
+        break;
+    }
+    case CLEAVE_NONE:
+    default:
+        break;
     }
 }
 
@@ -757,6 +1201,9 @@ void attack_cleave_targets(actor &attacker, list<actor*> &targets,
                            int attack_number, int effective_attack_number,
                            wu_jian_attack_type wu_jian_attack)
 {
+    if (!attacker.alive())
+        return;
+
     if (attacker.is_player())
     {
         if ((wu_jian_attack == WU_JIAN_ATTACK_WHIRLWIND
@@ -767,11 +1214,20 @@ void attack_cleave_targets(actor &attacker, list<actor*> &targets,
         }
     }
 
+    item_def* wpn = attacker.weapon(attack_number);
+    int range = 1;
+    if (wpn && wpn->base_type == OBJ_WEAPONS && wpn->sub_type == WPN_SCYTHE)
+        range = 2;
+
     while (attacker.alive() && !targets.empty())
     {
         actor* def = targets.front();
 
-        if (def && def->alive() && !_dont_harm(attacker, *def) && adjacent(attacker.pos(), def->pos()))
+        if (cell_is_solid(def->pos()) && def->is_monster() && mons_wall_shielded(*def->as_monster()))
+            mprf("%s clang%s %s on the wall.", attacker.is_player() ? "You" : attacker.name(DESC_THE).c_str(), 
+                 attacker.is_player() ? "" : "s",wpn->name(DESC_A).c_str());
+        else if (def && def->alive() && !_dont_harm(attacker, *def) && 
+                (grid_distance(attacker.pos(), def->pos()) <= range))
         {
             melee_attack attck(&attacker, def, attack_number,
                                ++effective_attack_number, true);
@@ -810,10 +1266,19 @@ int dual_wield_base_delay(const item_def &weap0, const item_def &weap1)
 {
     const int wpn0_delay = weapon_delay(weap0);
     const int wpn1_delay = weapon_delay(weap1);
+    const int wpn0_mindelay = weapon_min_delay(weap0);
+    const int wpn1_mindelay = weapon_min_delay(weap1);
+    const int delay_div0 = wpn0_delay - wpn0_mindelay;
+    const int delay_div1 = wpn1_delay - wpn1_mindelay;
 
-    const int mismatch_malus = (item_attack_skill(weap0) == item_attack_skill(weap1)) ? 0 : 4;
+    bool mismatch = (item_attack_skill(weap0) != item_attack_skill(weap1));
 
-    return max(wpn0_delay, wpn1_delay) + div_round_up(min(wpn0_delay, wpn1_delay) - min(weapon_min_delay(weap0), weapon_min_delay(weap1)),2) + mismatch_malus;
+    if (mismatch)
+        return max(wpn0_mindelay, wpn1_mindelay) + 3 * (delay_div0 + delay_div1) / 2;
+
+    if (delay_div0 > delay_div1)
+        return max(wpn0_mindelay, wpn1_mindelay) + delay_div0 + delay_div1 / 2;
+    return max(wpn0_mindelay, wpn1_mindelay) + delay_div1 + delay_div0 / 2;
 }
 
 /**
@@ -843,6 +1308,10 @@ int dual_wield_mindelay_skill(const item_def &weap0, const item_def &weap1)
  */
 int weapon_min_delay(const item_def &weapon, bool check_speed)
 {
+    // Short circuit for lightweights
+    if (weapon_has_flag(weapon.sub_type, WPNF_LIGHTWEIGHT))
+        return 3;
+
     int base = 20;
     if (weapon.base_type == OBJ_SHIELDS)
     {
@@ -850,15 +1319,37 @@ int weapon_min_delay(const item_def &weapon, bool check_speed)
             return 5;
         base = property(weapon, PSHD_SPEED);
     }
-    else base = property(weapon, PWPN_SPEED);
+    else
+    {
+        base = property(weapon, PWPN_SPEED);
+    }
+
+    if (weapon_has_flag(weapon.sub_type, WPNF_HEAVYWEIGHT))
+    {
+        // RandArt clubs and skullcrusher.
+        if (check_speed && get_weapon_brand(weapon) == SPWPN_SPEED)
+        {
+            base *= 2;
+            base /= 3;
+        }
+        return base;
+    }
+
     int min_delay = base/2;
+
+    // Hammers are special cased slightly.
+    if (weapon.is_type(OBJ_WEAPONS, WPN_HAMMER))
+        min_delay = 6;
 
     if (is_unrandom_artefact(weapon, UNRAND_ZEPHYR))
         min_delay = 3;
 
-    // Short blades can get up to at least unarmed speed.
-    if (item_attack_skill(weapon) == SK_SHORT_BLADES && min_delay > 5)
-        min_delay = 5;
+    // Short blades and bows can get up to at least unarmed speed.
+    if (item_attack_skill(weapon) == SK_SHORT_BLADES
+        || item_attack_skill(weapon) == SK_BOWS)
+    {
+        min_delay = min(5, min_delay);
+    }
 
     // All weapons have min delay 7 or better
     if (min_delay > 7)
@@ -902,34 +1393,7 @@ int mons_missile_damage(monster* mons, const item_def *launch,
     return max(0, launch_damage + missile_damage);
 }
 
-int mons_usable_missile(monster* mons, item_def **launcher)
-{
-    *launcher = nullptr;
-    item_def *launch = nullptr;
-    for (int i = MSLOT_WEAPON; i <= MSLOT_ALT_WEAPON; ++i)
-    {
-        if (item_def *item = mons->mslot_item(static_cast<mon_inv_type>(i)))
-        {
-            if (is_range_weapon(*item))
-                launch = item;
-        }
-    }
-
-    const item_def *missiles = mons->missiles();
-    if (launch && missiles && !missiles->launched_by(*launch))
-        launch = nullptr;
-
-    const int fdam = mons_missile_damage(mons, launch, missiles);
-
-    if (!fdam)
-        return NON_ITEM;
-    else
-    {
-        *launcher = launch;
-        return missiles->index();
-    }
-}
-
+// BCADDO: This needs fixing. Staff of life should disable melee, not all.
 bool bad_attack(const monster *mon, string& adj, string& suffix,
                 bool& would_cause_penance, coord_def attack_pos)
 {
@@ -937,6 +1401,12 @@ bool bad_attack(const monster *mon, string& adj, string& suffix,
     ASSERT(!crawl_state.game_is_arena());
 
     if (!you.can_see(*mon))
+        return false;
+
+    if (you.weapon(0) && you.weapon(0)->is_type(OBJ_STAVES, STAFF_LIFE))
+        return false;
+
+    if (you.weapon(1) && you.weapon(1)->is_type(OBJ_STAVES, STAFF_LIFE))
         return false;
 
     if (attack_pos == coord_def(0, 0))

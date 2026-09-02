@@ -9,14 +9,15 @@
 
 #include <algorithm>
 
-#include "areas.h"
 #include "butcher.h"
 #include "delay.h"
 #include "english.h"
 #include "env.h"
-#include "god-conduct.h"
 #include "item-prop.h"
 #include "items.h"
+#include "god-conduct.h"
+#include "mon-place.h"
+#include "mon-util.h"
 #include "player-equip.h"
 #include "religion.h"
 #include "shopping.h"
@@ -33,10 +34,6 @@ static int _rot_stack(item_def &it, int slot, bool in_inv);
 static void _compare_stack_quantity(item_def &stack);
 
 static void _print_chunk_messages(int num_chunks, int num_chunks_gone);
-
-static void _potion_stack_changed_message(string item_name, int num_changed,
-                                          int remainder);
-
 
 /** * Checks if a given item is a stack of chunks.
  *
@@ -57,7 +54,7 @@ static bool _is_chunk(const item_def &item)
  */
 bool is_perishable_stack(const item_def &item)
 {
-    return _is_chunk(item) || is_blood_potion(item);
+    return _is_chunk(item);
 }
 
 /**
@@ -90,9 +87,6 @@ static void _update_freshness(item_def &stack)
  */
 static int _get_initial_stack_longevity(const item_def &stack)
 {
-    if (is_blood_potion(stack))
-        return FRESHEST_BLOOD;
-
     ASSERT(_is_chunk(stack));
     if (stack.freshness) // legacy chunk
         return stack.freshness * ROT_TIME_FACTOR;
@@ -112,7 +106,7 @@ static int _get_initial_stack_longevity(const item_def &stack)
  */
 void init_perishable_stack(item_def &stack, int age)
 {
-    ASSERT(is_blood_potion(stack) || _is_chunk(stack));
+    ASSERT(_is_chunk(stack));
 
     CrawlHashTable &props = stack.props;
     const bool never_decay = props.exists(CORPSE_NEVER_DECAYS)
@@ -132,11 +126,6 @@ void init_perishable_stack(item_def &stack, int age)
     dprf("initializing perishable stack");
 
     // For a newly created stack, all potions/chunks use the same timer.
-#ifdef DEBUG_BLOOD_POTIONS
-    mprf(MSGCH_DIAGNOSTICS,
-         "newly created stack of size %d will time out at aut %d",
-         stack.quantity, max_age);
-#endif
     for (int i = 0; i < stack.quantity; i++)
         timer.push_back(max_age);
 
@@ -182,6 +171,36 @@ static bool _item_needs_rot_check(const item_def &item)
            && item.sub_type <= CORPSE_SKELETON; // XXX: is this needed?
 }
 
+void spawn_flies(item_def item, bool msg)
+{
+    const coord_def &p = item.pos;
+
+    int num_flies = 1;
+
+    int x = random2(max_corpse_chunks(item.mon_type));
+    num_flies += div_rand_round(x, 3);
+
+    for (int i = 0; i <= num_flies; ++i)
+    {
+        monster * fly = create_monster(mgen_data(MONS_GIANT_BLOWFLY, BEH_PASSIVE, p, MHITNOT));
+        if (fly)
+            fly->flags |= MF_WAS_NEUTRAL;
+    }
+
+    if (you.see_cell(p) && msg)
+    {
+        mprf("%s forth from the corpse!", num_flies > 1 ? "Flies burst" : "A fly bursts");
+    }
+}
+
+static void _maybe_spawn_flies(item_def item)
+{
+    if (!x_chance_in_y(max_corpse_chunks(item.mon_type), 200))
+        return;
+
+    spawn_flies(item);
+}
+
 /**
  * Rot a corpse or skeleton lying on the floor.
  *
@@ -197,6 +216,9 @@ static void _rot_corpse(item_def &it, int mitm_index, int rot_time)
     it.freshness -= rot_time;
     if (it.freshness > 0 || is_being_butchered(it))
         return;
+
+    if (it.sub_type == CORPSE_BODY)
+        _maybe_spawn_flies(it);
 
     if (it.sub_type == CORPSE_SKELETON || !mons_skeleton(it.mon_type))
     {
@@ -268,11 +290,6 @@ static int _rot_stack(item_def &it, int slot, bool in_inv)
 
     _update_freshness(it); // for external consumption
 
-    // after initializing everything, skip the actual decay if we're eating
-    // this stack - this will preserve it a little longer but that's ok.
-    if (current_delay() && current_delay()->is_being_used(&it, OPER_EAT))
-        return 0;
-
     int destroyed_count = 0;    // # of items decayed away entirely
     // will be filled in ascending (reversed) order.
 
@@ -333,7 +350,7 @@ void rot_floor_items(int elapsedTime)
 
     for (int mitm_index = 0; mitm_index < MAX_ITEMS; ++mitm_index)
     {
-        item_def &it = mitm[mitm_index];
+        item_def &it = env.item[mitm_index];
 
         if (is_shop_item(it) || !_item_needs_rot_check(it))
             continue;
@@ -350,7 +367,7 @@ void rot_floor_items(int elapsedTime)
  *
  * @param time_delta    The amount of time to rot for.
  */
-void rot_inventory_food(int time_delta)
+void rot_inventory_food(int /*time_delta*/)
 {
     int num_chunks         = 0;
     int num_chunks_gone    = 0;
@@ -362,35 +379,14 @@ void rot_inventory_food(int time_delta)
         if (item.quantity < 1 || !_item_needs_rot_check(item))
             continue;
 
-#if TAG_MAJOR_VERSION == 34
-        // cleanup
-        if (item.base_type == OBJ_CORPSES)
-        {
-            if (you.equip[EQ_WEAPON0] == i)
-                unwield_item();
-
-            item_was_destroyed(item);
-            destroy_item(item);
-        }
-#endif
-
-        const int initial_quantity = item.quantity;
         const string item_name = item.name(DESC_PLAIN, false);
         const bool is_chunk = _is_chunk(item);
 
-        if (is_chunk)
-            num_chunks += item.quantity;
-        else
-            ASSERT(is_blood_potion(item));
+        ASSERT(is_chunk);
+        num_chunks += item.quantity;
 
         const int rotted_away_count = _rot_stack(item, i, true);
-        if (is_chunk)
-            num_chunks_gone += rotted_away_count;
-        else if (rotted_away_count)
-        {
-            _potion_stack_changed_message(item_name, rotted_away_count,
-                                          initial_quantity);
-        }
+        num_chunks_gone += rotted_away_count;
     }
 
     _print_chunk_messages(num_chunks, num_chunks_gone);
@@ -405,18 +401,6 @@ static void _print_chunk_messages(int num_chunks, int num_chunks_gone)
              "%s of the chunks of flesh in your inventory have rotted away.",
              num_chunks_gone == num_chunks ? "All" : "Some");
     }
-}
-
-// Prints messages for blood potions coagulating or rotting in inventory.
-static void _potion_stack_changed_message(string item_name, int num_changed,
-                                          int initial_quantity)
-{
-    ASSERT(num_changed > 0);
-
-    mprf(MSGCH_ROTTEN_MEAT, "%s %s rot%s away.",
-         get_desc_quantity(num_changed, initial_quantity).c_str(),
-         item_name.c_str(),
-         num_changed == 1 ? "s" : "");
 }
 
 // Removes the oldest timer of a stack of blood potions.

@@ -20,12 +20,9 @@ function gammafunk_the_bubble_setup(e, entry_glyph, exit_glyph)
         else
             e.nsubst(". = 6=0 / 6=0. / 3=9 / 4=9. / 2=8. / .")
         end
-    elseif you.in_branch("Shoals")
-           or you.in_branch("Swamp")
-           or you.in_branch("Snake")
-           or you.in_branch("Spider") then
+    elseif you.in_branch("Snake") then
         e.nsubst(". = 6=0 / 7=0. / 3=9 / 5=9. / 2=8. / .")
-    elseif you.in_branch("Elf") then
+    elseif you.in_branch("Elf") or you.in_branch("Vaults") then
         e.nsubst(". = 6=0 / 8=0. / 3=9 / 5=9. / 8 / 8. / .")
     elseif you.in_branch("Crypt") then
         e.nsubst(". = 6=0 / 8=0. / 4=9 / 4=9. / 8 / 2=8. / .")
@@ -46,22 +43,19 @@ function gammafunk_the_bubble_setup(e, entry_glyph, exit_glyph)
     elseif you.in_branch("Pandemonium") then
        -- 8 and 9 spawns both aren't a thing in Pan, so make these ourself.
        e.kmons("2 = greater demon / nonbase demonspawn")
-       e.kmons("3 = executioner / brimstone fiend / ice fiend / tzitzimitl" ..
-               "    / hell sentinel")
+       e.kmons("3 = oxarmordth / rhuddgoch / Vetrifl / tzitzimitl" ..
+               "    / gwarchodwr")
        e.subst("8 = 39")
        e.subst("9 = 02")
-    end
-
-    -- Metal is a bit out of place in these branches.
-    if you.in_branch("Swamp") or you.in_branch("Spider") then
-       e.subst("v = c")
     end
 end
 }}
 
 NAME:   gammafunk_the_bubble
 TAGS:   no_monster_gen no_trap_gen
-DEPTH:  D:7-, Shoals, Snake, Swamp, Spider, Elf, Crypt, Depths, Zot, Pan
+# Allow placement in Vaults as a room.
+TAGS:   vaults_hard preserve_wall passable
+DEPTH:  Crypt, D:3-, Depths, Elf, Pan, Snake, Vaults, Zot
 ORIENT: float
 : item(dgn.loot_scrolls .. " / " .. dgn.loot_potions)
 ITEM:   any jewellery good_item, any jewellery randart
@@ -71,17 +65,16 @@ ITEM:   cloak randart / helmet randart / hat randart / pair of gloves randart \
         / pair of boots randart
 # Set up increasing loot count and quality with depth.
 : if you.in_branch("D") then
-:   if you.depth() < 10 then
+:   if you.depth() < 5 then
 NSUBST: ' = ddeg / 3=|* / * / *% / 2=$ / .
-:   elseif you.depth() < 13 then
+:   elseif you.depth() < 7 then
 NSUBST: ' = d / eg / 3=|* / * / %$.. / 2=$ / .
 :   else
 NSUBST: ' = 2=d / eg / 3=|* / *% / %$.. / 2=$ / .
 :   end
-: elseif you.in_branch("Shoals") or you.in_branch("Swamp")
-:        or you.in_branch("Snake") or you.in_branch("Spider") then
+: elseif you.in_branch("Snake") then
 NSUBST: ' = 2=d / eg / 3=|* / * / %$ / 2=$ / .
-: elseif you.in_branch("Elf") then
+: elseif you.in_branch("Elf") or you.in_branch("Vaults") then
 NSUBST: ' = 2=d / fh / 4=|* / *% / %$.. / 2=$ / .
 : elseif you.in_branch("Crypt") then
 NSUBST: ' = 2=d / fh / 4=|* / * / %$ / 2=$ / .
@@ -91,13 +84,7 @@ NSUBST: ' = 2=d / f / h / 4=|* / *% / %$.. / 2=$ / .
 NSUBST: ' = 2=d / f / h / 4=|* / *% / %$ / 2=$ / .
 : end
 # Statue decorations.
-: if not you.in_branch("Shoals") and not you.in_branch("Spider") then
 SUBST:  G : GGGTTUttt, H : GGGTTUttt
-: elseif you.in_branch("Swamp") then
-SUBST:  G : Gt, H : Gt
-: else
-SUBST:  G : GGGTTUttt, H : GGGTTUttt
-: end
 SUBVAULT: A : the_bubble
 MARKER:   D = lua:transp_loc("the_bubble_entry")
 MARKER:   E = lua:transp_dest_loc("the_bubble_exit")
@@ -105,21 +92,21 @@ MARKER:   E = lua:transp_dest_loc("the_bubble_exit")
 MAP
    ......@.......
  ...cccc...ccccc..
-..cccAAnnnnnAAAcc..
+..cccAAqqqqqAAAcc..
 .ccHcAAAAAAAAAAAcc.
-.n''cAAAAAAAAAAAAc.
-.n''+AAAAAAAAAAAAc.
-.n''cAAAAAAAAAAAAc.
-.ccccAAAAAAAAAAAnc.
-.G..nAAAAAAAAAAAn..
-@..DnAAAAAAAAAAAnE@
-.G..nAAAAAAAAAAAn..
-.ccccAAAAAAAAAAAnc.
-.n''cAAAAAAAAAAAAc.
-.n''+AAAAAAAAAAAAc.
-.n''cAAAAAAAAAAAAc.
+.q''cAAAAAAAAAAAAc.
+.q''+AAAAAAAAAAAAc.
+.q''cAAAAAAAAAAAAc.
+.ccccAAAAAAAAAAAqc.
+.G..qAAAAAAAAAAAq..
+@..DqAAAAAAAAAAAqE@
+.G..qAAAAAAAAAAAq..
+.ccccAAAAAAAAAAAqc.
+.q''cAAAAAAAAAAAAc.
+.q''+AAAAAAAAAAAAc.
+.q''cAAAAAAAAAAAAc.
 .ccHcAAAAAAAAAAAcc.
-..cccAAnnnnnAAAcc..
+..cccAAqqqqqAAAcc..
  ...cccc...ccccc..
    ......@.......
 ENDMAP

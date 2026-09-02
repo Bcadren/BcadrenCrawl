@@ -1,5 +1,6 @@
+TAG_MAJOR_VERSION: 34
 enum: SP_GREY_DRACONIAN
-monster: MONS_GREY_DRACONIAN
+monster: MONS_SILVER_DRACONIAN
 name: "Grey Draconian"
 short_name: "Dr"
 adjective: "Draconian"
@@ -16,7 +17,6 @@ aptitudes:
   slings: -1
   bows: -1
   crossbows: -1
-  throwing: -1
   armour: False
   dodging: -1
   spellcasting: -1
@@ -39,4 +39,7 @@ mutations:
 fake_mutations:
   - long: You can walk through water.
     short: walk through water
-create_enum: False
+
+# start TAG_MAJOR_VERSION == 34
+create_enum: false
+# end TAG_MAJOR_VERSION

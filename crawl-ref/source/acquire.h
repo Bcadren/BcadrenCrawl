@@ -5,10 +5,11 @@
 
 #pragma once
 
-bool acquirement(object_class_type force_class, int agent,
-                 bool quiet = false, int *item_index = nullptr,
-                 bool debug = false, bool known_scroll = false);
+#include "item-prop-enum.h"
 
-int acquirement_create_item(object_class_type class_wanted,
-                            int agent, bool quiet,
-                            const coord_def &pos, bool debug = false);
+bool acquirement_menu();
+
+int acquire_gold_amt();
+
+int acquirement_create_item(object_class_type class_wanted, int agent,
+                            bool quiet, const coord_def &pos = coord_def());

@@ -1,6 +1,6 @@
 enum: SP_HUMAN
 monster: MONS_HUMAN
-name: Human
+name: "Human"
 difficulty: Intermediate
 difficulty_priority: 100
 aptitudes:
@@ -15,9 +15,15 @@ str: 8
 int: 8
 dex: 8
 levelup_stat_frequency: 4
+mutations:
+  1:
+    MUT_SOFT_FLESH: 1
 recommended_jobs:
   - JOB_BERSERKER
   - JOB_NECROMANCER
   - JOB_FIRE_ELEMENTALIST
   - JOB_ICE_ELEMENTALIST
-create_enum: False
+
+# start TAG_MAJOR_VERSION == 34
+create_enum: false
+# end TAG_MAJOR_VERSION

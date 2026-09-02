@@ -5,8 +5,12 @@
 
 #pragma once
 
+#include <vector>
+
 #include "god-type.h"
 #include "score-format-type.h"
+
+using std::vector;
 
 class scorefile_entry;
 
@@ -131,6 +135,8 @@ private:
 
     int         scrolls_used;       // Number of scrolls used.
     int         potions_used;       // Number of potions used.
+    string      seed;               // Game seed: use string here for simplicity
+                                    // even though the seed is really uint64_t
 
     mutable unique_ptr<xlog_fields> fields;
 

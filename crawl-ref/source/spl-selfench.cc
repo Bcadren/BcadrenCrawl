@@ -10,31 +10,32 @@
 #include <cmath>
 
 #include "areas.h"
-#include "art-enum.h"
+#include "cloud.h"
 #include "coordit.h" // radius_iterator
-#include "god-conduct.h"
+#include "env.h"
 #include "god-passive.h"
 #include "hints.h"
 #include "items.h" // stack_iterator
+#include "level-state-type.h"
 #include "libutil.h"
-#include "macro.h"
 #include "message.h"
 #include "output.h"
 #include "prompt.h"
 #include "religion.h"
-#include "showsymb.h"
-#include "spl-transloc.h"
 #include "spl-util.h"
 #include "stringutil.h"
+#include "terrain.h"
 #include "transform.h"
 #include "tilepick.h"
 #include "view.h"
-#include "viewchar.h"
 
 spret cast_deaths_door(int pow, bool fail)
 {
     fail_check();
-    mpr("You stand defiantly in death's doorway!");
+    if (you.undead_state())
+        mpr("You step closer to the veil between life and death!");
+    else
+        mpr("You stand defiantly in death's doorway!");
     mprf(MSGCH_SOUND, "You seem to hear sand running through an hourglass...");
 
     you.set_duration(DUR_DEATHS_DOOR, 10 + random2avg(13, 3)
@@ -74,11 +75,20 @@ spret ice_armour(int pow, bool fail)
     return spret::success;
 }
 
-spret deflection(int pow, bool fail)
+spret deflection(int /*pow*/, bool fail)
 {
     fail_check();
     you.attribute[ATTR_DEFLECT_MISSILES] = 1;
     mpr("You feel very safe from missiles.");
+
+    return spret::success;
+}
+
+spret pryten(int /*pow*/, bool fail)
+{
+    fail_check();
+    you.attribute[ATTR_SKELETON] = 1;
+    mpr("Skeletons will now rise from your step.");
 
     return spret::success;
 }
@@ -111,15 +121,37 @@ spret cast_revivification(int pow, bool fail)
     return spret::success;
 }
 
+spret cast_gravitation(int power, bool fail)
+{
+    fail_check();
+
+    mprf(MSGCH_DURATION, "You %s gravitational anomaly.",
+        you.duration[DUR_GRAVITATION] > 0 ? "strengthen your" : "create a");
+    you.increase_duration(DUR_GRAVITATION, 20 + random2(power) / 2, 100);
+    you.attribute[ATTR_GRAVITY_POWER] = power;
+
+    return spret::success;
+}
+
 spret cast_swiftness(int power, bool fail)
 {
     fail_check();
 
-    if (you.in_liquid())
+    // Hint that the player won't be faster until they leave the liquid.
+    if (you.in_lava())
+        mpr("The lava splatters!");
+    else if (you.in_liquid())
     {
-        // Hint that the player won't be faster until they leave the liquid.
-        mprf("The %s foams!", you.in_water() ? "water"
-                                             : "liquid ground");
+        if (env.grid(you.pos()) == DNGN_SLIMY_WATER
+            || env.grid(you.pos()) == DNGN_DEEP_SLIMY_WATER)
+        {
+            mpr("The slime gurgles!");
+        }
+        else
+        {
+            mprf("The %s foams!", you.in_water() ? "water"
+                                                 : "liquid ground");
+        }
     }
 
     you.set_duration(DUR_SWIFTNESS, 12 + random2(power)/2, 30,
@@ -144,12 +176,14 @@ int cast_selective_amnesia(const string &pre_msg)
     // Pick a spell to forget.
     keyin = list_spells(false, false, false, "Forget which spell?");
     redraw_screen();
+    update_screen();
 
     if (isaalpha(keyin))
     {
         spell = get_spell_by_letter(keyin);
         slot = get_spell_slot_by_letter(keyin);
 
+        const bool in_library = you.spell_library[spell];
         if (spell != SPELL_NO_SPELL)
         {
             const string prompt = make_stringf(
@@ -157,10 +191,9 @@ int cast_selective_amnesia(const string &pre_msg)
                     spell_title(spell), spell_levels_required(spell),
                     spell_levels_required(spell) != 1 ? "s" : "",
                     player_spell_levels() + spell_levels_required(spell),
-                    you.spell_library[spell] ? "" :
-                    " This spell is not in your library!");
+                    in_library ? "" : " This spell is not in your library!");
 
-            if (yesno(prompt.c_str(), true, 'n', false))
+            if (yesno(prompt.c_str(), in_library, 'n', false))
             {
                 if (!pre_msg.empty())
                     mpr(pre_msg);
@@ -202,10 +235,38 @@ spret cast_song_of_slaying(int pow, bool fail)
     return spret::success;
 }
 
-spret cast_silence(int pow, bool fail)
+spret cast_silence(int pow, bool fail, bool abil)
 {
     fail_check();
-    mpr("A profound silence engulfs you.");
+
+    if (abil)
+    {
+        for (rectangle_iterator ri(you.pos(), 7); ri; ++ri)
+        {
+            if (monster * mon = monster_at(*ri))
+            {
+                if (mon->friendly())
+                {
+                    string prompt = make_stringf("Really attack %s?", mon->name(DESC_YOUR).c_str());
+                    if (yesno(prompt.c_str(), true, 'n'))
+                        break;
+                    else
+                    {
+                        canned_msg(MSG_OK);
+                        return spret::abort;
+                    }
+                }
+            }
+        }
+
+        mpr("<lightgreen>You let out a horrid demonic screech!</lightgreen>");
+        you.props[DEMON_SCREAM] = true;
+    }
+    else
+    {
+        mpr("A profound silence engulfs you.");
+        you.props[DEMON_SCREAM] = false;
+    }
 
     you.increase_duration(DUR_SILENCE, 10 + pow/4 + random2avg(pow/2, 2), 100);
     invalidate_agrid(true);
@@ -243,6 +304,23 @@ spret cast_shroud_of_golubria(int pow, bool fail)
     return spret::success;
 }
 
+spret cast_still_winds(int pow, bool fail)
+{
+    fail_check();
+    if (!bool(env.level_state & LSTATE_STILL_WINDS))
+    {
+        mpr("You grab control of the winds!");
+        start_still_winds();
+    }
+    else
+        mpr("You extend your hold on the air!");
+
+    const int base = div_rand_round(pow, 20);
+
+    you.increase_duration(DUR_STILL_WINDS, roll_dice(4, base / 2), 100);
+    return spret::success;
+}
+
 spret cast_transform(int pow, transformation which_trans, bool fail)
 {
     if (!transform(pow, which_trans, false, true)
@@ -254,4 +332,36 @@ spret cast_transform(int pow, transformation which_trans, bool fail)
     fail_check();
     transform(pow, which_trans);
     return spret::success;
+}
+
+spret cast_noxious_bog(int pow, bool fail)
+{
+    fail_check();
+    bool chaos = determine_chaos(&you, SPELL_NOXIOUS_BOG);
+    flash_view_delay(UA_PLAYER, chaos ? LIGHTMAGENTA : LIGHTGREEN, 100);
+
+    if (!you.duration[DUR_NOXIOUS_BOG])
+        mpr("You begin spewing toxic sludge!");
+    else
+        mpr("Your toxic spew intensifies!");
+
+    you.props[NOXIOUS_BOG_KEY] = pow;
+    you.increase_duration(DUR_NOXIOUS_BOG, 5 + random2(pow / 10), 24);
+    return spret::success;
+}
+
+void noxious_bog_cell(coord_def p)
+{
+    if (env.grid(p) == DNGN_DEEP_WATER || env.grid(p) == DNGN_LAVA
+        || env.grid(p) == DNGN_SLIMY_WATER || env.grid(p) == DNGN_DEEP_SLIMY_WATER)
+    {
+        return;
+    }
+
+    const int turns = 10
+                    + random2avg(you.props[NOXIOUS_BOG_KEY].get_int() / 20, 2);
+    bool chaos = determine_chaos(&you, SPELL_NOXIOUS_BOG);
+
+    temp_change_terrain(p, chaos ? DNGN_QUAGMIRE : DNGN_TOXIC_BOG, turns * BASELINE_DELAY,
+            TERRAIN_CHANGE_BOG, you.as_monster());
 }

@@ -18,12 +18,21 @@
 #include "items.h"
 #include "libutil.h" // map_find
 #include "mon-place.h"
+#include "mpr.h"
 #include "religion.h"
+#include "tag-version.h"
 #include "timed-effects.h"
 
 #define MAX_LOST 100
 
 monsters_in_transit the_lost_ones;
+items_in_transit    transiting_items;
+
+void transit_lists_clear()
+{
+    the_lost_ones.clear();
+    transiting_items.clear();
+}
 
 static void _cull_lost_mons(m_transit_list &mlist, int how_many)
 {
@@ -46,11 +55,58 @@ static void _cull_lost_mons(m_transit_list &mlist, int how_many)
         mlist.erase(mlist.begin());
 }
 
+static void cull_lost_items(i_transit_list &ilist, int how_many)
+{
+    // First pass, drop non-artefacts.
+    for (auto i = ilist.begin(); i != ilist.end();)
+    {
+        auto finger = i++;
+        if (!is_artefact(*finger))
+        {
+            ilist.erase(finger);
+
+            if (--how_many <= MAX_LOST)
+                return;
+        }
+    }
+
+    // Second pass, drop randarts.
+    for (auto i = ilist.begin(); i != ilist.end();)
+    {
+        auto finger = i++;
+        if (is_random_artefact(*finger))
+        {
+            ilist.erase(finger);
+
+            if (--how_many <= MAX_LOST)
+                return;
+        }
+    }
+
+    // Third pass, drop unrandarts.
+    for (auto i = ilist.begin(); i != ilist.end();)
+    {
+        auto finger = i++;
+        if (is_unrandom_artefact(*finger))
+        {
+            ilist.erase(finger);
+
+            if (--how_many <= MAX_LOST)
+                return;
+        }
+    }
+
+    // If we're still over the limit (unlikely), just lose
+    // the old ones.
+    while (how_many-- > MAX_LOST && !ilist.empty())
+        ilist.erase(ilist.begin());
+}
+
 /**
- * Get the monster transit list for the given level.
- * @param lid    The level.
- * @returns      The monster transit list.
- **/
+* Get the monster transit list for the given level.
+* @param lid    The level.
+* @returns      The monster transit list.
+**/
 m_transit_list *get_transit_list(const level_id &lid)
 {
     return map_find(the_lost_ones, lid);
@@ -186,6 +242,47 @@ void place_transiting_monsters()
     _place_lost_ones(_level_place_lost_monsters);
 }
 
+void add_item_to_transit(const level_id &lid, const item_def &i)
+{
+    i_transit_list &ilist = transiting_items[lid];
+    ilist.push_back(i);
+
+    dprf("Item in transit: %s", i.name(DESC_PLAIN).c_str());
+
+    const int how_many = ilist.size();
+    if (how_many > MAX_LOST)
+        cull_lost_items(ilist, how_many);
+}
+
+void place_transiting_items()
+{
+    level_id c = level_id::current();
+
+    i_transit_list *transit = map_find(transiting_items, c);
+    if (!transit)
+        return;
+
+    i_transit_list keep;
+    for (item_def &item : *transit)
+    {
+        coord_def pos = item.pos;
+
+        if (!in_bounds(pos))
+            pos = random_in_bounds();
+
+        const coord_def where_to_go =
+            dgn_find_nearby_stair(DNGN_ESCAPE_HATCH_DOWN,
+                                  pos, true);
+
+        // List of items we couldn't place.
+        if (!copy_item_to_grid(item, where_to_go, -1, false, true))
+            keep.push_back(item);
+    }
+
+    // Only unplaceable items are kept in list.
+    *transit = keep;
+}
+
 void apply_daction_to_transit(daction_type act)
 {
     for (auto &entry : the_lost_ones)
@@ -232,7 +329,7 @@ void follower::load_mons_items()
 {
     for (int i = 0; i < NUM_MONSTER_SLOTS; ++i)
         if (mons.inv[i] != NON_ITEM)
-            items[i] = mitm[ mons.inv[i] ];
+            items[i] = env.item[ mons.inv[i] ];
         else
             items[i].clear();
 }
@@ -289,7 +386,7 @@ void follower::restore_mons_items(monster& m)
             if (islot == NON_ITEM)
                 continue;
 
-            item_def &it = mitm[islot];
+            item_def &it = env.item[islot];
             it = items[i];
             it.set_holding_monster(m);
         }
@@ -311,6 +408,7 @@ static bool _mons_can_follow_player_from(const monster &mons,
     if (!mons.alive()
         || mons.speed_increment < 50
         || mons.incapacitated()
+        || mons.has_ench(ENCH_ROLLING)
         || mons.is_stationary())
     {
         return false;
@@ -336,7 +434,7 @@ static bool _mons_can_follow_player_from(const monster &mons,
     // (though they'll be ignored for transit), so any adjacent real
     // follower can follow through. (jpeg)
     if (within_level && !mons_class_can_use_transporter(mons.type)
-        || !within_level && !mons_can_use_stairs(mons, grd(from)))
+        || !within_level && !mons_can_use_stairs(mons, env.grid(from)))
     {
         if (_is_religious_follower(mons))
             return true;
@@ -408,20 +506,22 @@ void handle_followers(const coord_def &from,
     vector<coord_def> places[2];
     int place_set = 0;
 
+    bool visited[GXM][GYM];
+    memset(&visited, 0, sizeof(visited));
+
     places[place_set].push_back(from);
-    memset(travel_point_distance, 0, sizeof(travel_distance_grid_t));
     while (!places[place_set].empty())
     {
-        for (const coord_def p : places[place_set])
+        for (const coord_def &p : places[place_set])
         {
             for (adjacent_iterator ai(p); ai; ++ai)
             {
                 if ((*ai - from).rdist() > radius
-                    || travel_point_distance[ai->x][ai->y])
+                    || visited[ai->x][ai->y])
                 {
                     continue;
                 }
-                travel_point_distance[ai->x][ai->y] = 1;
+                visited[ai->x][ai->y] = true;
 
                 bool real_follower = false;
                 if (handler(*ai, from, real_follower))

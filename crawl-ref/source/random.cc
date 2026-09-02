@@ -4,7 +4,7 @@
 
 #include <cinttypes>
 #include <cmath>
-#ifndef TARGET_COMPILER_VC
+#if defined(UNIX) || defined(TARGET_COMPILER_MINGW)
 # include <unistd.h>
 #else
 # include <process.h>
@@ -107,6 +107,7 @@ namespace rng
 
     PcgRNG *get_generator(rng_type r)
     {
+        UNUSED(r);
         ASSERT(_generator != ASSERT_NO_RNG);
         if (_generator == SUB_GENERATOR)
             return _sub_generator;
@@ -285,7 +286,12 @@ int dice_def::roll() const
     return roll_dice(num, size);
 }
 
-dice_def calc_dice(int num_dice, int max_damage)
+int dice_def::max() const
+{
+    return num * size;
+}
+
+dice_def calc_dice(int num_dice, int max_damage, bool random)
 {
     dice_def ret(num_dice, 0);
 
@@ -299,8 +305,10 @@ dice_def calc_dice(int num_dice, int max_damage)
         ret.num  = max_damage;
         ret.size = 1;
     }
-    else
+    else if (random)
         ret.size = div_rand_round(max_damage, num_dice);
+    else
+        ret.size = max_damage / num_dice; // round down
 
     return ret;
 }

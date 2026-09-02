@@ -35,9 +35,9 @@ Beogh lastname
 
 Beogh the Brigand
 %%%%
-Fedhas lastname
+Fedhas Madash lastname
 
-Fedhas Madash
+Fedhas Madash the Flourishing
 %%%%
 Cheibriados lastname
 
@@ -45,7 +45,7 @@ Cheibriados the Contemplative
 %%%%
 Ashenzari lastname
 
-Ashenzari the Shackled
+Ashenzari the Ephemeral
 %%%%
 Dithmenos lastname
 
@@ -55,7 +55,7 @@ Nemelex Xobeh lastname
 
 Nemelex Xobeh the Trickster
 %%%%
-Gozag lastname
+Gozag Ym Sagoz lastname
 
 Gozag Ym Sagoz the Greedy
 %%%%
@@ -73,7 +73,7 @@ Pakellas the Inventive
 %%%%
 Uskayaw lastname
 
-Uskayaw the Reveler
+Uskayaw the Reveller
 %%%%
 Hepliaklqana lastname
 

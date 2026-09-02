@@ -51,8 +51,10 @@
 #include "coord.h"
 #include "coordit.h"
 #include "env.h"
+#include "god-passive.h" // passive_t::monster_shadows
 #include "losglobal.h"
 #include "mon-act.h"
+#include "mpr.h"
 
 // These determine what rays are cast in the precomputation,
 // and affect start-up time significantly.
@@ -728,7 +730,7 @@ int num_feats_between(const coord_def& source, const coord_def& target,
     bool reached_target = false;
     while (dist++ <= max_dist)
     {
-        const dungeon_feature_type feat = grd(ray.pos());
+        const dungeon_feature_type feat = env.grid(ray.pos());
 
         if (ray.pos() == target)
             reached_target = true;
@@ -882,10 +884,14 @@ void losight(los_grid& sh, const coord_def& center,
 opacity_type mons_opacity(const monster* mon, los_type how)
 {
     // no regard for LOS_ARENA
-    if (mons_species(mon->type) == MONS_BUSH
-        && how != LOS_SOLID)
-    {
+    if (mons_genus(mon->type) == MONS_PLANT && how != LOS_SOLID)
         return OPC_HALF;
+
+    if (have_passive(passive_t::monster_shadows))
+    {
+        if (mon->friendly())
+            return OPC_CLEAR;
+        return OPC_OPAQUE;
     }
 
     return OPC_CLEAR;

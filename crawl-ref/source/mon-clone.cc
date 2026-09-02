@@ -11,7 +11,6 @@
 #include "arena.h"
 #include "artefact.h"
 #include "coordit.h"
-#include "directn.h"
 #include "env.h"
 #include "items.h"
 #include "message.h"
@@ -24,7 +23,6 @@
 #include "stringutil.h"
 #include "terrain.h"
 #include "transform.h"
-#include "unwind.h"
 #include "view.h"
 
 static string _monster_clone_id_for(monster* mons)
@@ -64,7 +62,7 @@ static bool _player_is_illusion_cloneable()
 {
     for (monster_iterator mi; mi; ++mi)
     {
-        if (mi->type == MONS_PLAYER_ILLUSION && mi->mname == you.xom_name)
+        if (mi->type == MONS_PLAYER_ILLUSION && mi->mname == player_name())
             return false;
     }
     return true;
@@ -100,6 +98,7 @@ static void _mons_summon_monster_illusion(monster* caster,
                        "woven by " + caster->name(DESC_THE));
         if (!clone->has_ench(ENCH_ABJ))
             clone->mark_summoned(6, true, MON_SUMM_CLONE);
+        clone->add_ench(ENCH_PHANTOM_MIRROR);
         clone->summoner = caster->mid;
 
         // Discard unsuitable enchantments.
@@ -147,27 +146,59 @@ static enchant_type _player_duration_to_mons_enchantment(duration_type dur)
 {
     switch (dur)
     {
-    case DUR_INVIS:     return ENCH_INVIS;
-    case DUR_CONF:      return ENCH_CONFUSION;
-    case DUR_PARALYSIS: return ENCH_PARALYSIS;
-    case DUR_SLOW:      return ENCH_SLOW;
-    case DUR_HASTE:     return ENCH_HASTE;
-    case DUR_MIGHT:     return ENCH_MIGHT;
-    case DUR_BERSERK:   return ENCH_BERSERK;
-    case DUR_POISONING: return ENCH_POISON;
+    case DUR_INVIS:         return ENCH_INVIS;
+    case DUR_CONF:          return ENCH_CONFUSION;
+    case DUR_PARALYSIS:     return ENCH_PARALYSIS;
+    case DUR_SLOW:          return ENCH_SLOW;
+    case DUR_HASTE:         return ENCH_HASTE;
+    case DUR_MIGHT:         return ENCH_MIGHT;
+    case DUR_BERSERK:       return ENCH_BERSERK;
+    case DUR_POISONING:     return ENCH_POISON;
+    case DUR_PETRIFIED:     return ENCH_PETRIFIED;
+    case DUR_PETRIFYING:    return ENCH_PETRIFYING;
 
-    default:            return ENCH_NONE;
+    default:                return ENCH_NONE;
     }
 }
 
-static void _mons_load_player_enchantments(monster* creator, monster* target)
+static enchant_type _mount_dur_to_ench(duration_type dur)
+{
+    switch (dur)
+    {
+    case DUR_MOUNT_BARBS:
+        return ENCH_BARBS;
+    case DUR_MOUNT_BREATH:
+        return ENCH_BREATH_WEAPON;
+    case DUR_MOUNT_CORROSION:
+        return ENCH_CORROSION;
+    case DUR_MOUNT_DRAINING:
+        return ENCH_DRAINED;
+    case DUR_MOUNT_PETRIFIED:
+        return ENCH_PETRIFIED;
+    case DUR_MOUNT_PETRIFYING:
+        return ENCH_PETRIFYING;
+    case DUR_MOUNT_POISONING:
+        return ENCH_POISON;
+    case DUR_MOUNT_SLOW:
+        return ENCH_SLOW;
+    case DUR_MOUNT_WRETCHED:
+        return ENCH_WRETCHED;
+    case DUR_MOUNT_FROZEN:
+        return ENCH_FROZEN;
+    default:
+        break;
+    }
+    return ENCH_NONE;
+}
+
+static void _mons_load_player_enchantments(monster* creator, monster* target, bool mount)
 {
     for (int i = 0; i < NUM_DURATIONS; ++i)
     {
         if (you.duration[i] > 0)
         {
             const duration_type dur(static_cast<duration_type>(i));
-            const enchant_type ench =
+            const enchant_type ench = mount ? _mount_dur_to_ench(dur) :
                 _player_duration_to_mons_enchantment(dur);
             if (ench == ENCH_NONE)
                 continue;
@@ -204,7 +235,8 @@ void mons_summon_illusion_from(monster* mons, actor *foe,
 
             _init_player_illusion_properties(
                 get_monster_data(MONS_PLAYER_ILLUSION));
-            _mons_load_player_enchantments(mons, clone);
+            _mons_load_player_enchantments(mons, clone, false);
+            clone->add_ench(ENCH_PHANTOM_MIRROR);
         }
         else if (card_power >= 0)
             mpr("You see a puff of smoke.");
@@ -216,12 +248,21 @@ void mons_summon_illusion_from(monster* mons, actor *foe,
     }
 }
 
-bool mons_clonable(const monster* mon, bool needs_adjacent)
+bool mons_clonable(const actor* act, bool needs_adjacent)
 {
+    const monster * mon = act->as_monster();
+
+    // If we're passed the player we're trying to clone a mount.
+    if (act->is_player())
+    {
+        if (!you.mounted())
+            return false;
+    }
+
     // No uniques or ghost demon monsters. Also, figuring out the name
     // for the clone of a named monster isn't worth it, and duplicate
     // battlespheres with the same owner cause problems with the spell
-    if (mons_is_unique(mon->type)
+    else if (mons_is_unique(mon->type)
         || mons_is_ghost_demon(mon->type)
         || mon->is_named()
         || mon->type == MONS_BATTLESPHERE)
@@ -233,11 +274,12 @@ bool mons_clonable(const monster* mon, bool needs_adjacent)
     {
         // Is there space for the clone?
         bool square_found = false;
-        for (adjacent_iterator ai(mon->pos()); ai; ++ai)
+        monster_type type = act->is_player() ? mount_mons() : mon->type;
+        for (adjacent_iterator ai(act->pos()); ai; ++ai)
         {
             if (in_bounds(*ai)
                 && !actor_at(*ai)
-                && monster_habitable_grid(mon, grd(*ai)))
+                && monster_habitable_grid(type, env.grid(*ai)))
             {
                 square_found = true;
                 break;
@@ -248,9 +290,12 @@ bool mons_clonable(const monster* mon, bool needs_adjacent)
     }
 
     // Is the monster carrying an artefact?
-    for (mon_inv_iterator ii(const_cast<monster &>(*mon)); ii; ++ii)
-        if (is_artefact(*ii))
-            return false;
+    if (act->is_monster())
+    {
+        for (mon_inv_iterator ii(const_cast<monster &>(*mon)); ii; ++ii)
+            if (is_artefact(*ii))
+                return false;
+    }
 
     return true;
 }
@@ -261,7 +306,7 @@ bool mons_clonable(const monster* mon, bool needs_adjacent)
  * @param obvious       If true, player can see the orig & cloned monster
  * @return              Returns the cloned monster
  */
-monster* clone_mons(const monster* orig, bool quiet, bool* obvious)
+monster* clone_mons(const actor* orig, bool quiet, bool* obvious)
 {
     // Pass temp_attitude to handle enslaved monsters cloning monsters
     return clone_mons(orig, quiet, obvious, orig->temp_attitude());
@@ -269,26 +314,33 @@ monster* clone_mons(const monster* orig, bool quiet, bool* obvious)
 
 /**
  * @param orig          The original monster to clone.
+ * if passed the player we're trying to clone the player's mount instead.
  * @param quiet         If true, suppress messages
  * @param obvious       If true, player can see the orig & cloned monster
  * @param mon_att       The attitude to set for the cloned monster
  * @return              Returns the cloned monster
  */
-monster* clone_mons(const monster* orig, bool quiet, bool* obvious,
+monster* clone_mons(const actor* orig, bool quiet, bool* obvious,
                     mon_attitude_type mon_att)
 {
-    // Is there an open slot in menv?
+    if (orig->is_player() && !you.mounted())
+        return nullptr;
+
+    // Is there an open slot in env.mons?
     monster* mons = get_free_monster();
     coord_def pos(0, 0);
 
     if (!mons)
         return nullptr;
 
+    const monster * mon = orig->as_monster();
+    const monster_type type = orig->is_player() ? mount_mons() : mon->type;
+
     for (fair_adjacent_iterator ai(orig->pos()); ai; ++ai)
     {
         if (in_bounds(*ai)
             && !actor_at(*ai)
-            && monster_habitable_grid(orig, grd(*ai)))
+            && monster_habitable_grid(type, env.grid(*ai)))
         {
             pos = *ai;
         }
@@ -299,35 +351,49 @@ monster* clone_mons(const monster* orig, bool quiet, bool* obvious,
 
     ASSERT(!actor_at(pos));
 
-    *mons          = *orig;
+    if (orig->is_player())
+    {
+        mons->type = mount_mons();
+        mons->set_hit_dice(mount_hd());
+        mons->max_hit_points = you.mount_hp_max;
+        mons->hit_points = you.mount_hp;
+        mons->num_heads = you.mount_heads;
+        _mons_load_player_enchantments((monster *)0, mons, true);
+    }
+    else
+        *mons          = *mon;
+
     mons->set_new_monster_id();
     mons->move_to_pos(pos);
     mons->attitude = mon_att;
 
-    // The monster copy constructor doesn't copy constriction, so no need to
-    // worry about that.
-
-    // Don't copy death triggers - phantom royal jellies should not open the
-    // Slime vaults on death.
-    if (mons->props.exists(MONSTER_DIES_LUA_KEY))
-        mons->props.erase(MONSTER_DIES_LUA_KEY);
-
-    // Duplicate objects, or unequip them if they can't be duplicated.
-    for (mon_inv_iterator ii(*mons); ii; ++ii)
+    if (!orig->is_player())
     {
-        const int old_index = ii->index();
+        // The monster copy constructor doesn't copy constriction, so no need to
+        // worry about that.
 
-        const int new_index = get_mitm_slot(0);
-        if (new_index == NON_ITEM)
+        // Don't copy death triggers - phantom royal jellies should not open the
+        // Slime vaults on death.
+        if (mons->props.exists(MONSTER_DIES_LUA_KEY))
+            mons->props.erase(MONSTER_DIES_LUA_KEY);
+
+        // Duplicate objects, or unequip them if they can't be duplicated.
+        for (mon_inv_iterator ii(*mons); ii; ++ii)
         {
-            mons->unequip(mitm[old_index], false, true);
-            mons->inv[ii.slot()] = NON_ITEM;
-            continue;
-        }
+            const int old_index = ii->index();
 
-        mons->inv[ii.slot()] = new_index;
-        mitm[new_index] = mitm[old_index];
-        mitm[new_index].set_holding_monster(*mons);
+            const int new_index = get_mitm_slot(0);
+            if (new_index == NON_ITEM)
+            {
+                mons->unequip(env.item[old_index], false, true);
+                mons->inv[ii.slot()] = NON_ITEM;
+                continue;
+            }
+
+            mons->inv[ii.slot()] = new_index;
+            env.item[new_index] = env.item[old_index];
+            env.item[new_index].set_holding_monster(*mons);
+        }
     }
 
     bool _obvious;
@@ -335,10 +401,15 @@ monster* clone_mons(const monster* orig, bool quiet, bool* obvious,
         obvious = &_obvious;
     *obvious = false;
 
-    if (you.can_see(*orig) && you.can_see(*mons))
+    if ((orig->is_player() || you.can_see(*orig)) && you.can_see(*mons))
     {
         if (!quiet)
-            simple_monster_message(*orig, " is duplicated!");
+        {
+            if (orig->is_player())
+                mprf("Your %s is duplicated.", you.mount_name().c_str());
+            else
+                simple_monster_message(*mon, " is duplicated!");
+        }
         *obvious = true;
     }
 
@@ -346,6 +417,7 @@ monster* clone_mons(const monster* orig, bool quiet, bool* obvious,
     {
         handle_seen_interrupt(mons);
         viewwindow();
+        update_screen();
     }
 
     if (crawl_state.game_is_arena())

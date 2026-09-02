@@ -15,7 +15,6 @@
 #include "food.h"
 #include "god-conduct.h"
 #include "item-name.h"
-#include "item-prop.h"
 #include "item-status-flag-type.h"
 #include "items.h"
 #include "libutil.h"
@@ -24,7 +23,6 @@
 #include "message.h"
 #include "options.h"
 #include "output.h"
-#include "prompt.h"
 #include "rot.h"
 #include "stash.h"
 #include "stepdown.h"
@@ -98,13 +96,6 @@ void finish_butchering(item_def& corpse, bool bottling)
 
     StashTrack.update_stash(you.pos()); // Stash-track the generated items.
 }
-
-#ifdef TOUCH_UI
-static string _butcher_menu_title(const Menu *menu, const string &oldt)
-{
-    return oldt;
-}
-#endif
 
 static int _corpse_quality(const item_def &item)
 {
@@ -225,8 +216,8 @@ void butchery(item_def* specific_corpse)
 
     vector<SelItem> selected =
         select_items(meat, bottle_blood ? "Choose a corpse to bottle"
-                                        : "Choose a corpse to butcher",
-                     false, menu_type::any, _butcher_menu_title);
+                                        : "Choose a corpse to butcher", 
+                           false, menu_type::any);
     redraw_screen();
     for (SelItem sel : selected)
         if (_start_butchering(const_cast<item_def &>(*sel.item)))

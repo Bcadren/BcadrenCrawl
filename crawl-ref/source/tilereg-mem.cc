@@ -54,14 +54,14 @@ void MemoriseRegion::draw_tag()
     draw_desc(desc.c_str());
 }
 
-int MemoriseRegion::handle_mouse(MouseEvent &event)
+int MemoriseRegion::handle_mouse(wm_mouse_event &event)
 {
     unsigned int item_idx;
     if (!place_cursor(event, item_idx))
         return 0;
 
     const spell_type spell = (spell_type) m_items[item_idx].idx;
-    if (event.button == MouseEvent::LEFT)
+    if (event.button == wm_mouse_event::LEFT)
     {
         m_last_clicked_item = item_idx;
         tiles.set_need_redraw();
@@ -71,10 +71,11 @@ int MemoriseRegion::handle_mouse(MouseEvent &event)
             flush_input_buffer(FLUSH_ON_FAILURE);
         return CK_MOUSE_CMD;
     }
-    else if (event.button == MouseEvent::RIGHT)
+    else if (event.button == wm_mouse_event::RIGHT)
     {
         describe_spell(spell);
         redraw_screen();
+        update_screen();
         return CK_MOUSE_CMD;
     }
     return 0;
@@ -147,9 +148,6 @@ void MemoriseRegion::update()
         {
             desc.flag |= TILEI_FLAG_INVALID;
         }
-
-        if (vehumet_is_offering(spell))
-            desc.flag |= TILEI_FLAG_EQUIP;
 
         m_items.push_back(desc);
     }

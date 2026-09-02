@@ -125,9 +125,6 @@ static COLOURS FG_COL = LIGHTGREY;
 /** @brief The current background @em colour. */
 static COLOURS BG_COL = BLACK;
 
-/** @brief The default background @em colour. */
-static COLOURS BG_COL_DEFAULT = BLACK;
-
 void writeChar(char32_t c)
 {
     if (c == '\t')
@@ -151,7 +148,7 @@ void writeChar(char32_t c)
         bFlush();
 
         // reposition
-        cgotoxy(1, cy+2);
+        gotoxy_sys(1, cy+2);
 
         return;
     }
@@ -472,7 +469,7 @@ void set_cursor_enabled(bool curstype)
     // now, if we just changed from NOCURSOR to CURSOR,
     // actually move screen cursor
     if (cursor_is_enabled)
-        cgotoxy(cx+1, cy+1);
+        gotoxy_sys(cx+1, cy+1);
 }
 
 // This will force the cursor down to the next line.
@@ -484,7 +481,7 @@ void clear_to_end_of_line()
         cprintf("%*s", cols - pos + 1, "");
 }
 
-void clrscr()
+void clrscr_sys()
 {
     int x,y;
     COORD source;
@@ -508,9 +505,6 @@ void clrscr()
     target.Bottom = screensize.Y - 1;
 
     WriteConsoleOutputW(outbuf, screen, screensize, source, &target);
-
-    // reset cursor to 1,1 for convenience
-    cgotoxy(1,1);
 }
 
 void gotoxy_sys(int x, int y)
@@ -543,34 +537,116 @@ void gotoxy_sys(int x, int y)
     }
 }
 
-// Hacked-up version of corresponding function in libunix.cc
-static void adjust_color_pair_to_non_identical(short &fg, short &bg)
+static unsigned short _dos_reverse_brand(unsigned short colour)
 {
-    // ignore brighness when comparing visually
-    if ((fg & ~COLFLAG_CURSES_BRIGHTEN) != bg)
-        return;  // colours look different; no need to adjust
-    fg &= ~COLFLAG_CURSES_BRIGHTEN;
-    fg = fg == BG_COL_DEFAULT ? WHITE : BG_COL_DEFAULT;;
+    if (Options.dos_use_background_intensity)
+    {
+        // If the console treats the intensity bit on background colours
+        // correctly, we can do a very simple colour invert.
+
+        // Special casery for shadows.
+        if (colour == BLACK)
+            colour = (DARKGREY << 4);
+        else
+            colour = (colour & 0xF) << 4;
+    }
+    else
+    {
+        // If we're on a console that takes its DOSness very seriously the
+        // background high-intensity bit is actually a blink bit. Blinking is
+        // evil, so we strip the background high-intensity bit. This, sadly,
+        // limits us to 7 background colours.
+
+        // Strip off high-intensity bit. Special case DARKGREY, since it's the
+        // high-intensity counterpart of black, and we don't want black on
+        // black.
+        //
+        // We *could* set the foreground colour to WHITE if the background
+        // intensity bit is set, but I think we've carried the
+        // angry-fruit-salad theme far enough already.
+
+        if (colour == DARKGREY)
+            colour |= (LIGHTGREY << 4);
+        else if (colour == BLACK)
+            colour = LIGHTGREY << 4;
+        else
+        {
+            // Zap out any existing background colour, and the high
+            // intensity bit.
+            colour  &= 7;
+
+            // And swap the foreground colour over to the background
+            // colour, leaving the foreground black.
+            colour <<= 4;
+        }
+    }
+
+    return colour;
 }
 
-static void update_text_colours()
+static unsigned short _dos_hilite_brand(unsigned short colour,
+                                        unsigned short hilite)
 {
-    short macro_fg = Options.colour[FG_COL];
-    short macro_bg = Options.colour[BG_COL];
-    adjust_color_pair_to_non_identical(macro_fg, macro_bg);
+    if (!hilite)
+        return colour;
+
+    if (colour == hilite)
+        colour = 0;
+
+    colour |= (hilite << 4);
+    return colour;
+}
+
+static unsigned short _dos_brand(unsigned short colour, unsigned brand)
+{
+    if ((brand & CHATTR_ATTRMASK) == CHATTR_NORMAL)
+        return colour;
+
+    colour &= 0xFF;
+
+    if ((brand & CHATTR_ATTRMASK) == CHATTR_HILITE)
+        return _dos_hilite_brand(colour, (brand & CHATTR_COLMASK) >> 8);
+    else
+        return _dos_reverse_brand(colour);
+}
+
+static inline unsigned get_brand(int col)
+{
+    return (col & COLFLAG_FRIENDLY_MONSTER) ? Options.friend_brand :
+           (col & COLFLAG_NEUTRAL_MONSTER)  ? Options.neutral_brand :
+           (col & COLFLAG_ITEM_HEAP)        ? Options.heap_brand :
+           (col & COLFLAG_WILLSTAB)         ? Options.stab_brand :
+           (col & COLFLAG_MAYSTAB)          ? Options.may_stab_brand :
+           (col & COLFLAG_FEATURE_ITEM)     ? Options.feature_item_brand :
+           (col & COLFLAG_TRAP_ITEM)        ? Options.trap_item_brand :
+           (col & COLFLAG_REVERSE)          ? unsigned{CHATTR_REVERSE}
+                                            : unsigned{CHATTR_NORMAL};
+}
+
+static void update_text_colours(int brand)
+{
+    unsigned short branded_bg_fg = _dos_brand(FG_COL, brand);
+    const bool brand_overrides_bg = branded_bg_fg & 0xF0;
+
+    const short fg = branded_bg_fg & 0x0F;
+    const short bg = brand_overrides_bg ? (branded_bg_fg & 0xF0) >> 4 : BG_COL;
+
+    const short macro_fg = Options.colour[fg];
+    const short macro_bg = Options.colour[bg];
+
     current_colour = (macro_bg << 4) | macro_fg;
 }
 
 void textcolour(int c)
 {
     FG_COL = static_cast<COLOURS>(c & 0xF);
-    update_text_colours();
+    update_text_colours(get_brand(c));
 }
 
 void textbackground(int c)
 {
     BG_COL = static_cast<COLOURS>(c & 0xF);
-    update_text_colours();
+    update_text_colours(get_brand(c));
 }
 
 static void cprintf_aux(const char *s)
@@ -578,7 +654,7 @@ static void cprintf_aux(const char *s)
     // early out -- not initted yet
     if (outbuf == nullptr)
     {
-        printf("%S", OUTW(s));
+        printf("%ls", OUTW(s));
         return;
     }
 
@@ -638,27 +714,6 @@ static int vk_tr[4][VKEY_MAPPINGS] = // virtual key, unmodified, shifted, contro
     { CK_CTRL_END, CK_CTRL_DOWN, CK_CTRL_PGDN, CK_CTRL_LEFT, CK_CTRL_CLEAR, CK_CTRL_RIGHT,
       CK_CTRL_HOME, CK_CTRL_UP, CK_CTRL_PGUP, CK_CTRL_INSERT, CK_CTRL_TAB },
 };
-
-static int ck_tr[] =
-{
-    'k', 'j', 'h', 'l', '0', 'y', 'b', '.', 'u', 'n', '0',
-    // 'b', 'j', 'n', 'h', '.', 'l', 'y', 'k', 'u', (autofight)
-    '8', '2', '4', '6', '0', '7', '1', '5', '9', '3', '0',
-    // '1', '2', '3', '4', '5', '6', '7', '8', '9', (non-move autofight)
-    11, 10, 8, 12, '0', 25, 2, 0, 21, 14, '0',
-    // 2, 10, 14, 8, 0, 12, 25, 11, 21,
-};
-
-static int key_to_command(int keyin)
-{
-    if (keyin >= CK_UP && keyin <= CK_CTRL_PGDN)
-        return ck_tr[ keyin - CK_UP ];
-
-    if (keyin == CK_DELETE)
-        return '.';
-
-    return keyin;
-}
 
 static int vk_translate(WORD VirtCode, WCHAR c, DWORD cKeys)
 {
@@ -729,11 +784,6 @@ static int vk_translate(WORD VirtCode, WCHAR c, DWORD cKeys)
     return vk_tr[1][mkey];
 }
 
-int m_getch()
-{
-    return getchk();
-}
-
 static int w32_proc_mouse_event(const MOUSE_EVENT_RECORD &mer)
 {
     const coord_def pos(mer.dwMousePosition.X + 1, mer.dwMousePosition.Y + 1);
@@ -792,8 +842,6 @@ int getch_ck()
         return repeat_key;
     }
 
-    const bool oldValue = cursor_is_enabled;
-
     bool waiting_for_event = true;
     while (waiting_for_event)
     {
@@ -838,12 +886,6 @@ int getch_ck()
     }
 
     return key;
-}
-
-int getchk()
-{
-    int c = getch_ck();
-    return key_to_command(c);
 }
 
 bool kbhit()
@@ -891,7 +933,6 @@ void puttext(int x1, int y1, const crawl_view_buffer &vbuf)
             cell++;
         }
     }
-    update_screen();
     textcolour(WHITE);
 }
 

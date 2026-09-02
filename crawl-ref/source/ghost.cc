@@ -12,18 +12,22 @@
 #include "act-iter.h"
 #include "colour.h"
 #include "database.h"
+#include "enchant-type.h"
 #include "env.h"
 #include "god-type.h"
 #include "item-name.h"
 #include "item-prop.h"
-#include "mon-book.h"
+#include "jobs.h"
 #include "mon-cast.h"
 #include "mon-transit.h"
+#include "mpr.h"
 #include "ng-input.h"
+#include "options.h"
 #include "skills.h"
 #include "spl-util.h"
 #include "state.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "unwind.h"
 
 #define MAX_GHOST_DAMAGE     50
@@ -42,12 +46,13 @@ static spell_type search_order_aoe_conj[] =
     SPELL_METAL_SPLINTERS,
     SPELL_ENERGY_BOLT,
     SPELL_ORB_OF_ELECTRICITY,
+    SPELL_CONJURE_BALL_LIGHTNING,
 };
 
 // Pan lord conjuration spell list.
 static spell_type search_order_conj[] =
 {
-    SPELL_CALL_DOWN_DAMNATION,
+    SPELL_HELLFIRE_BLAST,
     SPELL_LEHUDIBS_CRYSTAL_SPEAR,
     SPELL_CORROSIVE_BOLT,
     SPELL_QUICKSILVER_BOLT,
@@ -67,9 +72,9 @@ static spell_type search_order_selfench[] =
     SPELL_HASTE,
     SPELL_SILENCE,
     SPELL_INVISIBILITY,
-    SPELL_BLINK,
-    SPELL_BLINKBOLT,
     SPELL_CONDENSATION_SHIELD,
+    SPELL_BLINK,
+    SPELL_BLINK_RANGE,
 };
 
 // Pan lord summoning spell list.
@@ -79,9 +84,8 @@ static spell_type search_order_summon[] =
     SPELL_MALIGN_GATEWAY,
     SPELL_SUMMON_DRAGON,
     SPELL_SUMMON_HORRIBLE_THINGS,
-    SPELL_SHADOW_CREATURES,
     SPELL_SUMMON_EYEBALLS,
-    SPELL_SUMMON_VERMIN, // funny
+    SPELL_SUMMON_SPIDERS,
     SPELL_SUMMON_BUTTERFLIES, // funny
 };
 
@@ -94,8 +98,24 @@ static spell_type search_order_misc[] =
     SPELL_DRAIN_MAGIC,
     SPELL_PETRIFY,
     SPELL_POLYMORPH,
-    SPELL_FORCE_LANCE,
+    SPELL_FORCE_LASSO,
     SPELL_SLOW,
+    SPELL_SENTINEL_MARK,
+    SPELL_DIMENSION_ANCHOR,
+    SPELL_TELEPORT_OTHER, // funny
+};
+
+/**
+ * A small set of spells that pan lords without (other) spells can make use of.
+ * All related to closing the gap with the player, or messing with their
+ * movement.
+ */
+static spell_type search_order_non_spellcaster[] =
+{
+    SPELL_BLINKBOLT,
+    SPELL_BLINK_CLOSE,
+    SPELL_HARPOON_SHOT,
+    SPELL_SEAL_DOORS,
 };
 
 ghost_demon::ghost_demon()
@@ -125,27 +145,7 @@ void ghost_demon::reset()
     resists          = 0;
     colour           = COLOUR_UNDEF;
     flies            = false;
-}
-
-/**
- * Choose a random brand for a pandemonium lord's melee attacks.
- *
- * @return  A random valid brand type (not holy wrath, protection, etc)
- */
-static brand_type _random_special_pan_lord_brand()
-{
-    return random_choose_weighted(10, SPWPN_MOLTEN,
-                                  10, SPWPN_FREEZING,
-                                  10, SPWPN_ELECTROCUTION,
-                                  10, SPWPN_VENOM,
-                                  // Lower chance
-                                  5, SPWPN_DRAINING,
-                                  // Higher chance
-                                  20, SPWPN_VAMPIRISM,
-                                  20, SPWPN_PAIN,
-                                  20, SPWPN_ANTIMAGIC,
-                                  20, SPWPN_DISTORTION,
-                                  20, SPWPN_CHAOS);
+    cloud_ring_ench  = ENCH_NONE;
 }
 
 #define ADD_SPELL(which_spell) \
@@ -169,6 +169,130 @@ static int _panlord_random_elec_resist_level()
     return random_choose_weighted(3, 0,
                                   6, 1,
                                   1, 3);
+}
+
+/**
+ * Generate a random attack_type for a pandemonium_lord. Since this is purely
+ * flavour, special attack types are rare.
+ */
+static attack_type _pan_lord_random_attack_type()
+{
+    attack_type attack = AT_HIT;
+    if (one_chance_in(4))
+    {
+        do
+        {
+            attack = static_cast<attack_type>(random_range(AT_FIRST_ATTACK, AT_LAST_REAL_ATTACK));
+        }
+        while (attack == AT_HIT || !is_plain_attack_type(attack));
+    }
+    return attack;
+}
+
+// this is a bit like a union, but not really
+struct attack_form
+{
+    brand_type brand = SPWPN_NORMAL;
+    attack_flavour flavour = AF_PLAIN;
+};
+
+static attack_form _brand_attack(brand_type brand)
+{
+    attack_form form;
+    form.brand = brand;
+    return form;
+}
+
+static attack_form _flavour_attack(attack_flavour flavour)
+{
+    attack_form form;
+    form.flavour = flavour;
+    return form;
+}
+
+/**
+ * Set a random attack type for a pandemonium lord's melee attacks. Some of
+ * these are branded attacks, some are custom attack flavours, some are matching
+ * attack types & flavours. (Pan lord attack type is randomised, but can be
+ * overridden here if required.)
+ */
+void ghost_demon::set_pan_lord_special_attack()
+{
+    const attack_form form = random_choose_weighted(
+        // Low chance
+        10, _brand_attack(SPWPN_VENOM),
+        10, _brand_attack(SPWPN_DRAINING),
+        4, _flavour_attack(AF_DRAIN_STR),
+        4, _flavour_attack(AF_DRAIN_INT),
+        2, _flavour_attack(AF_DRAIN_DEX),
+        10, _flavour_attack(AF_HUNGER),
+        10, _flavour_attack(AF_ROT),
+        10, _flavour_attack(AF_DROWN),
+        // Normal chance
+        20, _brand_attack(SPWPN_MOLTEN),
+        20, _brand_attack(SPWPN_FREEZING),
+        20, _brand_attack(SPWPN_ELECTROCUTION),
+        20, _brand_attack(SPWPN_VAMPIRISM),
+        20, _brand_attack(SPWPN_PAIN),
+        20, _flavour_attack(AF_ENSNARE),
+        20, _flavour_attack(AF_DRAIN_SPEED),
+        20, _flavour_attack(AF_CORRODE),
+        20, _flavour_attack(AF_WEAKNESS),
+        // High chance
+        40, _brand_attack(SPWPN_ANTIMAGIC),
+        40, _brand_attack(SPWPN_DISTORTION),
+        40, _brand_attack(SPWPN_CHAOS),
+        40, _flavour_attack(AF_TRAMPLE)
+    );
+
+    brand = form.brand;
+    if (form.flavour != AF_PLAIN)
+        att_flav = form.flavour;
+
+    if (brand == SPWPN_VENOM && coinflip())
+        att_type = AT_STING; // such flavour!
+    switch (att_flav)
+    {
+        case AF_TRAMPLE:
+            att_type = AT_TRAMPLE;
+            break;
+        case AF_DROWN:
+            att_type = AT_ENGULF;
+            break;
+        default:
+            break;
+    }
+}
+
+void ghost_demon::set_pan_lord_cloud_ring()
+{
+    if (brand == SPWPN_ELECTROCUTION)
+        cloud_ring_ench = ENCH_RING_OF_THUNDER;
+    else if (brand == SPWPN_MOLTEN)
+        cloud_ring_ench = ENCH_RING_OF_FLAMES;
+    else if (brand == SPWPN_CHAOS)
+        cloud_ring_ench = ENCH_RING_OF_CHAOS;
+    else if (brand == SPWPN_FREEZING)
+        cloud_ring_ench = ENCH_RING_OF_ICE;
+    else if (att_flav == AF_CORRODE)
+        cloud_ring_ench = ENCH_RING_OF_ACID;
+    else if (brand == SPWPN_DRAINING)
+        cloud_ring_ench = ENCH_RING_OF_DRAINING;
+    else if (att_flav == AF_ROT)
+        cloud_ring_ench = ENCH_RING_OF_MIASMA;
+    else
+    {
+        cloud_ring_ench = random_choose_weighted(
+            20, ENCH_RING_OF_THUNDER,
+            20, ENCH_RING_OF_FLAMES,
+            20, ENCH_RING_OF_ICE,
+            10, ENCH_RING_OF_DRAINING,
+             5, ENCH_RING_OF_CHAOS,
+             5, ENCH_RING_OF_ACID,
+             5, ENCH_RING_OF_MIASMA,
+             5, ENCH_RING_OF_MUTATION);
+    }
+    dprf("This pan lord has a cloud ring ench of %d", cloud_ring_ench);
 }
 
 void ghost_demon::init_pandemonium_lord()
@@ -196,10 +320,12 @@ void ghost_demon::init_pandemonium_lord()
     see_invis = true;
 
     resists = 0;
-    resists |= mrd(MR_RES_FIRE, _panlord_random_resist_level());
-    resists |= mrd(MR_RES_COLD, _panlord_random_resist_level());
-    resists |= mrd(MR_RES_ELEC, _panlord_random_elec_resist_level());
-    // Demons, like ghosts, automatically get poison res. and life prot.
+    resists |= mrd(MR_RES_FIRE,   _panlord_random_resist_level());
+    resists |= mrd(MR_RES_COLD,   _panlord_random_resist_level());
+    resists |= mrd(MR_RES_ACID,   _panlord_random_resist_level());
+    resists |= mrd(MR_RES_NEG,    _panlord_random_resist_level());
+    resists |= mrd(MR_RES_POISON, _panlord_random_resist_level());
+    resists |= mrd(MR_RES_ELEC,   _panlord_random_elec_resist_level());
 
     // HTH damage:
     damage = 20 + roll_dice(2, 20);
@@ -220,12 +346,15 @@ void ghost_demon::init_pandemonium_lord()
         xl += 5;
     }
 
+    att_type = _pan_lord_random_attack_type();
     if (one_chance_in(3) || !spellcaster)
-        brand = _random_special_pan_lord_brand();
-    else
-        brand = SPWPN_NORMAL;
+        set_pan_lord_special_attack();
 
-    // Non-caster demons are fast, casters may get haste.
+    // Spellcasters get a (smaller) chance of a cloud ring below
+    if (!spellcaster && one_chance_in(7))
+        set_pan_lord_cloud_ring();
+
+    // Non-casters are fast, casters may get haste.
     if (!spellcaster)
         speed = 11 + roll_dice(2,4);
     else if (one_chance_in(3))
@@ -243,9 +372,26 @@ void ghost_demon::init_pandemonium_lord()
         if (!one_chance_in(10))
         {
             if (coinflip())
-                ADD_SPELL(RANDOM_ELEMENT(search_order_summon));
+            {
+                // Demon-summoning should be fairly common.
+                if (coinflip())
+                {
+                    ADD_SPELL(random_choose(SPELL_SUMMON_DEMON,
+                                            SPELL_SUMMON_GREATER_DEMON));
+                }
+                else
+                {
+                    ADD_SPELL(RANDOM_ELEMENT(search_order_summon));
+                    if (coinflip())
+                        ADD_SPELL(SPELL_BLINK_ALLIES_ENCIRCLE);
+                }
+            }
             else
+            {
                 ADD_SPELL(RANDOM_ELEMENT(search_order_aoe_conj));
+                if (one_chance_in(7))
+                    set_pan_lord_cloud_ring();
+            }
         }
 
         if (coinflip())
@@ -253,31 +399,36 @@ void ghost_demon::init_pandemonium_lord()
 
         if (coinflip())
             ADD_SPELL(RANDOM_ELEMENT(search_order_misc));
-
-        // Demon-summoning should be fairly common.
-        if (coinflip())
-            ADD_SPELL(random_choose(SPELL_SUMMON_DEMON, SPELL_SUMMON_GREATER_DEMON));
-
-        normalize_spell_freq(spells, xl);
+    }
+    else
+    {
+        // Non-spellcasters may get one spell
+        if (one_chance_in(3))
+            ADD_SPELL(RANDOM_ELEMENT(search_order_non_spellcaster));
     }
 
-    colour = one_chance_in(10) ? ETC_RANDOM : random_monster_colour();
+    if (!spells.empty())
+    {
+        normalize_spell_freq(spells, spellcaster ? spell_freq_for_hd(xl)
+                                                 : spell_freq_for_hd(xl) / 3);
+    }
+
+    colour = one_chance_in(10) ? colour_t{ETC_RANDOM} : random_monster_colour();
 }
 
 static const set<brand_type> ghost_banned_brands =
                 { SPWPN_HOLY_WRATH };
 
-void ghost_demon::init_player_ghost(bool actual_ghost)
+void ghost_demon::init_player_ghost()
 {
     // don't preserve transformations for ghosty purposes
     unwind_var<transformation> form(you.form, transformation::none);
     unwind_var<FixedBitVector<NUM_EQUIP>> melded(you.melded,
                                                  FixedBitVector<NUM_EQUIP>());
     unwind_var<bool> fishtail(you.fishtail, false);
+    unwind_var<mount_type> mount(you.mount, mount_type::none);
 
-    if (you.xom_name == "")
-        you.xom_name == you.your_name;
-    name   = you.xom_name;
+    name   = player_name();
     max_hp = min(get_real_hp(false, false), MAX_GHOST_HP);
     ev     = min(you.evasion(ev_ignore::helpless), MAX_GHOST_EVASION);
     ac     = you.armour_class();
@@ -291,9 +442,7 @@ void ghost_demon::init_player_ghost(bool actual_ghost)
     // clones might lack innate rPois, copy it. pghosts don't care.
     set_resist(resists, MR_RES_POISON, player_res_poison());
     set_resist(resists, MR_RES_NEG, you.res_negative_energy());
-    set_resist(resists, MR_RES_ACID, player_res_acid());
-    // multi-level for players, boolean as an innate monster resistance
-    set_resist(resists, MR_RES_STEAM, player_res_steam() ? 1 : 0);
+    set_resist(resists, MR_RES_ACID, you.res_acid());
     set_resist(resists, MR_RES_STICKY_FLAME, player_res_sticky_flame());
     set_resist(resists, MR_RES_ROTTING, you.res_rotting());
     set_resist(resists, MR_RES_PETRIFY, you.res_petrify());
@@ -304,14 +453,17 @@ void ghost_demon::init_player_ghost(bool actual_ghost)
     damage = 4;
     brand = SPWPN_NORMAL;
 
-    if (you.weapon())
+    if (you.weapon(0))
     {
         // This includes ranged weapons, but they're treated as melee.
 
-        const item_def& weapon = *you.weapon();
+        const item_def& weapon = *you.weapon(0);
         if (is_weapon(weapon))
         {
-            damage = property(weapon, PWPN_DAMAGE);
+            if (weapon.base_type == OBJ_SHIELDS)
+                damage = property(weapon, PSHD_DAMAGE);
+            else
+                damage = property(weapon, PWPN_DAMAGE);
 
             // Bows skill doesn't make bow-bashing better.
             skill_type sk = is_range_weapon(weapon) ? SK_FIGHTING
@@ -319,7 +471,7 @@ void ghost_demon::init_player_ghost(bool actual_ghost)
             damage *= 25 + you.skills[sk];
             damage /= 25;
 
-            if (weapon.base_type == OBJ_WEAPONS)
+            if (weapon.base_type == OBJ_WEAPONS || weapon.base_type == OBJ_SHIELDS)
             {
                 brand = static_cast<brand_type>(get_weapon_brand(weapon));
 
@@ -375,7 +527,7 @@ void ghost_demon::init_player_ghost(bool actual_ghost)
 
     flies = true;
 
-    add_spells(actual_ghost);
+    add_spells();
 }
 
 static colour_t _ugly_thing_assign_colour(colour_t force_colour,
@@ -453,6 +605,81 @@ static attack_flavour _ugly_thing_colour_to_flavour(colour_t u_colour)
 }
 
 /**
+* Init a ghost demon object corresponding to a chameleon monster.
+*
+* @param only_mutate   Whether just change the colour or creating new
+* @param force_colour  The chameleon's (new) colour. (Default COLOUR_UNDEF = random)
+*/
+void ghost_demon::init_chameleon(bool only_mutate, colour_t force_colour)
+{
+    const monsterentry* stats = get_monster_data(MONS_CHAMELEON);
+
+    speed = stats->speed;
+    ev = stats->ev;
+    ac = stats->AC;
+    mr = stats->resist_magic;
+    resists = stats->resists;
+    damage = stats->attack[0].damage;
+    move_energy = stats->energy_usage.move;
+
+    // If we're mutating a chameleon, leave its experience level, hit
+    // dice and maximum hit points as they are.
+    if (!only_mutate)
+    {
+        xl = stats->HD;
+        max_hp = hit_points(stats->avg_hp_10x);
+    }
+
+    att_type = AT_GORE;
+
+    colour = force_colour;
+
+    if (!force_colour)
+        colour = chameleon_random_colour();
+
+    att_flav = chameleon_colour_to_flavour(colour);
+
+    switch (colour)
+    {
+    case GREEN:
+        resists |= mrd(MR_RES_POISON, 3);
+        break;
+    case RED:
+        resists |= mrd(MR_RES_FIRE, 4);
+        break;
+    case WHITE:
+        resists |= mrd(MR_RES_COLD, 4);
+        break;
+    case BLUE:
+        resists |= mrd(MR_RES_ELEC, 4);
+        break;
+    default:
+    case LIGHTCYAN:
+        // cloud immune is hardcoded.
+        ac -= 2;
+        damage *= 2;
+        damage /= 3;
+        resists = MR_RES_WIND;
+        break;
+    case BROWN:
+        ac *= 3;
+        ac /= 2;
+        damage *= 3;
+        damage /= 2;
+        // frag immune is hardcoded.
+        break;
+    case MAGENTA:
+        mr *= 5;
+        mr /= 3;
+        break;
+    case YELLOW:
+        resists |= mrd(MR_RES_ACID, 4);
+    case DARKGREY:
+        resists |= mrd(MR_RES_NEG, 4);
+    }
+}
+
+/**
  * Init a ghost demon object corresponding to an ugly thing monster.
  *
  * @param very_ugly     Whether the ugly thing is a very ugly thing.
@@ -494,7 +721,7 @@ void ghost_demon::init_ugly_thing(bool very_ugly, bool only_mutate,
     // before.
     colour = _ugly_thing_assign_colour(make_low_colour(force_colour),
                                        only_mutate ? make_low_colour(colour)
-                                                   : COLOUR_UNDEF);
+                                                   : colour_t{COLOUR_UNDEF});
 
     // Pick a compatible attack flavour for this colour.
     att_flav = _ugly_thing_colour_to_flavour(colour);
@@ -619,7 +846,7 @@ void ghost_demon::init_spectral_weapon(const item_def& weapon, int power)
 // Used when creating ghosts: goes through and finds spells for the
 // ghost to cast. Death is a traumatic experience, so ghosts only
 // remember a few spells.
-void ghost_demon::add_spells(bool actual_ghost)
+void ghost_demon::add_spells()
 {
     spells.clear();
 
@@ -636,7 +863,7 @@ void ghost_demon::add_spells(bool actual_ghost)
         }
     }
 
-    normalize_spell_freq(spells, xl);
+    normalize_spell_freq(spells, spell_freq_for_hd(xl));
 }
 
 bool ghost_demon::has_spells() const
@@ -656,6 +883,10 @@ spell_type ghost_demon::translate_spell(spell_type spell) const
         return SPELL_SUMMON_DRAGON;
     case SPELL_SWIFTNESS:
         return SPELL_SPRINT;
+    case SPELL_SUMMON_HYDRA:
+        return SPELL_SUMMON_HYDRA;
+    case SPELL_SUMMON_SPIDER_MOUNT:
+        return SPELL_SUMMON_SPIDERS;
     default:
         break;
     }
@@ -666,6 +897,8 @@ spell_type ghost_demon::translate_spell(spell_type spell) const
 const vector<ghost_demon> ghost_demon::find_ghosts(bool include_player)
 {
     vector<ghost_demon> gs;
+    if (Options.no_player_bones)
+        include_player = false;
 
     if (include_player && you.undead_state(false) == US_ALIVE)
     {
@@ -706,6 +939,7 @@ void ghost_demon::find_transiting_ghosts(
 
 void ghost_demon::announce_ghost(const ghost_demon &g)
 {
+    UNUSED(g);
 #if defined(DEBUG_BONES) || defined(DEBUG_DIAGNOSTICS)
     mprf(MSGCH_DIAGNOSTICS, "Saving ghost: %s", g.name.c_str());
 #endif
@@ -762,9 +996,9 @@ bool debug_check_ghost(const ghost_demon &ghost)
         return false;
     if (ghost.brand < SPWPN_NORMAL || ghost.brand > MAX_GHOST_BRAND)
         return false;
-    if (ghost.species < 0 || ghost.species >= NUM_SPECIES)
+    if (!species_type_valid(ghost.species))
         return false;
-    if (ghost.job < JOB_FIGHTER || ghost.job >= NUM_JOBS)
+    if (!job_type_valid(ghost.job))
         return false;
     if (ghost.best_skill < SK_FIGHTING || ghost.best_skill >= NUM_SKILLS)
         return false;
@@ -776,8 +1010,7 @@ bool debug_check_ghost(const ghost_demon &ghost)
     if (ghost.brand == SPWPN_HOLY_WRATH)
         return false;
 
-    // Only (very) ugly things get non-plain attack types and
-    // flavours.
+    // Ghosts don't get non-plain attack types and flavours.
     if (ghost.att_type != AT_HIT || ghost.att_flav != AF_PLAIN)
         return false;
 

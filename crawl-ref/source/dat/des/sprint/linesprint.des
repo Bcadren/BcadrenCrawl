@@ -17,9 +17,7 @@ function line_setup(e)
   e.kfeat("x = permarock_wall")
   e.colour("x = brown")
   e.kfeat("# = permarock_wall")
-  e.lua_marker('t', props_marker { veto_dig="veto",
-                                   veto_shatter="veto",
-                                   veto_fire="veto" })
+  e.lua_marker('t', props_marker { veto_destroy="veto" })
 end
 
 function general_item_setup(e)
@@ -32,9 +30,9 @@ function general_item_setup(e)
           potion of haste ident:all /\
           potion of resistance ident:all w:5 / potion of brilliance ident:all /\
           potion of berserk rage ident:all /\
-          potion of mutation ident:all")
+          potion of cure mutation ident:all")
   e.kitem("? = scroll of blinking ident:all /\
-          scroll of remove curse ident:all /\
+          scroll of bless item ident:all /\
           scroll of fog ident:all /\
           scroll of fear ident:all / scroll of enchantment ident:all q:2 /\
           scroll of enchantment ident:all q:2")
@@ -91,16 +89,16 @@ KMONS:     a = Erica / Erolcha / Eustachio / Gastronok / Grum band /\
                Harold / Joseph / Josephine band / Maurice / Psyche /\
                Sonja / Urug
 NSUBST:    a = 1:a. / 1:a.. / 1:a... / 1:a.... / * = .:70 a:1
-KMONS:     b = Agnes / Aizul / Azrael band / Donald / Frances / Kirke band /\
+KMONS:     b = Agnes / Aizul / Maalik band / Donald / Frances / Circe band /\
                Nergalle / Nessos / Rupert / Saint Roka band / Snorg
 NSUBST:    b = 1:b. / 1:b.. / 1:ba.. / 1:baa.. / * = .:70 b:1
 KMONS:     c = Louise / Nikola / Frederick / Boris / Margery band /\
                Sojobo band / Xtahua / Jory / Mennas / Mara
 NSUBST:    c = 2:c. / 2:cb. / 2:cb.. / 2:cbb.. / * = .:69 c:2
 MAP
-xxxxAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCDDDDDDDDDDDDDDxxxx
-x{..AAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCDDDDDDDDDDDDDD&..x
-xxxxAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCDDDDDDDDDDDDDDxx.x
+xxxAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCDDDDDDDDDDDDDDxxxx
+x{.AAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCDDDDDDDDDDDDDD&..x
+xxxAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCDDDDDDDDDDDDDDxx.x
 x..........a.........a..........a.........a.............a............x
 x.xxxxxxEEEEEEEEEEEEEEFFFFFFFFFFFFFFFFFFFFGGGGGGGGGGGGGHHHHHHHHHxxxxxx
 x.......EEEEEEEEEEEEEEFFFFFFFFFFFFFFFFFFFFGGGGGGGGGGGGGHHHHHHHHH&....x
@@ -163,7 +161,7 @@ ENDMAP
 NAME:      early_d
 TAGS:      early_d
 KMONS:     A = place:D:1
-KMONS:     B = place:D:5
+KMONS:     B = place:D:3
 : line_setup(_G)
 : lua_marker('~', props_marker {
 :           door_description_suffix=" to the Dungeon",
@@ -179,6 +177,7 @@ NAME:     line_temple
 TAGS:     line_temple
 # No Ashenzari.
 KFEAT:    b = altar_beogh
+KFEAT:    B = altar_bahamut_and_tiamat
 KFEAT:    c = altar_cheibriados
 KFEAT:    d = altar_dithmenos
 KFEAT:    e = altar_elyvilon
@@ -207,9 +206,9 @@ KFEAT:    1 = altar_the_shining_one
 :           door_description_suffix=" to the Temple",
 :           })
 MAP
-xxxxxxxxxxxxxxxxxxxxxxxxx
-~bcdefghjklmnoqrstuvwXyz1
-xxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxx
+~bBcdefghjklmnoqrstuvwXyz1
+xxxxxxxxxxxxxxxxxxxxxxxxxx
 ENDMAP
 
 
@@ -220,11 +219,11 @@ KITEM:    a = potion of curing q:4 ident:all, \
               potion of invisibility q:1 ident:all, \
               potion of magic q:2 ident:all
 KITEM:    b = scroll of blinking q:1 ident:all, \
-              scroll of amnesia q:2 ident:all, \
-              scroll of remove curse q:3 ident:all
+              potion of amnesia q:2 ident:all, \
+              scroll of bless item q:3 ident:all
 KITEM:    d = wand of iceblast charges:10 ident:all /\
               wand of acid charges:10 ident:all, \
-              staff of energy not_cursed ident:all
+              crystal ball of energy
 KITEM:    e = rapier plus:2 ego:electrocution ident:all not_cursed /\
            rapier plus:2 ego:draining ident:all not_cursed /\
            rapier plus:2 ego:venom ident:all not_cursed /\
@@ -274,8 +273,8 @@ ENDMAP
 
 NAME:     d_10
 TAGS:     d_10
-KMONS:    1 = place:D:10
-KMONS:    2 = place:D:13
+KMONS:    1 = place:D:5
+KMONS:    2 = place:D:6 / place:D:7
 : line_setup(_G)
 : lua_marker('~', props_marker {
 :           door_description_suffix=" to the Dungeon",
@@ -422,7 +421,7 @@ KITEM:    b = any weapon level:27 ident:all /\
           great mace plus:1 not_cursed ident:all /\
           demon whip plus:1 not_cursed ident:all w:5 /\
           giant spiked club plus:1 not_cursed ident:all /\
-          quick blade plus:3 not_cursed ident:all /\
+          tanto plus:3 not_cursed ident:all /\
           great sword plus:1 not_cursed ident:all /\
           double sword plus:1 not_cursed ident:all /\
           demon blade plus:1 not_cursed ident:all w:3 /\
@@ -461,7 +460,7 @@ ENDMAP
 
 NAME:     d_15
 TAGS:     d_15
-KMONS:    1 = place:D:15
+KMONS:    1 = place:D:$
 KMONS:    2 = place:Depths:1
 : line_setup(_G)
 : general_item_setup(_G)
@@ -1016,9 +1015,9 @@ NAME:     tomb_end
 TAGS:     tomb_end
 KMONS:    1 = guardian mummy
 KMONS:    2 = mummy priest
-KMONS:    3 = greater mummy
+KMONS:    3 = royal mummy
 KMONS:    4 = sphinx
-KMONS:    5 = greater mummy
+KMONS:    5 = royal mummy
 KITEM:    5 = golden rune of zot
 COLOUR:   # = lightgrey
 COLOUR:   12345 = brown

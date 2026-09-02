@@ -5,9 +5,18 @@
 
 #pragma once
 
-#include "ouch.h"
+#include <string>
+
+#include "kill-method-type.h"
+#include "maybe-bool.h"
+#include "monster.h"
+
+using std::string;
 
 #define XOM_CLOUD_TRAIL_TYPE_KEY "xom_cloud_trail_type"
+#define XOM_NAME_KEY             "xom_name"
+#define XOM_AX_TITLE_KEY         "xom_ax_title"
+#define XOM_DOOR_KEY             "xom_doors_attempted"
 
 struct item_def;
 
@@ -36,6 +45,7 @@ enum xom_event_type
     XOM_GOOD_ALLIES,
     XOM_GOOD_POLYMORPH,
     XOM_GOOD_TELEPORT,
+    XOM_GOOD_VITRIFY,
     XOM_GOOD_MUTATION,
     XOM_GOOD_LIGHTNING,
     XOM_GOOD_SCENERY,
@@ -51,10 +61,6 @@ enum xom_event_type
 
     // bad acts
     XOM_BAD_MISCAST_PSEUDO,
-    XOM_BAD_MISCAST_HARMLESS,
-    XOM_BAD_MISCAST_MINOR,
-    XOM_BAD_MISCAST_MAJOR,
-    XOM_BAD_MISCAST_CRITICAL,
     XOM_BAD_STATLOSS,
     XOM_BAD_TELEPORT,
     XOM_BAD_CHAOS_UPGRADE,
@@ -73,13 +79,15 @@ enum xom_event_type
     XOM_BAD_BLINK_MONSTERS,
     XOM_BAD_CHAOS_CLOUD,
     XOM_BAD_SWAP_MONSTERS,
-    XOM_LAST_BAD_ACT = XOM_BAD_SWAP_MONSTERS,
+    XOM_BAD_OPEN_DOORS,
+    XOM_LAST_BAD_ACT = XOM_BAD_OPEN_DOORS,
     XOM_LAST_REAL_ACT = XOM_LAST_BAD_ACT,
 
     XOM_PLAYER_DEAD = 100, // player already dead (shouldn't happen)
     NUM_XOM_EVENTS
 };
 
+bool xom_is_bored();
 void xom_tick();
 void xom_is_stimulated(int maxinterestingness,
                        xom_message_type message_type = XM_NORMAL,
@@ -100,7 +108,7 @@ xom_event_type xom_maybe_reverts_banishment(bool xom_banished = true,
 void xom_check_lost_item(const item_def& item);
 void xom_check_destroyed_item(const item_def& item);
 void xom_death_message(const kill_method_type killed_by);
-bool xom_saves_your_life(const kill_method_type death_type, const char *aux);
+bool xom_saves_your_life(const kill_method_type death_type);
 void xom_new_level_noise_or_stealth();
 
 string xom_effect_to_name(xom_event_type effect);

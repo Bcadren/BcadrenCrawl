@@ -16,7 +16,6 @@
 #include "database.h"
 #include "dbg-maps.h"
 #include "dbg-objstat.h"
-#include "dgn-overview.h"
 #include "dungeon.h"
 #include "end.h"
 #include "exclude.h"
@@ -36,7 +35,6 @@
 #include "menu.h"
 #include "outer-menu.h"
 #include "message.h"
-#include "misc.h"
 #include "mon-cast.h"
 #include "mon-death.h"
 #include "mutation.h"
@@ -45,7 +43,6 @@
 #include "ng-setup.h"
 #include "notes.h"
 #include "output.h"
-#include "place.h"
 #include "player-save-info.h"
 #include "shopping.h"
 #include "skills.h"
@@ -88,6 +85,8 @@ static void _initialize()
 
     rng::seed(); // don't use any chosen seed yet
 
+    clua.init_libraries();
+
     init_char_table(Options.char_set);
     init_show_table();
     init_monster_symbols();
@@ -113,8 +112,8 @@ static void _initialize()
     reset_all_monsters();
     init_anon();
 
-    igrd.init(NON_ITEM);
-    mgrd.init(NON_MONSTER);
+    env.igrid.init(NON_ITEM);
+    env.mgrid.init(NON_MONSTER);
     env.map_knowledge.init(map_cell());
     env.pgrid.init(terrain_property_t{});
 
@@ -207,30 +206,41 @@ static void _initialize()
 *
 *  Doesn't affect monsters behind glass, only those that would
 *  immediately have line-of-fire.
-*
-*  @param items_also whether to zap items as well as monsters.
 */
-static void _zap_los_monsters(bool items_also)
+static void _zap_los_monsters()
 {
+    const bool items_also = Hints.hints_events[HINT_SEEN_FIRST_OBJECT];
     for (radius_iterator ri(you.pos(), LOS_SOLID); ri; ++ri)
     {
         if (items_also)
         {
-            int item = igrd(*ri);
+            int item = env.igrid(*ri);
 
-            if (item != NON_ITEM && mitm[item].defined())
+            if (item != NON_ITEM && env.item[item].defined())
                 destroy_item(item);
         }
 
-        // If we ever allow starting with a friendly monster,
-        // we'll have to check here.
         monster* mon = monster_at(*ri);
-        if (mon == nullptr || !mons_is_threatening(*mon))
+        if (mon == nullptr || !mons_is_threatening(*mon) || mon->friendly())
             continue;
 
         dprf("Dismissing %s",
              mon->name(DESC_PLAIN, true).c_str());
 
+        // If a unique gets zapped, let it generate elsewhere
+        if (mons_is_or_was_unique(*mon))
+        {
+            you.unique_creatures.set(mon->type, false);
+            if (mons_is_elven_twin(mon))
+            {
+                if (monster* sibling = mons_find_elven_twin_of(mon))
+                {
+                    you.unique_creatures.set(sibling->type, false);
+                    sibling->flags |=MF_HARD_RESET;
+                    monster_die(*sibling, KILL_DISMISSED, NON_MONSTER, true, true);
+                }
+            }
+        }
         // Do a hard reset so the monster's items will be discarded.
         mon->flags |= MF_HARD_RESET;
         // Do a silent, wizard-mode monster_die() just to be extra sure the
@@ -242,6 +252,13 @@ static void _zap_los_monsters(bool items_also)
 static void _post_init(bool newc)
 {
     ASSERT(strwidth(you.your_name) <= MAX_NAME_LENGTH);
+
+    // XXX: now that the player is loaded, do a layout.
+    // This is necessary to ensure that the message window is positioned, in
+    // case there are any early game warning messages to be logged.
+#ifdef USE_TILE
+    tiles.resize();
+#endif
 
     clua.load_persist();
 
@@ -269,28 +286,32 @@ static void _post_init(bool newc)
 
         you.entering_level = false;
         you.transit_stair = DNGN_UNSEEN;
-        you.depth = 1;
-        // Abyssal Knights start out in the Abyss.
-        if (you.char_class == JOB_ABYSSAL_KNIGHT)
-            you.where_are_you = BRANCH_ABYSS;
-        else if (you.char_class == JOB_PRIEST)
-            you.where_are_you = BRANCH_START_TEMPLE;
-        else if (you.char_class == JOB_NOBLE)
-            you.where_are_you = BRANCH_START_MARKET;
-        else
-            you.where_are_you = root_branch;
+        you.depth = starting_absdepth();
+        you.where_are_you = root_branch;
+
+        if (!crawl_state.game_is_sprint())
+        {
+            // Abyssal Knights start out in the Abyss.
+            if (you.char_class == JOB_ABYSSAL_KNIGHT)
+                you.where_are_you = BRANCH_ABYSS;
+            else if (you.char_class == JOB_PRIEST)
+                you.where_are_you = BRANCH_START_TEMPLE;
+            else if (you.char_class == JOB_NOBLE)
+                you.where_are_you = BRANCH_START_MARKET;
+        }
     }
 
     // XXX: Any invalid level_id should do.
     level_id old_level;
     old_level.branch = NUM_BRANCHES;
 
-    load_level(you.entering_level ? you.transit_stair : DNGN_STONE_STAIRS_DOWN_I,
+    load_level(you.entering_level ? you.transit_stair :
+               you.char_class == JOB_DELVER ? DNGN_STONE_STAIRS_UP_I : DNGN_STONE_STAIRS_DOWN_I,
                you.entering_level ? LOAD_ENTER_LEVEL :
                newc               ? LOAD_START_GAME : LOAD_RESTART_GAME,
                old_level);
 
-    if (newc && you.char_class == JOB_ABYSSAL_KNIGHT)
+    if (newc && you.where_are_you == BRANCH_ABYSS)
         generate_abyss();
 
 #ifdef DEBUG_DIAGNOSTICS
@@ -311,13 +332,18 @@ static void _post_init(bool newc)
     you.redraw_armour_class = true;
     you.redraw_evasion      = true;
     you.redraw_experience   = true;
-    you.redraw_quiver       = true;
+    you.redraw_noise        = true;
     you.wield_change        = true;
+    you.redraw_resists      = true;
+    you.gear_change         = true;
+    quiver::set_needs_redraw();
+
 
     // Start timer on session.
     you.last_keypress_time = chrono::system_clock::now();
 
-#ifdef CLUA_BINDINGS
+    // in principle everything here might be skippable if CLUA_BINDINGS is not
+    // defined, but do it anyways for consistency with normal builds.
     clua.runhook("chk_startgame", "b", newc);
 
     read_init_file(true);
@@ -327,7 +353,6 @@ static void _post_init(bool newc)
     init_char_table(Options.char_set);
     init_show_table();
     init_monster_symbols();
-#endif
 
 #ifdef USE_TILE
     init_player_doll();
@@ -336,28 +361,33 @@ static void _post_init(bool newc)
 #endif
     update_player_symbol();
 
+    if (newc)
+        quiver::on_newchar(); // needs to happen after init file is read
+
     draw_border();
     new_level(!newc);
     update_turn_count();
     update_vision_range();
-    you.xray_vision = !!you.duration[DUR_SCRYING];
+    you.xray_vision = !!you.attribute[ATTR_SCRYING];
     init_exclusion_los();
     ash_check_bondage(false);
 
-    trackers_init_new_level(false);
+    trackers_init_new_level();
 
     if (newc) // start a new game
     {
         // For a new game, wipe out monsters in LOS, and
         // for new hints mode games also the items.
-        _zap_los_monsters(Hints.hints_events[HINT_SEEN_FIRST_OBJECT]);
+        _zap_los_monsters();
     }
 
     // This just puts the view up for the first turn.
     you.redraw_title = true;
     you.redraw_status_lights = true;
     print_stats();
+    update_screen();
     viewwindow();
+    update_screen();
 
     activate_notes(true);
 
@@ -409,9 +439,9 @@ static void _construct_game_modes_menu(shared_ptr<OuterMenu>& container)
 
 #ifdef USE_TILE_LOCAL
         auto hbox = make_shared<Box>(Box::HORZ);
-        hbox->align_cross = Widget::Align::CENTER;
+        hbox->set_cross_alignment(Widget::Align::CENTER);
         auto tile = make_shared<Image>();
-        tile->set_tile(tile_def(tileidx_gametype(entry.id), TEX_GUI));
+        tile->set_tile(tile_def(tileidx_gametype(entry.id)));
         tile->set_margin_for_sdl(0, 6, 0, 0);
         hbox->add_child(move(tile));
         hbox->add_child(label);
@@ -433,13 +463,13 @@ static void _construct_game_modes_menu(shared_ptr<OuterMenu>& container)
     }
 }
 
-static shared_ptr<MenuButton> _make_newgame_button(shared_ptr<OuterMenu>& container, int num_chars)
+static shared_ptr<MenuButton> _make_newgame_button(int num_chars)
 {
     auto label = make_shared<Text>(formatted_string("New Game", WHITE));
 
 #ifdef USE_TILE_LOCAL
     auto hbox = make_shared<Box>(Box::HORZ);
-    hbox->align_cross = Widget::Align::CENTER;
+    hbox->set_cross_alignment(Widget::Align::CENTER);
     hbox->add_child(label);
     label->set_margin_for_sdl(0,0,0,TILE_Y+6);
     hbox->min_size().height = TILE_Y;
@@ -463,7 +493,7 @@ static void _construct_save_games_menu(shared_ptr<OuterMenu>& container,
     for (unsigned int i = 0; i < chars.size(); ++i)
     {
         auto hbox = make_shared<Box>(Box::HORZ);
-        hbox->align_cross = Widget::Align::CENTER;
+        hbox->set_cross_alignment(Widget::Align::CENTER);
 
 #ifdef USE_TILE_LOCAL
         auto tile = make_shared<ui::PlayerDoll>(chars.at(i).doll);
@@ -504,7 +534,7 @@ static void _construct_save_games_menu(shared_ptr<OuterMenu>& container,
 
     if (!chars.empty())
     {
-        auto btn = _make_newgame_button(container, chars.size());
+        auto btn = _make_newgame_button(chars.size());
         container->add_button(move(btn), 0, (int)chars.size());
     }
 }
@@ -525,21 +555,21 @@ static bool _game_defined(const newgame_def& ng)
            && ng.job != JOB_UNKNOWN;
 }
 
-// TODO: should be game_type. Also, does this really need to be static?
-// maybe part of crawl_state?
-static int startup_menu_game_type = GAME_TYPE_UNSPECIFIED;
-
 class UIStartupMenu : public Widget
 {
 public:
-    UIStartupMenu(newgame_def& _ng_choice, const newgame_def &_defaults) : done(false), end_game(false), ng_choice(_ng_choice), defaults(_defaults) {
+    UIStartupMenu(newgame_def& _ng_choice, const newgame_def &_defaults)
+                : done(false), end_game(false), ng_choice(_ng_choice),
+                  defaults(_defaults),
+                  selected_game_type(crawl_state.last_type)
+    {
         chars = find_all_saved_characters();
         num_saves = chars.size();
         input_string = crawl_state.default_startup_name;
 
         m_root = make_shared<Box>(Box::VERT);
-        m_root->_set_parent(this);
-        m_root->align_cross = Widget::Align::STRETCH;
+        add_internal_child(m_root);
+        m_root->set_cross_alignment(Widget::Align::STRETCH);
 
         auto about = make_shared<Text>(opening_screen());
         about->set_margin_for_crt(0, 0, 1, 0);
@@ -610,20 +640,24 @@ public:
             grid->row_flex_grow(2) = 1;
         }
 
-        game_modes_menu->on_button_activated =
-        save_games_menu->on_button_activated =
-            [this](int id) { this->menu_item_activated(id); };
+        m_root->on_activate_event([this](const ActivateEvent& event) {
+            const auto button = static_pointer_cast<const MenuButton>(event.target());
+            this->menu_item_activated(button->id);
+            return true;
+        });
 
+        // TODO: focus events should probably not bubble, but there should be
+        // some way to capture them...
         for (auto &w : game_modes_menu->get_buttons())
         {
-            w->on(Widget::slots.event, [w, this](wm_event ev) {
-                return this->button_event_hook(ev, w);
+            w->on_focusin_event([w, this](const FocusEvent&) {
+                return this->on_button_focusin(*w);
             });
         }
         for (auto &w : save_games_menu->get_buttons())
         {
-            w->on(Widget::slots.event, [w, this](wm_event ev) {
-                return this->button_event_hook(ev, w);
+            w->on_focusin_event([w, this](const FocusEvent&) {
+                return this->on_button_focusin(*w);
             });
         }
 
@@ -647,7 +681,7 @@ public:
         {
             instructions_text +=
                     "<white>[tab]</white> quick-start last combo: "
-                    + defaults.name + " the "
+                    + (defaults.name.size() ? (defaults.name + " the ") : "")
                     + newgame_char_description(defaults) + "\n";
         }
         instructions_text +=
@@ -671,7 +705,7 @@ public:
 
     bool done;
     bool end_game;
-    virtual shared_ptr<Widget> get_child_at_offset(int x, int y) override {
+    virtual shared_ptr<Widget> get_child_at_offset(int, int) override {
         return m_root;
     }
 
@@ -681,43 +715,38 @@ private:
     string input_string;
     vector<player_save_info> chars;
     int num_saves;
+    bool first_action = true;
 
-    bool button_event_hook(const wm_event& ev, MenuButton* btn)
+    bool on_button_focusin(const MenuButton& btn)
     {
-        if (ev.type == WME_FOCUSIN)
+        selected_game_type = btn.id;
+        switch (selected_game_type)
         {
-            startup_menu_game_type = btn->id;
-            switch (startup_menu_game_type)
-            {
-            case GAME_TYPE_ARENA:
-                break;
-            case GAME_TYPE_NORMAL:
-            case GAME_TYPE_CUSTOM_SEED:
-            case GAME_TYPE_TUTORIAL:
-            case GAME_TYPE_SPRINT:
-            case GAME_TYPE_HINTS:
-                // If a game type is chosen, the user expects
-                // to start a new game. Just blanking the name
-                // it it clashes for now.
-                if (_find_save(chars, input_string) != -1)
-                    input_string = "";
-                break;
-            case GAME_TYPE_HIGH_SCORES:
-                break;
+        case GAME_TYPE_NORMAL:
+        case GAME_TYPE_CUSTOM_SEED:
+        case GAME_TYPE_TUTORIAL:
+        case GAME_TYPE_SPRINT:
+        case GAME_TYPE_HINTS:
+            // If a game type is chosen, the user expects to start a new game.
+            // Just blanking the name it it clashes for now.
+            if (_find_save(chars, input_string) != -1)
+                input_string = "";
+            break;
 
-            case GAME_TYPE_INSTRUCTIONS:
-                break;
+        case GAME_TYPE_ARENA:
+        case GAME_TYPE_HIGH_SCORES:
+        case GAME_TYPE_INSTRUCTIONS:
+            break;
 
-            default:
-                int save_number = startup_menu_game_type - NUM_GAME_TYPE;
-                if (save_number < num_saves)
-                    input_string = chars.at(save_number).name;
-                else // new game
-                    input_string = "";
-                break;
-            }
-            input_text->set_text(formatted_string(input_string, WHITE));
+        default:
+            int save_number = selected_game_type - NUM_GAME_TYPE;
+            if (save_number < num_saves)
+                input_string = chars.at(save_number).name;
+            else // new game
+                input_string = "";
+            break;
         }
+        input_text->set_text(formatted_string(input_string, WHITE));
         return false;
     }
 
@@ -729,6 +758,8 @@ private:
     shared_ptr<Switcher> descriptions;
     shared_ptr<OuterMenu> game_modes_menu;
     shared_ptr<OuterMenu> save_games_menu;
+    // not a `game_type` because it is used for save #s as well
+    int selected_game_type;
 };
 
 SizeReq UIStartupMenu::_get_preferred_size(Direction dim, int prosp_width)
@@ -757,12 +788,12 @@ void UIStartupMenu::on_show()
     int save = _find_save(chars, input_string);
     // don't use non-enum game_type values across restarts, as the list of
     // saves may have changed on restart.
-    if (startup_menu_game_type >= NUM_GAME_TYPE)
-        startup_menu_game_type = GAME_TYPE_UNSPECIFIED;
+    if (selected_game_type >= NUM_GAME_TYPE)
+        selected_game_type = GAME_TYPE_UNSPECIFIED;
 
     int id;
-    if (startup_menu_game_type != GAME_TYPE_UNSPECIFIED)
-        id = startup_menu_game_type;
+    if (selected_game_type != GAME_TYPE_UNSPECIFIED)
+        id = selected_game_type;
     else if (save != -1)
     {
         // save game id is offset by NUM_GAME_TYPE
@@ -780,14 +811,8 @@ void UIStartupMenu::on_show()
     else if (auto focus2 = save_games_menu->get_button_by_id(id))
         save_games_menu->scroll_button_into_view(focus2);
 
-    Layout *layout = nullptr;
-    for (Widget *w = _get_parent(); w && !layout; w = w->_get_parent())
-        layout = dynamic_cast<Layout*>(w);
-    ASSERT(layout);
-    layout->add_event_filter([this](wm_event ev) {
-        if (ev.type != WME_KEYDOWN)
-            return false;
-        const int keyn = ev.key.keysym.sym;
+    on_hotkey_event([this](const KeyEvent& ev) {
+        const auto keyn = ev.key();
         bool changed_name = false;
 
         if (key_is_escape(keyn) || keyn == CK_MOUSE_CMD)
@@ -810,17 +835,29 @@ void UIStartupMenu::on_show()
             replay_messages_during_startup();
             return true;
         }
+        else if (keyn == '*')
+        {
+            input_string = newgame_random_name();
+            changed_name = true;
+        }
         else if (keyn == CONTROL('U'))
         {
             input_string = "";
             changed_name = true;
         }
 
+        if (keyn == ' ' && first_action)
+        {
+            first_action = false;
+            input_string = "";
+            changed_name = true;
+        }
         // handle the non-action keys by hand to poll input
         // Only consider alphanumeric keys and -_ .
-        if (iswalnum(keyn) || keyn == '-' || keyn == '.'
+        else if (iswalnum(keyn) || keyn == '-' || keyn == '.'
             || keyn == '_' || keyn == ' ')
         {
+            first_action = false;
             if (strwidth(input_string) < MAX_NAME_LENGTH)
             {
                 input_string += stringize_glyph(keyn);
@@ -829,6 +866,12 @@ void UIStartupMenu::on_show()
         }
         else if (keyn == CK_BKSP)
         {
+            if (first_action)
+            {
+                first_action = false;
+                input_string = "";
+                changed_name = true;
+            }
             if (!input_string.empty())
             {
                 input_string.erase(input_string.size() - 1);
@@ -879,13 +922,11 @@ void UIStartupMenu::menu_item_activated(int id)
         return;
 
     case GAME_TYPE_INSTRUCTIONS:
+        show_help();
+        return;
+
     case GAME_TYPE_HIGH_SCORES:
-        {
-            if (id == GAME_TYPE_INSTRUCTIONS)
-                show_help();
-            else
-                show_hiscore_table();
-        }
+        show_hiscore_table();
         return;
 
     default:
@@ -966,7 +1007,7 @@ bool startup_step()
     crawl_state.type = choice.type;
 
     newgame_def defaults = read_startup_prefs();
-    if (crawl_state.default_startup_name.size() == 0)
+    if (crawl_state.default_startup_name.size() == 0 && Options.remember_name)
         crawl_state.default_startup_name = defaults.name;
 
     // Set the crawl_state gametype to the requested game type. This must
@@ -1050,7 +1091,8 @@ bool startup_step()
                                     // setup_game.
         write_newgame_options_file(choice);
     }
-    crawl_state.default_startup_name = you.your_name;
+    if (Options.remember_name)
+        crawl_state.default_startup_name = you.your_name;
 
     _post_init(newchar);
 

@@ -103,11 +103,9 @@ static void _automap_from(int x, int y, int mutated)
 
 static int _map_quality()
 {
-    int passive = you.get_mutation_level(MUT_PASSIVE_MAPPING);
-    // the explanation of this 51 vs max_piety of 200 is left as
-    // an exercise to the reader
+    int passive = you.get_mutation_level(MUT_PASSIVE_MAPPING) * 2;
     if (have_passive(passive_t::auto_map))
-        passive = max(passive, you.piety / 51);
+        passive = max(passive, (you.piety - 1) / 50);
     return passive;
 }
 
@@ -123,7 +121,7 @@ void reautomap_level()
 
 void set_terrain_seen(const coord_def pos)
 {
-    const dungeon_feature_type feat = grd(pos);
+    const dungeon_feature_type feat = env.grid(pos);
     map_cell* cell = &env.map_knowledge(pos);
 
     // First time we've seen a notable feature.
@@ -133,7 +131,7 @@ void set_terrain_seen(const coord_def pos)
 
         if (!is_boring_terrain(feat))
         {
-            string desc = feature_description_at(pos, false, DESC_A);
+            string desc = feature_description_at(pos, false, DESC_A) + ".";
             take_note(Note(NOTE_SEEN_FEAT, 0, 0, desc));
         }
     }
@@ -327,6 +325,12 @@ bool map_cell::update_cloud_state()
     return false;
 }
 
+/**
+ * Find the known map bounds as a pair of coordinates. Returns (-1,-1) x (-1,-1)
+ * if the map is not known at all (this state shouldn't arise during normal
+ * gameplay, but may arise in weird limiting cases, like during levelgen or
+ * in tests).
+ */
 std::pair<coord_def, coord_def> known_map_bounds() {
     int min_x = GXM, max_x = 0, min_y = 0, max_y = 0;
     bool found_y = false;
@@ -351,6 +355,8 @@ std::pair<coord_def, coord_def> known_map_bounds() {
                     max_x = i;
             }
         }
+    if (!found_y)
+        min_x = max_x = min_y = max_y = -1;
 
     return std::make_pair(coord_def(min_x, min_y), coord_def(max_x, max_y));
 }

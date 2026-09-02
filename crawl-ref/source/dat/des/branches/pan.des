@@ -46,21 +46,21 @@ function pan_lord_setup(_G, name)
 
     local monsters = {
         Mnoleg = "large abomination w:200 / " ..
-                 "neqoxec w:200 / chaos spawn w:200 / " ..
-                 "cacodemon w:300 / tormentor / " ..
+                 "neqoxec w:200 / chaos elemental w:200 / " ..
+                 "titivilus w:300 / poenydio / " ..
                  "tentacled monstrosity w:5 / " ..
                  "floating eye / golden eye band / eye of devastation / " ..
                  "eye of draining / shining eye / very ugly thing band / "..
-                 "monstrous corrupter",
-        ['Lom Lobon'] = "hellwing w:300 / sixfirhy w:100 / " ..
-                 "smoke demon w:300 / blizzard demon w:100 / " ..
-                 "green death w:200 / glowing orange brain / rakshasa / " ..
+                 "monstrous corrupter / pulsating lump band",
+        ['Lom Lobon'] = "vlerk w:300 / sixfirhy w:100 / " ..
+                 "mygdarth w:300 / cenysus w:100 / " ..
+                 "gwyrdd w:200 / cacodemon w:50 / glowing orange brain / rakshasa / " ..
                  "wizard / draconian annihilator / deep elf annihilator / " ..
                  "titan w:5 / lich w:5 / gelid blood saint",
-        Cerebov = "efreet / orange demon / sun demon / ynoxinul / balrug / " ..
-                  "brimstone fiend w:1 / infernal warmonger w:1",
-        ['Gloorx Vloq'] = "skeleton w:400 / soul eater w:200 / " ..
-                 "lorocyproca w:100 / executioner w:300 / " ..
+        Cerebov = "efreet / nychdod / sturnulos / ynoxinul / balrug / " ..
+                  "rhuddgoch w:1 / infernal warmonger w:1",
+        ['Gloorx Vloq'] = "skeleton w:400 / saelneytandi w:200 / " ..
+                 "lorocyproca w:100 / oxarmordth w:300 / " ..
                  "demonic crawler / shadow wraith / " ..
                  "unseen horror / torturous black sun"
     }
@@ -184,10 +184,8 @@ end
 
 function pan_entry_feature(e, glyph)
     e.tags("extra luniq_enter_pan chance_enter_pan")
--- Late D entries for save compat, remove when TAG_MAJOR_VERSION > 34
-    e.depth("Depths, D:21-")
+    e.depth("Depths")
     e.depth_chance("Depths:3", 10000)
-    e.depth_chance("D:24", 10000)
     e.chance(2500)
     e.kfeat(glyph .. " = enter_pandemonium")
 end
@@ -199,16 +197,16 @@ function pan_entry_vault_contents(e, glyph)
     if e.is_validating() then return end
     if crawl.x_chance_in_y(you.depth() + 3, you.depth() + 5) then
         e.tags("luniq_hellpanabyss_threat_entry")
-        e.kmons(glyph .. " = green death / blizzard demon / balrug / "
-                      .. "   cacodemon / hell beast / hellion / reaper / "
-                      .. "   lorocyproca / tormentor / shadow demon")
+        e.kmons(glyph .. " = gwyrdd / cenysus / balrug / "
+                      .. "   titivilus / helvityr / hellion / reaper / "
+                      .. "   lorocyproca / poenydio / cysgodol")
     else
         e.subst("12 = .")
         e.kmons(glyph .. " = lesser demon")
     end
 end
 
-function pan_declare_demonic_rune(e)
+function pan_declare_demonic_rune()
   crawl.mpr("The tension of great conflict fills the air!", "warning")
   crawl.mpr("The demonic rune of Zot may be found here.")
 end
@@ -528,7 +526,7 @@ ORIENT:    northeast
 TAGS:      mnoleg uniq_mnoleg
 : pan_lord_setup(_G, 'Mnoleg')
 TILE:      c = dngn_stone_wall_yellow
-MONS:      patrolling Mnoleg, neqoxec, cacodemon, tentacled monstrosity
+MONS:      patrolling Mnoleg, neqoxec, titivilus, tentacled monstrosity
 NSUBST:    2 = 4:3 / 3 = 234 / *:2
 epilogue{{
   pan_lord_epilogue('Mnoleg')
@@ -573,9 +571,9 @@ TAGS:      mnoleg uniq_mnoleg
 : pan_lord_setup(_G, 'Mnoleg')
 TILE:      c = dngn_stone_wall_yellow
 MONS:      patrolling Mnoleg
-MONS:      neqoxec, ugly thing, large abomination, neqoxec
-MONS:      very ugly thing, tormentor
-KMONS:     A = cacodemon
+MONS:      neqoxec, pulsating lump, large abomination, neqoxec
+MONS:      very ugly thing, poenydio
+KMONS:     A = titivilus
 KMONS:     B = tentacled monstrosity
 SUBST:     D = 5:20 6 7 A B
 NSUBST:    q = 2:6 / *:.
@@ -630,8 +628,8 @@ TILE:       c = dngn_stone_wall_yellow
 MONS:       patrolling mnoleg
 MONS:       floating eye / golden eye / eye of devastation / \
             eye of draining / shining eye
-MONS:       w:3 large abomination / w:2 tentacled monstrosity
-MONS:       cacodemon
+MONS:       large abomination
+MONS:       titivilus
 MONS:       neqoxec
 NSUBST:     C = 1:4 / *:N
 NSUBST:     N = 2:4 / *:5
@@ -691,8 +689,8 @@ TILE:    c = dngn_stone_wall_yellow
 SHUFFLE: Od, 1e
 KFEAT:   d = .
 KFEAT:   e = .
-MONS:    patrolling Mnoleg, patrolling cacodemon
-MONS:    neqoxec, tentacled monstrosity, large abomination, very ugly thing band
+MONS:    patrolling Mnoleg, patrolling titivilus
+MONS:    neqoxec, tentacled monstrosity, large abomination, very ugly thing band / pulsating lump band
 epilogue{{
   pan_lord_epilogue('Mnoleg')
 }}
@@ -739,10 +737,10 @@ TAGS:    mnoleg uniq_mnoleg
 : pan_lord_setup(_G, 'Mnoleg')
 NSUBST:  O = 1:O / *:|
 TILE:    c = dngn_stone_wall_yellow
-MONS:    patrolling Mnoleg, patrolling cacodemon
+MONS:    patrolling Mnoleg, patrolling titivilus
 MONS:    neqoxec, tentacled monstrosity, large abomination
 MONS:    very ugly thing band w:20 / floating eye / golden eye band / \
-         great orb of eyes / shining eye
+         great orb of eyes / shining eye / pulsating lump band w:30
 epilogue{{
   pan_lord_epilogue('Mnoleg')
 }}
@@ -834,7 +832,7 @@ TAGS:      lom_lobon no_pool_fixup uniq_lom_lobon
 ORIENT:    northwest
 : pan_lord_setup(_G, 'Lom Lobon')
 MONS:      patrolling Lom Lobon
-MONS:      blizzard demon, green death, wizard, draconian annihilator
+MONS:      cenysus, gwyrdd, wizard, draconian annihilator
 MONS:      sixfirhy
 SUBST:     0 = 23444445566
 NSUBST:    Q = 1:O / *:4
@@ -958,7 +956,7 @@ ORIENT:  north
 MONS: patrolling Lom Lobon
 MONS: draconian annihilator / deep elf annihilator / \
       wizard w:20 / rakshasa w:20 / glowing orange brain / \
-      blizzard demon / green death / titan w:5 / \
+      cenysus / gwyrdd / titan w:5 / \
       spriggan air mage w:5 / lich w:5
 SUBST:   W = ww.
 SUBST:   - = ..w
@@ -1015,10 +1013,10 @@ ORIENT:  west
 : pan_lord_setup(_G, 'Lom Lobon')
 SHUFFLE: O2
 MONS:    patrolling Lom Lobon, patrolling titan, patrolling wind drake
-MONS:    blizzard demon / titan / spriggan air mage / storm dragon
+MONS:    cenysus / titan / spriggan air mage / storm dragon
 MONS:    draconian annihilator / deep elf annihilator / \
          wizard w:20 / rakshasa w:20 / glowing orange brain / \
-         blizzard demon / green death / titan w:5 / \
+         cenysus / gwyrdd / titan w:5 / \
          spriggan air mage w:5 / lich w:5
 epilogue{{
   pan_lord_epilogue('Lom Lobon')
@@ -1074,7 +1072,7 @@ NAME:      cerebov
 TAGS:      cerebov uniq_cerebov
 ORIENT:    northeast
 : pan_lord_setup(_G, 'Cerebov')
-MONS:      patrolling Cerebov, Balrug, brimstone fiend
+MONS:      patrolling Cerebov, Balrug, rhuddgoch
 epilogue{{
   pan_lord_epilogue('Cerebov')
 }}
@@ -1118,8 +1116,8 @@ TAGS:      cerebov patrolling uniq_cerebov
 ORIENT:    north
 : pan_lord_setup(_G, 'Cerebov')
 TILE:      v = dngn_metal_wall_brown
-MONS:      patrolling Cerebov, balrug, brimstone fiend
-MONS:      red devil, sun demon, crimson imp
+MONS:      patrolling Cerebov, balrug, rhuddgoch
+MONS:      cythraul, sturnulos, llaibwca
 epilogue{{
   pan_lord_epilogue('Cerebov')
 }}
@@ -1172,7 +1170,7 @@ SUBST:      L : lll.
 SUBST:      U : W., W : V., V : v.
 KPROP:      l = no_cloud_gen
 TILE:       v = dngn_metal_wall_brown
-MONS:       Cerebov, balrug, brimstone fiend, sun demon
+MONS:       Cerebov, balrug, rhuddgoch, sturnulos
 NSUBST:     Q = 1:3 / 2:|
 NSUBST:     B = 3:2 / 3:4
 NSUBST:     C = 2:2 / 2:|
@@ -1225,8 +1223,8 @@ NAME:   cerebov_grunt
 TAGS:   cerebov uniq_cerebov
 ORIENT: northwest
 : pan_lord_setup(_G, 'Cerebov')
-MONS:   patrolling Cerebov, balrug, brimstone fiend
-MONS:   sun demon, red devil / crimson imp w:20
+MONS:   patrolling Cerebov, balrug, rhuddgoch
+MONS:   sturnulos, cythraul / llaibwca w:20
 epilogue{{
   pan_lord_epilogue('Cerebov')
 }}
@@ -1272,7 +1270,7 @@ TAGS:   cerebov uniq_cerebov
 ORIENT: north
 : pan_lord_setup(_G, 'Cerebov')
 NSUBST: O = 1:O / *:|
-MONS:   patrolling Cerebov, balrug, brimstone fiend, sun demon
+MONS:   patrolling Cerebov, balrug, rhuddgoch, sturnulos
 epilogue{{
   pan_lord_epilogue('Cerebov')
 }}
@@ -1313,7 +1311,7 @@ ORIENT:    southwest
 : pan_lord_setup(_G, 'Gloorx Vloq')
 TILE:      c = dngn_stone_wall_darkgray
 SHUFFLE:   1O
-MONS:      patrolling Gloorx Vloq, Executioner, curse skull
+MONS:      patrolling Gloorx Vloq, oxarmordth, curse skull
 MONS:      demonic crawler, shadow wraith
 epilogue{{
   pan_lord_epilogue('Gloorx Vloq')
@@ -1355,8 +1353,8 @@ TAGS:      gloorx_vloq uniq_gloorx_vloq
 ORIENT:    southeast
 : pan_lord_setup(_G, 'Gloorx Vloq')
 TILE:      c = dngn_stone_wall_darkgray
-MONS:      patrolling Gloorx Vloq, Executioner, curse skull
-MONS:      soul eater, shadow wraith, unseen horror
+MONS:      patrolling Gloorx Vloq, oxarmordth, curse skull
+MONS:      saelneytandi, shadow wraith, unseen horror
 epilogue{{
   pan_lord_epilogue('Gloorx Vloq')
 }}
@@ -1407,7 +1405,7 @@ SUBST:      C : ., d : +
 : end
 TILE:       c = dngn_stone_wall_darkgray
 MONS:       patrolling Gloorx Vloq
-MONS:       executioner, curse skull, shadow demon
+MONS:       oxarmordth, curse skull, cysgodol
 MONS:       shadow wraith, demonic crawler
 KMONS:      O = demonic crawler
 epilogue{{
@@ -1453,7 +1451,7 @@ TAGS:   gloorx_vloq uniq_gloorx_vloq
 ORIENT: west
 : pan_lord_setup(_G, 'Gloorx Vloq')
 TILE:   c = dngn_stone_wall_darkgray
-MONS:   patrolling Gloorx Vloq, Executioner, curse skull, demonic crawler, shadow wraith
+MONS:   patrolling Gloorx Vloq, oxarmordth, curse skull, demonic crawler, shadow wraith
 epilogue{{
   pan_lord_epilogue('Gloorx Vloq')
 }}
@@ -1502,7 +1500,7 @@ TAGS:   gloorx_vloq uniq_gloorx_vloq
 ORIENT: centre
 : pan_lord_setup(_G, 'Gloorx Vloq')
 TILE:   c = dngn_stone_wall_darkgray
-MONS:   patrolling Gloorx Vloq, Executioner, curse skull
+MONS:   patrolling Gloorx Vloq, oxarmordth, curse skull
 MONS:   demonic crawler, shadow wraith
 epilogue{{
   pan_lord_epilogue('Gloorx Vloq')
@@ -2366,7 +2364,7 @@ WEIGHT: 1
 KMONS:  p = human / elf / orc / naga / centaur / draconian / ogre / \
             minotaur / troll / kobold / mummy / ghoul / spriggan / felid / \
             deep dwarf / octopode / vampire / base draconian / demigod / \
-            demonspawn / merfolk / halfling / gargoyle / formicid / vine stalker
+            demonspawn / merfolk / gargoyle / formicid / vine stalker
 NSUBST: t = 10:p / *:', b = 10:p / *:'
 KPROP:  p' = no_tele_into
 : pan_demonic_rune(_G, 'P', true)
@@ -2513,14 +2511,16 @@ ENDMAP
 #    these relatively large floating vaults (and die_on_error, aside
 #    from being insufficient, shows player-visible error messages) -
 #    some validator check is needed for the concept to work.
-#  * pan_declare_demonic_rune produces messages every time the level
-#    is rebuilt due to connectivity failures, and should also use
-#    the same validator check.
 NAME:   pan_demonic_rune_highlights
+# mark this as removed so that it doesn't get tested, remove if this ever is
+# made to work:
+TAGS:   removed
 ORIENT: float
 WEIGHT: 0
 : pan_highlights_setup(_G)
-: pan_declare_demonic_rune(_G)
+epilogue{{
+  pan_declare_demonic_rune()
+}}
 
 # Concept inherited from lemuel_draining_boxes.
 NAME:   regret_index_pan_draining_boxed
@@ -2538,6 +2538,7 @@ KFEAT:  m = iron_grate
 KFEAT:  { = {
 SUBST:  n : m.
 KMASK:  2O = opaque
+KPROP:  2 = no_tele_into
 MAP
   ...................
   .............mmm...
@@ -2689,13 +2690,14 @@ ENDMAP
 NAME:    lemuel_hall_of_pain
 TAGS:    pan_fixed_rune_pain pan_fixed_lure_pain
 ORIENT:  float
-MONS:    pandemonium lord, brimstone fiend
-MONS:    tormentor, smoke demon, any demon
+MONS:    pandemonium lord, rhuddgoch
+MONS:    poenydio, mygdarth, any demon
 : if demonic_rune_vault_is_decoy() then
 KITEM:   O = superb_item / demonic rune of zot mimic
 : else
 KITEM:   O = demonic rune of zot
 : end
+KPROP:   4 = no_tele_into
 KFEAT:   m = iron_grate
 KFEAT:   { = {
 NSUBST:  3 = 6:3 / *:.
@@ -2722,7 +2724,7 @@ ccccccccccccccc
 ENDMAP
 
 NAME:    serial_pan_pain_one
-MONS:    smoke demon, tormentor, any demon
+MONS:    mygdarth, poenydio, any demon
 KMASK:   1' = opaque
 : serial_pan_setup(_G, "pain")
 MAP
@@ -2735,7 +2737,7 @@ xxxxxxxxxx
 ENDMAP
 
 NAME:    serial_pan_pain_two
-MONS:    smoke demon, tormentor, any demon
+MONS:    mygdarth, poenydio, any demon
 KMASK:   1 = opaque
 : serial_pan_setup(_G, "pain")
 MAP
@@ -2753,8 +2755,8 @@ NAME:   grunt_pan_frozen_over
 TAGS:   pan_fixed_rune_frozen pan_fixed_lure_frozen
 TAGS:   no_pool_fixup no_monster_gen transparent
 ORIENT: float
-MONS:   blizzard demon, nonbase gelid demonspawn
-MONS:   juggernaut simulacrum, ice devil
+MONS:   cenysus, nonbase gelid demonspawn
+MONS:   juggernaut simulacrum, rypuiwel
 KMONS:  56 = ice statue
 KMONS:  P = pandemonium lord
 : if demonic_rune_vault_is_decoy() then
@@ -2782,7 +2784,7 @@ ENDMAP
 NAME:   serial_pan_frozen_one
 TAGS:   no_pool_fixup
 MONS:   any demon
-KMONS:  2 = blizzard demon
+KMONS:  2 = cenysus
 KFEAT:  2 = w
 : serial_pan_setup(_G, "frozen")
 MAP
@@ -2801,7 +2803,7 @@ ENDMAP
 NAME:   serial_pan_frozen_two
 TAGS:   no_pool_fixup
 MONS:   any demon
-KMONS:  2 = blizzard demon
+KMONS:  2 = cenysus
 KFEAT:  2 = w
 : serial_pan_setup(_G, "frozen")
 MAP
@@ -2818,7 +2820,7 @@ ENDMAP
 NAME:   serial_pan_frozen_three
 TAGS:   no_pool_fixup
 MONS:   any demon
-KMONS:  2 = patrolling blizzard demon
+KMONS:  2 = patrolling cenysus
 KFEAT:  2 = w
 : serial_pan_setup(_G, "frozen")
 MAP
@@ -2842,7 +2844,7 @@ MONS:    rakshasa, corrupter, blood saint
 MONS:    dancing weapon ; demon trident good_item ego:distortion
 MONS:    dancing weapon ; lajatang good_item ego:distortion
 MONS:    dancing weapon ; demon blade good_item ego:distortion
-MONS:    brimstone fiend / ice fiend / tzitzimitl / hell sentinel
+MONS:    rhuddgoch / Vetrifl / tzitzimitl / gwarchodwr
 KMONS:   p = demonic plant
 KMONS:   P = pandemonium lord
 ITEM:    any potion
@@ -2867,8 +2869,7 @@ FTILE:   D.xp01234567dO = floor_pebble
 FTILE:   _{+ = floor_hall
 TILE:    D = dngn_disco_ball
 : set_feature_name("granite_statue", "weirdly glowing ball")
-MARKER:  D = lua:props_marker { veto_dig="veto", \
-                                veto_shatter="veto" }
+MARKER:  D = lua:props_marker { veto_destroy="veto" }
 MAP
                xx+xx
                xp.px
@@ -2885,11 +2886,11 @@ xp.x.....................---------------_....xXXX
 xxxx.....................---------------_.d6.xXXX
    x.xxxxxxxxxxxxxxxxx..x---------------_....xXXX
    x.x0d0x.d0x0d.x0d0x..x---------------xxxxxxXXX
-   x.x0..x0..x..0x..0x..x-------------1-x
-   x._..............._..x2-------------3x
-   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+   x.x0..x0..x..0x..0x..x-------------1-xxxxxxXXX
+   x._..............._..x2-------------3xxxxxxXXX
+   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxXXX
+   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ENDMAP
 
 NAME: serial_pan_fixed_disco_one
@@ -2968,8 +2969,8 @@ ENDMAP
 
 NAME:   pan_surprise
 TAGS:   extra
-KMONS:  1 = executioner
-# It may be a surprise for the executioner as well if the player has high
+KMONS:  1 = oxarmordth
+# It may be a surprise for the oxarmordth as well if the player has high
 # stealth -- an alarm trap would be found by most chars who dare Pan and thus
 # spoil the fun.
 MAP
@@ -3047,8 +3048,9 @@ ENDMAP
 
 NAME:   pan_captured_pigsty
 TAGS:   extra
-MONS:   red devil, holy swine
+MONS:   cythraul, holy swine
 KFEAT:  o = iron_grate
+KPROP:  2 = no_tele_into
 {{
 local function swineherd_die(monster, killer_type, killer_index, silent, wizard)
   local p = dgn.find_marker_positions_by_prop("pigsty_gate", 1)[1]
@@ -3624,7 +3626,7 @@ TAGS: transparent extra decor allow_dup
 SHUFFLE: Aai/Bbj/Cck/Ddl/Eem/Ffn/Ggo/Hhp, Ffn/Qqr/Qqr, Ggo/Sst/Sst, Hhp/Uuv/Uuv
 SUBST: ABCDFGHijklnop = x, abcdfgh = -, EQSU = @, emqrstuv = ., \
        I : x., J : x., K : x., L: x., M: x., N : x.
-KFEAT: - = transit_pandemonium w:36 / known permanent teleport trap w:1 / \
+KFEAT: - = transit_pandemonium w:36 / permanent teleport trap w:1 / \
            exit_pandemonium w:1 / exit_through_abyss w:1
 MAP
     xxxAxxx
@@ -3925,16 +3927,17 @@ NAME:   evilmike_holy_pan
 TAGS:   no_pool_fixup
 ORIENT: encompass
 NSUBST: . = > / .
+# There's a somewhat iffy interaction with pregen here. As long as only one
+# pan level is ever pregenerated, it should be basically fine.
 : if you.have_rune("demonic") then
 KFEAT:  O = exit_pandemonium
 : else
-: pan_declare_demonic_rune(_G)
 KITEM:  O = demonic rune of Zot
 : end
 ITEM:   w:5 any / potion of curing
 ITEM:   any / potion of heal wounds
 ITEM:   any good_item
-ITEM:   potion of cancellation
+ITEM:   potion of cure mutation
 ITEM:   potion of might / potion of brilliance / potion of agility
 ITEM:   any
 NSUBST: i = 2=ghh / 3=ghhiii / *:i
@@ -3942,14 +3945,14 @@ MONS:   angel
 MONS:   cherub
 MONS:   angel
 MONS:   ophan
-MONS:   ophan
+MONS:   silver star
 MONS:   daeva
 #  8 was phoenix but they were removed.
 KMONS:  9 = pearl dragon
 KMONS:  0 = apis
 KMONS:  A = apis
 KMONS:  B = daeva god:Zin
-KMONS:  Z = daeva god:Zin
+KMONS:  Z = silver star
 KMONS:  S = patrolling seraph
 KFEAT:  _ = altar_the_shining_one
 KFEAT:  E = altar_elyvilon
@@ -3964,7 +3967,12 @@ COLOUR: "0 = green
 FTILE:  -ZBghi&v = floor_vault
 SUBST:  D& = +, '"- = ., H = G, C = c
 : set_feature_name("granite_statue", "golden statue")
-: set_random_mon_list("angel w:20 / cherub / ophan / daeva / apis w:20")
+: set_random_mon_list("angel w:20 / silver star w:5 / cherub / ophan / daeva / apis w:20")
+epilogue{{
+if not you.have_rune("demonic") then
+  pan_declare_demonic_rune()
+end
+}}
 MAP
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 xxxxxxxCCCCCxxxxxxxxxxxxwwwwxxxxxxxxxwwwxxxwwwxxxxxxCCCCCCCCCCCCCCCCCxxxxxxxxxxx

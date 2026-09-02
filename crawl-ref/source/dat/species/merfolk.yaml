@@ -1,61 +1,55 @@
+TAG_MAJOR_VERSION: 34
 enum: SP_MERFOLK
 monster: MONS_MERFOLK
-name: Merfolk
-short_name: Mf
+name: "Merfolk"
+short_name: "Mf"
 adjective: Merfolkian
-difficulty: Simple
-difficulty_priority: 80
+difficulty: False
 aptitudes:
   xp: 0
-  hp: 0
+  hp: -1
   mp_mod: 0
   mr: 3
   fighting: 1
-  short_blades: 2
+  short_blades: 1
   long_blades: 1
   axes: 1
   whips_and_flails: -2
   polearms: 3
-  maces_and_staves: 1
-  slings: -2
+  maces_and_staves: -2
+  slings: 1
   bows: -2
   crossbows: -2
-  armour: -3
+  armour: -2
   dodging: 3
-  stealth: 2
+  stealth: 3
   unarmed_combat: 1
-  spellcasting: -1
   charms: 1
+  hexes: 1
+  summoning: 1
   necromancy: -2
   translocations: -2
   transmutations: 3
-  fire_magic: -3
-  ice_magic: 1
+  fire_magic: -2
+  ice_magic: 3
   air_magic: -2
   earth_magic: -2
   poison_magic: 1
   invocations: 1
+  evocations: 1
 can_swim: true
 str: 8
 int: 7
 dex: 9
 levelup_stat_frequency: 5
-fake_mutations:
-  - long: You revert to your normal form in water.
-    short: change form in water
-  - long: You are very nimble and swift while swimming.
-    short: swift swim
-  - long: You are very stealthy in the water. (Stealth+)
-    short: stealthy swim
-recommended_jobs:
-  - JOB_GLADIATOR
-  - JOB_BERSERKER
-  - JOB_SKALD
-  - JOB_TRANSMUTER
-  - JOB_SUMMONER
-  - JOB_ICE_ELEMENTALIST
-  - JOB_VENOM_MAGE
+mutations:
+  1:
+    MUT_MERFOLK_TAIL: 1
+    MUT_COLD_RESISTANCE: 1
 recommended_weapons:
   - SK_POLEARMS
   - SK_LONG_BLADES
-create_enum: False
+
+# start TAG_MAJOR_VERSION == 34
+create_enum: false
+# end TAG_MAJOR_VERSION

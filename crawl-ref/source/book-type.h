@@ -1,5 +1,7 @@
 #pragma once
 
+#include "tag-version.h"
+
 enum book_type
 {
     BOOK_MINOR_MAGIC,
@@ -34,8 +36,8 @@ enum book_type
     BOOK_ENVENOMATIONS,
 #endif
     BOOK_UNLIFE,
+    BOOK_KIKU_RITUALS,
 #if TAG_MAJOR_VERSION == 34
-    BOOK_CONTROL,
     BOOK_BATTLE, // was BOOK_MUTATIONS
 #endif
     BOOK_GEOMANCY,
@@ -65,8 +67,8 @@ enum book_type
     BOOK_RANDART_LEVEL,
     BOOK_RANDART_THEME,
 
-    BOOK_MANUAL,
 #if TAG_MAJOR_VERSION == 34
+    BOOK_MANUAL,
     BOOK_BUGGY_DESTRUCTION,
 #endif
     NUM_BOOKS

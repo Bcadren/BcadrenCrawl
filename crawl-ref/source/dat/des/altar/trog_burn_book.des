@@ -44,7 +44,7 @@ end
 
 NAME:   trog_book
 TAGS:   uniq_altar_trog temple_overflow_trog
-DEPTH:  D:2-10, Orc
+DEPTH:  D:2-, Orc
 KFEAT:  _ = altar_trog
 {{
 local tm = TriggerableFunction:new{func="callback.trog_book_convert_book",

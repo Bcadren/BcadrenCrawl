@@ -288,7 +288,7 @@ DEPTH:   D:2-
 WEIGHT:  0
 KFEAT:   g = iron_grate
 KFEAT:   _ = altar_pakellas
-: if you.depth() <= 7 then
+: if you.depth() <= 3 then
 MONS:    iguana / jelly / hippogriff / crocodile / hornet / wyvern / yak / troll
 : else
 MONS:    wyvern / yak / troll / komodo dragon / ugly thing / hydra

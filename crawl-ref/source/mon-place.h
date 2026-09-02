@@ -5,11 +5,22 @@
 
 #pragma once
 
+#include <vector>
+
 #include "conduct-type.h"
+#include "coord-def.h"
 #include "dungeon-char-type.h"
+#include "dungeon-feature-type.h"
+#include "god-type.h"
+#include "level-id.h"
 #include "mgen-enum.h"
+#include "monster-type.h"
+#include "tag-version.h"
 #include "trap-type.h"
 
+using std::vector;
+
+class monster;
 class mons_spec;
 struct mgen_data;
 
@@ -39,8 +50,8 @@ monster_type resolve_monster_type(monster_type mon_type,
                                   bool *want_band = nullptr,
                                   bool allow_ood = true);
 
-const monster_type fixup_zombie_type(const monster_type cls,
-                                     const monster_type base_type);
+monster_type fixup_zombie_type(const monster_type cls,
+                               const monster_type base_type);
 
 /* ***********************************************************************
  * This isn't really meant to be a public function. It is a low level
@@ -63,7 +74,8 @@ monster* place_monster(mgen_data mg, bool force_pos = false, bool dont_place = f
 monster_type pick_local_zombifiable_monster(level_id place,
                                             monster_type cs = MONS_NO_MONSTER,
                                             const coord_def& pos = coord_def(),
-                                            bool for_corpse = false);
+                                            bool for_corpse = false,
+                                            bool adjusted = false);
 
 monster_type pick_local_corpsey_monster(level_id place);
 
@@ -75,14 +87,18 @@ bool downgrade_zombie_to_skeleton(monster* mon);
 
 class level_id;
 
+level_id adjust_pop_place(level_id place);
+
 monster_type pick_random_monster(level_id place,
                                  monster_type kind = RANDOM_MONSTER,
                                  level_id *final_place = nullptr,
-                                 bool allow_ood = true);
+                                 bool allow_ood = true,
+                                 bool adjusted = false);
 
-conduct_type player_will_anger_monster(monster_type type);
-conduct_type player_will_anger_monster(const monster &mon);
-bool player_angers_monster(monster* mon, bool real = true);
+conduct_type god_hates_monster(monster_type type, god_type god = GOD_PLAYER);
+conduct_type god_hates_monster(const monster &mon, god_type god = GOD_PLAYER);
+bool mons_can_hate(monster_type type);
+void check_lovelessness(monster &mon);
 
 bool find_habitable_spot_near(const coord_def& where, monster_type mon_type,
                               int radius, bool allow_centre, coord_def& empty,
@@ -97,8 +113,7 @@ bool monster_habitable_grid(const monster* mon, dungeon_feature_type actual_grid
                             bool ai_check = true);
 bool monster_habitable_grid(monster_type mt, dungeon_feature_type actual_grid,
                             dungeon_feature_type wanted_grid = DNGN_UNSEEN,
-                            bool flies = false, bool ai_check = true);
-bool monster_can_submerge(const monster* mon, dungeon_feature_type grid);
+                            bool ai_check = true);
 coord_def find_newmons_square(monster_type mons_class, const coord_def &p,
                               const monster* viable_mon = nullptr);
 coord_def find_newmons_square_contiguous(monster_type mons_class,

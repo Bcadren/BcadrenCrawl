@@ -7,10 +7,12 @@
 
 #include <vector>
 
+#include "activity-interrupt-type.h"
 #include "command-type.h"
 #include "disable-type.h"
 #include "end.h"
 #include "game-exit-type.h"
+#include "game-type.h"
 #include "player.h"
 
 class monster;
@@ -54,6 +56,10 @@ struct game_state
     bool game_started;      // Set to true when a game has started.
     bool saving_game;       // Set to true while in save_game.
     bool updating_scores;   // Set to true while updating hiscores.
+#ifndef USE_TILE_LOCAL
+    bool smallterm;         // The terminal has been resized under the min view
+                            // size, and errors need to be displayed
+#endif
     const char* no_gdb;     // reason for not running gdb
 
     int  seen_hups;         // Set to true if SIGHUP received.
@@ -138,6 +144,8 @@ struct game_state
 
     // Should flushing a nonempty key buffer error or crash? Used for tests.
     bool nonempty_buffer_flush_errors;
+
+    string last_builder_error;
 
 protected:
     void reset_cmd_repeat();

@@ -7,12 +7,7 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
 
     function DungeonCellRenderer()
     {
-        // see also, renderer_settings in game.js. In fact, do these values
-        // do anything?
-        var ratio = window.devicePixelRatio;
         this.set_cell_size(32, 32);
-        this.glyph_mode_font_size = 24 * ratio;
-        this.glyph_mode_font = "monospace";
     }
 
     var fg_term_colours, bg_term_colours;
@@ -101,14 +96,67 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
 
         glyph_mode_font_name: function ()
         {
-            var glyph_scale;
+            var glyph_scale = window.devicePixelRatio;
             if (this.ui_state == enums.ui.VIEW_MAP)
-                glyph_scale = options.get("tile_map_scale");
+                glyph_scale *= options.get("tile_map_scale");
             else
-                glyph_scale = options.get("tile_viewport_scale");
+                glyph_scale *= options.get("tile_viewport_scale");
 
             return (Math.floor(this.glyph_mode_font_size * glyph_scale / 100)
                 + "px " + this.glyph_mode_font);
+        },
+
+        glyph_mode_update_font_metrics: function ()
+        {
+            this.ctx.font = this.glyph_mode_font_name();
+
+            // Glyph used here does not matter because fontBoundingBoxAscent
+            // and fontBoundingBoxDescent are specific to the font whereas all
+            // glyphs in a monospaced font will have the same width
+            var metrics = this.ctx.measureText('@');
+            this.glyph_mode_font_width = metrics.width;
+
+            // Currently, fontBoundingBoxAscent/Descent are still
+            // experimental for most web browsers and may be unavailable.
+            if (metrics.fontBoundingBoxAscent)
+            {
+                this.glyph_mode_baseline = metrics.fontBoundingBoxAscent;
+                this.glyph_mode_line_height = metrics.fontBoundingBoxAscent
+                                            + metrics.fontBoundingBoxDescent;
+            }
+            else
+            {   // Inspired by https://stackoverflow.com/q/1134586/
+                var body = document.body;
+                var ref_glyph = document.createElement("span");
+                var ref_block = document.createElement("div");
+                var div = document.createElement("div");
+
+                ref_glyph.innerHTML = '@';
+                ref_glyph.style.font = this.ctx.font;
+
+                ref_block.style.display = "inline-block";
+                ref_block.style.width = "1px";
+                ref_block.style.height = "0px";
+
+                div.style.visibility = "hidden";
+                div.appendChild(ref_glyph);
+                div.appendChild(ref_block);
+                body.appendChild(div);
+
+                try
+                {
+                    ref_block.style["vertical-align"] = "baseline";
+                    this.glyph_mode_baseline = ref_block.offsetTop
+                                                - ref_glyph.offsetTop;
+                    ref_block.style["vertical-align"] = "bottom";
+                    this.glyph_mode_line_height = ref_block.offsetTop
+                                                    - ref_glyph.offsetTop;
+                }
+                finally
+                {
+                    document.body.removeChild(div);
+                }
+            }
         },
 
         render_cursors: function(cx, cy, x, y)
@@ -185,7 +233,7 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
             var is_in_water = in_water(cell);
 
             // draw clouds
-            if (cell.cloud.value && cell.cloud.value < dngn.FEAT_MAX)
+            if (cell.cloud.value)
             {
                 this.ctx.save();
                 // If there will be a front/back cloud pair, draw
@@ -320,8 +368,7 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
             this.draw_foreground(x, y, map_cell);
 
             // draw clouds over stuff
-            if (fg_idx && cell.cloud.value
-                && cell.cloud.value < dngn.FEAT_MAX)
+            if (fg_idx && cell.cloud.value)
             {
                 this.ctx.save();
                 try
@@ -346,6 +393,18 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
                 {
                     this.ctx.restore();
                 }
+            }
+
+            // Draw main-tile overlays (i.e. zaps), on top of clouds.
+            if (cell.ov)
+            {
+                $.each(cell.ov, function (i, overlay)
+                        {
+                            if (dngn.FEAT_MAX <= overlay && overlay < main.MAIN_MAX)
+                            {
+                                renderer.draw_main(overlay, x, y);
+                            }
+                        });
             }
 
             this.render_flash(x, y);
@@ -461,8 +520,6 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
             }
             this.ctx.fillStyle = fg_term_colours[col.fg];
             this.ctx.font = prefix + this.glyph_mode_font_name();
-            this.ctx.textAlign = "center";
-            this.ctx.textBaseline = "middle";
 
             this.ctx.save();
 
@@ -472,8 +529,18 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
                 this.ctx.rect(x, y, this.cell_width, this.cell_height);
                 this.ctx.clip();
 
-                this.ctx.fillText(map_cell.g,
-                                  x + this.cell_width/2, y + this.cell_height/2);
+                if (options.get("tile_display_mode") == "hybrid")
+                {
+                    this.ctx.textAlign = "center";
+                    this.ctx.textBaseline = "middle";
+                    this.ctx.fillText(map_cell.g, x + this.cell_width/2,
+                                        y + this.cell_height/2);
+                }
+                else
+                {
+                    this.ctx.fillText(map_cell.g, x,
+                                        y + this.glyph_mode_baseline);
+                }
             }
             finally
             {
@@ -578,8 +645,11 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
             var renderer = this;
 
             if (cell.mangrove_water && bg_idx > dngn.DNGN_UNSEEN)
-                this.draw_dngn(dngn.DNGN_SHALLOW_WATER, x, y);
-            else if (bg_idx >= dngn.DNGN_FIRST_TRANSPARENT)
+                this.draw_dngn(dngn.DNGN_SHALLOW_WATER_MURKY, x, y);
+            else if (cell.mushroom_slime && bg_idx > dngn.DNGN_UNSEEN)
+                this.draw_dngn(dngn.DNGN_SLIMY_WATER, x, y);
+            else if (bg_idx >= dngn.DNGN_FIRST_TRANSPARENT || bg_idx == dngn.DNGN_SHALLOW_WATER || bg_idx == dngn.DNGN_DEEP_WATER
+                || bg_idx == dngn.DNGN_SHALLOW_WATER_DISTURBANCE || bg_idx == dngn.DNGN_SHALLOW_WATER_DISTURBANCE + 1)
             {
                 this.draw_dngn(cell.flv.f, x, y); // f = floor
 
@@ -598,7 +668,7 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
             if (bg_idx > dngn.WALL_MAX)
                 this.draw_blood_overlay(x, y, cell);
 
-            if (cell.mangrove_water) // Draw the tree submerged
+            if (cell.mangrove_water || cell.mushroom_slime) // Draw the tree submerged
             {
                 this.ctx.save();
                 try
@@ -641,7 +711,9 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
                 {
                     $.each(cell.ov, function (i, overlay)
                            {
-                               if (overlay &&
+                               if (overlay > dngn.DNGN_MAX)
+                                   return;
+                               else if (overlay &&
                                    (bg_idx < dngn.DNGN_FIRST_TRANSPARENT ||
                                     overlay > dngn.FLOOR_MAX))
                                {
@@ -668,10 +740,7 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
                         this.draw_dngn(dngn.KRAKEN_OVERLAY_SW, x, y);
                     else if (bg.ELDRITCH_SW)
                         this.draw_dngn(dngn.ELDRITCH_OVERLAY_SW, x, y);
-                }
 
-                if (!bg.UNSEEN)
-                {
                     if (cell.sanctuary)
                         this.draw_dngn(dngn.SANCTUARY, x, y);
                     // TAG_MAJOR_VERSION == 34
@@ -715,6 +784,9 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
                         this.draw_dngn(dngn.TRAVEL_EXCLUSION_BG, x, y);
                 }
             }
+
+            if (cell.is_snowy)
+                this.draw_dngn(dngn.SNOW + cell.is_snowy - 1, x, y);
 
             this.draw_ray(x, y, cell);
         },
@@ -832,6 +904,29 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
                 this.draw_icon(icons.POISON, x, y, -status_shift, 0);
                 status_shift += 5;
             }
+            else if (fg.MORE_POISON)
+            {
+                this.draw_icon(icons.MORE_POISON, x, y, -status_shift, 0);
+                status_shift += 5;
+            }
+            else if (fg.MAX_POISON)
+            {
+                this.draw_icon(icons.MAX_POISON, x, y, -status_shift, 0);
+                status_shift += 5;
+            }
+
+            if (fg.WRETCHED)
+            {
+                this.draw_icon(icons.WRETCHED, x, y, -status_shift, 0);
+                status_shift += 7;
+            }
+
+            if (fg.MUTE)
+            {
+                this.draw_icon(icons.MUTE, x, y, -status_shift, 0);
+                status_shift += 9;
+            }
+
             if (fg.STICKY_FLAME)
             {
                 this.draw_icon(icons.STICKY_FLAME, x, y, -status_shift, 0);
@@ -851,6 +946,11 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
             {
                 this.draw_icon(icons.VILE_CLUTCH, x, y, -status_shift, 0);
                 status_shift += 11;
+            }
+            if (fg.POSSESSABLE)
+            {
+                this.draw_icon(icons.POSSESSABLE, x, y, -status_shift, 0);
+                status_shift += 6;
             }
             if (fg.GLOWING)
             {
@@ -907,10 +1007,10 @@ function ($, view_data, main, tileinfo_player, icons, dngn, enums,
                 this.draw_icon(icons.BLIND, x, y, -status_shift, 0);
                 status_shift += 10;
             }
-            if (fg.DEATHS_DOOR)
+            if (fg.CONFUSED)
             {
-                this.draw_icon(icons.DEATHS_DOOR, x, y, -status_shift, 0);
-                status_shift += 10;
+                this.draw_icon(icons.CONFUSED, x, y, -status_shift, 0);
+                status_shift += 7;
             }
             if (fg.BOUND_SOUL)
             {

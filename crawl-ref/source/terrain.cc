@@ -12,6 +12,7 @@
 #include <sstream>
 
 #include "areas.h"
+#include "attack.h"
 #include "branch.h"
 #include "cloud.h"
 #include "coord.h"
@@ -21,6 +22,7 @@
 #include "directn.h"
 #include "dungeon.h"
 #include "env.h"
+#include "tile-env.h"
 #include "fight.h"
 #include "feature.h"
 #include "fprop.h"
@@ -29,10 +31,8 @@
 #include "items.h"
 #include "level-state-type.h"
 #include "libutil.h"
-#include "map-knowledge.h"
 #include "mapmark.h"
 #include "message.h"
-#include "misc.h"
 #include "mon-place.h"
 #include "mon-poly.h"
 #include "mon-util.h"
@@ -45,6 +45,9 @@
 #include "spl-transloc.h"
 #include "state.h"
 #include "stringutil.h"
+#include "rltiles/tiledef-dngn.h"
+#include "tag-version.h"
+#include "teleport.h"
 #include "tileview.h"
 #include "transform.h"
 #include "traps.h"
@@ -384,7 +387,7 @@ bool feat_can_wall_jump_against(dungeon_feature_type feat)
  */
 bool cell_is_solid(const coord_def &c)
 {
-    return feat_is_solid(grd(c));
+    return feat_is_solid(env.grid(c));
 }
 
 /** Can a human stand on this feature without flying?
@@ -392,7 +395,7 @@ bool cell_is_solid(const coord_def &c)
 bool feat_has_solid_floor(dungeon_feature_type feat)
 {
     return !feat_is_solid(feat) && feat != DNGN_DEEP_WATER
-           && feat != DNGN_LAVA;
+           && feat != DNGN_LAVA && feat != DNGN_DEEP_SLIMY_WATER;
 }
 
 /** Is there enough dry floor on this feature to stand without penalty?
@@ -415,7 +418,8 @@ bool feat_is_closed_door(dungeon_feature_type feat)
 {
     return feat == DNGN_CLOSED_DOOR
            || feat == DNGN_CLOSED_CLEAR_DOOR
-           || feat_is_runed(feat)
+           || feat == DNGN_RUNED_DOOR
+           || feat == DNGN_RUNED_CLEAR_DOOR
            || feat == DNGN_SEALED_DOOR
            || feat == DNGN_SEALED_CLEAR_DOOR;
 }
@@ -437,11 +441,13 @@ bool feat_is_sealed(dungeon_feature_type feat)
         || feat == DNGN_SEALED_CLEAR_DOOR;
 }
 
-/** Is this feature a type of runed door?
+/** Is this feature runed against monster crossing?
  */
 bool feat_is_runed(dungeon_feature_type feat)
 {
-    return feat == DNGN_RUNED_DOOR || feat == DNGN_RUNED_CLEAR_DOOR;
+    return feat == DNGN_RUNED_DOOR || feat == DNGN_RUNED_CLEAR_DOOR 
+        || feat == DNGN_RUNED_CLEAR_STONE_WALL || feat == DNGN_SILVER_WALL
+        || feat == DNGN_RUNED_STONE_WALL;
 }
 
 /** Is the original feature at this position runed, as in a runed door?
@@ -456,7 +462,7 @@ bool cell_is_runed(const coord_def &p)
  */
 bool feat_is_statuelike(dungeon_feature_type feat)
 {
-    return feat == DNGN_ORCISH_IDOL || feat == DNGN_GRANITE_STATUE;
+    return feat == DNGN_ORCISH_IDOL || feat == DNGN_GRANITE_STATUE || feat == DNGN_SARCOPHAGUS;
 }
 
 /** Is this feature permanent, unalterable rock?
@@ -471,16 +477,24 @@ bool feat_is_permarock(dungeon_feature_type feat)
 bool feat_is_endless(dungeon_feature_type feat)
 {
     return feat == DNGN_OPEN_SEA || feat == DNGN_LAVA_SEA
-           || feat == DNGN_ENDLESS_SALT;
+           || feat == DNGN_ENDLESS_SALT || feat == DNGN_ENDLESS_SLUDGE;
 }
 
 /** Can this feature be dug?
+/    Formacid bool is used for diggable by Formacid mandibles instead of spell.
  */
-bool feat_is_diggable(dungeon_feature_type feat)
+bool feat_is_diggable(dungeon_feature_type feat, bool formacid)
 {
-    return feat == DNGN_ROCK_WALL || feat == DNGN_CLEAR_ROCK_WALL
-           || feat == DNGN_SLIMY_WALL || feat == DNGN_GRATE
-           || feat == DNGN_ORCISH_IDOL || feat == DNGN_GRANITE_STATUE;
+    if (formacid)
+    {
+        if (you_worship(GOD_JIYVA) && feat == DNGN_SLIMY_WALL)
+            return true;
+        return feat == DNGN_GRATE || feat == DNGN_GRANITE_STATUE || feat == DNGN_ROCK_WALL
+            || feat == DNGN_CLEAR_ROCK_WALL;
+    }
+    return feat_is_solid(feat) && !feat_is_permarock(feat) && !feat_is_tree(feat) 
+        && !feat_is_door(feat) && !feat_is_endless(feat) 
+        && (!feat_is_metal(feat) || feat == DNGN_GRATE);
 }
 
 /** Is this feature a type of trap?
@@ -501,7 +515,12 @@ bool feat_is_water(dungeon_feature_type feat)
 {
     return feat == DNGN_SHALLOW_WATER
            || feat == DNGN_DEEP_WATER
-           || feat == DNGN_OPEN_SEA;
+           || feat == DNGN_OPEN_SEA
+           || feat == DNGN_ENDLESS_SLUDGE
+           || feat == DNGN_TOXIC_BOG
+           || feat == DNGN_QUAGMIRE
+           || feat == DNGN_SLIMY_WATER
+           || feat == DNGN_DEEP_SLIMY_WATER;
 }
 
 /** Does this feature have enough water to keep water-only monsters alive in it?
@@ -549,6 +568,7 @@ static const pair<god_type, dungeon_feature_type> _god_altars[] =
     { GOD_HEPLIAKLQANA, DNGN_ALTAR_HEPLIAKLQANA },
     { GOD_WU_JIAN, DNGN_ALTAR_WU_JIAN },
     { GOD_ECUMENICAL, DNGN_ALTAR_ECUMENICAL },
+    { GOD_BAHAMUT_TIAMAT, DNGN_ALTAR_BAHAMUT_TIAMAT },
 };
 
 COMPILE_CHECK(ARRAYSZ(_god_altars) == NUM_GODS );
@@ -602,14 +622,14 @@ bool feat_is_player_altar(dungeon_feature_type grid)
  */
 bool feat_is_tree(dungeon_feature_type feat)
 {
-    return feat == DNGN_TREE;
+    return feat == DNGN_TREE || feat == DNGN_MANGROVE || feat == DNGN_SLIMESHROOM;
 }
 
 /** Is this feature made of metal?
  */
 bool feat_is_metal(dungeon_feature_type feat)
 {
-    return feat == DNGN_METAL_WALL || feat == DNGN_GRATE || feat == DNGN_SILVER_WALL;
+    return feat == DNGN_METAL_WALL || feat == DNGN_GRATE || feat == DNGN_SILVER_WALL || feat == DNGN_CLEAR_METAL_WALL;
 }
 
 /** Is this feature ambivalent about whether we're going up or down?
@@ -640,7 +660,10 @@ bool feat_is_fountain(dungeon_feature_type feat)
  */
 bool feat_is_reachable_past(dungeon_feature_type feat)
 {
-    return !feat_is_opaque(feat) && !feat_is_wall(feat) && feat != DNGN_GRATE;
+    return !feat_is_opaque(feat)
+        && !feat_is_wall(feat)
+        && !feat_is_closed_door(feat)
+        && feat != DNGN_GRATE;
 }
 
 /** Is this feature important to the game?
@@ -663,6 +686,7 @@ bool feat_is_valid_border(dungeon_feature_type feat)
     return feat_is_wall(feat)
            || feat_is_tree(feat)
            || feat == DNGN_OPEN_SEA
+           || feat == DNGN_ENDLESS_SLUDGE
            || feat == DNGN_LAVA_SEA
            || feat == DNGN_ENDLESS_SALT;
 }
@@ -677,7 +701,7 @@ bool feat_is_valid_border(dungeon_feature_type feat)
 bool feat_is_mimicable(dungeon_feature_type feat, bool strict)
 {
     if (!strict && feat != DNGN_FLOOR && feat != DNGN_SHALLOW_WATER
-        && feat != DNGN_DEEP_WATER)
+        && feat != DNGN_DEEP_WATER && feat != DNGN_SLIMY_WATER && feat != DNGN_DEEP_SLIMY_WATER)
     {
         return true;
     }
@@ -712,7 +736,7 @@ int count_neighbours_with_func(const coord_def& c, bool (*checker)(dungeon_featu
     int count = 0;
     for (adjacent_iterator ai(c); ai; ++ai)
     {
-        if (checker(grd(*ai)))
+        if (checker(env.grid(*ai)))
             count++;
     }
     return count;
@@ -724,7 +748,7 @@ static void _find_connected_identical(const coord_def &d,
                                       set<coord_def>& out,
                                       bool known_only)
 {
-    if (grd(d) != ft || (known_only && !env.map_knowledge(d).known()))
+    if (env.grid(d) != ft || (known_only && !env.map_knowledge(d).known()))
         return;
 
     string prop = env.markers.property_at(d, MAT_ANY, "connected_exclude");
@@ -753,7 +777,7 @@ void find_connected_identical(const coord_def &d, set<coord_def>& out, bool know
     if (!prop.empty())
         out.insert(d);
     else
-        _find_connected_identical(d, grd(d), out, known_only);
+        _find_connected_identical(d, env.grid(d), out, known_only);
 }
 
 void get_door_description(int door_size, const char** adjective, const char** noun)
@@ -779,7 +803,7 @@ coord_def get_random_stair()
     vector<coord_def> st;
     for (rectangle_iterator ri(1); ri; ++ri)
     {
-        const dungeon_feature_type feat = grd(*ri);
+        const dungeon_feature_type feat = env.grid(*ri);
         if (feat_is_travelable_stair(feat) && !feat_is_escape_hatch(feat)
             && feat != DNGN_EXIT_DUNGEON
             && feat != DNGN_EXIT_HELL)
@@ -799,7 +823,7 @@ static void _precompute_slime_wall_neighbours()
     map_mask_boolean &mask(*_slime_wall_precomputed_neighbour_mask);
     for (rectangle_iterator ri(1); ri; ++ri)
     {
-        if (grd(*ri) == DNGN_SLIMY_WALL)
+        if (env.grid(*ri) == DNGN_SLIMY_WALL)
         {
             for (adjacent_iterator ai(*ri); ai; ++ai)
                 mask(*ai) = true;
@@ -870,8 +894,15 @@ void slime_wall_damage(actor* act, int delay)
     if (act->is_player())
     {
         you.splash_with_acid(nullptr, strength, false,
-                            (walls > 1) ? "The walls burn you!"
-                                        : "The wall burns you!");
+                            (walls > 1) ? "The walls burn you"
+                                        : "The wall burns you");
+        if (you.mounted())
+        {
+            string mt_msg = (walls > 1) ? "The walls burn your"
+                                        : "The wall burns your";
+            mt_msg = make_stringf("%s %s", mt_msg.c_str(), you.mount_name(true).c_str());
+            you.splash_with_acid(nullptr, strength, false, mt_msg.c_str(), true);
+        }
     }
     else
     {
@@ -879,21 +910,42 @@ void slime_wall_damage(actor* act, int delay)
 
         const int dam = resist_adjust_damage(mon, BEAM_ACID,
                                              roll_dice(2, strength));
-        if (dam > 0 && you.can_see(*mon))
+        if (dam > 0)
         {
-            mprf((walls > 1) ? "The walls burn %s!" : "The wall burns %s!",
-                  mon->name(DESC_THE).c_str());
+            if (you.can_see(*mon))
+            { 
+                mprf((walls > 1) ? "The walls burn %s%s" : "The wall burns %s%s",
+                      mon->name(DESC_THE).c_str(),
+                      attack_strength_punctuation(dam).c_str());
+            }
+            mon->hurt(nullptr, dam, BEAM_ACID);
         }
-        mon->hurt(nullptr, dam, BEAM_ACID);
+        else if (dam < 0 && act->stat_hp() < act->stat_maxhp())
+        {
+            const int healz = timescale_damage(act, max(1, div_rand_round(walls, 2))); // Since terrain is constant, turn to weak regen.
+            if (you.can_see(*mon))
+            {
+                mprf("%s draws strength from the acidic wall%s%s",
+                    mon->name(DESC_THE).c_str(),
+                    walls > 1 ? "s" : "",
+                    attack_strength_punctuation(healz).c_str());
+            }
+            mon->heal(healz, true);
+        }
     }
 }
 
 void feat_splash_noise(dungeon_feature_type feat)
 {
+    if (crawl_state.generating_level)
+        return;
+
     switch (feat)
     {
     case DNGN_SHALLOW_WATER:
     case DNGN_DEEP_WATER:
+    case DNGN_DEEP_SLIMY_WATER:
+    case DNGN_SLIMY_WATER:
         mprf(MSGCH_SOUND, "You hear a splash.");
         return;
 
@@ -917,8 +969,8 @@ bool feat_destroys_items(dungeon_feature_type feat)
  */
 bool feat_eliminates_items(dungeon_feature_type feat)
 {
-    return feat_destroys_items(feat)
-           || (feat == DNGN_DEEP_WATER && !species_likes_water(you.species));
+    return feat_destroys_items(feat) ||
+           ((feat == DNGN_DEEP_WATER || feat == DNGN_DEEP_SLIMY_WATER) && !species_likes_water(you.species));
 }
 
 static coord_def _dgn_find_nearest_square(
@@ -926,12 +978,14 @@ static coord_def _dgn_find_nearest_square(
     function<bool (const coord_def &)> acceptable,
     function<bool (const coord_def &)> traversable = nullptr)
 {
-    memset(travel_point_distance, 0, sizeof(travel_distance_grid_t));
+    bool visited[GXM][GYM];
+    memset(&visited, 0, sizeof(visited));
 
     vector<coord_def> points[2];
     int iter = 0;
     points[iter].push_back(pos);
 
+    // TODO: Deduplicate this BFS code (see commit for other two instances).
     while (!points[iter].empty())
     {
         // Iterate each layer of BFS in random order to avoid bias.
@@ -941,22 +995,18 @@ static coord_def _dgn_find_nearest_square(
             if (p != pos && acceptable(p))
                 return p;
 
-            travel_point_distance[p.x][p.y] = 1;
-            for (int yi = -1; yi <= 1; ++yi)
-                for (int xi = -1; xi <= 1; ++xi)
-                {
-                    if (!xi && !yi)
-                        continue;
+            visited[p.x][p.y] = true;
+            for (adjacent_iterator ai(p); ai; ++ai)
+            {
+                const coord_def np = coord_def(ai->x, ai->y);
+                if (!in_bounds(np) || visited[np.x][np.y])
+                    continue;
 
-                    const coord_def np = p + coord_def(xi, yi);
-                    if (!in_bounds(np) || travel_point_distance[np.x][np.y])
-                        continue;
+                if (traversable && !traversable(np))
+                    continue;
 
-                    if (traversable && !traversable(np))
-                        continue;
-
-                    points[!iter].push_back(np);
-                }
+                points[!iter].push_back(np);
+            }
         }
 
         points[iter].clear();
@@ -968,8 +1018,8 @@ static coord_def _dgn_find_nearest_square(
 
 static bool _item_safe_square(const coord_def &pos)
 {
-    const dungeon_feature_type feat = grd(pos);
-    return feat_is_traversable(feat) && !feat_destroys_items(feat);
+    const dungeon_feature_type feat = env.grid(pos);
+    return feat_is_traversable(feat) && !feat_eliminates_items(feat);
 }
 
 static bool _item_traversable_square(const coord_def &pos)
@@ -998,7 +1048,7 @@ static bool _dgn_shift_item(const coord_def &pos, item_def &item)
 
 static bool _is_feature_shift_target(const coord_def &pos)
 {
-    return grd(pos) == DNGN_FLOOR && !dungeon_events.has_listeners_at(pos)
+    return env.grid(pos) == DNGN_FLOOR && !dungeon_events.has_listeners_at(pos)
            && !actor_at(pos);
 }
 
@@ -1027,14 +1077,14 @@ void dgn_move_entities_at(coord_def src, coord_def dst,
 
     move_notable_thing(src, dst);
 
-    dungeon_feature_type dfeat = grd(src);
+    dungeon_feature_type dfeat = env.grid(src);
     if (dfeat == DNGN_ENTER_SHOP)
     {
         ASSERT(shop_at(src));
         env.shop[dst] = env.shop[src];
         env.shop[dst].pos = dst;
         env.shop.erase(src);
-        grd(src) = DNGN_FLOOR;
+        env.grid(src) = DNGN_FLOOR;
     }
     else if (feat_is_trap(dfeat))
     {
@@ -1042,10 +1092,10 @@ void dgn_move_entities_at(coord_def src, coord_def dst,
         env.trap[dst] = env.trap[src];
         env.trap[dst].pos = dst;
         env.trap.erase(src);
-        grd(src) = DNGN_FLOOR;
+        env.grid(src) = DNGN_FLOOR;
     }
 
-    grd(dst) = dfeat;
+    env.grid(dst) = dfeat;
 
     if (move_monster || move_player)
         ASSERT(!actor_at(dst));
@@ -1066,8 +1116,8 @@ void dgn_move_entities_at(coord_def src, coord_def dst,
                 }
 
             }
-            mgrd(dst) = mgrd(src);
-            mgrd(src) = NON_MONSTER;
+            env.mgrid(dst) = env.mgrid(src);
+            env.mgrid(src) = NON_MONSTER;
         }
     }
 
@@ -1089,11 +1139,11 @@ void dgn_move_entities_at(coord_def src, coord_def dst,
     env.pgrid(dst) = env.pgrid(src);
     env.grid_colours(dst) = env.grid_colours(src);
 #ifdef USE_TILE
-    env.tile_bk_fg(dst) = env.tile_bk_fg(src);
-    env.tile_bk_bg(dst) = env.tile_bk_bg(src);
-    env.tile_bk_cloud(dst) = env.tile_bk_cloud(src);
+    tile_env.bk_fg(dst) = tile_env.bk_fg(src);
+    tile_env.bk_bg(dst) = tile_env.bk_bg(src);
+    tile_env.bk_cloud(dst) = tile_env.bk_cloud(src);
 #endif
-    env.tile_flv(dst) = env.tile_flv(src);
+    tile_env.flv(dst) = tile_env.flv(src);
 
     // Move vault masks.
     env.level_map_mask(dst) = env.level_map_mask(src);
@@ -1112,7 +1162,7 @@ void dgn_move_entities_at(coord_def src, coord_def dst,
 
 static bool _dgn_shift_feature(const coord_def &pos)
 {
-    const dungeon_feature_type dfeat = grd(pos);
+    const dungeon_feature_type dfeat = env.grid(pos);
     if (!feat_is_critical(dfeat) && !env.markers.find(pos, MAT_ANY))
         return false;
 
@@ -1125,38 +1175,38 @@ static bool _dgn_shift_feature(const coord_def &pos)
 
 static void _dgn_check_terrain_items(const coord_def &pos, bool preserve_items)
 {
-    const dungeon_feature_type feat = grd(pos);
+    const dungeon_feature_type feat = env.grid(pos);
 
-    int item = igrd(pos);
+    int item = env.igrid(pos);
     while (item != NON_ITEM)
     {
         const int curr = item;
-        item = mitm[item].link;
+        item = env.item[item].link;
 
         if (!feat_is_solid(feat) && !feat_destroys_items(feat))
             continue;
 
         // Game-critical item.
-        if (preserve_items || mitm[curr].is_critical())
-            _dgn_shift_item(pos, mitm[curr]);
+        if (preserve_items || env.item[curr].is_critical())
+            _dgn_shift_item(pos, env.item[curr]);
         else
         {
             feat_splash_noise(feat);
-            item_was_destroyed(mitm[curr]);
+            item_was_destroyed(env.item[curr]);
             destroy_item(curr);
         }
     }
 }
 
-static bool _dgn_check_terrain_monsters(const coord_def &pos)
+static void _dgn_check_terrain_monsters(const coord_def &pos)
 {
     if (monster* m = monster_at(pos))
     {
-        m->apply_location_effects(pos);
-        return true;
+        if (!m->can_pass_through(pos))
+            blink_out(m);
+        else
+            m->apply_location_effects(pos);
     }
-    else
-        return false;
 }
 
 // Clear blood or mold off of terrain that shouldn't have it. Also clear
@@ -1205,7 +1255,7 @@ static void _dgn_check_terrain_player(const coord_def pos)
     if (you.can_pass_through(pos))
         move_player_to_grid(pos, false);
     else
-        you_teleport_now();
+        blink_out(&you);
 }
 
 /**
@@ -1230,12 +1280,71 @@ void dungeon_terrain_changed(const coord_def &pos,
                              bool temporary,
                              bool wizmode)
 {
-    if (grd(pos) == nfeat)
-        return;
-    if (_dgn_check_terrain_monsters(pos) && feat_is_wall(nfeat))
+    // Sanity.
+    if (!in_bounds(pos))
         return;
 
-    _dgn_check_terrain_covering(pos, grd(pos), nfeat);
+    if (env.grid(pos) == nfeat)
+        return;
+
+    // Grate trap coding.
+    if (nfeat == DNGN_GRATE)
+    {
+        actor * act = actor_at(pos);
+        if (act)
+        {
+            bool failure = true;
+            for (adjacent_iterator ai(pos); ai; ++ai)
+            {
+                if (!actor_at(*ai) && act->can_pass_through(*ai) && act->is_habitable(*ai))
+                {
+                    failure = false;
+                    act->move_to_pos(*ai);
+                    break;
+                }
+            }
+            if (failure)
+            {
+                int dam = roll_dice(4, 8);
+                dam = act->apply_ac(dam, 32);
+                if (act->is_player())
+                {
+                    ouch(dam, KILLED_BY_TRAP);
+                    mprf("A porticulus crashes down on your head%s This prevents the grating from closing.", 
+                        attack_strength_punctuation(dam).c_str());
+                    return;
+                }
+                else
+                {
+                    act->hurt(nullptr, dam, BEAM_DEVASTATION, KILLED_BY_TRAP); // Devastation used to explode the monster if it's fatal.
+                    mprf("A porticulus crashes down on %s%s%s", act->name(DESC_THE).c_str(), 
+                        attack_strength_punctuation(dam).c_str(), act->alive() ? " This prevents the grating from closing." : "");
+                    if (act->alive())
+                        return;
+                }
+            }
+        }
+        mpr("A porticulus slams shut!");
+    }
+
+    if (feat_is_trap(nfeat) && env.trap.find(pos) == env.trap.end())
+    {
+        // TODO: create a trap_def in env for this case?
+        mprf(MSGCH_ERROR,
+            "Attempting to change terrain to a trap without a corresponding"
+            " trap_def!");
+        nfeat = DNGN_FLOOR;
+    }
+
+    // Sanity
+    if (!is_valid_feature_type(nfeat))
+    {
+        mprf(MSGCH_ERROR, "Trying to change terrain to invalid feature. "
+                          "Defaulting to floor . . . ");
+        nfeat = DNGN_FLOOR;
+    }
+
+    _dgn_check_terrain_covering(pos, env.grid(pos), nfeat);
 
     if (nfeat != DNGN_UNSEEN)
     {
@@ -1245,10 +1354,10 @@ void dungeon_terrain_changed(const coord_def &pos,
         if (!temporary)
             unnotice_feature(level_pos(level_id::current(), pos));
 
-        grd(pos) = nfeat;
+        env.grid(pos) = nfeat;
         // Reset feature tile
-        env.tile_flv(pos).feat = 0;
-        env.tile_flv(pos).feat_idx = 0;
+        tile_env.flv(pos).feat = 0;
+        tile_env.flv(pos).feat_idx = 0;
 
         if (is_notable_terrain(nfeat) && you.see_cell(pos))
             seen_notable_thing(nfeat, pos);
@@ -1258,7 +1367,9 @@ void dungeon_terrain_changed(const coord_def &pos,
             destroy_trap(pos);
     }
 
+    _dgn_check_terrain_monsters(pos);
     _dgn_check_terrain_items(pos, preserve_items);
+    _dgn_check_terrain_monsters(pos);
     if (!wizmode)
         _dgn_check_terrain_player(pos);
     if (!temporary && feature_mimic_at(pos))
@@ -1272,12 +1383,11 @@ void dungeon_terrain_changed(const coord_def &pos,
 
 static void _announce_swap_real(coord_def orig_pos, coord_def dest_pos)
 {
-    const dungeon_feature_type orig_feat = grd(dest_pos);
+    const dungeon_feature_type orig_feat = env.grid(dest_pos);
 
     const string orig_name =
         feature_description_at(dest_pos, false,
-                            you.see_cell(orig_pos) ? DESC_THE : DESC_A,
-                            false);
+                            you.see_cell(orig_pos) ? DESC_THE : DESC_A);
 
     string prep = feat_preposition(orig_feat, false);
 
@@ -1329,8 +1439,8 @@ static void _announce_swap(coord_def pos1, coord_def pos2)
     if (!you.see_cell(pos1) && !you.see_cell(pos2))
         return;
 
-    const dungeon_feature_type feat1 = grd(pos1);
-    const dungeon_feature_type feat2 = grd(pos2);
+    const dungeon_feature_type feat1 = env.grid(pos1);
+    const dungeon_feature_type feat2 = env.grid(pos2);
 
     if (feat1 == feat2)
         return;
@@ -1363,8 +1473,8 @@ bool swap_features(const coord_def &pos1, const coord_def &pos2,
     if (is_sanctuary(pos1) || is_sanctuary(pos2))
         return false;
 
-    const dungeon_feature_type feat1 = grd(pos1);
-    const dungeon_feature_type feat2 = grd(pos2);
+    const dungeon_feature_type feat1 = env.grid(pos1);
+    const dungeon_feature_type feat2 = env.grid(pos2);
 
     if (is_notable_terrain(feat1) && !you.see_cell(pos1)
         && env.map_knowledge(pos1).known())
@@ -1402,7 +1512,7 @@ bool swap_features(const coord_def &pos1, const coord_def &pos2,
                 continue;
 
             if (!env.markers.find(pos, MAT_ANY)
-                && !is_notable_terrain(grd(pos))
+                && !is_notable_terrain(env.grid(pos))
                 && !cloud_at(pos))
             {
                 temp = pos;
@@ -1424,7 +1534,7 @@ bool swap_features(const coord_def &pos1, const coord_def &pos2,
     (void) move_notable_thing(pos1, temp);
     env.markers.move(pos1, temp);
     dungeon_events.move_listeners(pos1, temp);
-    grd(pos1) = DNGN_UNSEEN;
+    env.grid(pos1) = DNGN_UNSEEN;
     env.pgrid(pos1) = terrain_property_t{};
 
     (void) move_notable_thing(pos2, pos1);
@@ -1438,8 +1548,8 @@ bool swap_features(const coord_def &pos1, const coord_def &pos2,
     dungeon_events.move_listeners(temp, pos2);
 
     // Swap features and colours.
-    grd(pos2) = feat1;
-    grd(pos1) = feat2;
+    env.grid(pos2) = feat1;
+    env.grid(pos1) = feat2;
 
     env.grid_colours(pos1) = col2;
     env.grid_colours(pos2) = col1;
@@ -1515,21 +1625,21 @@ bool swap_features(const coord_def &pos1, const coord_def &pos2,
     // Swap monsters.
     // Note that trapping nets, etc., move together
     // with the monster/player, so don't clear them.
-    const int m1 = mgrd(pos1);
-    const int m2 = mgrd(pos2);
+    const int m1 = env.mgrid(pos1);
+    const int m2 = env.mgrid(pos2);
 
-    mgrd(pos1) = m2;
-    mgrd(pos2) = m1;
+    env.mgrid(pos1) = m2;
+    env.mgrid(pos2) = m1;
 
     if (monster_at(pos1))
     {
-        menv[mgrd(pos1)].set_position(pos1);
-        menv[mgrd(pos1)].clear_invalid_constrictions();
+        env.mons[env.mgrid(pos1)].set_position(pos1);
+        env.mons[env.mgrid(pos1)].clear_invalid_constrictions();
     }
     if (monster_at(pos2))
     {
-        menv[mgrd(pos2)].set_position(pos2);
-        menv[mgrd(pos2)].clear_invalid_constrictions();
+        env.mons[env.mgrid(pos2)].set_position(pos2);
+        env.mons[env.mgrid(pos2)].clear_invalid_constrictions();
     }
 
     swap_clouds(pos1, pos2);
@@ -1539,12 +1649,14 @@ bool swap_features(const coord_def &pos1, const coord_def &pos2,
         you.set_position(pos2);
         you.clear_invalid_constrictions();
         viewwindow();
+        update_screen();
     }
     else if (pos2 == you.pos())
     {
         you.set_position(pos1);
         you.clear_invalid_constrictions();
         viewwindow();
+        update_screen();
     }
 
     set_terrain_changed(pos1);
@@ -1560,7 +1672,7 @@ static bool _ok_dest_cell(const actor* orig_actor,
                           const dungeon_feature_type orig_feat,
                           const coord_def dest_pos)
 {
-    const dungeon_feature_type dest_feat = grd(dest_pos);
+    const dungeon_feature_type dest_feat = env.grid(dest_pos);
 
     if (orig_feat == dest_feat)
         return false;
@@ -1586,7 +1698,7 @@ bool slide_feature_over(const coord_def &src, coord_def preferred_dest,
 {
     ASSERT_IN_BOUNDS(src);
 
-    const dungeon_feature_type orig_feat = grd(src);
+    const dungeon_feature_type orig_feat = env.grid(src);
     const actor* orig_actor = actor_at(src);
 
     if (in_bounds(preferred_dest)
@@ -1624,68 +1736,293 @@ void actor_apply_terrain(actor* act, dungeon_feature_type terrain)
 {
     int original = 0;
     int hurted = 0;
+    int actual = 0;
     monster *mon = act->as_monster();
+    mid_t source = MID_NOBODY;
+    string aux_source = "";
+    bool mount = act->is_player() && you.mounted();
+
+    // Handling death messages and who gets the EXP.
+    if (act->confused())
+    {
+        if (act->is_monster())
+        {
+            actor * agent = act->as_monster()->get_ench(ENCH_CONFUSION).agent();
+            if (agent)
+                source = agent->mid;
+        }
+        aux_source = "blundered into %s while confused.";
+    }
+    else if (act->props.exists(KNOCKBACK_KEY))
+    {
+        source = act->props[KNOCKBACK_KEY].get_int();
+        aux_source = "knocked back into %s.";
+    }
+    else if (act->props.exists(PULLED_KEY))
+    {
+        source = act->props[PULLED_KEY].get_int();
+        aux_source = "wretched into %s.";
+    }
+
     if (feat_is_lava(terrain))
     {
+        if (aux_source.length() > 1)
+            aux_source = make_stringf(aux_source.c_str(), "lava");
+
         if (act->is_player())
         {
             original = (12 + roll_dice(3, 21));
-            hurted = resist_adjust_damage(act, BEAM_FIRE, original);
-            if (hurted > original)
-                mpr("The lava burns you terribly!");
-            else
-                mpr("The lava burns!");
-            if (hurted < original)
-                canned_msg(MSG_YOU_RESIST);
-            ouch(timescale_damage(act, hurted) , KILLED_BY_LAVA, MID_NOBODY, "Lava");
+            hurted = resist_adjust_damage(act, BEAM_FIRE, original, mount);
+            actual = timescale_damage(act, hurted);
+
+            if (you.species == SP_MOLTEN_GARGOYLE) // special case to absorb JUST ground lava.
+                actual = -1;
+
+            const int healz = timescale_damage(act, 1 + random2(4)); // Only weak regen since lava is constant.
+
+            if (mount)
+            {
+                if (actual > 0)
+                {
+                    mprf("The lava burns your %s%s%s%s",
+                        you.mount_name(true).c_str(),
+                        hurted > original ? " terribly" : "",
+                        attack_strength_punctuation(actual).c_str(),
+                        hurted < original ? " It resists." : "");
+                    damage_mount(actual);
+                }
+                else if (actual < 0)
+                {
+                    mprf("Your %s absorbs some lava%s",
+                        you.mount_name(true).c_str(),
+                        attack_strength_punctuation(healz).c_str());
+                    heal_mount(healz);
+                }
+            }
+            else if (actual > 0)
+            {
+                if (hurted > original)
+                    mprf("The lava burns you terribly%s", attack_strength_punctuation(actual).c_str());
+                else
+                    mprf("The lava burns%s", attack_strength_punctuation(actual).c_str());
+                if (hurted < original)
+                    canned_msg(MSG_YOU_RESIST);
+                ouch(actual, KILLED_BY_LAVA, source, aux_source.c_str());
+            }
+            else if (actual < 0 && you.hp < you.hp_max)
+            {
+                if (you.species == SP_MOLTEN_GARGOYLE)
+                    mprf("Your molten form reforms in the lava%s", attack_strength_punctuation(healz).c_str());
+                else
+                    mprf("You absorb the scorching heat from the lava%s", attack_strength_punctuation(healz).c_str());
+                you.heal(healz, true);
+            }
+            you.expose_to_element(BEAM_FIRE, 4);
         }
         else
         {
             original = (8 + roll_dice(3, 14));
             hurted = resist_adjust_damage(act, BEAM_FIRE, original);
+            actual = timescale_damage(act, hurted);
             if (mons_primary_habitat(*mon) == HT_LAVA || mons_primary_habitat(*mon) == HT_AMPHIBIOUS_LAVA)
-                hurted = 0;
-            if (you.can_see(*act) && hurted > 0)
-                mpr(make_stringf("The lava burns %s%s%s", act->name(DESC_THE).c_str(), hurted > original ? " terribly!" : ".", hurted < original ? " It resists." : ""));
-            act->hurt(nullptr, hurted, BEAM_FIRE, KILLED_BY_LAVA, "Lava", "", true, true);
+                actual = -1;
+            if (actual > 0)
+            {
+                if (you.can_see(*act))
+                {
+                    mprf("The lava burns %s%s%s%s", act->name(DESC_THE).c_str(), hurted > original ? " terribly" : "",
+                        attack_strength_punctuation(actual).c_str(), hurted < original ? " It resists." : "");
+                }
+                act->hurt(actor_by_mid(source), actual, BEAM_FIRE, KILLED_BY_LAVA, "", aux_source.c_str(), true, true);
+            }
+            else if (actual < 0 && act->stat_hp() < act->stat_maxhp())
+            {
+                const int healz = timescale_damage(act, 1 + random2(4)); // Only weak regen since lava is constant.
+
+                if (mons_primary_habitat(*mon) == HT_LAVA || mons_primary_habitat(*mon) == HT_AMPHIBIOUS_LAVA)
+                    mprf("%s regenerates from its natural habitat%s", act->name(DESC_THE).c_str(), attack_strength_punctuation(healz).c_str());
+                else
+                    mprf("%s reforms from the lava%s", act->name(DESC_THE).c_str(), attack_strength_punctuation(healz).c_str());
+
+                act->heal(healz, true);
+            }
         }
     }
-    else if (terrain == DNGN_DEEP_WATER)
+    else if (terrain == DNGN_DEEP_WATER || terrain == DNGN_DEEP_SLIMY_WATER)
     {
+        if (aux_source.length() > 1)
+        {
+            if (terrain == DNGN_DEEP_SLIMY_WATER)
+                aux_source = make_stringf(aux_source.c_str(), "deep slime");
+            else
+                aux_source = make_stringf(aux_source.c_str(), "deep water");
+        }
+
         if (act->is_player())
         {
+            // BCADDO: Mild regen for water elementals, when adding Djinn. :)
+
             if (you.drowning())
             {
-                if (!you.res_water_drowning() && you.petrified())
+                if (mount) // Should only happen to spider mount most the time (drake will have it happen if forced down by roots, etc.)
                 {
-                    mpr("You are drowning!");
-                    ouch(timescale_damage(act, roll_dice(2, 10)), KILLED_BY_WATER, MID_NOBODY, "Deep Water");
-                }
-                else if (coinflip())
-                {
-                    if (!silenced(you.pos()))
+                    if (!you.res_water_drowning(true))
                     {
-                        mpr("Your struggles to swim create loud splashing noises!");
-                        noisy(25, you.position);
+                        actual = timescale_damage(act, roll_dice(2, 10));
+                        mprf("Your %s drowns%s", you.mount_name(true).c_str(), attack_strength_punctuation(actual).c_str());
+                        damage_mount(actual);
                     }
                 }
-                else if (!you.res_water_drowning() && coinflip())
+                else
                 {
-                    if (coinflip())
-                        mpr("Your lungs burn in need of oxygen!");
+                    if (!you.res_water_drowning() && you.petrified())
+                    {
+                        actual = timescale_damage(act, roll_dice(2, 10));
+                        mprf("You are drowning%s", attack_strength_punctuation(actual).c_str());
+                        ouch(actual, KILLED_BY_WATER, source, aux_source.c_str());
+                    }
                     else if (coinflip())
-                        mpr("You are drowning!");
-                    else
-                        mpr("You inhale water!");
-                    ouch(timescale_damage(act, roll_dice(2, 10)), KILLED_BY_WATER, MID_NOBODY, "Deep Water");
+                    {
+                        if (!silenced(you.pos()) && !you.is_stationary())
+                        {
+                            mpr("Your struggles to swim create loud splashing noises!");
+                            noisy(25, you.position);
+                        }
+                    }
+                    else if (!you.res_water_drowning() && coinflip())
+                    {
+                        actual = timescale_damage(act, roll_dice(2, 10));
+                        if (coinflip())
+                            mprf("Your lungs burn in need of oxygen%s", attack_strength_punctuation(actual).c_str());
+                        else if (terrain == DNGN_DEEP_WATER)
+                        {
+                            if (coinflip())
+                                mprf("You are drowning%s", attack_strength_punctuation(actual).c_str());
+                            else
+                                mprf("You inhale water%s", attack_strength_punctuation(actual).c_str());
+                        }
+                        else
+                            mprf("You injest ooze%s", attack_strength_punctuation(actual).c_str());
+                        ouch(actual, KILLED_BY_WATER, source, aux_source.c_str());
+                    }
                 }
             }
         }
         else if (!act->res_water_drowning() && (mons_primary_habitat(*mon) != HT_WATER) &&
             (mons_primary_habitat(*mon) != HT_AMPHIBIOUS) && (mon->body_size(PSIZE_BODY) < SIZE_GIANT))
         {
-            act->hurt(nullptr, timescale_damage(act, roll_dice(2, 7)), BEAM_WATER, KILLED_BY_WATER, "Deep Water", "", true, true);
+            original = roll_dice(2, 7);
+            hurted = resist_adjust_damage(act, BEAM_WATER, original);
+            actual = timescale_damage(act, hurted);
+
+            if (actual)
+            {
+                mprf("%s drowns%s", act->name(DESC_THE).c_str(), attack_strength_punctuation(actual).c_str());
+                act->hurt(actor_by_mid(source), actual, BEAM_WATER, KILLED_BY_WATER, "", aux_source.c_str(), true, true);
+            }
         }
+        else if (act->res_water_drowning() > 4)
+        {
+            const int healz = timescale_damage(act, 3);
+            
+            mprf("%s reforms from the water around it%s", act->name(DESC_THE).c_str(), attack_strength_punctuation(healz).c_str());
+            act->heal(healz, true);
+        }
+    }
+
+    if (terrain == DNGN_SLIMY_WATER || terrain == DNGN_DEEP_SLIMY_WATER)
+    {
+        if (aux_source.length() > 1)
+            aux_source = make_stringf(aux_source.c_str(), "slime");
+
+        original = (1 + roll_dice(2, 4));
+        hurted = resist_adjust_damage(act, BEAM_ACID, original, mount);
+        actual = timescale_damage(act, hurted);
+        const int healz = timescale_damage(act, 2 + random2(4));
+
+        if (!actual)
+            return;
+
+        if (act->is_player())
+        {
+            if (actual > 0)
+            {
+                if (you_worship(GOD_JIYVA))
+                    return;
+
+                if (mount)
+                {
+                    mprf("The acidic ooze burns your %s%s%s%s",
+                        you.mount_name(true).c_str(),
+                        hurted > original ? " terribly" : "",
+                        attack_strength_punctuation(actual).c_str(),
+                        hurted < original ? " It resists." : "");
+                    damage_mount(actual);
+                }
+                else
+                {
+                    if (hurted > original)
+                        mprf("The acidic ooze burns you terribly%s", attack_strength_punctuation(actual).c_str());
+                    else
+                        mprf("The acidic ooze burns%s", attack_strength_punctuation(actual).c_str());
+                    if (hurted < original)
+                        canned_msg(MSG_YOU_RESIST);
+                    ouch(actual, KILLED_BY_ACID, source, aux_source.c_str());
+                }
+            }
+            else
+            {
+                if (mount)
+                {
+                    if (you.mount == mount_type::slime)
+                        return;
+                    int healed = heal_mount(healz);
+                    if (healed)
+                    {
+                        mprf("Your %s reforms in the acidic ooze%s", you.mount_name(true).c_str(),
+                            attack_strength_punctuation(healed).c_str());
+                    }
+                }
+                else
+                {
+                    mprf("Your gelatinous form absorbs some acidic slime%s", attack_strength_punctuation(healz).c_str());
+                    you.heal(healz, true);
+                }
+            }
+        }
+
+        else if (act->is_monster())
+        {
+            if (mon->res_acid() > 3)
+            {
+                if (mon->hit_points < mon->max_hit_points)
+                {
+                    if (you.can_see(*act))
+                    {
+                        mprf("%s reforms in the acidic ooze%s", uppercase_first(act->name(DESC_THE)).c_str(),
+                            attack_strength_punctuation(healz).c_str());
+                    }
+                    act->heal(healz);
+                }
+            }
+            else if (mons_primary_habitat(*mon) == HT_SLIME)
+                return;
+            else if (hurted > 0)
+            {
+                if (you.can_see(*act))
+                {
+                    mprf("The acidic ooze burns %s%s%s%s", act->name(DESC_THE).c_str(), original > hurted ? " terribly" : "",
+                        attack_strength_punctuation(actual).c_str(), original < hurted ? " It resists." : "");
+                }
+                act->hurt(actor_by_mid(source), actual, BEAM_ACID, KILLED_BY_ACID, "", aux_source.c_str(), true, true);
+            }
+        }
+
+        if (hurted < 0)
+            hurted = 0;
+
+        if (act->alive() && x_chance_in_y(hurted, 20))
+            act->corrode_equipment("acidic ooze", 1, mount);
     }
 }
 
@@ -1709,13 +2046,10 @@ dungeon_feature_type feat_by_desc(string desc)
 {
     lowercase(desc);
 
-    if (desc[desc.size() - 1] != '.')
-        desc += ".";
-
 #if TAG_MAJOR_VERSION == 34
     // hard-coded because all the dry fountain variants match this description,
     // and they have a lower enum value, so the first is incorrectly returned
-    if (desc == "a dry fountain.")
+    if (desc == "a dry fountain")
         return DNGN_DRY_FOUNTAIN;
 #endif
 
@@ -1994,9 +2328,9 @@ void set_terrain_changed(const coord_def p)
     if (cell_is_solid(p))
         delete_cloud(p);
 
-    if (grd(p) == DNGN_SLIMY_WALL)
+    if (env.grid(p) == DNGN_SLIMY_WALL)
         env.level_state |= LSTATE_SLIMY_WALL;
-    else if (grd(p) == DNGN_OPEN_DOOR)
+    else if (env.grid(p) == DNGN_OPEN_DOOR)
     {
         // Restore colour from door-change markers
         for (map_marker *marker : env.markers.get_markers_at(p))
@@ -2025,20 +2359,20 @@ void set_terrain_changed(const coord_def p)
 
     for (orth_adjacent_iterator ai(p); ai; ++ai)
         if (actor *act = actor_at(*ai))
-            act->check_clinging(false, feat_is_door(grd(p)));
+            act->check_clinging(false, feat_is_door(env.grid(p)));
 }
 
 /**
- * Does this cell count for exploraation piety?
+ * Does this cell count for exploration piety?
  *
  * Don't count: endless map borders, deep water, lava, and cells explicitly
  * marked. (player_view_update_at in view.cc updates the flags)
  */
 bool cell_triggers_conduct(const coord_def p)
 {
-    return !(feat_is_endless(grd(p))
-             || grd(p) == DNGN_LAVA
-             || grd(p) == DNGN_DEEP_WATER
+    return !(feat_is_endless(env.grid(p))
+             || env.grid(p) == DNGN_LAVA
+             || env.grid(p) == DNGN_DEEP_WATER
              || env.pgrid(p) & FPROP_SEEN_OR_NOEXP);
 }
 
@@ -2067,7 +2401,7 @@ dungeon_feature_type orig_terrain(coord_def pos)
 {
     const map_marker *mark = env.markers.find(pos, MAT_TERRAIN_CHANGE);
     if (!mark)
-        return grd(pos);
+        return env.grid(pos);
 
     const map_terrain_change_marker *terch
         = dynamic_cast<const map_terrain_change_marker *>(mark);
@@ -2076,26 +2410,49 @@ dungeon_feature_type orig_terrain(coord_def pos)
     return terch->old_feature;
 }
 
-void mutate_terrain_change_duration(coord_def pos, int delta, bool replace)
+bool mutate_terrain_change_duration(coord_def pos, int delta, bool replace)
 {
     map_marker *mark = env.markers.find(pos, MAT_TERRAIN_CHANGE);
     map_terrain_change_marker *terch = dynamic_cast<map_terrain_change_marker *>(mark);
 
-    if (replace)
-    {
-        if (delta > terch->duration)
-            terch->duration = delta;
-        else
-            terch->duration += div_rand_round(delta, 10);
-    }
+    if (!terch)
+        return false;
     else
-        terch->duration += delta;
+    {
+        if (replace)
+        {
+            if (delta > terch->duration)
+                terch->duration = delta;
+            else
+                terch->duration += div_rand_round(delta, 10);
+        }
+        else
+            terch->duration += delta;
+    }
+    return true;
+}
+
+// Only used by Silver Stars to check if they are currently in their own sanctum.
+bool order_at(const coord_def pos)
+{
+    for (map_marker *marker : env.markers.get_markers_at(pos))
+    {
+        if (marker->get_type() == MAT_TERRAIN_CHANGE)
+        {
+            map_terrain_change_marker* tmarker =
+                dynamic_cast<map_terrain_change_marker*>(marker);
+
+            if (tmarker->change_type == TERRAIN_CHANGE_IMPRISON)
+                return true;
+        }
+    }
+    return false;
 }
 
 void temp_change_terrain(coord_def pos, dungeon_feature_type newfeat, int dur,
                          terrain_change_type type, const monster* mon)
 {
-    dungeon_feature_type old_feat = grd(pos);
+    dungeon_feature_type old_feat = env.grid(pos);
     for (map_marker *marker : env.markers.get_markers_at(pos))
     {
         if (marker->get_type() == MAT_TERRAIN_CHANGE)
@@ -2135,7 +2492,7 @@ void temp_change_terrain(coord_def pos, dungeon_feature_type newfeat, int dur,
 
     // If we are trying to change terrain into what it already is, don't actually
     // add another marker (unless the current terrain is due to some OTHER marker)
-    if (grd(pos) == newfeat && newfeat == old_feat)
+    if (env.grid(pos) == newfeat && newfeat == old_feat)
         return;
 
     int col = env.grid_colours(pos);
@@ -2147,17 +2504,29 @@ void temp_change_terrain(coord_def pos, dungeon_feature_type newfeat, int dur,
     dungeon_terrain_changed(pos, newfeat, false, true, true);
 }
 
-/// What terrain type do destroyed feats become, in the current branch?
-static dungeon_feature_type _destroyed_feat_type()
+/// What terrain type does this feat become when destroyed?
+static dungeon_feature_type _destroyed_feat_type(dungeon_feature_type oldfeat)
 {
-    return player_in_branch(BRANCH_SWAMP) ?
-        DNGN_SHALLOW_WATER :
-        DNGN_FLOOR;
+    switch (oldfeat)
+    {
+    case DNGN_MANGROVE:
+        return DNGN_SHALLOW_WATER;
+    case DNGN_SLIMY_WALL:
+        if (!one_chance_in(3))
+            return DNGN_FLOOR;
+        // fallthrough
+    case DNGN_SLIMESHROOM:
+        return you.royal_jelly_dead ? DNGN_FLOOR : DNGN_SLIMY_WATER;
+    default:
+        break;
+    }
+    return DNGN_FLOOR;
 }
 
 static bool _revert_terrain_to_floor(coord_def pos)
 {
-    dungeon_feature_type newfeat = _destroyed_feat_type();
+    dungeon_feature_type oldfeat = env.grid(pos);
+    dungeon_feature_type newfeat = _destroyed_feat_type(oldfeat);
     for (map_marker *marker : env.markers.get_markers_at(pos))
     {
         if (marker->get_type() == MAT_TERRAIN_CHANGE)
@@ -2168,29 +2537,42 @@ static bool _revert_terrain_to_floor(coord_def pos)
             // Don't revert sealed doors to normal doors if we're trying to
             // remove the door altogether
             // Same for destroyed trees
-            if ((tmarker->change_type == TERRAIN_CHANGE_DOOR_SEAL
+            if (tmarker->change_type == TERRAIN_CHANGE_DOOR_SEAL
                 || tmarker->change_type == TERRAIN_CHANGE_FORESTED)
-                && newfeat == _destroyed_feat_type())
             {
+                env.markers.remove(tmarker);
+            }
+            else if (tmarker->change_type == TERRAIN_CHANGE_SLIME)
+            {
+                newfeat = _destroyed_feat_type(tmarker->old_feature);
                 env.markers.remove(tmarker);
             }
             else
             {
                 newfeat = tmarker->old_feature;
-                if (tmarker->new_feature == grd(pos))
+                if (tmarker->new_feature == oldfeat)
                     env.markers.remove(tmarker);
             }
         }
     }
 
-    if (grd(pos) == DNGN_RUNED_DOOR && newfeat != DNGN_RUNED_DOOR
-        || grd(pos) == DNGN_RUNED_CLEAR_DOOR
-           && newfeat != DNGN_RUNED_CLEAR_DOOR)
+    if (oldfeat == DNGN_RUNED_DOOR && newfeat != DNGN_RUNED_DOOR
+        || oldfeat == DNGN_RUNED_CLEAR_DOOR 
+        && newfeat != DNGN_RUNED_CLEAR_DOOR)
     {
-        explored_tracked_feature(grd(pos));
+        explored_tracked_feature(env.grid(pos));
     }
 
-    grd(pos) = newfeat;
+    env.grid(pos) = newfeat;
+
+    if (oldfeat == DNGN_SLIMESHROOM && jiyva_is_dead())
+    {
+        env.grid_colours(pos) = WHITE;
+        tile_env.flv(pos).floor_idx =
+            store_tilename_get_index("floor_ruined_slime");
+        tile_env.flv(pos).floor = TILE_FLOOR_RUINED_SLIME;
+    }
+
     set_terrain_changed(pos);
 
     tile_clear_flavour(pos);
@@ -2231,13 +2613,16 @@ bool revert_terrain_change(coord_def pos, terrain_change_type ctype)
     }
 
     // Don't revert opened sealed doors.
-    if (feat_is_door(newfeat) && grd(pos) == DNGN_OPEN_DOOR)
+    if (feat_is_door(newfeat) && env.grid(pos) == DNGN_OPEN_DOOR)
         newfeat = DNGN_UNSEEN;
 
     if (newfeat != DNGN_UNSEEN)
     {
+        if (ctype == TERRAIN_CHANGE_BOG)
+            env.map_knowledge(pos).set_feature(newfeat, colour);
         dungeon_terrain_changed(pos, newfeat, false, true);
         env.grid_colours(pos) = colour;
+
         return true;
     }
     else
@@ -2273,7 +2658,7 @@ bool plant_forbidden_at(const coord_def &p, bool connectivity_only)
     {
         coord_def q = p + Compass[i];
 
-        if (feat_is_traversable(grd(q), true))
+        if (feat_is_traversable(env.grid(q), true))
         {
             ++passable;
             if (first < 0)
@@ -2330,12 +2715,12 @@ vector<coord_def> get_push_spaces(const coord_def& pos, bool push_actor,
             return results;
     }
 
-    dungeon_feature_type starting_feat = grd(pos);
+    dungeon_feature_type starting_feat = env.grid(pos);
     vector<coord_def> bad_spots; // used for items
 
     for (adjacent_iterator ai(pos); ai; ++ai)
     {
-        dungeon_feature_type feat = grd(*ai);
+        dungeon_feature_type feat = env.grid(*ai);
 
         // Make sure the spot wasn't already vetoed. This is used e.g. for
         // imprison, to pre-exclude all the spots where a wall will be.
@@ -2404,7 +2789,7 @@ bool push_items_from(const coord_def& pos, const vector<coord_def>* excluded)
     if (targets.empty())
         return false;
     // TODO: splashing is flavorful, but how annoying is it in practice?
-    while (igrd(pos) != NON_ITEM)
+    while (env.igrid(pos) != NON_ITEM)
         result |= move_top_item(pos, targets[random2(targets.size())]);
     return result;
 }
@@ -2445,13 +2830,13 @@ coord_def push_actor_from(const coord_def& pos,
  */
 void dgn_close_door(const coord_def &dest)
 {
-    if (!feat_is_open_door(grd(dest)))
+    if (!feat_is_open_door(env.grid(dest)))
         return;
 
-    if (grd(dest) == DNGN_OPEN_CLEAR_DOOR)
-        grd(dest) = DNGN_CLOSED_CLEAR_DOOR;
+    if (env.grid(dest) == DNGN_OPEN_CLEAR_DOOR)
+        env.grid(dest) = DNGN_CLOSED_CLEAR_DOOR;
     else
-        grd(dest) = DNGN_CLOSED_DOOR;
+        env.grid(dest) = DNGN_CLOSED_DOOR;
 }
 
 /** Open any door at the given position. Handles the grid change, but does not
@@ -2461,14 +2846,14 @@ void dgn_close_door(const coord_def &dest)
  */
 void dgn_open_door(const coord_def &dest)
 {
-    if (!feat_is_closed_door(grd(dest)))
+    if (!feat_is_closed_door(env.grid(dest)))
         return;
 
-    if (grd(dest) == DNGN_CLOSED_CLEAR_DOOR
-        || grd(dest) == DNGN_RUNED_CLEAR_DOOR)
+    if (env.grid(dest) == DNGN_CLOSED_CLEAR_DOOR
+        || env.grid(dest) == DNGN_RUNED_CLEAR_DOOR)
     {
-        grd(dest) = DNGN_OPEN_CLEAR_DOOR;
+        env.grid(dest) = DNGN_OPEN_CLEAR_DOOR;
     }
     else
-        grd(dest) = DNGN_OPEN_DOOR;
+        env.grid(dest) = DNGN_OPEN_DOOR;
 }

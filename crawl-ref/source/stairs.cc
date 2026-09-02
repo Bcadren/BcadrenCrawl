@@ -18,18 +18,15 @@
 #include "directn.h"
 #include "env.h"
 #include "files.h"
-#include "fprop.h"
 #include "god-abil.h"
 #include "god-passive.h" // passive_t::slow_abyss
 #include "hints.h"
 #include "hiscores.h"
 #include "item-name.h"
-#include "item-status-flag-type.h"
 #include "items.h"
 #include "level-state-type.h"
 #include "mapmark.h"
 #include "message.h"
-#include "misc.h"
 #include "mon-death.h"
 #include "movement.h"
 #include "notes.h"
@@ -40,9 +37,9 @@
 #include "spl-clouds.h"
 #include "spl-damage.h"
 #include "spl-other.h"
-#include "spl-transloc.h"
 #include "state.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "terrain.h"
 #ifdef USE_TILE_LOCAL
  #include "tilepick.h"
@@ -53,45 +50,62 @@
 #include "view.h"
 #include "xom.h"
 
-bool check_annotation_exclusion_warning()
+static string _annotation_exclusion_warning(level_id next_level_id)
 {
-    level_id  next_level_id = level_id::get_next_level_id(you.pos());
-
-    crawl_state.level_annotation_shown = false;
-    bool might_be_dangerous = false;
-
     if (level_annotation_has("!", next_level_id)
         && next_level_id != level_id::current()
         && is_connected_branch(next_level_id))
     {
-        mprf(MSGCH_PROMPT, "Warning, next level annotated: <yellow>%s</yellow>",
-             get_level_annotation(next_level_id).c_str());
-        might_be_dangerous = true;
         crawl_state.level_annotation_shown = true;
-    }
-    else if (is_exclude_root(you.pos())
-             && feat_is_travelable_stair(grd(you.pos()))
-             && !strstr(get_exclusion_desc(you.pos()).c_str(), "cloud"))
-    {
-        mprf(MSGCH_WARN, "This staircase is marked as excluded!");
-        might_be_dangerous = true;
+        return make_stringf("Warning, next level annotated: <yellow>%s</yellow>",
+                            get_level_annotation(next_level_id).c_str());
     }
 
-    if (feat_is_travelable_stair(grd(you.pos())))
+    if (is_exclude_root(you.pos())
+             && feat_is_travelable_stair(env.grid(you.pos()))
+             && !strstr(get_exclusion_desc(you.pos()).c_str(), "cloud"))
     {
-        if (LevelInfo *li = travel_cache.find_level_info(level_id::current()))
-        {
-            if (const stair_info *si = li->get_stair(you.pos()))
-            {
-                if (stairs_destination_is_excluded(*si))
-                {
-                    mprf(MSGCH_WARN,
-                         "This staircase leads to a travel-excluded area!");
-                    might_be_dangerous = true;
-                }
-            }
-        }
+        return "This staircase is marked as excluded!";
     }
+
+    return "";
+}
+
+static string _target_exclusion_warning()
+{
+    if (!feat_is_travelable_stair(env.grid(you.pos())))
+        return "";
+
+    LevelInfo *li = travel_cache.find_level_info(level_id::current());
+    if (!li)
+        return "";
+
+    const stair_info *si = li->get_stair(you.pos());
+    if (!si)
+        return "";
+
+    if (stairs_destination_is_excluded(*si))
+        return "This staircase leads to a travel-excluded area!";
+
+    return "";
+}
+
+bool check_next_floor_warning()
+{
+    level_id  next_level_id = level_id::get_next_level_id(you.pos());
+
+    crawl_state.level_annotation_shown = false;
+    const string annotation_warning = _annotation_exclusion_warning(next_level_id);
+
+    const string target_warning = _target_exclusion_warning();
+
+    if (annotation_warning != "")
+        mprf(MSGCH_PROMPT, "%s", annotation_warning.c_str());
+    if (target_warning != "")
+        mprf(MSGCH_PROMPT, "%s", target_warning.c_str());
+
+    const bool might_be_dangerous = annotation_warning != ""
+                                 || target_warning != "";
 
     if (might_be_dangerous
         && !yesno("Enter next level anyway?", true, 'n', true, false))
@@ -131,7 +145,7 @@ static bool _stair_moves_pre(dungeon_feature_type stair)
     if (crawl_state.prev_cmd == CMD_WIZARD)
         return false;
 
-    if (stair != grd(you.pos()))
+    if (stair != env.grid(you.pos()))
         return false;
 
     if (feat_stair_direction(stair) == CMD_NO_CMD)
@@ -155,7 +169,7 @@ static bool _stair_moves_pre(dungeon_feature_type stair)
         return false;
 
     // Get feature name before sliding stair over.
-    string stair_str = feature_description_at(you.pos(), false, DESC_THE, false);
+    string stair_str = feature_description_at(you.pos(), false, DESC_THE);
 
     if (!slide_feature_over(you.pos()))
         return false;
@@ -321,7 +335,7 @@ static bool _check_stairs(const dungeon_feature_type ftype, bool going_up)
             if (ftype == DNGN_STONE_ARCH)
                 mpr("There is nothing on the other side of the stone arch.");
             else if (ftype == DNGN_ABANDONED_SHOP)
-                mpr("This shop appears to be closed.");
+                mpr("This shop has been abandoned, nothing of value remains.");
             else if (going_up)
                 mpr("You can't go up here!");
             else
@@ -383,7 +397,8 @@ static void _rune_effect(dungeon_feature_type ftype)
 
             mprf("You insert the %s rune into the lock.", rune_type_name(runes[2]));
 #ifdef USE_TILE_LOCAL
-            tiles.add_overlay(you.pos(), tileidx_zap(rune_colour(runes[2])));
+            view_add_tile_overlay(you.pos(), tileidx_zap(rune_colour(runes[2])));
+            viewwindow(false);
             update_screen();
 #else
             flash_view(UA_BRANCH_ENTRY, rune_colour(runes[2]));
@@ -394,6 +409,7 @@ static void _rune_effect(dungeon_feature_type ftype)
             mprf("You insert the %s rune into the lock.", rune_type_name(runes[1]));
             big_cloud(CLOUD_BLUE_SMOKE, &you, you.pos(), 20, 7 + random2(7));
             viewwindow();
+            update_screen();
             mpr("Heavy smoke blows from the lock!");
             // included in default force_more_message
         }
@@ -411,7 +427,7 @@ static void _rune_effect(dungeon_feature_type ftype)
 static void _gauntlet_effect()
 {
     // already doomed
-    if (you.species == SP_FORMICID)
+    if (you.get_mutation_level(MUT_STASIS))
         return;
 
     mprf(MSGCH_WARN, "The nature of this place prevents you from teleporting.");
@@ -491,7 +507,7 @@ static level_id _travel_destination(const dungeon_feature_type how,
             return dest;
         }
 
-        shaft_dest = you.shaft_dest(known_shaft);
+        shaft_dest = you.shaft_dest();
     }
     // How far down you fall via a shaft or hatch.
     const int shaft_depth = (shaft ? shaft_dest.depth - you.depth : 1);
@@ -552,6 +568,8 @@ static level_id _travel_destination(const dungeon_feature_type how,
              you.airborne() ? "are sucked" : "fall",
              shaft_depth,
              shaft_depth > 1 ? "s" : "");
+
+        handle_items_on_shaft(you.pos());
 
         // Shafts are one-time-use.
         mpr("The shaft crumbles and collapses.");
@@ -622,6 +640,10 @@ void floor_transition(dungeon_feature_type how,
     // Clean up fake blood.
     heal_flayed_effect(&you, true, true);
 
+    // We "stepped".
+    if (!forced)
+        apply_barbs_damage();
+
     // Magical level changes (which currently only exist "downwards") need this.
     clear_trapping_net();
     end_searing_ray();
@@ -629,15 +651,6 @@ void floor_transition(dungeon_feature_type how,
     you.stop_being_constricted();
     you.clear_beholders();
     you.clear_fearmongers();
-
-    if (!forced)
-    {
-        // Break ice armour
-        remove_ice_armour_movement();
-
-        // Check for barbs and apply
-        apply_barbs_damage();
-    }
 
     // Fire level-leaving trigger.
     leaving_level_now(how);
@@ -830,7 +843,7 @@ void floor_transition(dungeon_feature_type how,
     }
 
     // Warn Formicids if they cannot shaft here
-    if (you.species == SP_FORMICID && !is_valid_shaft_level())
+    if (you.get_mutation_level(MUT_BURROWING) && !is_valid_shaft_level())
         mpr("Beware, you cannot shaft yourself on this level.");
 
     const bool newlevel = load_level(how, LOAD_ENTER_LEVEL, old_level);
@@ -854,7 +867,7 @@ void floor_transition(dungeon_feature_type how,
 
     moveto_location_effects(whence);
 
-    trackers_init_new_level(true);
+    trackers_init_new_level();
 
     if (update_travel_cache && !shaft)
         _update_travel_cache(old_level, stair_pos);
@@ -863,6 +876,7 @@ void floor_transition(dungeon_feature_type how,
     env.map_seen.set(you.pos());
 
     viewwindow();
+    update_screen();
 
     // There's probably a reason for this. I don't know it.
     if (going_up)
@@ -903,8 +917,12 @@ void take_stairs(dungeon_feature_type force_stair, bool going_up,
     if (!_level_transition_moves_player(whither, old_feat, going_up))
         return;
 
+    // The transition is "forced" for the purpose of floor_transition if
+    // a force_stair feature is specified and force_known_shaft is not set
+    // (in the latter case, the player 'moved').
     floor_transition(how, old_feat, whither,
-                     bool(force_stair), going_up, shaft, update_travel_cache);
+                     bool(force_stair) && !force_known_shaft,
+                     going_up, shaft, update_travel_cache);
 }
 
 void up_stairs(dungeon_feature_type force_stair, bool update_travel_cache)
@@ -933,6 +951,8 @@ level_id stair_destination(dungeon_feature_type feat, const string &dst,
 #if TAG_MAJOR_VERSION == 34
     if (feat == DNGN_ESCAPE_HATCH_UP && player_in_branch(BRANCH_LABYRINTH))
         feat = DNGN_EXIT_LABYRINTH;
+#else
+    UNUSED(dst); // see below in the switch
 #endif
     if (branches[you.where_are_you].exit_stairs == feat
         && parent_branch(you.where_are_you) < NUM_BRANCHES
@@ -1112,7 +1132,7 @@ static void _update_level_state()
         }
     }
     for (rectangle_iterator ri(0); ri; ++ri)
-        if (grd(*ri) == DNGN_SLIMY_WALL)
+        if (env.grid(*ri) == DNGN_SLIMY_WALL)
             env.level_state |= LSTATE_SLIMY_WALL;
 
     env.orb_pos = coord_def();

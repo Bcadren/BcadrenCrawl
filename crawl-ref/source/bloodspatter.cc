@@ -12,6 +12,7 @@
 #include "env.h"
 #include "fprop.h"
 #include "losglobal.h"
+#include "mpr.h"
 #include "religion.h"
 #include "shout.h"
 #include "terrain.h"
@@ -37,18 +38,18 @@ static bool _allow_bleeding_on_square(const coord_def& where,
         return false;
 
     // No spattering into lava or water.
-    if (feat_is_lava(grd(where)) || feat_is_water(grd(where)))
+    if (feat_is_lava(env.grid(where)) || feat_is_water(env.grid(where)))
         return false;
 
     // No spattering into fountains (other than blood).
-    if (grd(where) == DNGN_FOUNTAIN_BLUE
-        || grd(where) == DNGN_FOUNTAIN_SPARKLING)
+    if (env.grid(where) == DNGN_FOUNTAIN_BLUE
+        || env.grid(where) == DNGN_FOUNTAIN_SPARKLING)
     {
         return false;
     }
 
     // The good gods like to keep their altars pristine.
-    if (is_good_god(feat_altar_god(grd(where))))
+    if (is_good_god(feat_altar_god(env.grid(where))))
         return false;
 
     return true;
@@ -144,11 +145,13 @@ static void _maybe_bloodify_square(const coord_def& where, int amount,
             env.pgrid(where) |= FPROP_BLOODY;
             _orient_wall_blood(where, from, old_blood);
 
+            // Don't apply penance for involuntary cloud placement.
             if (ignite_blood
                 && !cell_is_solid(where)
                 && !cloud_at(where))
             {
-                place_cloud(CLOUD_FIRE, where, 5 + random2(6), &you);
+                place_cloud(CLOUD_FIRE, where, 5 + random2(6), &you, -1, -1,
+                            false);
             }
         }
 
@@ -170,9 +173,9 @@ static void _maybe_bloodify_square(const coord_def& where, int amount,
     }
 }
 
-// Currently flavour only: colour ground (and possibly adjacent squares) red.
-// "damage" depends on damage taken (or hitpoints, if damage higher),
-// or, for sacrifices, on the number of chunks possible to get out of a corpse.
+// Colour ground (and possibly adjacent squares) red. "damage" depends on damage
+// taken (or hitpoints, if damage higher), or, for butchering, on the number of
+// chunks possible to get out of a corpse.
 void bleed_onto_floor(const coord_def& where, monster_type montype,
                       int damage, bool spatter, bool smell_alert,
                       const coord_def& from, const bool old_blood)

@@ -5,10 +5,15 @@
 #include "holy-word-source-type.h"
 #include "spell-type.h"
 #include "spl-cast.h"
+#include "tag-version.h"
 #include "torment-source-type.h"
+
+class actor;
 
 spret cast_healing(int pow, bool fail);
 spret try_to_pacify(monster &mon, int healed, int pow, bool fail = false);
+vector<string> desc_pacify_chance(const monster_info& mi, const int pow);
+
 int random_effects_zap();
 bool heal_monster(monster& patient, int amount);
 
@@ -31,6 +36,7 @@ const enchant_type dispellable_enchantments[] =
     ENCH_REGENERATION,
     ENCH_TP,
     ENCH_INNER_FLAME,
+    ENCH_ENTROPIC_BURST,
     ENCH_OZOCUBUS_ARMOUR,
     ENCH_INJURY_BOND,
     ENCH_DIMENSION_ANCHOR,
@@ -49,17 +55,9 @@ const enchant_type dispellable_enchantments[] =
     ENCH_BOUND_SOUL,
 };
 
-bool player_is_debuffable();
-void debuff_player();
-bool monster_is_debuffable(const monster &mon);
-void debuff_monster(monster &mon);
-
 int detect_items(int pow);
 int detect_creatures(int pow, bool telepathic = false);
 bool remove_curse(bool alreadyknown = true, const string &pre_msg = "");
-#if TAG_MAJOR_VERSION == 34
-bool curse_item(bool armour, const string &pre_msg = "");
-#endif
 
 bool entomb(int pow);
 bool cast_imprison(int pow, monster* mons, int source);
@@ -80,7 +78,7 @@ void holy_word_player(holy_word_source_type source);
 
 void torment(actor *attacker, torment_source_type taux, const coord_def& where);
 void torment_cell(coord_def where, actor *attacker, torment_source_type taux);
-void torment_player(actor *attacker, torment_source_type taux);
+void torment_player(const actor *attacker, torment_source_type taux);
 
 void setup_cleansing_flame_beam(bolt &beam, int pow,
                                 cleansing_flame_source caster,
@@ -89,3 +87,4 @@ void cleansing_flame(int pow, cleansing_flame_source caster, coord_def where,
                      actor *attacker = nullptr);
 
 spret cast_random_effects(int pow, bolt& beam, bool fail);
+void majin_bo_vampirism(monster &mon, int damage);

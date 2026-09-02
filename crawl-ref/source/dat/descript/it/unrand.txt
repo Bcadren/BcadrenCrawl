@@ -178,7 +178,7 @@ skin of Zhor
 
 Una puzzolente pelliccia di un qualche strano animale.
 %%%%
-salamander hide armour
+salamander hide
 
 Un'armatura di cuoio fatta della pelle di salamandra.
 %%%%
@@ -328,7 +328,7 @@ Stringendo quest'ascia in mano la tua mente non sembra davvero appartenerti. Il
 tuo corpo inizia a mostrare forza ben oltre le sue capacità, e i tuoi movimenti
 diventano guidati da Makhleb.
 %%%%
-moon troll leather armour
+moon troll leather
 
 A quanto si dice, quest'armatura è stata creata incantando la pelliccia di una
 specie ormai estinta di troll. Se quest'armatura sia davvero la testimonianza

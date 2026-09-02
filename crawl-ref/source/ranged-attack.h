@@ -9,6 +9,7 @@ class ranged_attack : public attack
 public:
     int range_used;
     bool reflected;
+    int force_range = 0;
 
 // Public Methods
 public:
@@ -17,6 +18,8 @@ public:
 
     int calc_to_hit(bool random, bool player_aux = false) override;
 
+    void set_path(bolt path);
+    void ricochet();
 
     // Applies attack damage and other effects.
     bool attack();
@@ -27,14 +30,18 @@ private:
     bool handle_phase_blocked() override;
     bool handle_phase_dodged() override;
     bool handle_phase_hit() override;
+    bool handle_phase_end() override;
     bool ignores_shield(bool verbose) override;
+
+    bolt the_path;
+    string blocker = "";
 
     /* Combat Calculations */
     bool using_weapon() const override;
     int weapon_damage() override;
     int calc_base_unarmed_damage() override;
-    int calc_mon_to_hit_base() override;
-    int apply_damage_modifiers(int damage, int damage_max) override;
+    int calc_mon_to_hit_base(bool random) override;
+    int apply_damage_modifiers(int damage) override;
     bool apply_damage_brand(const char *what = nullptr) override;
     special_missile_type random_chaos_missile_brand();
     bool blowgun_check(special_missile_type type);
@@ -45,6 +52,8 @@ private:
 
     /* Weapon Effects */
     bool check_unrand_effects() override;
+
+    int attack_count;
 
     /* Attack Effects */
     bool mons_attack_effects() override;

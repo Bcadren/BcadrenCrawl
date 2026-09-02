@@ -38,6 +38,7 @@
     Marc H. Thoben (crawl.develz.org)
     dplusplus (lazy-life.ddo.jp)
     floraline (crawl.kelbi.org)
+    Namanix (crawl.xtahua.com)
   and past:
     Jan Anders Bremer (crawl.lantea.net)
     Aleksi Miikkael Luukkonen (crawl.lantea.net)
@@ -45,6 +46,7 @@
     sd1989 (kr.dobrazupa.org)
     phunktion (crawl.somatika.net)
     ZiBuDo (crawl.jorgrun.rocks)
+    Medar, Zkyp (crawl.xtahua.com)
 
 * The members of various usability testing teams from the department of
   Information Processing Science in Oulu University:
@@ -71,6 +73,8 @@
 
 * Members of the Dungeon Crawl community who have contributed to Dungeon
   Crawl Stone Soup:
+    achuah
+    AdamPG
     Brent Adams
     Mike Adams
     Aj Adamson
@@ -120,11 +124,13 @@
     Thom Chiovoloni
     Anthony Chuah
     Henry Cipolla
+    CollinJ
     Nicholas Connelly
     Tom Conrad
     Vitor 'Baconkid' Costa
     Aaron Curtis
     Simon Curtis
+    cut1less
     Paul Dejean
     Denzi
     Lothar Dierkes
@@ -141,6 +147,7 @@
     Micha Elsner
     Carl-Oscar Erneholm
     Erich Erstu
+    Higor Eurípedes
     Christopher Evenstar
     Floodkiller
     floraline
@@ -217,6 +224,7 @@
     Paul Maloney
     Pablo Mansanet
     Wille Mäntylä
+    István Markó
     Gabriel Marks
     Jean Martel
     James 'Eronarn' Meickle
@@ -224,6 +232,7 @@
     mgdelmonte
     mikee
     Andrew Minton
+    Byrel Mitchell
     Yer Mivvaggah
     Shawn M Moore
     Muffindrake
@@ -267,6 +276,7 @@
     Terence Reeves
     Tobias Rehbein
     Remsleep
+    Chris Rendle-Short
     Ryan Riegel
     RjY
     rmcneive
@@ -275,6 +285,7 @@
     Will Rogers
     Nate Rook
     David Rose
+    runrin
     Risto Saarelma
     Sebastian Salman
     Sandman25
@@ -301,6 +312,7 @@
     Jan 'heftig' Steffens
     Stenella
     Timothy Stiles
+    John Stilley
     Johan Strandell
     Ben Striegel
     Derrick Sund
@@ -310,16 +322,20 @@
     William Tanksley, Jr.
     Tedronai
     Chris Terenzi
+    theJollySin
     Jared 'Twinge' Tinney
     Matt Titus
     Tommy
+    Sean VanMeter
     Mikko Vepsäläinen
     WanderingBlade
+    Richard Wardin
     waylon531
     Steven Wheeler
     Thomas Willem
     Evan Williams
     Jeremey Wilson
+    wjchen
     ximxim
     Yelve Yakut
     Edward Z. Yang

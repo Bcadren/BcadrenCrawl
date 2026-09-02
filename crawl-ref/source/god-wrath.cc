@@ -9,16 +9,18 @@
 
 #include <sstream>
 
+#include "abyss.h" // lugonu_corrupt_level
+#include "act-iter.h"
 #include "areas.h"
 #include "artefact.h"
+#include "attack.h" // attack_strength_punctuation
 #include "attitude-change.h"
 #include "cleansing-flame-source-type.h"
 #include "coordit.h"
 #include "database.h"
+#include "death-curse.h"
 #include "decks.h"
-#include "english.h"
 #include "env.h"
-#include "evoke.h"
 #include "food.h"
 #include "ghost.h"
 #include "god-abil.h"
@@ -30,11 +32,10 @@
 #include "message.h"
 #include "misc.h"
 #include "mon-behv.h"
-#include "mon-book.h"
 #include "mon-cast.h"
 #include "mon-pick.h"
 #include "mon-place.h"
-#include "mon-poly.h"
+#include "mon-tentacle.h"
 #include "mutation.h"
 #include "notes.h"
 #include "player-stats.h"
@@ -44,15 +45,16 @@
 #include "shout.h"
 #include "spl-clouds.h"
 #include "spl-goditem.h"
-#include "spl-miscast.h"
 #include "spl-selfench.h"
 #include "spl-summoning.h"
 #include "spl-transloc.h"
 #include "spl-util.h"
 #include "state.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "terrain.h"
 #include "transform.h"
+#include "unicode.h"
 #include "view.h"
 #include "xom.h"
 
@@ -91,6 +93,7 @@ static const char *_god_wrath_adjectives[] =
     "fury",             // Uskayaw
     "memory",           // Hepliaklqana (unused)
     "rancor",           // Wu Jian
+    "outrage",          // Bahamut & Tiamat
 };
 COMPILE_CHECK(ARRAYSZ(_god_wrath_adjectives) == NUM_GODS);
 
@@ -109,6 +112,13 @@ static string _god_wrath_name(god_type god)
     const bool use_full_name = god == GOD_FEDHAS      // fedhas is very formal.
                                || god == GOD_WU_JIAN; // apparently.
 
+    // You like exceptions right? Twin gods need special rules.
+    if (god == GOD_BAHAMUT_TIAMAT)
+    {
+        return coinflip ()  ? "the outrage of Bahamut"
+                            : "the brutality of Tiamat";
+    }
+
     return make_stringf("the %s of %s",
                         _god_wrath_adjectives[god],
                         god_name(god, use_full_name).c_str());
@@ -121,29 +131,6 @@ static mgen_data _wrath_mon_data(monster_type mtyp, god_type god)
                     .set_non_actor_summoner(_god_wrath_name(god));
     mg.extra_flags |= (MF_NO_REWARD | MF_HARD_RESET);
     return mg;
-}
-
-static bool _yred_random_zombified_hostile()
-{
-    const bool skel = one_chance_in(4);
-
-    monster_type z_base;
-
-    do
-    {
-        // XXX: better zombie selection?
-        level_id place(BRANCH_DUNGEON,
-                       min(27, you.experience_level + 5));
-        z_base = pick_local_zombifiable_monster(place, RANDOM_MONSTER,
-                                                you.pos());
-    }
-    while (skel && !mons_skeleton(z_base));
-
-    mgen_data temp = _wrath_mon_data(skel ? MONS_SKELETON : MONS_ZOMBIE,
-                                     GOD_YREDELEMNUL)
-                     .set_base(z_base);
-
-    return create_monster(temp, false);
 }
 
 static const pop_entry _okawaru_servants[] =
@@ -172,6 +159,7 @@ static const pop_entry _okawaru_servants[] =
   { 13, 27,   1, FLAT, MONS_DEEP_ELF_MASTER_ARCHER },
   { 13, 27,   1, FLAT, RANDOM_BASE_DRACONIAN },
   { 15, 27,   2, FLAT, MONS_TITAN },
+  { 18, 27,   1, RISE, MONS_DRACONIAN_KNIGHT },
   { 0,0,0,FLAT,MONS_0 }
 };
 
@@ -196,7 +184,7 @@ static bool _dithmenos_random_shadow(const int count, const int tier)
     if (tier >= 2 && count == 0 && coinflip())
         mon_type = MONS_TZITZIMITL;
     else if (tier >= 1 && count < 3 && coinflip())
-        mon_type = MONS_SHADOW_DEMON;
+        mon_type = MONS_CYSGODOL;
 
     return create_monster(_wrath_mon_data(mon_type, GOD_DITHMENOS), false);
 }
@@ -360,33 +348,48 @@ static bool _cheibriados_retribution()
 
     // Determine the level of wrath
     int wrath_type = 0;
-    if (wrath_value < 2)       { wrath_type = 0; }
-    else if (wrath_value < 4)  { wrath_type = 1; }
-    else if (wrath_value < 8)  { wrath_type = 2; }
-    else if (wrath_value < 16) { wrath_type = 3; }
-    else                       { wrath_type = 4; }
+
+    if (wrath_value < 4)       { wrath_type = 1; }
+    else
+    {
+        if (x_chance_in_y(you.experience_level, 90))
+            wrath_type = 4;
+        else if (coinflip())
+            wrath_type = 3;
+        else
+            wrath_type = 2;
+    }
 
     // Strip away extra speed
     dec_haste_player(10000);
 
     switch (wrath_type)
     {
-    // Very high tension wrath
+    // Very high tension wrath.
+    // Summon torpor snails or direct (slouch) damage then start sleeping.
     case 4:
-        simple_god_message(" adjusts the clock.", god);
-        MiscastEffect(&you, nullptr, {miscast_source::god, god},
-                      spschool::random,
-                      5 + div_rand_round(you.experience_level, 9),
-                      random2avg(88, 3), _god_wrath_name(god));
-        if (one_chance_in(3))
-            break;
-        else
+        if (coinflip())
+        {
+            simple_god_message(" sends glorious snails to punish you.", god);
+            for (int i = 2 + you.experience_level / 8; i > 0; i++)
+                create_monster(_wrath_mon_data(MONS_TORPOR_SNAIL, GOD_CHEIBRIADOS), false);
             dec_penance(god, 1); // and fall-through.
+        }
+        else
+        {
+            int dam = 3 + roll_dice(3, you.experience_level);
+            dam *= max(20 - player_movement_speed(), 4);
+            dam /= 10;
+            mprf(MSGCH_WARN, "You feel time thicken around you%s", attack_strength_punctuation(dam).c_str());
+            ouch(dam, KILLED_BY_DIVINE_WRATH, MID_NOBODY, "displeasure of Cheibriados");
+
+        }
     // High tension wrath
+    // Sleep the player and slow the player with 50% chance.
     case 3:
         mpr("You lose track of time.");
         you.put_to_sleep(nullptr, 30 + random2(20));
-        if (coinflip())
+        if (wrath_type == 4 || coinflip())
             break;
         else
             dec_penance(god, 1); // and fall-through.
@@ -398,14 +401,10 @@ static bool _cheibriados_retribution()
             slow_player(100);
         }
         break;
-    // Low/no tension
+    // Low/no tension; lose stats.
     case 1:
-    case 0:
-        mpr("Time shudders.");
-        MiscastEffect(&you, nullptr, {miscast_source::god, god},
-                      spschool::random,
-                      5 + div_rand_round(you.experience_level, 9),
-                      random2avg(88, 3), _god_wrath_name(god));
+        simple_god_message(" obstructs your stats as your blasphemy continues.");
+        lose_stat(STAT_RANDOM, 1 + random2avg(8, 2));
         break;
 
     default:
@@ -413,17 +412,6 @@ static bool _cheibriados_retribution()
     }
 
     return true;
-}
-
-static void _spell_retribution(monster* avatar, spell_type spell, god_type god)
-{
-    simple_god_message(" rains destruction down upon you!", god);
-    bolt beam;
-    beam.source = you.pos();
-    beam.target = you.pos();
-    beam.aimed_at_feet = true;
-    beam.source_name = avatar->mname;
-    mons_cast(avatar, beam, spell, MON_SPELL_PRIEST, false);
 }
 
 /**
@@ -467,13 +455,13 @@ static spell_type _makhleb_destruction_type()
 }
 
 /**
- * Create a fake 'avatar' monster representing a god, with which to hurl
- * destructive magic at foolish players.
- *
- * @param god           The god doing the wrath-hurling.
- * @return              An avatar monster, or nullptr if none could be set up.
- */
-static monster* get_avatar(god_type god)
+* Create a fake 'avatar' monster representing a god, with which to hurl
+* destructive magic at foolish players.
+*
+* @param god           The god doing the wrath-hurling.
+* @return              An avatar monster, or nullptr if none could be set up.
+*/
+static monster* _get_avatar(god_type god)
 {
     monster* avatar = shadow_monster(false);
     if (!avatar)
@@ -497,25 +485,26 @@ static void _reset_avatar(monster &avatar)
     shadow_monster_reset(&avatar);
 }
 
-/**
- * Rain down Makhleb's destruction upon the player!
- *
- * @return Whether to take further divine wrath actions afterward.
- */
-static bool _makhleb_call_down_destruction()
+bool spell_retribution(spell_type spell, god_type god, const char* message)
 {
-    const god_type god = GOD_MAKHLEB;
-
-    monster* avatar = get_avatar(god);
+    monster* avatar = _get_avatar(god);
     // can't be const because mons_cast() doesn't accept const monster*
 
-    if (avatar == nullptr)
+    if (avatar == nullptr || spell == SPELL_NO_SPELL)
     {
         simple_god_message(" has no time to deal with you just now.", god);
         return false; // not a very dazzling divine experience...
     }
 
-    _spell_retribution(avatar, _makhleb_destruction_type(), god);
+    simple_god_message(message ? message : " rains destruction down upon you!",
+        god);
+    bolt beam;
+    beam.source = you.pos();
+    beam.target = you.pos();
+    beam.aimed_at_feet = true;
+    beam.source_name = avatar->mname;
+    mons_cast(avatar, beam, spell, MON_SPELL_PRIEST, false);
+
     _reset_avatar(*avatar);
     return true;
 }
@@ -568,21 +557,21 @@ static bool _makhleb_summon_servants()
 
     for (int i = 0; i < greater_servants; i++)
     {
-        const monster_type servant = random_choose(MONS_EXECUTIONER,
-                                                   MONS_GREEN_DEATH,
-                                                   MONS_BLIZZARD_DEMON,
+        const monster_type servant = random_choose(MONS_OXARMORDTH,
+                                                   MONS_GWYRDD,
+                                                   MONS_CENYSUS,
                                                    MONS_BALRUG,
-                                                   MONS_CACODEMON);
+                                                   MONS_TITIVILUS);
         if (_makhleb_summon_servant(servant))
             summoned++;
     }
 
     for (int i = 0; i < lesser_servants; i++)
     {
-        const monster_type servant = random_choose(MONS_HELLWING,
+        const monster_type servant = random_choose(MONS_VLERK,
                                                    MONS_NEQOXEC,
-                                                   MONS_ORANGE_DEMON,
-                                                   MONS_SMOKE_DEMON,
+                                                   MONS_NYCHDOD,
+                                                   MONS_MYGDARTH,
                                                    MONS_YNOXINUL);
         if (_makhleb_summon_servant(servant))
             summoned++;
@@ -606,7 +595,7 @@ static bool _makhleb_summon_servants()
 static bool _makhleb_retribution()
 {
     if (coinflip())
-        return _makhleb_call_down_destruction();
+        return spell_retribution(_makhleb_destruction_type(), GOD_MAKHLEB);
     else
         return _makhleb_summon_servants();
 }
@@ -630,37 +619,33 @@ static bool _kikubaaqudgha_retribution()
 
     if (x_chance_in_y(you.experience_level, 27))
     {
-        // torment, or 3 necromancy miscasts
+        // torment, or 3 death curses of maximum power
         if (!player_res_torment(false))
             torment(nullptr, TORMENT_KIKUBAAQUDGHA, you.pos());
         else
         {
             for (int i = 0; i < 3; ++i)
             {
-                MiscastEffect(&you, nullptr, {miscast_source::god, god},
-                              spschool::necromancy,
-                              2 + div_rand_round(you.experience_level, 9),
-                              random2avg(88, 3), _god_wrath_name(god));
+                death_curse(you, nullptr,
+                            _god_wrath_name(god), you.experience_level);
             }
         }
     }
     else if (random2(you.experience_level) >= 4)
     {
-        // necromancy miscast, 25% chance of additional miscast
-        const int num_miscasts = one_chance_in(4) ? 2 : 1;
-        for (int i = 0; i < num_miscasts; i++)
+        // death curse, 25% chance of additional curse
+        const int num_curses = one_chance_in(4) ? 2 : 1;
+        for (int i = 0; i < num_curses; i++)
         {
-            MiscastEffect(&you, nullptr, {miscast_source::god, god},
-                          spschool::necromancy,
-                          2 + div_rand_round(you.experience_level, 9),
-                          random2avg(88, 3), _god_wrath_name(god));
+                death_curse(you, nullptr,
+                            _god_wrath_name(god), you.experience_level);
         }
     }
 
     // Every act of retribution causes corpses in view to rise against
     // you.
     animate_dead(&you, 1 + random2(3), BEH_HOSTILE, MHITYOU, 0,
-                 _god_wrath_name(god), god);
+                 _god_wrath_name(god), god, true, false);
 
     return true;
 }
@@ -681,50 +666,53 @@ static bool _yredelemnul_retribution()
 
             for (; how_many > 0; --how_many)
             {
-                if (one_chance_in(you.experience_level))
-                {
-                    if (_yred_random_zombified_hostile())
-                        count++;
-                }
-                else
-                {
-                    const int num = yred_random_servants(0, true);
-                    if (num >= 0)
-                        count += num;
-                    else
-                        ++how_many;
-                }
+                monster_type mon_type = MONS_ABOMINATION_SMALL;
+                if (x_chance_in_y(you.experience_level, 40))
+                    mon_type = MONS_ABOMINATION_LARGE;
+
+                mgen_data mg(mon_type, BEH_HOSTILE, you.pos(), MHITYOU);
+                mg.set_summoned(0, 0, 0, GOD_YREDELEMNUL);
+                mg.non_actor_summoner = "the anger of Yredelemnul";
+                mg.extra_flags |= (MF_NO_REWARD | MF_HARD_RESET);
+
+                create_monster(mg);
             }
 
-            simple_god_message(count > 1 ? " sends servants to punish you." :
-                               count > 0 ? " sends a servant to punish you."
-                                         : "'s servants fail to arrive.", god);
+            simple_god_message(count > 1 ? " sends abominations to punish you." :
+                               count > 0 ? " sends an abomination to punish you."
+                                         : "'s abominations fail to arrive.", god);
         }
     }
     else
-    {
-        simple_god_message("'s anger turns toward you for a moment.", god);
-        MiscastEffect(&you, nullptr, {miscast_source::god, god},
-                      spschool::necromancy,
-                      2 + div_rand_round(you.experience_level, 9),
-                      random2avg(88, 3), _god_wrath_name(god));
-    }
+        spell_retribution(SPELL_BOLT_OF_DRAINING, god, "'s anger turns toward you for a moment.");
 
     return true;
 }
 
 static bool _trog_retribution()
 {
-    // physical/berserk theme
+    // berserk theme
     const god_type god = GOD_TROG;
 
-    if (coinflip())
+    if (you.berserk())
+    {
+        simple_god_message(" shortens your rage.");
+        you.duration[DUR_BERSERK] = 20;
+    }
+    else if (you.can_go_berserk(true) && coinflip())
+    {
+        simple_god_message(" takes away your ability to berserk.");
+        const int dur = 12 + roll_dice(2, 12);
+        you.increase_duration(DUR_BERSERK_COOLDOWN, dur * 2);
+    }
+
+    if (!one_chance_in(3))
     {
         int count = 0;
         int points = 3 + you.experience_level * 3;
 
         {
-            no_messages msg;
+            msg::suppress msg;
 
             while (points > 0)
             {
@@ -747,61 +735,58 @@ static bool _trog_retribution()
             }
         }
 
+        if (count > 0)
+        {
+            if (x_chance_in_y(you.experience_level, 30) && coinflip())
+            {
+                if (coinflip() && !you.duration[DUR_WEAK])
+                {
+                    simple_god_message(" saps your strength.", god);
+                    you.weaken(nullptr, 30);
+                }
+                else if (you.duration[DUR_SLOW] < 180 * BASELINE_DELAY)
+                {
+                    mprf(MSGCH_WARN, "You suddenly feel lethargic!");
+                    slow_player(100);
+                }
+            }
+        }
+
         simple_god_message(count > 1 ? " sends monsters to punish you." :
                            count > 0 ? " sends a monster to punish you."
                                      : " has no time to punish you... now.",
-                           god);
-    }
-    else if (!one_chance_in(3))
-    {
-        simple_god_message("'s voice booms out, \"Feel my wrath!\"", god);
+                                       god);
 
-        // A collection of physical effects that might be better
-        // suited to Trog than wild fire magic... messages could
-        // be better here... something more along the lines of apathy
-        // or loss of rage to go with the anti-berserk effect-- bwr
-        switch (random2(6))
+        if (count > 0)
+            return true;
+        return false;
+    }
+
+    simple_god_message("'s voice booms out, \"Feel my wrath!\"", god);
+    noisy(40, you.pos());
+
+    switch (random2(4))
+    {
+    case 0:
+    case 1:
+    case 2:
+        if (you.strength() > 0)
         {
-        case 0:
-            you.rot(nullptr, 3 + random2(3));
-            break;
-
-        case 1:
-        case 2:
-            lose_stat(STAT_STR, 1 + random2(you.strength() / 5));
-            break;
-
-        case 3:
-            if (!you.duration[DUR_PETRIFIED])
-            {
-                you.petrify(nullptr);
-                break;
-            }
-            return false;
-
-        case 4:
-        case 5:
-            if (you.duration[DUR_SLOW] < 180 * BASELINE_DELAY)
-            {
-                mprf(MSGCH_WARN, "You suddenly feel lethargic!");
-                slow_player(100);
-            }
-            break;
+            lose_stat(STAT_STR, 1 + random2(you.max_strength() / 3));
+            return true;
         }
-    }
-    else
-    {
-        //jmf: returned Trog's old Fire damage
-        // -- actually, this function partially exists to remove that,
-        //    we'll leave this effect in, but we'll remove the wild
-        //    fire magic. -- bwr
-        mprf(MSGCH_WARN, "You feel Trog's fiery rage upon you!");
-        MiscastEffect(&you, nullptr, {miscast_source::god, god}, spschool::fire,
-                      8 + you.experience_level, random2avg(98, 3),
-                      _god_wrath_name(god));
-    }
+        break;
 
-    return true;
+    case 3:
+        if (you.can_sleep())
+        {
+            mprf(MSGCH_WARN, "You pass out from exhaustion!");
+            you.put_to_sleep(nullptr, 30 + random2(20));
+            return true;
+        }
+        break;
+    }
+    return false;
 }
 
 static bool _beogh_retribution()
@@ -837,7 +822,7 @@ static bool _beogh_retribution()
                 ASSERT(mon->weapon() != nullptr);
                 item_def& wpn(*mon->weapon());
 
-                set_item_ego_type(wpn, OBJ_WEAPONS, SPWPN_ELECTROCUTION);
+                set_item_ego_type(wpn, SPWPN_ORC_SLAYING);
 
                 wpn.plus  = random2(3);
                 wpn.sub_type = wpn_type;
@@ -960,7 +945,7 @@ static bool _sif_muna_retribution()
         // This will set all the extendable duration spells to
         // a duration of one round, thus potentially exposing
         // the player to real danger.
-        debuff_player();
+        you.debuff();
         break;
     }
 
@@ -970,27 +955,53 @@ static bool _sif_muna_retribution()
 /**
  * Perform translocation-flavored Lugonu retribution.
  *
- * 50% chance of tloc miscasts; failing that, 50% chance of teleports/blinks.
+ * 50% banishment/corruption; 50% teleport near monsters.
  */
 static void _lugonu_transloc_retribution()
 {
     const god_type god = GOD_LUGONU;
 
+    bool acted = false;
+
     if (coinflip())
     {
-        simple_god_message("'s wrath finds you!", god);
-        MiscastEffect(&you, nullptr, {miscast_source::god, god},
-                      spschool::translocation, 9, 90, "Lugonu's touch");
+        if (x_chance_in_y(you.experience_level, 30))
+            lugonu_corrupt_level(150 + you.experience_level * 30, true);
+        else
+        {
+            simple_god_message(" draws you home!", god);
+            you.banish(nullptr, "Lugonu's touch", you.get_experience_level(), true);
+        }
+        acted = true;
     }
     else if (coinflip())
     {
-        // Give extra opportunities for embarrassing teleports.
-        simple_god_message("'s wrath finds you!", god);
-        mpr("Space warps around you!");
-        if (!one_chance_in(3))
-            you_teleport_now();
-        else
-            uncontrolled_blink();
+        you_teleport_now(false, true, "Space warps around you!");
+        acted = true;
+    }
+
+    if (one_chance_in(3) && acted)
+    {
+        switch (random2(3))
+        {
+        case 0:
+            mprf(MSGCH_GOD, "You're contaminated by residual distortion.");
+            contaminate_player(random2avg(18000, 3));
+            break;
+        case 1:
+            simple_god_message(" thickens space around you!", god);
+            you.increase_duration(DUR_DIMENSION_ANCHOR, 20 + random2(11), 50);
+            break;
+        case 2:
+            mprf(MSGCH_GOD, "Reality tears apart around you.");
+            ouch(9 + random2avg(17, 2), KILLED_BY_DIVINE_WRATH, MID_NOBODY, "Lugonu's touch");
+            for (int i = 1 + random2(4); i > 0; i++)
+            {
+                create_monster(_wrath_mon_data(x_chance_in_y(you.experience_level, 50) ? 
+                    MONS_SPATIAL_MAELSTROM : MONS_SPATIAL_VORTEX, GOD_LUGONU), false);
+            }
+            break;
+        }
     }
 }
 
@@ -1026,10 +1037,10 @@ static void _lugonu_minion_retribution()
         // higher levels
         const monster_type to_summon =
             random_choose_weighted(
-                15 - (you.experience_level/2),  MONS_ABOMINATION_SMALL,
-                you.experience_level/2,         MONS_ABOMINATION_LARGE,
+                7,                              MONS_RAIJU,
                 6,                              MONS_THRASHING_HORROR,
-                3,                              MONS_ANCIENT_ZYME
+                3,                              MONS_ANCIENT_ZYME,
+                3,                              MONS_APOCALYPSE_CRAB
             );
 
         if (create_monster(_wrath_mon_data(to_summon, god), false))
@@ -1131,26 +1142,7 @@ static spell_type _vehumet_wrath_type()
  */
 static bool _vehumet_retribution()
 {
-    const god_type god = GOD_VEHUMET;
-
-    monster* avatar = get_avatar(god);
-    if (!avatar)
-    {
-        simple_god_message(" has no time to deal with you just now.", god);
-        return false;
-    }
-
-    const spell_type spell = _vehumet_wrath_type();
-    if (spell == SPELL_NO_SPELL)
-    {
-        simple_god_message(" has no time to deal with you just now.", god);
-        _reset_avatar(*avatar);
-        return false;
-    }
-
-    _spell_retribution(avatar, spell, god);
-    _reset_avatar(*avatar);
-    return true;
+    return spell_retribution(_vehumet_wrath_type(), GOD_VEHUMET);
 }
 
 static bool _nemelex_retribution()
@@ -1174,6 +1166,7 @@ static void _jiyva_mutate_player()
     const int mutations = 1 + random2(3);
     for (int i = 0; i < mutations; ++i)
         mutate(RANDOM_BAD_MUTATION, _god_wrath_name(god), true, false, true);
+    flash_view_delay(UA_PLAYER, MAGENTA, 300);
 }
 
 static void _jiyva_remove_slime_mutation()
@@ -1286,17 +1279,41 @@ static bool _jiyva_retribution()
 
 /**
  * Let Fedhas call down the enmity of nature upon the player!
+ * Equal chance corrosive bolt, primal wave (a throwback to rain),
+ * or thorn volley
  */
-static void _fedhas_elemental_miscast()
+static void _fedhas_nature_retribution()
 {
-    const god_type god = GOD_FEDHAS;
-    simple_god_message(" invokes the elements against you.", god);
+    spell_type spell = random_choose(SPELL_CORROSIVE_BOLT,
+                                     SPELL_PRIMAL_WAVE,
+                                     SPELL_THORN_VOLLEY);
 
-    const spschool stype = random_choose(spschool::ice, spschool::fire,
-                                         spschool::earth, spschool::air);
-    MiscastEffect(&you, nullptr, {miscast_source::god, god}, stype,
-                  5 + you.experience_level, random2avg(88, 3),
-                  _god_wrath_name(god));
+    spell_retribution(spell, GOD_FEDHAS, " invokes nature against you.");
+}
+
+static bool _fedhas_summon_elemental()
+{
+    bool success = false;
+
+    mgen_data rot = _wrath_mon_data(MONS_ROT_ELEMENTAL, GOD_FEDHAS);
+
+    for (int x = 1 + random2(you.experience_level/9); x > 0; x--)
+    {
+        if (create_monster(rot, false))
+            success = true;
+    }
+
+    if (!success)
+        return true;
+
+    mgen_data cap = _wrath_mon_data(MONS_DEATHCAP, GOD_FEDHAS);
+
+    for (int x = 1 + random2(you.experience_level/3); x > 0; x--)
+        create_monster(cap, false);
+
+    simple_god_message(" wants you to rot away.", GOD_FEDHAS);
+
+    return false;
 }
 
 /**
@@ -1390,7 +1407,7 @@ static bool _fedhas_summon_plants()
 /**
  * Call down the wrath of Fedhas upon the player!
  *
- * Plants and elemental miscasts.
+ * Plants and plant/nature themed attacks.
  *
  * @return Whether to take further divine wrath actions afterward.
  */
@@ -1400,7 +1417,7 @@ static bool _fedhas_retribution()
 
     // We have 3 forms of retribution, but players under penance will be
     // spared the 'you are now surrounded by oklob plants, please die' one.
-    const int retribution_options = you_worship(god) ? 2 : 3;
+    const int retribution_options = you_worship(god) ? 2 : 4;
 
     switch (random2(retribution_options))
     {
@@ -1415,10 +1432,13 @@ static bool _fedhas_retribution()
 
     case 1:
     default:
-        _fedhas_elemental_miscast();
+        _fedhas_nature_retribution();
         return true;
 
     case 2:
+        return _fedhas_summon_elemental();
+
+    case 3:
         return _fedhas_summon_plants();
     }
 }
@@ -1507,6 +1527,8 @@ static const pop_entry pop_qazlal_wrath[] =
   {  2, 10, 50, FLAT, MONS_BASILISK },
   {  4, 14, 30, FLAT, MONS_CATOBLEPAS },
   { 18, 27, 50, RISE, MONS_IRON_DRAGON },
+  
+  {  0,  6, 12, SEMI, MONS_EARTH_ELEMENTAL },
 
   { 0,0,0,FLAT,MONS_0 }
 };
@@ -1580,11 +1602,6 @@ static bool _qazlal_retribution()
     return true;
 }
 
-static bool _choose_hostile_monster(const monster& mon)
-{
-    return mon.attitude == ATT_HOSTILE;
-}
-
 static int _wu_jian_summon_weapons()
 {
     god_type god = GOD_WU_JIAN;
@@ -1595,10 +1612,14 @@ static int _wu_jian_summon_weapons()
     {
         const int subtype = random_choose(WPN_DIRE_FLAIL, WPN_QUARTERSTAFF,
                                           WPN_BROAD_AXE, WPN_GREAT_SWORD,
-                                          WPN_RAPIER, WPN_GLAIVE);
-        const int ego = random_choose(SPWPN_VORPAL, SPWPN_MOLTEN,
-                                      SPWPN_FREEZING, SPWPN_ELECTROCUTION,
-                                      SPWPN_SPEED);
+                                          WPN_TANTO, WPN_GLAIVE);
+        int ego = SPWPN_NORMAL;
+        while (ego == SPWPN_NORMAL || !is_weapon_brand_ok(subtype, ego, true))
+        {
+            ego = random_choose(SPWPN_VORPAL, SPWPN_MOLTEN,
+                                SPWPN_FREEZING, SPWPN_ELECTROCUTION,
+                                SPWPN_SPEED);
+        }
 
         if (monster *mon =
             create_monster(_wrath_mon_data(MONS_DANCING_WEAPON, god)))
@@ -1606,7 +1627,7 @@ static int _wu_jian_summon_weapons()
             ASSERT(mon->weapon() != nullptr);
             item_def& wpn(*mon->weapon());
 
-            set_item_ego_type(wpn, OBJ_WEAPONS, ego);
+            set_item_ego_type(wpn, ego);
 
             wpn.plus = random2(5);
             wpn.sub_type = subtype;
@@ -1667,7 +1688,7 @@ static bool _uskayaw_retribution()
 
     // check if we have monsters around
     monster* mon = nullptr;
-    mon = choose_random_nearby_monster(0, _choose_hostile_monster);
+    mon = choose_random_nearby_monster(0, choose_hostile_monster);
 
     switch (random2(5))
     {
@@ -1702,6 +1723,150 @@ static bool _uskayaw_retribution()
     return true;
 }
 
+static const pop_entry _bahamut_draconians[] =
+{
+  {  0, 12,   5, FLAT, MONS_DRACONIAN },
+  {  8, 27,  10, FALL, RANDOM_BASE_DRACONIAN },
+  { 15, 27,  10, RISE, RANDOM_NONBASE_DRACONIAN },
+  { 0,0,0,FLAT,MONS_0 }
+};
+
+static const pop_entry _bahamut_dragons[] =
+{
+  {  0, 12,  10, FLAT, MONS_STEAM_DRAGON },
+  {  6, 18,  10, PEAK, MONS_ACID_DRAGON },
+  {  8, 24,  10, PEAK, MONS_FIRE_DRAGON },
+  {  8, 24,  10, PEAK, MONS_ICE_DRAGON },
+  { 10, 18,  10, RISE, MONS_HYDRA },
+  { 12, 27,  20, RISE, MONS_SHADOW_DRAGON },
+  { 12, 27,  20, PEAK, MONS_STORM_DRAGON },
+  { 12, 27,  20, PEAK, MONS_GOLDEN_DRAGON },
+  { 18, 27,  20, RISE, MONS_QUICKSILVER_DRAGON },
+  { 18, 27,  10, RISE, MONS_IRON_DRAGON },
+  { 21, 27,  10, RISE, MONS_BONE_DRAGON },
+  { 21, 27,   5, RISE, MONS_PEARL_DRAGON },
+  { 0,0,0,FLAT,MONS_0 }
+};
+
+static bool _bahamut_retribution()
+{
+    monster* mon = nullptr;
+    mon = choose_random_nearby_monster(0, choose_hostile_monster);
+    int x = random2(5);
+
+    if (mon && coinflip())
+        x = 3;
+
+    switch (x)
+    {
+    case 0:
+    {
+        int count = 1 + you.experience_level / 9;
+        bool success = false;
+        for (int i = 0; i < count; i++)
+        {
+            if (summon_drakes(you.get_experience_level(), true))
+            {
+                success = true;
+            }
+        }
+        if (success)
+        {
+            mprf(MSGCH_GOD, "Tiamat sends hordes of drakes to punish you.");
+            return true;
+        }
+    }   // If fail, fallthrough to next.
+    case 1:
+    {
+        int count = 1 + you.experience_level / 8 + random2(1 + you.experience_level / 3);
+        bool success = false;
+
+        for (int i = 0; i < count; i++)
+        {
+            monster_type mon_type = pick_monster_from(_bahamut_dragons,
+                you.experience_level);
+
+            mgen_data temp = _wrath_mon_data(mon_type, GOD_BAHAMUT_TIAMAT);
+
+            if (create_monster(temp, false))
+                success = true;
+        }
+        count = 1 + you.experience_level / 9;
+        for (int i = 0; i < count; i++)
+        {
+            monster_type mon_type = pick_monster_from(_bahamut_draconians,
+                you.experience_level);
+
+            mgen_data temp = _wrath_mon_data(mon_type, GOD_BAHAMUT_TIAMAT);
+
+            if (you.experience_level > (10 + random2(5)))
+                temp.flags |= MG_PERMIT_BANDS;
+
+            if (create_monster(temp, false))
+                success = true;
+        }
+        if (success)
+        {
+            mprf(MSGCH_GOD, "Bahamut calls forth your kin to admonish your indiscretion.");
+            return true;
+        }
+    }   // If fail, fallthrough to next.
+    case 2:
+    {
+        if (mon)
+        {
+            if (you.props.exists(BAHAMUT_TIAMAT_CHOICE0_KEY) && you.props[BAHAMUT_TIAMAT_CHOICE0_KEY].get_bool() && !you.stasis() && !you.res_petrify())
+            {
+                you.petrify(nullptr);
+                mprf(MSGCH_GOD, "Bahamut Booms: \"Repent and I shall protect you once more.\"");
+            }
+            else
+            {
+                monster * target = nullptr;
+                for (monster_iterator mi; mi; ++mi)
+                {
+                    if (you.see_cell_no_trans(mi->pos()) &&
+                        (!target || (mi->get_experience_level() >= target->get_experience_level()))
+                        && !bool(mi->holiness() & (MH_ELEMENTAL | MH_UNDEAD | MH_CONSTRUCT)))
+                    {
+                        target = *mi;
+                    }
+                }
+                if (target)
+                {
+                    mprf(MSGCH_GOD, "%s blood boils as Tiamat raises it to a haste.", target->name(DESC_ITS).c_str());
+                    target->add_ench(ENCH_HASTE);
+                }
+            }
+        }
+    }   // If fail, fallthrough to next.
+    case 3:
+    {
+        mprf(MSGCH_GOD, "Tiamat compels you to roar at the top of your lungs!");
+
+        if (silenced(you.pos()))
+            mpr("...but you couldn't make a sound.");
+
+        noisy(35, you.pos(), you.mid);
+        you.increase_duration(DUR_BREATH_WEAPON, you.experience_level + random2(you.experience_level), 100, "You are out of breath.");
+        return true;
+    }
+    default:
+    case 4:
+    {
+        if (you.drac_colour != DR_BROWN && you.penance[GOD_BAHAMUT_TIAMAT] > 6) // Don't do this at low penance since it would just revert near immediately.
+        {
+            mprf(MSGCH_GOD, "Bahamut sneers: \"You need to grow up!\"");
+            you.attribute[ATTR_STRIPPED_COLOUR] = you.drac_colour;
+            change_drac_colour(DR_BROWN);
+            return true;
+        }
+    }
+    }
+
+    return false;
+}
+
 bool divine_retribution(god_type god, bool no_bonus, bool force)
 {
     ASSERT(god != GOD_NO_GOD);
@@ -1720,7 +1885,9 @@ bool divine_retribution(god_type god, bool no_bonus, bool force)
 
     god_acting gdact(god, true);
 
-    bool do_more    = true;
+    bool restore_colour = ((you.attribute[ATTR_STRIPPED_COLOUR] > 0) && one_chance_in(3));
+
+    bool do_more        = true;
     switch (god)
     {
     // One in ten chance that Xom might do something good...
@@ -1728,25 +1895,26 @@ bool divine_retribution(god_type god, bool no_bonus, bool force)
         xom_acts(abs(you.piety - HALF_MAX_PIETY),
                  frombool(one_chance_in(10)));
         break;
-    case GOD_SHINING_ONE:   do_more = _tso_retribution(); break;
-    case GOD_ZIN:           do_more = _zin_retribution(); break;
-    case GOD_MAKHLEB:       do_more = _makhleb_retribution(); break;
-    case GOD_KIKUBAAQUDGHA: do_more = _kikubaaqudgha_retribution(); break;
-    case GOD_YREDELEMNUL:   do_more = _yredelemnul_retribution(); break;
-    case GOD_TROG:          do_more = _trog_retribution(); break;
-    case GOD_BEOGH:         do_more = _beogh_retribution(); break;
-    case GOD_OKAWARU:       do_more = _okawaru_retribution(); break;
-    case GOD_LUGONU:        do_more = _lugonu_retribution(); break;
-    case GOD_VEHUMET:       do_more = _vehumet_retribution(); break;
-    case GOD_NEMELEX_XOBEH: do_more = _nemelex_retribution(); break;
-    case GOD_SIF_MUNA:      do_more = _sif_muna_retribution(); break;
-    case GOD_JIYVA:         do_more = _jiyva_retribution(); break;
-    case GOD_FEDHAS:        do_more = _fedhas_retribution(); break;
-    case GOD_CHEIBRIADOS:   do_more = _cheibriados_retribution(); break;
-    case GOD_DITHMENOS:     do_more = _dithmenos_retribution(); break;
-    case GOD_QAZLAL:        do_more = _qazlal_retribution(); break;
-    case GOD_USKAYAW:       do_more = _uskayaw_retribution(); break;
-    case GOD_WU_JIAN:       do_more = _wu_jian_retribution(); break;
+    case GOD_SHINING_ONE:       do_more = _tso_retribution(); break;
+    case GOD_ZIN:               do_more = _zin_retribution(); break;
+    case GOD_MAKHLEB:           do_more = _makhleb_retribution(); break;
+    case GOD_KIKUBAAQUDGHA:     do_more = _kikubaaqudgha_retribution(); break;
+    case GOD_YREDELEMNUL:       do_more = _yredelemnul_retribution(); break;
+    case GOD_TROG:              do_more = _trog_retribution(); break;
+    case GOD_BEOGH:             do_more = _beogh_retribution(); break;
+    case GOD_OKAWARU:           do_more = _okawaru_retribution(); break;
+    case GOD_LUGONU:            do_more = _lugonu_retribution(); break;
+    case GOD_VEHUMET:           do_more = _vehumet_retribution(); break;
+    case GOD_NEMELEX_XOBEH:     do_more = _nemelex_retribution(); break;
+    case GOD_SIF_MUNA:          do_more = _sif_muna_retribution(); break;
+    case GOD_JIYVA:             do_more = _jiyva_retribution(); break;
+    case GOD_FEDHAS:            do_more = _fedhas_retribution(); break;
+    case GOD_CHEIBRIADOS:       do_more = _cheibriados_retribution(); break;
+    case GOD_DITHMENOS:         do_more = _dithmenos_retribution(); break;
+    case GOD_QAZLAL:            do_more = _qazlal_retribution(); break;
+    case GOD_USKAYAW:           do_more = _uskayaw_retribution(); break;
+    case GOD_WU_JIAN:           do_more = _wu_jian_retribution(); break;
+    case GOD_BAHAMUT_TIAMAT:    do_more = _bahamut_retribution(); break;
 
     case GOD_ASHENZARI:
     case GOD_ELYVILON:
@@ -1765,6 +1933,13 @@ bool divine_retribution(god_type god, bool no_bonus, bool force)
              god_name(god).c_str());
 #endif
         return false;
+    }
+
+    if (restore_colour)
+    {
+        mprf(MSGCH_INTRINSIC_GAIN, "You feel yourself maturing once more...");
+        change_drac_colour((draconian_colour)you.attribute[ATTR_STRIPPED_COLOUR]);
+        you.attribute[ATTR_STRIPPED_COLOUR] = 0;
     }
 
     if (no_bonus)
@@ -1797,6 +1972,43 @@ bool divine_retribution(god_type god, bool no_bonus, bool force)
     dec_penance(god, 1 + random2(3));
 
     return true;
+}
+
+// Currently only used when orcish idols have been destroyed.
+static string _get_beogh_speech(const string &key)
+{
+    string result = getSpeakString("Beogh " + key);
+
+    if (result.empty())
+        return "Beogh is angry!";
+
+    return result;
+}
+
+// Destroying orcish idols (a.k.a. idols of Beogh) may anger Beogh.
+void beogh_idol_revenge()
+{
+    god_acting gdact(GOD_BEOGH, true);
+
+    // Beogh watches his charges closely, but for others doesn't always
+    // notice.
+    if (!you_worship(GOD_BEOGH)
+        && (!species_is_orcish(you.species) || coinflip())
+        && x_chance_in_y(2, 3))
+    {
+        return;
+    }
+
+    string revenge;
+
+    if (you_worship(GOD_BEOGH))
+        revenge = _get_beogh_speech("idol follower");
+    else if (species_is_orcish(you.species))
+        revenge = _get_beogh_speech("idol orc");
+    else
+        revenge = _get_beogh_speech("idol other");
+
+    _god_smites_you(GOD_BEOGH, revenge.c_str());
 }
 
 static void _tso_blasts_cleansing_flame(const char *message)
@@ -1862,6 +2074,51 @@ void reduce_xp_penance(god_type god, int amount)
                 / you.exp_docked_total[god];
     if (new_pen < you.penance[god])
         dec_penance(god, you.penance[god] - new_pen);
+}
+
+/// Let Gozag's wrath buff newly-seen hostile monsters, maybe.
+void maybe_gozag_incite(vector<monster*> monsters)
+{
+    if (!player_under_penance(GOD_GOZAG))
+        return;
+
+    counted_monster_list mon_count;
+    vector<monster *> incited;
+    for (monster* mon : monsters)
+    {
+        // XXX: some of this is probably redundant with interrupt_activity
+        if (!mon->see_cell(you.pos()) // xray_vision
+            || mon->wont_attack()
+            || mon->is_stationary()
+            || mons_is_object(mon->type)
+            || mons_is_tentacle_or_tentacle_segment(mon->type))
+        {
+            continue;
+        }
+
+        if (coinflip()
+            && mon->get_experience_level() >= random2(you.experience_level))
+        {
+            mon_count.add(mon);
+            incited.push_back(mon);
+        }
+    }
+
+    if (incited.empty())
+        return;
+
+    string msg = make_stringf("%s incites %s against you.",
+        god_name(GOD_GOZAG).c_str(),
+        mon_count.describe().c_str());
+    if (strwidth(msg) >= get_number_of_cols() - 2)
+    {
+        msg = make_stringf("%s incites your enemies against you.",
+            god_name(GOD_GOZAG).c_str());
+    }
+    mprf(MSGCH_GOD, GOD_GOZAG, "%s", msg.c_str());
+
+    for (monster *mon : incited)
+        gozag_incite(mon);
 }
 
 void gozag_incite(monster *mon)

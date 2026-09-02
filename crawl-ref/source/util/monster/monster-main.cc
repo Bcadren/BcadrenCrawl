@@ -4,39 +4,19 @@
 **/
 
 #include "AppHdr.h"
-#include "externs.h"
-#include "directn.h"
-#include "unwind.h"
-#include "env.h"
-#include "colour.h"
+
+#include "fake-main.hpp"
+
 #include "coordit.h"
-#include "dungeon.h"
-#include "los.h"
-#include "message.h"
-#include "mon-abil.h"
-#include "mon-book.h"
-#include "mon-cast.h"
-#include "mon-util.h"
-#include "version.h"
-#include "view.h"
-#include "los.h"
-#include "maps.h"
-#include "initfile.h"
-#include "libutil.h"
 #include "item-name.h"
 #include "item-prop.h"
-#include "act-iter.h"
-#include "mon-death.h"
-#include "random.h"
-#include "spl-util.h"
-#include "state.h"
-#include "stepdown.h"
-#include "stringutil.h"
+#include "los.h"
+#include "message.h"
+#include "mon-project.h"
+#include "spl-damage.h"
 #include "syscalls.h"
-#include "artefact.h"
-#include <sstream>
-#include <set>
-#include <unistd.h>
+#include "tag-version.h"
+#include "version.h"
 
 const coord_def MONSTER_PLACE(20, 20);
 
@@ -44,13 +24,6 @@ const string CANG = "cang";
 
 const int PLAYER_MAXHP = 500;
 const int PLAYER_MAXMP = 50;
-
-// Clockwise, around the compass from north (same order as enum RUN_DIR)
-const struct coord_def Compass[9] = {
-    coord_def(0, -1), coord_def(1, -1),  coord_def(1, 0),
-    coord_def(1, 1),  coord_def(0, 1),   coord_def(-1, 1),
-    coord_def(-1, 0), coord_def(-1, -1), coord_def(0, 0),
-};
 
 static bool _is_element_colour(int col)
 {
@@ -181,8 +154,7 @@ static string monster_size(const monster& mon)
     }
 }
 
-static string monster_speed(const monster& mon, const monsterentry* me,
-                                 int speed_min, int speed_max)
+static string monster_speed(const monster& mon, int speed_min, int speed_max)
 {
     string speed;
 
@@ -262,7 +234,7 @@ static void initialize_crawl()
 
     dgn_reset_level();
     for (rectangle_iterator ri(0); ri; ++ri)
-        grd(*ri) = DNGN_FLOOR;
+        env.grid(*ri) = DNGN_FLOOR;
 
     los_changed();
     you.hp = you.hp_max = PLAYER_MAXHP;
@@ -278,12 +250,11 @@ static string dice_def_string(dice_def dice)
 
 static dice_def mi_calc_iood_damage(monster* mons)
 {
-    const int power =
-        stepdown_value(6 * mons->get_experience_level(), 30, 30, 200, -1);
-    return dice_def(9, power / 4);
+    const int pow = mons_power_for_hd(SPELL_IOOD, mons->get_hit_dice());
+    return iood_damage(pow, INFINITE_DISTANCE);
 }
 
-static string mi_calc_smiting_damage(monster* mons) { return "7-17"; }
+static string mi_calc_smiting_damage(monster* /*mons*/) { return "7-17"; }
 
 static string mi_calc_airstrike_damage(monster* mons)
 {
@@ -303,21 +274,9 @@ static string mi_calc_glaciate_damage(monster* mons)
 
 static string mi_calc_chain_lightning_damage(monster* mons)
 {
-    int pow = 4 * mons->get_experience_level();
-
-    // Damage is 5d(9.2 + pow / 30), but if lots of targets are around
-    // it can hit the player precisely once at very low (e.g. 1) power
-    // and deal 5 damage.
-    int min = 5;
-
-    // Max damage per bounce is 46 + pow / 6; in the worst case every other
-    // bounce hits the player, losing 8 pow on the bounce away and 8 on the
-    // bounce back for a total of 16; thus, for n bounces, it's:
-    // (46 + pow/6) * n less 16/6 times the (n - 1)th triangular number.
-    int n = (pow + 15) / 16;
-    int max = (46 + (pow / 6)) * n - 4 * n * (n - 1) / 3;
-
-    return make_stringf("%d-%d", min, max);
+    const int pow = mons_power_for_hd(SPELL_CHAIN_LIGHTNING,
+                                      mons->get_hit_dice());
+    return desc_chain_lightning_dam(pow);
 }
 
 static string mi_calc_vampiric_drain_damage(monster* mons)
@@ -345,8 +304,8 @@ static string mi_calc_major_healing(monster* mons)
 static string mons_human_readable_spell_damage_string(monster* monster,
                                                       spell_type sp)
 {
-    bolt spell_beam = mons_spell_beam(
-        monster, sp, mons_power_for_hd(sp, monster->spell_hd(sp)), true);
+    const int pow = mons_power_for_hd(sp, monster->spell_hd(sp));
+    bolt spell_beam = mons_spell_beam(monster, sp, pow, true);
     switch (sp)
     {
         case SPELL_PORTAL_PROJECTILE:
@@ -360,8 +319,10 @@ static string mons_human_readable_spell_damage_string(monster* monster,
             return mi_calc_glaciate_damage(monster);
         case SPELL_CHAIN_LIGHTNING:
             return mi_calc_chain_lightning_damage(monster);
+        case SPELL_MARSHLIGHT:
+            return "2x" + dice_def_string(zap_damage(ZAP_FOXFIRE, pow, true));
         case SPELL_WATERSTRIKE:
-            spell_beam.damage = waterstrike_damage(*monster);
+            spell_beam.damage = waterstrike_damage(monster->spell_hd(sp));
             break;
         case SPELL_RESONANCE_STRIKE:
             return dice_def_string(resonance_strike_base_damage(*monster))
@@ -491,7 +452,7 @@ static void record_spell_set(monster* mp, set<string>& spell_lists,
             continue;
         }
 
-        string spell_name = spell_title(sp);
+        string spell_name = mon_spell_title(sp, mp);
         spell_name = shorten_spell_name(spell_name);
         ret += spell_name;
         ret += _spell_flag_string(slot);
@@ -570,8 +531,7 @@ static int _mi_create_monster(mons_spec spec)
     {
         monster->behaviour = BEH_SEEK;
         monster->foe = MHITYOU;
-        no_messages mx;
-        monster->del_ench(ENCH_SUBMERGED);
+        msg::suppress mx;
         return monster->mindex();
     }
     return NON_MONSTER;
@@ -653,7 +613,7 @@ static mons_spec _get_vault_monster(string monster_name, string* vault_spec)
 
             bool this_spec = false;
 
-            monster* mp = &menv[index];
+            monster* mp = &env.mons[index];
 
             if (mp)
             {
@@ -812,9 +772,9 @@ int main(int argc, char* argv[])
     spell_damage_map damages;
     for (int i = 0; i < ntrials; ++i)
     {
-        monster* mp = &menv[index];
+        monster* mp = &env.mons[index];
         const string mname = mp->name(DESC_PLAIN, true);
-        exper += exper_value(*mp);
+        exper += mon_exper_value(*mp);
         mac += mp->armour_class();
         mev += mp->evasion();
         set_min_max(mp->speed, speed_min, speed_max);
@@ -826,7 +786,7 @@ int main(int argc, char* argv[])
         // iterations as well.
         for (int obj : mp->inv)
             if (obj != NON_ITEM)
-                set_unique_item_status(mitm[obj], UNIQ_NOT_EXISTS);
+                set_unique_item_status(env.item[obj], UNIQ_NOT_EXISTS);
         // Destroy the monster.
         mp->reset();
         you.unique_creatures.set(spec_type, false);
@@ -845,7 +805,7 @@ int main(int argc, char* argv[])
     mac /= ntrials;
     mev /= ntrials;
 
-    monster& mon(menv[index]);
+    monster& mon(env.mons[index]);
 
     const string symbol(monster_symbol(mon));
 
@@ -886,7 +846,7 @@ int main(int argc, char* argv[])
             printf(" | %s", colour(LIGHTRED, "UNFINISHED").c_str());
 
         printf(" | Spd: %s",
-               monster_speed(mon, me, speed_min, speed_max).c_str());
+               monster_speed(mon, speed_min, speed_max).c_str());
 
         const int hd = mon.get_experience_level();
         printf(" | HD: %d", hd);
@@ -947,17 +907,21 @@ int main(int argc, char* argv[])
                                                  orig_attk.flavour :
                                                  attk.flavour);
 
+                if (flavour_has_reach(flavour))
+                    monsterattacks += "(reach)";
                 switch (flavour)
                 {
-                case AF_REACH:
-                case AF_REACH_STING:
-                    monsterattacks += "(reach)";
-                    break;
                 case AF_KITE:
                     monsterattacks += "(kite)";
                     break;
                 case AF_SWOOP:
                     monsterattacks += "(swoop)";
+                    break;
+                case AF_CROC_LUNGE:
+                    monsterattacks += "(lunge)";
+                    break;
+                case AF_DEATH_ROLL:
+                    monsterattacks += "(death roll)";
                     break;
                 case AF_ACID:
                     monsterattacks +=
@@ -984,6 +948,9 @@ int main(int argc, char* argv[])
                     break;
                 case AF_CHAOTIC:
                     monsterattacks += colour(LIGHTGREEN, "(chaos)");
+                    break;
+                case AF_PURE_CHAOS:
+                    monsterattacks += colour(LIGHTGREEN, "(pure chaos)");
                     break;
                 case AF_ELEC:
                     monsterattacks +=
@@ -1043,7 +1010,11 @@ int main(int argc, char* argv[])
                     monsterattacks += colour(YELLOW, "(holy)");
                     break;
                 case AF_PAIN:
+                case AF_PURE_PAIN:
                     monsterattacks += colour(RED, "(pain)");
+                    break;
+                case AF_DECAY:
+                    monsterattacks += colour(RED, "(decay)");
                     break;
                 case AF_ANTIMAGIC:
                     monsterattacks += colour(LIGHTBLUE, "(antimagic)");
@@ -1057,6 +1028,9 @@ int main(int argc, char* argv[])
                 case AF_STEAL:
                     monsterattacks += colour(CYAN, "(steal)");
                     break;
+                case AF_PIERCE_AC:
+                    monsterattacks += colour(BROWN, "(pierce armour)");
+                    break;
                 case AF_ENSNARE:
                     monsterattacks += colour(WHITE, "(ensnare)");
                     break;
@@ -1068,6 +1042,9 @@ int main(int argc, char* argv[])
                     break;
                 case AF_DRAIN_SPEED:
                     monsterattacks += colour(LIGHTMAGENTA, "(drain speed)");
+                    break;
+                case AF_DISPEL:
+                    monsterattacks += colour(LIGHTBLUE, "(dispel)");
                     break;
                 case AF_VULN:
                     monsterattacks += colour(LIGHTBLUE, "(vuln)");
@@ -1081,24 +1058,33 @@ int main(int argc, char* argv[])
                 case AF_TRAMPLE:
                     monsterattacks += colour(BROWN, "(trample)");
                     break;
+                case AF_BARBS:
+                    monsterattacks += color(LIGHTRED, "(barbs)");
+                    break;
                 case AF_WEAKNESS:
                     monsterattacks += colour(LIGHTRED, "(weakness)");
                     break;
+                case AF_RANDOM:
+                    monsterattacks += colour(LIGHTRED, "(random)");
+                    break;
+                case AF_MIASMATA:
+                    monsterattacks += colour(MAGENTA, "(miasma)");
+                    break;
+				case AF_CONTAM:
+					monsterattacks += colour(YELLOW, "(contam)");
                 case AF_CRUSH:
                 case AF_PLAIN:
+                case AF_REACH:
+                case AF_REACH_STING:
+                case AF_REACH_TONGUE:
                     break;
 #if TAG_MAJOR_VERSION == 34
-                case AF_DISEASE:
-                case AF_PLAGUE:
-                case AF_STEAL_FOOD:
                 case AF_POISON_MEDIUM:
-                case AF_POISON_NASTY:
                 case AF_POISON_STR:
                 case AF_POISON_DEX:
                 case AF_POISON_INT:
                 case AF_POISON_STAT:
                 case AF_FIREBRAND:
-                case AF_MIASMATA:
                     monsterattacks += colour(LIGHTRED, "(?\?\?)");
                     break;
 #endif
@@ -1123,7 +1109,7 @@ int main(int argc, char* argv[])
                         monsterflags, colour(BROWN, "undead"));
         mons_check_flag((bool)(me->holiness & MH_DEMONIC),
                         monsterflags, colour(RED, "demonic"));
-        mons_check_flag((bool)(me->holiness & MH_NONLIVING),
+        mons_check_flag((bool)(me->holiness & MH_ELEMENTAL),
                         monsterflags, colour(LIGHTCYAN, "non-living"));
         mons_check_flag(mons_is_plant(mon), monsterflags,
                         colour(GREEN, "plant"));
@@ -1140,7 +1126,7 @@ int main(int argc, char* argv[])
         mons_check_flag(mon.is_fighter(), monsterflags, "fighter");
         if (mon.is_archer())
         {
-            if (me->bitfields & M_DONT_MELEE)
+            if (me->bitfields & M_PREFER_RANGED)
                 mons_flag(monsterflags, "master archer");
             else
                 mons_flag(monsterflags, "archer");
@@ -1166,12 +1152,8 @@ int main(int argc, char* argv[])
         mons_check_flag(mon.is_unbreathing(), monsterflags, "unbreathing");
 
         string spell_string = construct_spells(spell_lists, damages);
-        if (shapeshifter || mon.type == MONS_PANDEMONIUM_LORD
-            || mon.type == MONS_CHIMERA
-                   && (mon.base_monster == MONS_PANDEMONIUM_LORD))
-        {
+        if (shapeshifter || mon.type == MONS_PANDEMONIUM_LORD)
             spell_string = "(random)";
-        }
 
         mons_check_flag(vault_monster, monsterflags, colour(BROWN, "vault"));
 
@@ -1207,7 +1189,7 @@ int main(int argc, char* argv[])
         }
 
         const resists_t res(shapeshifter ? me->resists :
-                                           get_mons_resists(mon));
+                                           get_mons_base_resists(mon));
 #define res(c, x)                                                              \
     do                                                                         \
     {                                                                          \
@@ -1235,7 +1217,7 @@ int main(int argc, char* argv[])
 
         res2(LIGHTBLUE, drown, mon.res_water_drowning());
         res2(LIGHTRED, rot, mon.res_rotting());
-        res2(LIGHTMAGENTA, neg, mon.res_negative_energy(true));
+        res2(LIGHTMAGENTA, neg, mon.res_negative_energy());
         res2(YELLOW, holy, mon.res_holy_energy());
         res2(LIGHTMAGENTA, torm, mon.res_torment());
         res2(LIGHTBLUE, tornado, mon.res_tornado());
@@ -1277,18 +1259,3 @@ int main(int argc, char* argv[])
     }
     return 1;
 }
-
-//////////////////////////////////////////////////////////////////////////
-// main.cc stuff
-
-CLua clua(true);
-CLua dlua(false);      // Lua interpreter for the dungeon builder.
-crawl_environment env; // Requires dlua.
-player you;
-game_state crawl_state;
-
-void process_command(command_type);
-void process_command(command_type) {}
-
-void world_reacts();
-void world_reacts() {}

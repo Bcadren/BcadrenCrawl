@@ -1,22 +1,22 @@
 define(["jquery", "comm", "./enums", "./map_knowledge", "./messages",
-        "./options"],
-function ($, comm, enums, map_knowledge, messages, options) {
+        "./options", "./util"],
+function ($, comm, enums, map_knowledge, messages, options, util) {
     "use strict";
 
     var player = {}, last_time;
 
     var stat_boosters = {
-        "str": "vitalised|mighty|berserking",
-        "int": "vitalised|brilliant",
-        "dex": "vitalised|agile",
+        "str": "vitalised",
+        "int": "vitalised",
+        "dex": "vitalised",
         "hp": "divinely vigorous|berserking",
         "mp": "divinely vigorous"
     };
 
     var defense_boosters = {
-        "ac": "icy armour|protected from physical damage|sanguine armour|corpse armour|protection aura",
+        "ac": "icy armour|protected from physical damage|sanguine armour|protection aura",
         "ev": "agile|acrobat",
-        "sh": "divine shield|corpse armour",
+        "sh": "divine shield",
     }
 
     /**
@@ -158,21 +158,30 @@ function ($, comm, enums, map_knowledge, messages, options) {
             return String.fromCharCode("A".charCodeAt(0) + index - 26);
     }
 
-    function inventory_item_desc(index)
+    function inventory_item_desc(index, parens=false)
     {
         var item = player.inv[index];
         var elem = $("<span>");
-        elem.text(item.name);
+        if (parens)
+            elem.text("(" + item.name + ")");
+        else
+            elem.text(item.name);
         if (item.col != -1 && item.col != null)
             elem.addClass("fg" + item.col);
         return elem;
     }
 
-    function wielded_weapon()
+    function wielded_weapon(index, right)
     {
         var elem;
-        var wielded = player.equip[enums.equip.WEAPON];
-        if (wielded == -1)
+        var wielded = player.equip[index];
+        if (right && player.hand_lost)
+        {
+            elem = $("<span>");
+            elem.text("Slot unavailable");
+            elem.addClass("fg8");
+        }
+        else if (wielded == -1)
         {
             elem = $("<span>");
             elem.text(player.unarmed_attack);
@@ -189,17 +198,8 @@ function ($, comm, enums, map_knowledge, messages, options) {
 
     function quiver()
     {
-        if (!player.quiver_available)
-        {
-            var elem = $("<span>");
-            elem.text("Quiver unavailable");
-            elem.addClass("fg8");
-            return elem;
-        }
-        else if (player.quiver_item == -1)
-            return "Nothing quivered";
-        else
-            return inventory_item_desc(player.quiver_item);
+        // any use for player.quiver_available any more?
+        return util.formatted_string_to_html(player.quiver_desc);
     }
 
     player.has_status_light = function (status_light, col)
@@ -230,6 +230,85 @@ function ($, comm, enums, map_knowledge, messages, options) {
         return player.has_status("paralysed|petrified|sleeping")
                || player.has_status("confused|petrifying")
                || player.has_status("held", 4);
+    }
+
+    function update_MR()
+    {
+        var elem = $("#res_mr");
+        var val = player["mr"];
+        elem.text(val);
+        elem.removeClass();
+        if (val >= 200)
+            elem.addClass("fg13"); // lightmagenta
+        else if (val >= 160)
+            elem.addClass("fg5"); // magenta
+        else if (val >= 120)
+            elem.addClass("fg9"); // lightblue
+        else if (val >= 80)
+            elem.addClass("fg1"); // blue
+        else if (val >= 40)
+            elem.addClass("fg2"); // green
+    }
+
+    function update_resist(resist, nb)
+    {
+        var elem = $("#res_"+resist);
+        elem.removeClass();
+        if (player[resist] == 3 && (resist == "rp" || resist == "ra"))
+        {
+            elem.text(" ∞");
+            elem.addClass("fg10"); // Lightgreen
+        } 
+        else if (nb)
+        {
+            if (player[resist] > 0)
+            {
+                elem.text(" +");
+                elem.addClass("fg2"); // green
+            }
+            else if (player[resist] < 0)
+            {
+                elem.text(resist + " -");
+                elem.addClass("fg4"); // red
+            }
+            else
+                elem.text(" .");
+        }
+        else
+        {
+            if (player[resist] > 2)
+            {
+                elem.text(" + + +");
+                elem.addClass("fg10"); // lightgreen
+            }
+            else if (player[resist] == 2)
+            {
+                elem.text( " + + .");
+                elem.addClass("fg2"); // green
+            }
+            else if (player[resist] == 1)
+            {
+                elem.text(" + . .");
+                elem.addClass("fg2"); // green
+            }
+            else if (player[resist] == 0)
+                elem.text(" . . .");
+            else if (player[resist] == -1)
+            {
+                elem.text(" x . .");
+                elem.addClass("fg4"); // red
+            }
+            else if (player[resist] == -2)
+            {
+                elem.text(" x x .");
+                elem.addClass("fg12"); // lightred
+            }
+            else if (player[resist] < -2)
+            {
+                elem.text(" x x x");
+                elem.addClass("fg12"); // lightred
+            }
+        }
     }
 
     function update_defense(type)
@@ -320,7 +399,7 @@ function ($, comm, enums, map_knowledge, messages, options) {
             $("#stats_" + name).addClass("colour_" + colour);
     }
 
-    var simple_stats = ["hp", "hp_max", "mp", "mp_max", "xl", "progress"];
+    var simple_stats = ["hp", "hp_max", "mp", "mp_max", "mount_hp", "mount_hp_max", "xl", "progress"];
     /**
      * Update the stats pane area based on the player's current properties.
      */
@@ -333,6 +412,18 @@ function ($, comm, enums, map_knowledge, messages, options) {
         // TODO: Move to a proper initialisation task
         if ($("#stats").attr("data-species") != player.species)
             $("#stats").attr("data-species", player.species);
+
+        if (player.mounted && $("#stats").attr("data-mounted") != "y")
+            $("#stats").attr("data-mounted", "y");
+
+        if (!player.mounted && $("#stats").attr("data-mounted") != "n")
+            $("#stats").attr("data-mounted", "n");
+
+        if (player.toggle && $("#stats").attr("data-toggle") != "y")
+            $("#stats").attr("data-toggle", "y");
+
+        if (!player.toggle && $("#stats").attr("data-toggle") != "n")
+            $("#stats").attr("data-toggle", "n");
 
         var species_god = player.species;
         if (player.god != "")
@@ -350,8 +441,10 @@ function ($, comm, enums, map_knowledge, messages, options) {
         else if ((player.piety_rank > 0 || player.god != "")
                  && player.god != "Gozag")
         {
-            $("#stats_piety").text(repeat_string("*", player.piety_rank)
-                                   + repeat_string(".", 6-player.piety_rank));
+            if (player.piety > 0)
+                $("#stats_piety").text(player.piety_rank + "*[" + player.piety + "]");
+            else
+                $("#stats_piety").text(player.piety_rank + "*");
         }
         else
             $("#stats_piety").text("");
@@ -383,23 +476,40 @@ function ($, comm, enums, map_knowledge, messages, options) {
         else
             $("#stats_real_hp_max").text("");
 
-        if (player.species == "Deep Dwarf" && player.dd_real_mp_max != player.mp_max)
-            $("#stats_dd_real_mp_max").text("(" + player.dd_real_mp_max + ")");
-        else
-            $("#stats_dd_real_mp_max").text("");
+        $("#stats_dd_real_mp_max").text("");
 
         percentage_color("hp");
         percentage_color("mp");
         update_bar("hp");
+        if (player.mounted)
+        {
+            percentage_color("mount_hp");
+            update_bar("mount_hp");
+        }
         update_bar("mp");
 
-        update_defense("ac");
-        update_defense("ev");
-        update_defense("sh");
+        if (!player.toggle)
+        {
+            update_defense("ac");
+            update_defense("ev");
+            update_defense("sh");
+            update_defense("gdr");
 
-        update_stat("str");
-        update_stat("int");
-        update_stat("dex");
+            update_stat("str");
+            update_stat("int");
+            update_stat("dex");
+        }
+        else
+        {
+            update_resist("rf", false);
+            update_resist("rc", false);
+            update_resist("rn", false);
+            update_resist("ra", false);
+            update_resist("rp", true);
+            update_resist("re", true);
+            update_MR();
+        }
+
         update_bar_noise();
 
         if (options.get("show_game_time") === true)
@@ -425,17 +535,19 @@ function ($, comm, enums, map_knowledge, messages, options) {
         {
             var status_inf = player.status[i];
             if (!status_inf.light) continue;
-            status += ("<span class='status_light fg"
-                       + status_inf.col + "'>"
+            status += ("<span class='status_light fg" + status_inf.col + "' "
+                       + "data-desc=\"" + status_inf.desc + "\">"
                        + status_inf.light + "</span> ");
         }
         $("#stats_status_lights").html(status);
 
-        $("#stats_weapon_letter").text(
-            index_to_letter(player.equip[enums.equip.WEAPON]) + ")");
-        $("#stats_weapon").html(wielded_weapon());
-        $("#stats_quiver_letter").text(
-            index_to_letter(player.quiver_item) + ")");
+        $("#stats_weapon0_letter").text(
+            index_to_letter(player.equip[enums.equip.WEAPON0]) + ")");
+        $("#stats_weapon0").html(wielded_weapon(enums.equip.WEAPON0));
+        $("#stats_weapon1_letter").text(
+            index_to_letter(player.equip[enums.equip.WEAPON1]) + ")");
+        $("#stats_weapon1").html(wielded_weapon(enums.equip.WEAPON1));
+
         $("#stats_quiver").html(quiver());
     }
 
@@ -503,6 +615,7 @@ function ($, comm, enums, map_knowledge, messages, options) {
             $.extend(player, {
                 name: "", god: "", title: "", species: "",
                 hp: 0, hp_max: 0, real_hp_max: 0, poison_survival: 0,
+                mounted: false, mount_hp:0, mount_hp_max:0,
                 mp: 0, mp_max: 0, dd_real_mp_max: 0,
                 ac: 0, ev: 0, sh: 0,
                 xl: 0, progress: 0,
@@ -510,9 +623,13 @@ function ($, comm, enums, map_knowledge, messages, options) {
                 gold: 0,
                 str: 0, int: 0, dex: 0,
                 str_max: 0, int_max: 0, dex_max: 0,
-                piety_rank: 0, penance: false,
+                toggle: false,
+                rf: 0, rc: 0, rn: 0,
+                rp: 0, re: 0, ra: 0, mr: 0,
+                piety_rank: 0, piety: 0, penance: false,
                 status: [],
-                inv: {}, equip: {}, quiver_item: -1,
+                inv: {}, equip: {},
+                quiver_item: -1,
                 unarmed_attack: "",
                 pos: {x: 0, y: 0},
                 wizard: 0,
@@ -523,6 +640,7 @@ function ($, comm, enums, map_knowledge, messages, options) {
             });
             delete player["old_hp"];
             delete player["old_mp"];
+            delete player["old_mount_hp"];
             for (var i = 0; i < enums.equip.NUM_EQUIP; ++i)
                 player.equip[i] = -1;
             last_time = null;

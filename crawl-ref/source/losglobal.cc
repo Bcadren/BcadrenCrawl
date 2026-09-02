@@ -7,9 +7,9 @@
 #include "libutil.h"
 #include "los-def.h"
 
-#define LOS_KNOWN 4
+#define LOS_KNOWN 5
 
-typedef uint8_t losfield_t;
+typedef uint16_t losfield_t;
 typedef losfield_t halflos_t[LOS_MAX_RANGE+1][2*LOS_MAX_RANGE+1];
 static const int o_half_x = 0;
 static const int o_half_y = LOS_MAX_RANGE;
@@ -104,6 +104,13 @@ static void _update_globallos_at(const coord_def& p, los_type l)
     case LOS_SOLID_SEE:
         {
             los_def los(p, opc_solid_see);
+            los.update();
+            _save_los(&los, l);
+            break;
+        }
+    case LOS_MONSTER:
+        {
+            los_def los(p, opc_mon);
             los.update();
             _save_los(&los, l);
             break;

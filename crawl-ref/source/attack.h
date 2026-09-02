@@ -4,7 +4,7 @@
 #include "item-prop-enum.h"
 #include "item-status-flag-type.h"
 #include "mon-enum.h"
-#include "ouch.h"
+#include "kill-method-type.h"
 #include "pronoun-type.h"
 #include "spl-util.h" // spschool type definition
 
@@ -35,7 +35,7 @@ public:
     int     to_hit;
     int     damage_done;
     int     special_damage; // TODO: We'll see if we can remove this
-    int     aux_damage;     // TOOD: And this too
+    int     aux_damage;     // TODO: And this too
 
     int     min_delay;
     int     final_attack_delay;
@@ -55,6 +55,10 @@ public:
     attack_type     attk_type;
     attack_flavour  attk_flavour;
     int             attk_damage;
+
+    int             attack_number;
+    bool            mount_attack;   // Is the mount attacking?
+    bool            mount_defend;   // Is the mount being hit?
 
     item_def        *weapon;
     brand_type      damage_brand;
@@ -84,13 +88,10 @@ public:
 
     item_def        *defender_shield;
 
-    // Miscast to cause after special damage is done. If miscast_level == 0
-    // the miscast is discarded if special_damage_message isn't empty.
-    int       miscast_level;
-    spschool  miscast_type;
-    actor*    miscast_target;
-
     bool      fake_chaos_attack;
+
+    int       damage_type;
+    string    resist_message;
 
     bool simu;
 
@@ -111,7 +112,7 @@ public:
     // TODO: Definitely want to get rid of this, which we can't really do
     // until we refactor the whole pronoun / desc usage from these lowly
     // classes all the way up to monster/player (and actor) classes.
-    string defender_name(bool allow_reflexive);
+    string defender_name(bool allow_reflexive, bool pronoun = false);
 
 // Private Properties
     string aux_source;
@@ -119,7 +120,7 @@ public:
 
 // Private Methods
 protected:
-    virtual void init_attack(skill_type unarmed_skill, int attack_number);
+    virtual void init_attack(skill_type unarmed_skill, int attk_num);
 
     /* Attack Phases */
     virtual bool handle_phase_attempted();
@@ -135,15 +136,17 @@ protected:
     virtual int weapon_damage() = 0;
     virtual int get_weapon_plus();
     virtual int calc_base_unarmed_damage();
-    virtual int calc_mon_to_hit_base() = 0;
-    virtual int apply_damage_modifiers(int damage, int damage_max) = 0;
+    virtual int calc_mon_to_hit_base(bool random) = 0;
+    virtual int apply_resists(int damage);
+    virtual int apply_damage_modifiers(int damage);
     virtual int calc_damage();
-    int test_hit(int to_hit, int ev, bool randomise_ev);
+    int test_hit(int to_hit, int ev);
     int apply_defender_ac(int damage, int damage_max = 0) const;
     // Determine if we're blocking (partially or entirely)
     virtual bool attack_shield_blocked(bool verbose);
     virtual bool ignores_shield(bool verbose)
     {
+        UNUSED(verbose);
         return false;
     }
     virtual bool apply_damage_brand(const char *what = nullptr);
@@ -162,7 +165,6 @@ protected:
     void pain_affects_defender();
     void chaos_affects_defender();
     brand_type random_chaos_brand();
-    void do_miscast();
     void drain_defender();
     void drain_defender_speed();
 
@@ -170,7 +172,6 @@ protected:
                                bool clean = false);
 
     /* Output */
-    string debug_damage_number();
     string evasion_margin_adverb();
 
     virtual void set_attack_verb(int damage) = 0;
@@ -179,7 +180,7 @@ protected:
     void stab_message();
 
     string atk_name(description_level_type desc);
-    string def_name(description_level_type desc);
+    string def_name(description_level_type desc, bool pronoun = false);
     string wep_name(description_level_type desc = DESC_YOUR,
                     iflags_t ignore_flags = ISFLAG_KNOW_CURSE
                                             | ISFLAG_KNOW_PLUSES);
@@ -202,4 +203,9 @@ protected:
     virtual void player_stab_check();
 };
 
+float calc_player_to_hit(const item_def * weapon, bool player_aux, int armour_malus, bool random);
+float calc_mon_to_hit(const monster * mon, bool is_ranged, int attack_slot, bool random);
+int tohit_percent(const int ev, const int to_hit);
+float weapon_bonus(float mhit, int HD, int extra_slay, const item_def * weapon, bool random);
+int player_base_unarmed(bool rand = true);
 string attack_strength_punctuation(int dmg);

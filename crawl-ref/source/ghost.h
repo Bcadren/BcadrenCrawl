@@ -5,6 +5,9 @@
 
 #pragma once
 
+#include <vector>
+
+#include "enchant-type.h"
 #include "enum.h"
 #include "god-type.h"
 #include "item-prop-enum.h"
@@ -12,6 +15,8 @@
 #include "mon-enum.h"
 #include "mutant-beast.h"
 #include "species-type.h"
+
+using std::vector;
 
 #define MIRRORED_GHOST_KEY "mirrored_ghost"
 
@@ -27,12 +32,13 @@ public:
     short best_skill_level;
     short xl;
 
-    short max_hp, ev, ac, damage, speed, move_energy;
-    bool see_invis, flies;
+    short max_hp, ev, ac, mr, damage, speed, move_energy;
+    bool see_invis, flies; // BCADDO: Rework to extra flags.
     brand_type brand;
     attack_type att_type;
     attack_flavour att_flav;
     resists_t resists;
+    enchant_type cloud_ring_ench;
 
     colour_t colour;
 
@@ -43,9 +49,10 @@ public:
     bool has_spells() const;
     void reset();
     void init_pandemonium_lord();
-    void init_player_ghost(bool actual_ghost = true);
+    void init_player_ghost();
     void init_ugly_thing(bool very_ugly, bool only_mutate = false,
                          colour_t force_colour = BLACK);
+    void init_chameleon(bool only_mutate = false, colour_t force_colour = BLACK);
     void init_dancing_weapon(const item_def& weapon, int power);
     void init_spectral_weapon(const item_def& weapon, int power);
 
@@ -62,10 +69,12 @@ private:
     static void announce_ghost(const ghost_demon &g);
 
 private:
-    void add_spells(bool actual_ghost);
+    void add_spells();
     spell_type translate_spell(spell_type playerspell) const;
     void ugly_thing_add_resistance(bool very_ugly,
                                    attack_flavour u_att_flav);
+    void set_pan_lord_special_attack();
+    void set_pan_lord_cloud_ring();
 };
 
 bool debug_check_ghosts(vector<ghost_demon> &ghosts);

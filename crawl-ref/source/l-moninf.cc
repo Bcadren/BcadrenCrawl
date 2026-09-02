@@ -16,11 +16,14 @@
 #include "mon-pick.h"
 #include "spl-util.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "transform.h"
 #include "math.h" // ceil
 #include "spl-zap.h" // calc_spell_power
 #include "evoke.h" // wand_mp_cost
+#if TAG_MAJOR_VERSION == 34
 #include "god-abil.h" // pakellas_effective_hex_power
+#endif
 #include "describe.h" // describe_info, get_monster_db_desc
 
 #define MONINF_METATABLE "monster.info"
@@ -34,7 +37,9 @@ void lua_push_moninf(lua_State *ls, monster_info *mi)
 
 #define MONINF(ls, n, var) \
     monster_info *var = *(monster_info **) \
-        luaL_checkudata(ls, n, MONINF_METATABLE)
+        luaL_checkudata(ls, n, MONINF_METATABLE); \
+    if (!var) \
+        return 0
 
 #define MIRET1(type, field, cfield) \
     static int moninf_get_##field(lua_State *ls) \
@@ -213,6 +218,13 @@ MIRES1(res_shock, MR_RES_ELEC)
  * @function res_corr
  */
 MIRES1(res_corr, MR_RES_ACID)
+/*** Can the monster currently be frenzied?
+ * Is it possible to affect the monster with the discord spell or a datura
+ * dart?
+ * @treturn boolean
+ * @function can_go_frenzy
+ */
+MIRET1(boolean, can_go_frenzy, can_go_frenzy)
 
 /*** The monster's max HP given in its description.
  * @treturn string describing the max HP (usually "about X").
@@ -273,8 +285,12 @@ static int moninf_get_defeat_mr(lua_State *ls)
     }
     zap_type zap = spell_to_zap(spell);
     int eff_power = zap == NUM_ZAPS ? power : zap_ench_power(zap, power, false);
+#if TAG_MAJOR_VERSION == 34
     int adj_power = is_evoked ? pakellas_effective_hex_power(eff_power) : eff_power;
     int success = hex_success_chance(mr, adj_power, 100);
+#else
+    int success = hex_success_chance(mr, eff_power, 100);
+#endif
     lua_pushnumber(ls, success);
     return 1;
 }
@@ -436,7 +452,7 @@ LUAFN(moninf_get_spells)
         vector<string> spell_titles;
 
         for (const auto& slot : unique_slots)
-            spell_titles.emplace_back(spell_title(slot.spell));
+            spell_titles.emplace_back(mi_spell_title(slot.spell, mi));
 
         clua_stringtable(ls, spell_titles);
         lua_rawseti(ls, -2, i+1);
@@ -458,10 +474,9 @@ static bool cant_see_you(const monster_info *mi)
  * The return value is a number representing the percentage of a top-tier stab
  * you can currently get by attacking the monster. Possible values are:
  *
- * - 1.0 Sleep and paralysis stabs.
- * - 0.5 Net, web, and petrification stabs.
- * - 0.25 Confusion, fear, and invisibility stabs.
- * - 0.166666666 Distraction stabs.
+ * - 1.0 Sleep, petrified, and paralysis stabs.
+ * - 0.25 Net, web, petrifying, confusion, fear, invisibility, and distraction
+ *   stabs
  * - 0.0 No stab bonus.
  *
  * @treturn number
@@ -470,17 +485,17 @@ static bool cant_see_you(const monster_info *mi)
 LUAFN(moninf_get_stabbability)
 {
     MONINF(ls, 1, mi);
-    if (mi->is(MB_DORMANT) || mi->is(MB_SLEEPING) || mi->is(MB_PARALYSED))
-        lua_pushnumber(ls, 1.0);
-    else if (mi->is(MB_CAUGHT) || mi->is(MB_WEBBED) || mi->is(MB_PETRIFYING)
-             || mi->is(MB_PETRIFIED))
+    if (mi->is(MB_DORMANT) || mi->is(MB_SLEEPING) || mi->is(MB_PETRIFIED)
+            || mi->is(MB_PARALYSED))
     {
-        lua_pushnumber(ls, 0.5);
+        lua_pushnumber(ls, 1.0);
     }
-    else if (mi->is(MB_CONFUSED) || mi->is(MB_FLEEING) || cant_see_you(mi))
+    else if (mi->is(MB_CAUGHT) || mi->is(MB_WEBBED) || mi->is(MB_PETRIFYING)
+             || mi->is(MB_CONFUSED) || mi->is(MB_FLEEING) || cant_see_you(mi)
+             || mi->is(MB_DISTRACTED))
+    {
         lua_pushnumber(ls, 0.25);
-    else if (mi->is(MB_DISTRACTED))
-        lua_pushnumber(ls, 0.16666666);
+    }
     else
         lua_pushnumber(ls, 0);
 
@@ -555,9 +570,9 @@ LUAFN(moninf_get_can_be_constricted)
     if (!mi->constrictor_name.empty()
         || !form_keeps_mutations()
         || (you.species != SP_NAGA
-            || you.experience_level <= 12
+            && you.char_class != JOB_NAGA
             || you.is_constricting())
-         && (you.species != SP_OCTOPODE || !you.has_usable_tentacle()))
+         && (you.species != SP_OCTOPODE || !you.usable_tentacles()))
     {
         lua_pushboolean(ls, false);
     }
@@ -632,7 +647,7 @@ LUAFN(moninf_get_desc)
         // full description
         describe_info inf;
         bool has_stat_desc;
-        get_monster_db_desc(*mi, inf, has_stat_desc, false);
+        get_monster_db_desc(*mi, inf, has_stat_desc);
         lua_pushstring(ls, inf.body.str().c_str());
     }
     else
@@ -725,6 +740,7 @@ static const struct luaL_reg moninf_lib[] =
     MIREG(res_draining),
     MIREG(res_shock),
     MIREG(res_corr),
+    MIREG(can_go_frenzy),
     MIREG(max_hp),
     MIREG(mr),
     MIREG(defeat_mr),

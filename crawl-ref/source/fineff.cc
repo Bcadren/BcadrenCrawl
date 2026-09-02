@@ -8,15 +8,20 @@
 
 #include "fineff.h"
 
-#include "act-iter.h"
+#include "attack.h"     // attack_strength_punctuation
+#include "beam.h"
 #include "bloodspatter.h"
 #include "coordit.h"
 #include "dactions.h"
+#include "death-curse.h"
 #include "directn.h"
 #include "english.h"
 #include "env.h"
+#include "fight.h"      // resist_adjust_damage
 #include "god-abil.h"
+#include "god-passive.h"
 #include "libutil.h"
+#include "losglobal.h"
 #include "message.h"
 #include "mon-abil.h"
 #include "mon-act.h"
@@ -26,13 +31,14 @@
 #include "mon-place.h"
 #include "ouch.h"
 #include "religion.h"
+#include "spl-clouds.h" // Chaos_cloud . BCADNOTE: Should move to cloud?
 #include "spl-miscast.h"
+#include "spl-summoning.h"
 #include "state.h"
 #include "stringutil.h"
 #include "terrain.h"
 #include "transform.h"
 #include "view.h"
-#include "viewchar.h"
 
 /*static*/ void final_effect::schedule(final_effect *eff)
 {
@@ -113,7 +119,7 @@ bool shock_serpent_discharge_fineff::mergeable(const final_effect &fe) const
     return o && def == o->def;
 }
 
-bool delayed_action_fineff::mergeable(const final_effect &fe) const
+bool delayed_action_fineff::mergeable(const final_effect &) const
 {
     return false;
 }
@@ -200,16 +206,11 @@ void mirror_damage_fineff::fire()
     else if (def == MID_PLAYER)
     {
         simple_god_message(" mirrors your injury!");
-#ifndef USE_TILE_LOCAL
-        flash_monster_colour(monster_by_mid(att), RED, 200);
-#endif
 
         attack->hurt(&you, damage);
 
         if (attack->alive())
             print_wounds(*monster_by_mid(att));
-
-        lose_piety(isqrt_ceil(damage));
     }
     else
     {
@@ -451,32 +452,133 @@ void shock_serpent_discharge_fineff::fire()
         return;
 
     const int max_range = 3; // v0v
-    if (grid_distance(oppressor.pos(), position) > max_range)
+    if (grid_distance(oppressor.pos(), position) > max_range
+        || !cell_see_cell(position, oppressor.pos(), LOS_SOLID_SEE))
+    {
         return;
+    }
 
     const monster* serpent = defender() ? defender()->as_monster() : nullptr;
+
+    const int base = roll_dice(3, 4 + power * 3 / 2);
+    const int max = 3 * div_round_up(4 + power * 3, 2);
+    const int post_ac = oppressor.apply_ac(base, max, ac_type::half);
+    const int post_res = resist_adjust_damage(&oppressor, BEAM_ELECTRICITY, post_ac);
+
     if (serpent && you.can_see(*serpent))
     {
-        mprf("%s electric aura discharges%s, shocking %s!",
+        mprf("%s electric aura discharges%s, shocking %s%s",
              serpent->name(DESC_ITS).c_str(),
              power < 4 ? "" : " violently",
-             oppressor.name(DESC_THE).c_str());
+             oppressor.name(DESC_THE).c_str(),
+             attack_strength_punctuation(post_ac).c_str());
     }
     else if (you.can_see(oppressor))
     {
-        mprf("The air sparks with electricity, shocking %s!",
-             oppressor.name(DESC_THE).c_str());
+        mprf("The air sparks with electricity, shocking %s%s",
+             oppressor.name(DESC_THE).c_str(),
+             attack_strength_punctuation(post_ac).c_str());
     }
-    bolt beam;
-    beam.flavour = BEAM_ELECTRICITY;
 
-    int amount = roll_dice(3, 4 + power * 3 / 2);
-    amount = oppressor.apply_ac(oppressor.beam_resists(beam, amount, true),
-                                0, ac_type::half);
-    oppressor.hurt(serpent, amount, beam.flavour, KILLED_BY_BEAM,
-                                        "a shock serpent", "electric aura");
-    if (amount)
-        oppressor.expose_to_element(beam.flavour, amount);
+    if (post_res > 0)
+    {
+        oppressor.hurt(serpent, post_res, BEAM_ELECTRICITY, KILLED_BY_BEAM,
+            "a shock serpent", "electric aura");
+    }
+
+    oppressor.beam_effects(BEAM_ELECTRICITY, post_ac, post_res);
+
+    if (post_res)
+        oppressor.expose_to_element(BEAM_ELECTRICITY, abs(post_res));
+}
+
+static void _explosion_knockback(coord_def origin, coord_def pos, int size, string description, bool do_clouds)
+{
+    if (actor * act = actor_at(pos))
+    {
+        if (!(act->wearing_ego(EQ_BOOTS, SPARM_STURDY) || act->is_stationary()) && pos != origin)
+        {
+            coord_def newpos = coord_def(0, 0);
+            const bool is_left = (origin.x - pos.x) >= 0;
+            const bool is_up = (origin.y - pos.y) >= 0;
+            for (rectangle_iterator sai(pos, size); sai; ++sai)
+            {
+                if (in_bounds(*sai) && grid_distance(*sai, origin) > grid_distance(pos, origin) && act->is_habitable(*sai)
+                    && !actor_at(*sai) && cell_see_cell(pos, *sai, LOS_SOLID))
+                {
+                    const int d0 = grid_distance(pos, *sai);
+                    const int d1 = newpos.origin() ? 0 : grid_distance(pos, newpos);
+                    const bool left = (pos.x - (*sai).x) >= 0;
+                    const bool up = (pos.y - (*sai).y) >= 0;
+                    if (is_left == left && is_up == up && (newpos.origin() || (d0 > d1)))
+                        newpos = *sai;
+                }
+            }
+            if (!newpos.origin())
+            {
+                act->move_to_pos(newpos);
+                mprf("%s %s knocked back by the %s.", act->name(DESC_THE).c_str(),
+                    act->is_player() ? "are" : "is", description.c_str());
+            }
+        }
+    }
+
+    if (do_clouds && cloud_at(pos))
+    {
+        coord_def newpos = coord_def(0, 0);
+        const bool is_left = (origin.x - pos.x) >= 0;
+        const bool is_up = (origin.y - pos.y) >= 0;
+        for (rectangle_iterator sai(pos, size); sai; ++sai)
+        {
+            if (in_bounds(*sai) && grid_distance(*sai, origin) > grid_distance(pos, origin)
+                && !cloud_at(*sai) && !cell_is_solid(*sai) && cell_see_cell(pos, *sai, LOS_NO_TRANS))
+            {
+                const int d0 = grid_distance(pos, *sai);
+                const int d1 = newpos.origin() ? 0 : grid_distance(pos, newpos);
+                const bool left = (pos.x - (*sai).x) >= 0;
+                const bool up = (pos.y - (*sai).y) >= 0;
+                if (is_left == left && is_up == up && (newpos.origin() || (d0 > d1)))
+                    newpos = *sai;
+            }
+        }
+        if (!newpos.origin())
+            swap_clouds(pos, newpos);
+    }
+}
+
+void explosion_fineff::fire()
+{
+    if (is_sanctuary(beam.target))
+    {
+        if (you.see_cell(beam.target))
+            mprf(MSGCH_GOD, "%s", sanctuary_message.c_str());
+        return;
+    }
+
+    if (you.see_cell(beam.target))
+        mprf(MSGCH_MONSTER_DAMAGE, MDAM_DEAD, "%s", boom_message.c_str());
+    
+    if (beam.flavour == BEAM_LAVA)
+    {
+        for (adjacent_iterator ai(beam.target, false); ai; ++ai)
+        {
+            _explosion_knockback(beam.target, *ai, 2, "lava burst", false);
+            if (!cell_is_solid(*ai) && !feat_is_critical(env.grid(*ai)) && !feat_is_watery(env.grid(*ai)))
+                temp_change_terrain(*ai, DNGN_LAVA, 20 + random2(80), TERRAIN_CHANGE_FLOOD);
+        }
+    }
+    else if (beam.flavour == BEAM_FRAG)
+    {
+        for (rectangle_iterator ai(beam.target, 3); ai; ++ai)
+            _explosion_knockback(beam.target, *ai, 4, "rushing air", true);
+    }
+
+    if (inner_flame != iflame::none)
+        for (adjacent_iterator ai(beam.target, false); ai; ++ai)
+            if (!cell_is_solid(*ai) && !cloud_at(*ai) && !one_chance_in(5))
+                place_cloud((inner_flame == iflame::normal) ? CLOUD_FIRE : chaos_cloud(), *ai, 10 + random2(10), flame_agent);
+
+    beam.explode();
 }
 
 void delayed_action_fineff::fire()
@@ -535,18 +637,17 @@ void bennu_revive_fineff::fire()
 
 void infestation_death_fineff::fire()
 {
-    if (monster *scarab = create_monster(mgen_data(MONS_DEATH_SCARAB,
+    if (monster *spawn = create_monster(mgen_data(spawn_type,
                                                    BEH_FRIENDLY, posn,
-                                                   MHITYOU, MG_AUTOFOE)
-                                         .set_summoned(&you, 0,
-                                                       SPELL_INFESTATION),
+                                                   MHITYOU, MG_AUTOFOE),
                                          false))
     {
-        scarab->add_ench(mon_enchant(ENCH_FAKE_ABJURATION, 6));
+        spawn->add_ench(mon_enchant(ENCH_FAKE_ABJURATION, 6));
+        player_post_summon_adjustments(SPELL_INFESTATION, spawn);
 
-        if (you.see_cell(posn) || you.can_see(*scarab))
+        if (you.see_cell(posn) || you.can_see(*spawn))
         {
-            mprf("%s bursts from %s!", scarab->name(DESC_A, true).c_str(),
+            mprf("%s bursts from %s!", spawn->name(DESC_A, true).c_str(),
                                        name.c_str());
         }
     }
@@ -572,13 +673,31 @@ void make_derived_undead_fineff::fire()
         if (!mg.mname.empty())
             name_zombie(*undead, mg.base_type, mg.mname);
 
-        undead->add_ench(mon_enchant(ENCH_FAKE_ABJURATION, 6));
+        if (mg.summoner == &you)
+        {
+            if (!have_passive(passive_t::extend_undead))
+                undead->add_ench(mon_enchant(ENCH_FAKE_ABJURATION, 5));
+        }
+        else
+            undead->add_ench(mon_enchant(ENCH_FAKE_ABJURATION, 6));
+
         if (!agent.empty())
         {
             mons_add_blame(undead,
                 "animated by " + agent);
         }
     }
+}
+
+const actor *mummy_death_curse_fineff::fixup_attacker(const actor *a)
+{
+    if (a && a->is_monster() && a->as_monster()->friendly()
+        && !crawl_state.game_is_arena())
+    {
+        // Mummies are smart enough not to waste curses on summons or allies.
+        return &you;
+    }
+    return a;
 }
 
 void mummy_death_curse_fineff::fire()
@@ -601,7 +720,7 @@ void mummy_death_curse_fineff::fire()
             break;
     }
 
-    actor * victim;
+    actor* victim;
 
     if (YOU_KILL(killer))
         victim = &you;
@@ -614,13 +733,6 @@ void mummy_death_curse_fineff::fire()
     // Mummy was killed by a ballistomycete spore or ball lightning?
     if (!victim->alive())
         return;
-
-    // Mummies are smart enough not to waste curses on summons or allies.
-    if (victim->is_monster() && victim->as_monster()->friendly()
-        && !crawl_state.game_is_arena())
-    {
-        victim = &you;
-    }
 
     // Stepped from time?
     if (!in_bounds(victim->pos()))
@@ -635,8 +747,9 @@ void mummy_death_curse_fineff::fire()
     }
     const string cause = make_stringf("%s death curse",
                             apostrophise(name).c_str());
-    MiscastEffect(victim, nullptr, {miscast_source::mummy}, spschool::necromancy,
-                  pow, random2avg(88, 3), cause.c_str());
+    // source is used as a melee source and must be alive
+    // since the mummy is dead now we pass nullptr
+    death_curse(*victim, nullptr, cause, pow);
 }
 
 // Effects that occur after all other effects, even if the monster is dead.

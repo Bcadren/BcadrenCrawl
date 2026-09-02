@@ -174,6 +174,8 @@ function (exports, $, key_conversion, chat, comm) {
                && !showing_close_message;
     }
 
+    exports.in_game = in_game;
+
     function set_layer(layer)
     {
         if (showing_close_message) return;
@@ -396,7 +398,6 @@ function (exports, $, key_conversion, chat, comm) {
             $("#reg_link").hide();
             $("#forgot_link").hide();
             $("#login_message").html("Logging in...");
-            $("#remember_me").attr("checked", true);
             send_message("token_login", {
                 cookie: get_login_cookie()
             });
@@ -407,6 +408,12 @@ function (exports, $, key_conversion, chat, comm) {
     }
 
     var current_user;
+
+    // keep in mind that client-side, you can't rely on this variable being
+    // real. All admin actions needed to be validated on the server. Here it
+    // is only for whether to show the UI at all.
+    var admin_user = false;
+
     function login()
     {
         $("#login_form").hide();
@@ -428,6 +435,8 @@ function (exports, $, key_conversion, chat, comm) {
         $("#login_form").show();
         $("#reg_link").show();
         $("#forgot_link").show();
+        current_user = null;
+        admin_user = false;
     }
 
     function logged_in(data)
@@ -436,41 +445,29 @@ function (exports, $, key_conversion, chat, comm) {
         hide_prompt();
         $("#login_message").html("Logged in as " + username);
         current_user = username;
+        admin_user = data.admin;
         hide_dialog();
         $("#login_form").hide();
         $("#reg_link").hide();
         $("#forgot_link").hide();
         $('#chem_link').show();
+        $('#chpw_link').show();
         $("#logout_link").show();
 
         chat.reset_visibility(true);
         $("#chat_input").show();
         $("#chat_login_text").hide();
+        if (admin_user)
+            $("#admin_panel_button").show();
+        else
+            $("#admin_panel_button").hide();
 
-        if ($("#remember_me").attr("checked"))
-        {
-            send_message("set_login_cookie");
-        }
+        send_message("set_login_cookie");
 
         if (!watching)
         {
             current_hash = null;
             hash_changed();
-        }
-    }
-
-    function remember_me_click()
-    {
-        if ($("#remember_me").attr("checked"))
-        {
-            send_message("set_login_cookie");
-        }
-        else if (get_login_cookie())
-        {
-            send_message("forget_login_cookie", {
-                cookie: get_login_cookie()
-            });
-            set_login_cookie(null);
         }
     }
 
@@ -496,7 +493,81 @@ function (exports, $, key_conversion, chat, comm) {
             });
             set_login_cookie(null);
         }
+        current_user = null;
+        admin_user = false;
+        $("#admin_panel_button").hide();
+        $("#admin_panel").hide();
         location.reload();
+    }
+
+    function toggle_admin_panel()
+    {
+        if (admin_user)
+            $("#admin_panel").toggle();
+    }
+
+    function admin_announce()
+    {
+        var text = $("#announcement_text").val();
+        if (text.length > 0)
+        {
+            send_message("admin_announce", {text: text});
+            $("#announcement_text").val('');
+        }
+    }
+
+    function admin_pw_reset()
+    {
+        var username = $("#admin_username").val();
+        if (username.length == 0)
+            admin_log_msg("No username provided!");
+        else
+            send_message("admin_pw_reset", {username: username});
+    }
+
+    function admin_pw_reset_done(data)
+    {
+        if (data.error)
+            admin_log_msg("Password reset failed: " + data.error);
+        else
+        {
+            admin_log_msg("Password reset token set for " + data.username);
+            $("#ok_message_content").html("<div><span><b>Password reset info:</b></span></div>");
+            $("#ok_message_content").append("<div><span>Username: " + data.username + "</span></div>");
+            $("#ok_message_content").append("<div><span>User email: <tt>" + data.email + "</tt></span></div>");
+            $("#ok_message_content").append("<div>Message to send:<pre>" + data.email_body + "</pre></div>");
+            show_dialog("#floating_ok_message");
+        }
+    }
+
+    function admin_pw_reset_clear()
+    {
+        var username = $("#admin_username").val();
+        if (username.length == 0)
+            admin_log_msg("No username provided!");
+        else
+        {
+            admin_log_msg("Password reset token cleared for " + username);
+            send_message("admin_pw_reset_clear", {username: username});
+        }
+    }
+
+    function admin_log_msg(text)
+    {
+        $("#admin_panel_log").append(
+            '<div><span>' + text + "</span></div>");
+    }
+
+    function admin_log(data)
+    {
+        admin_log_msg(data.text);
+    }
+
+    function server_announcement(data)
+    {
+        var text = '<span class="fg5">Serverwide announcement: </span><span>'
+            + data.text + '</span>';
+        chat.show_in_chat(text);
     }
 
     function show_dialog(id)
@@ -522,6 +593,7 @@ function (exports, $, key_conversion, chat, comm) {
     }
     function hide_dialog()
     {
+        showing_close_message = false;
         $(".floating_dialog").blur().hide();
         $("#overlay").hide();
     }
@@ -668,6 +740,59 @@ function (exports, $, key_conversion, chat, comm) {
         $("#register_message").html(data.reason);
     }
 
+
+    function ask_change_password()
+    {
+        send_message("start_change_password");
+    }
+
+    function start_change_password(data)
+    {
+        $("#chpw_message").html("");
+        show_dialog("#change_password");
+        $("#change_cur_password").focus();
+    }
+
+    function cancel_change_password()
+    {
+        hide_dialog();
+    }
+
+    function change_password_done(data)
+    {
+        $("#ok_message_content").html("Password changed!");
+        show_dialog("#floating_ok_message");
+    }
+
+    function change_password()
+    {
+        var cur_password = $("#change_cur_password").val();
+        var new_password = $("#change_new_password").val();
+        var new_password_repeat = $("#change_repeat_password").val();
+
+        if (new_password !== new_password_repeat)
+        {
+            $("#chpw_message").html("Passwords don't match.");
+            return false;
+        }
+
+        send_message("change_password", {
+            cur_password: cur_password,
+            new_password: new_password,
+        });
+
+        return false;
+    }
+
+    function change_password_failed(data)
+    {
+        var msg = "Password change failed!";
+        if (data.reason)
+            msg = msg + " " + data.reason;
+        $("#ok_message_content").html(msg);
+        show_dialog("#floating_ok_message");
+    }
+
     function ask_change_email()
     {
         send_message("start_change_email");
@@ -706,14 +831,14 @@ function (exports, $, key_conversion, chat, comm) {
     {
         if ( data.email == "" )
         {
-            $("#chem_confirmation_message").html("Your account is no longer associated with an email address.");
+            $("#ok_message_content").html("Your account is no longer associated with an email address.");
         }
         else
         {
-            $("#chem_confirmation_message").html("Your email address has been set to " + data.email + ".");
+            $("#ok_message_content").html("Your email address has been set to " + data.email + ".");
         }
 
-        show_dialog("#change_email_2");
+        show_dialog("#floating_ok_message");
     }
 
     function start_forgot_password()
@@ -828,6 +953,7 @@ function (exports, $, key_conversion, chat, comm) {
 
     function play_now(id)
     {
+        showing_close_message = false;
         send_message("play", {
             game_id: id
         });
@@ -871,7 +997,7 @@ function (exports, $, key_conversion, chat, comm) {
         if (exit_reason)
         {
             if (was_watching || normal_exit.indexOf(exit_reason) === -1
-                || exit_message.length > 0)
+                || exit_message && exit_message.length > 0)
             {
                 show_exit_dialog(exit_reason, exit_message, exit_dump,
                                  was_watching ? watching_username : null);
@@ -885,6 +1011,11 @@ function (exports, $, key_conversion, chat, comm) {
         {
             show_dialog("#reset_pw");
         }
+    }
+
+    function go_admin()
+    {
+        $("#admin_panel").show();
     }
 
     function login_required(data)
@@ -1148,7 +1279,9 @@ function (exports, $, key_conversion, chat, comm) {
     {
         $("#play_now").html(data.content);
         $("#play_now .edit_rc_link").click(function (ev) {
-            var id = $(this).data("game_id");
+            // $(this).data("game_id") will return a number for values like
+            // "0.24", so explicitly coerce to string.
+            var id = $(this).data("game_id").toString();
             edit_rc(id);
         });
     }
@@ -1296,9 +1429,11 @@ function (exports, $, key_conversion, chat, comm) {
         "lobby_complete": lobby_complete,
 
         "go_lobby": go_lobby,
+        "go_admin": go_admin,
         "login_required": login_required,
         "game_started": crawl_started,
         "game_ended": crawl_ended,
+        "server_announcement": server_announcement,
 
         "login_success": logged_in,
         "login_fail": login_failed,
@@ -1307,9 +1442,15 @@ function (exports, $, key_conversion, chat, comm) {
         "start_change_email": start_change_email,
         "change_email_fail": change_email_failed,
         "change_email_done": change_email_done,
+        "start_change_password": start_change_password,
+        "change_password_done": change_password_done,
+        "change_password_fail": change_password_failed,
         "forgot_password_fail": forgot_password_failed,
         "forgot_password_done": forgot_password_done,
         "reset_password_fail": reset_password_failed,
+
+        "admin_log": admin_log,
+        "admin_pw_reset_done": admin_pw_reset_done,
 
         "watching_started": watching_started,
 
@@ -1333,6 +1474,9 @@ function (exports, $, key_conversion, chat, comm) {
             if (location.hash.match(/^#play-(.+)/i) &&
                 socket.readyState == 1)
             {
+                ev.preventDefault();
+                ev.returnValue = '';
+                // n.b. this return value is ignored by 95% of browsers
                 return "Really save and quit the game?";
             }
         });
@@ -1340,7 +1484,6 @@ function (exports, $, key_conversion, chat, comm) {
         $(".hide_dialog").click(hide_dialog);
 
         $("#login_form").bind("submit", login);
-        $("#remember_me").bind("click", remember_me_click);
         $("#logout_link").bind("click", logout);
         $("#chat_login_link").bind("click", chat_login);
 
@@ -1351,8 +1494,11 @@ function (exports, $, key_conversion, chat, comm) {
         $("#chem_link").bind("click", ask_change_email);
         $("#chem_form").bind("submit", change_email);
         $("#chem_cancel").bind("click", cancel_change_email);
+        $("#chpw_link").bind("click", ask_change_password);
+        $("#chpw_form").bind("submit", change_password);
+        $("#chpw_cancel").bind("click", cancel_change_password);
 
-        $("#change_email_2 input").bind("click", hide_dialog);
+        $("#floating_ok_message input").bind("click", hide_dialog);
 
         $("#forgot_link").bind("click", start_forgot_password);
         $("#forgot_form").bind("submit", forgot_password);
@@ -1370,6 +1516,11 @@ function (exports, $, key_conversion, chat, comm) {
 
         $("#force_terminate_no").click(force_terminate_no);
         $("#force_terminate_yes").click(force_terminate_yes);
+
+        $("#admin_panel_button").click(toggle_admin_panel);
+        $("#announcement_submit").click(admin_announce);
+        $("#admin_pw_reset").click(admin_pw_reset);
+        $("#admin_pw_reset_clear").click(admin_pw_reset_clear);
 
         do_layout();
 

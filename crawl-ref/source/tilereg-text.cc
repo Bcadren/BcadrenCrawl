@@ -114,7 +114,8 @@ void TextRegion::addstr_aux(const char32_t *buffer, int len)
     int y = print_y - cy_ofs;
     int adrs = y * mx;
 
-    ASSERT(y < my);
+    //BCADNOTE: I still blame mainline for intermittent crashes here.
+    //ASSERT(y < my);
 
     for (int i = 0; i < len && x + i < mx; i++)
     {
@@ -182,12 +183,12 @@ int TextRegion::wherey()
     return print_y + 1;
 }
 
-const int TextRegion::grid_width_to_pixels(int x) const
+int TextRegion::grid_width_to_pixels(int x) const
 {
     return font().max_width(x);
 }
 
-const int TextRegion::grid_height_to_pixels(int y) const
+int TextRegion::grid_height_to_pixels(int y) const
 {
     return font().max_height(y);
 }

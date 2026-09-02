@@ -46,6 +46,15 @@
         <span id="stats_hp" /><span id="stats_hp_separator">/</span><span id="stats_hp_max" />
         <span id="stats_real_hp_max" />
       </div>
+	  <div id="stats_mountline">
+	    <span id="stats_mount_hp_bar" class="bar" style="float:right; width:55%; height:1em;"><!-- Whitespace...
+       --><span id="stats_mount_hp_bar_full" /><!--
+       --><span id="stats_mount_hp_bar_decrease" /><!--
+       --><span id="stats_mount_hp_bar_increase" /><!--
+     --></span>
+        <span class="stats_caption">Mount:</span>
+        <span id="stats_mount_hp" /><span id="stats_hp_separator">/</span><span id="stats_mount_hp_max" />
+	  </div>
       <div id="stats_mpline">
         <span id="stats_mp_bar" class="bar" style="float:right; width:55%; height:1em;"><!-- Whitespace...
        --><span id="stats_mp_bar_full" /><!--
@@ -56,14 +65,45 @@
         <span id="stats_mp" /><span id="stats_mp_separator">/</span><span id="stats_mp_max" />
         <span id="stats_dd_real_mp_max" />
       </div>
+      <div id="normal_stats">
+        <span class="stats_caption">AC:</span>
+        <span id="stats_ac" />
+        <span class="stats_caption"> EV:</span>
+        <span id="stats_ev" />
+        <span class="stats_caption"> SH:</span>
+        <span id="stats_sh" />
+        <span class="stats_caption"> GDR:</span>
+        <span id="stats_gdr" />
+        <span class="stats_caption">%</span>
+      </div>
+	  <div id="normal_stats2">	
+        <span class="stats_caption">Str:</span>
+        <span id="stats_str" />
+        <span class="stats_caption">Int:</span>
+        <span id="stats_int" />
+        <span class="stats_caption">Dex:</span>
+        <span id="stats_dex" />
+      </div>
+	  <div id="resists">
+        <span class="stats_caption">rFire:</span>
+        <span id="res_rf" />
+        <span class="stats_caption">rCold:</span>
+        <span id="res_rc" />
+        <span class="stats_caption">rNeg:</span>
+        <span id="res_rn" />
+      </div>
+	  <div id="resists2">
+        <span class="stats_caption">rAcid:</span>
+        <span id="res_ra" />
+        <span class="stats_caption">rPois:</span>
+        <span id="res_rp" />
+        <span class="stats_caption">rElec:</span>
+        <span id="res_re" />
+        <span class="stats_caption">MR:</span>
+        <span id="res_mr" />
+      </div>
       <div>
         <div id="stats_leftcolumn" style="float:left;width:45%;">
-          <div><span class="stats_caption">AC:</span>
-            <span id="stats_ac" /></div>
-          <div><span class="stats_caption">EV:</span>
-            <span id="stats_ev" /></div>
-          <div><span class="stats_caption">SH:</span>
-            <span id="stats_sh" /></div>
           <div><span class="stats_caption">XL:</span>
             <span id="stats_xl" />
             <span class="stats_caption">Next:</span>
@@ -81,19 +121,19 @@
           </div>
         </div>
         <div id="stats_rightcolumn" style="float:right;width:55%;">
-          <div><span class="stats_caption">Str:</span>
-            <span id="stats_str" /></div>
-          <div><span class="stats_caption">Int:</span>
-            <span id="stats_int" /></div>
-          <div><span class="stats_caption">Dex:</span>
-            <span id="stats_dex" /></div>
           <div><span class="stats_caption">Place:</span>
             <span id="stats_place" /></div>
           <div><span class="stats_caption" id="stats_time_caption"></span>
             <span id="stats_time" /></div>
         </div>
-        <div style="float:left;width:100%;"><span class="stats_caption" id="stats_weapon_letter"></span>
-          <span id="stats_weapon" /></div>
+		<div id="stats_weapon0_line" style="float:left;width:100%;">
+		  <span class="stats_caption" id="stats_weapon0_letter"></span>
+          <span id="stats_weapon0_container"><span id="stats_weapon0" /></span>
+        </div>
+		<div id="stats_weapon1_line" style="float:left;width:100%;">
+		  <span class="stats_caption" id="stats_weapon1_letter"></span>
+          <span id="stats_weapon1_container"><span id="stats_weapon1" /></span>
+        </div>
         <div id="stats_quiver_line" style="float:left;width:100%;"><span class="stats_caption" id="stats_quiver_letter"></span>
           <span id="stats_quiver" /></div>
         <div id="stats_status_lights" style="float:left;width:100%;" />
@@ -216,13 +256,13 @@
             <div><b class=fg3>!</b>/<b class=fg3>^</b>:&nbsp;</div>
             <div class=paneset>
                 <div class=pane><b class=fg15>Overview</b> | Powers | Wrath
-                    <span class="join-keyhelp">&nbsp;&nbsp;<b class=fg3>Enter</b>: join religion</span>
+                    <span class="join-keyhelp">&nbsp;&nbsp;<b class=fg3>J</b>/<b class=fg3>Enter</b>: join religion</span>
                 </div>
                 <div class=pane>Overview | <b class=fg15>Powers</b> | Wrath
-                    <span class="join-keyhelp">&nbsp;&nbsp;<b class=fg3>Enter</b>: join religion</span>
+                    <span class="join-keyhelp">&nbsp;&nbsp;<b class=fg3>J</b>/<b class=fg3>Enter</b>: join religion</span>
                 </div>
                 <div class=pane>Overview | Powers | <b class=fg15>Wrath</b>
-                    <span class="join-keyhelp">&nbsp;&nbsp;<b class=fg3>Enter</b>: join religion</span>
+                    <span class="join-keyhelp">&nbsp;&nbsp;<b class=fg3>J</b>/<b class=fg3>Enter</b>: join religion</span>
                 </div>
             </div>
         </div>
@@ -254,16 +294,16 @@
             <div><b class=fg3>!</b>/<b class=fg3>^</b>:&nbsp;</div>
             <div class=paneset>
                 <div class=pane><b class=fg15>Overview</b> | Powers | Wrath | Extra
-                    <span class="join-keyhelp">&nbsp;&nbsp;<b class=fg3>Enter</b>: join religion</span>
+                    <span class="join-keyhelp">&nbsp;&nbsp;<b class=fg3>J</b>/<b class=fg3>Enter</b>: join religion</span>
                 </div>
                 <div class=pane>Overview | <b class=fg15>Powers</b> | Wrath | Extra
-                    <span class="join-keyhelp">&nbsp;&nbsp;<b class=fg3>Enter</b>: join religion</span>
+                    <span class="join-keyhelp">&nbsp;&nbsp;<b class=fg3>J</b>/<b class=fg3>Enter</b>: join religion</span>
                 </div>
                 <div class=pane>Overview | Powers | <b class=fg15>Wrath</b> | Extra
-                    <span class="join-keyhelp">&nbsp;&nbsp;<b class=fg3>Enter</b>: join religion</span>
+                    <span class="join-keyhelp">&nbsp;&nbsp;<b class=fg3>J</b>/<b class=fg3>Enter</b>: join religion</span>
                 </div>
                 <div class=pane>Overview | Powers | Wrath | <b class=fg15>Extra</b>
-                    <span class="join-keyhelp">&nbsp;&nbsp;<b class=fg3>Enter</b>: join religion</span>
+                    <span class="join-keyhelp">&nbsp;&nbsp;<b class=fg3>J</b>/<b class=fg3>Enter</b>: join religion</span>
                 </div>
             </div>
         </div>
@@ -292,7 +332,9 @@
     </div>
     <div class=msgwin-get-line>
         <div class=header></div>
-        <div class="body fg7"></div>
+        <input type="text" data-sync-id="input">
+        <div data-hotkey="Enter"></div>
+        <div data-hotkey="Escape"></div>
     </div>
     <div class="newgame-choice">
         <div class=header></div>
@@ -313,6 +355,34 @@
             <span></span>
         </div>
         <div class="body fg7"></div>
+    </div>
+    <div class="seed-selection">
+        <div class="header fg3"></div>
+        <div class="body fg7">
+            <p class="body-text"></p>
+            <div class="seed-input">
+                <span>Enter seed: </span>
+                <input type="text" data-sync-id="seed">
+                <button data-hotkey="-" data-sync-id="btn-clear">
+                    <span>[-] Clear</span>
+                </button>
+                <button data-hotkey="d" data-sync-id="btn-daily">
+                    <span>[d] Today's daily seed</span>
+                </button>
+            </div>
+            <p class="footer"></p>
+            <div class="pregen-toggle">
+                <label>
+                    <input type=checkbox data-sync-id="pregenerate" />
+                    <span>Fully pregenerate the Dungeon</span>
+                </label>
+            </div>
+        </div>
+        <div class="button-bar">
+            <button data-hotkey="Enter" data-sync-id="btn-begin">
+                <span>[Enter] Begin!</span>
+            </button>
+        </div>
     </div>
 </div>
 

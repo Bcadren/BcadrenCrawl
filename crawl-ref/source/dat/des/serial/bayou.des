@@ -23,7 +23,8 @@ DEPTH:  D, Depths, Snake, Lair
 MONS:   plant
 SUBST:  ? = .WW2
 SUBST:  1 = 11.t
-SUBST:  2 = t
+KFEAT:  2 = mangrove
+COLOUR: wW = green
 MAP
     1..1..1
    1..1??....1
@@ -41,6 +42,7 @@ DEPTH:  D, Depths, Snake, Lair
 MONS:   plant
 SUBST:  ? = .WW21
 SUBST:  1 = 11.t
+COLOUR: wW = green
 MAP
   ..1..11..
 ..1?W?W?WW1
@@ -60,6 +62,8 @@ SUBST:  ? = WWtt2
 SUBST:  . = ..W12
 KMONS:  2 = plant
 KFEAT:  2 = W
+KFEAT:  t = mangrove
+COLOUR: wW2 = green
 MAP
        1
     ..1W
@@ -82,6 +86,8 @@ SUBST:  1 = 1W.
 SUBST:  W = WWWt
 KMONS:  1 = plant
 KFEAT:  1 = W
+COLOUR: wW1 = green
+KFEAT:  t = mangrove
 MAP
  11
  WWW1
@@ -97,6 +103,8 @@ SUBST: W = WWW1.
 SUBST: . = ..t
 KMONS: 1 = plant
 KFEAT: 1 = W
+KFEAT: t = mangrove
+COLOUR: wW1 = green
 MAP
 .WWW.
 WWWWW
@@ -113,6 +121,8 @@ SUBST: W = WWWW1
 SUBST: ! = W..
 KMONS: 1 = plant
 KFEAT: 1 = W
+KFEAT: t = mangrove
+COLOUR: wW1 = green
 MAP
        ttttt
       tttttttt
@@ -133,7 +143,7 @@ ENDMAP
 
 NAME:   serial_bayou_shore_a
 #a shore of a small lake
-TAGS:   coolio_serial_bayou extra decor
+TAGS:   coolio_serial_bayou extra decor transparent
 ORIENT: east
 DEPTH:  D, Depths, Snake, Lair
 SUBST:  ? = Wt
@@ -142,8 +152,11 @@ SUBST:  W = WWW1
 SUBST:  ! = W1..
 KMONS:  1 = plant
 KFEAT:  1 = W
+KFEAT:  t = mangrove
+SUBST:  y = xxw
+COLOUR: wW1 = green
 MAP
- @@      ttttxxxxxx
+ @@yyyyyyttttxxxxxx
 @..WWWWWWWWttttxxxx
  ..!WWWWWWWWWttttxx
  ..!WWWWWVVVVWWtttx
@@ -154,13 +167,13 @@ MAP
  ..!WWWWWVwwwVWtttx
  ..!WWWWWVwwwVttttx
 @..WWWWWWWVVVWtttxx
-@..WWWWWWWWWtttttxx
- @@      tttttttxxx
+@..WWWWWWWWWWttttxx
+ @@yyyyyytttttttxxx
 ENDMAP
 
 NAME:   serial_bayou_shore_b
 #a shore of a small pond, duplicable
-TAGS:   coolio_serial_bayou allow_dup extra decor
+TAGS:   coolio_serial_bayou allow_dup extra decor transparent
 ORIENT: east
 DEPTH:  D, Depths, Snake, Lair
 SUBST:  ? = Wt
@@ -169,6 +182,8 @@ SUBST:  W = WWW1
 SUBST:  ! = W1..
 KMONS:  1 = plant
 KFEAT:  1 = W
+KFEAT: t = mangrove
+COLOUR: wW1 = green
 MAP
   ???xxx
 @.!W??xx
@@ -186,6 +201,8 @@ SUBST:  ? = W11.
 SUBST:  w = wwt
 KMONS:  1 = plant
 KFEAT:  1 = W
+KFEAT: t = mangrove
+COLOUR: wW1 = green
 MAP
 ?????????
 ?WWt1W11???
@@ -214,6 +231,8 @@ SUBST: W = WWWW1
 KMONS: 1 = plant
 KFEAT: 1 = W
 FTILE: . = floor_dirt
+KFEAT: t = mangrove
+COLOUR: wW1 = green
 MAP
     ?????     ???
    ?WWWWW?????ttt?
@@ -247,6 +266,8 @@ SUBST: V = Www
 SUBST: W = WWWW1
 KMONS: 1 = plant
 KFEAT: 1 = W
+KFEAT: t = mangrove
+COLOUR: wW1? = green
 MAP
           ?????????
       ?????????????????
@@ -272,6 +293,8 @@ SUBST: ? = W1tt
 SUBST: W = WWW.
 KMONS: 1 = plant
 KFEAT: 1 = W
+KFEAT: t = mangrove
+COLOUR: wW1 = green
 MAP
     t?@?t
     t?W?tt

@@ -5,7 +5,11 @@
 
 #pragma once
 
+#include <vector>
+
 #include "player.h"
+
+using std::vector;
 
 const int MAX_SKILL_ORDER = 100;
 struct skill_state
@@ -19,6 +23,7 @@ struct skill_state
     FixedVector<training_status, NUM_SKILLS>       train;
     FixedVector<unsigned int, NUM_SKILLS> training;
     FixedVector<unsigned int, NUM_SKILLS> skill_points;
+    FixedVector<unsigned int, NUM_SKILLS> manual_points;
     FixedVector<unsigned int, NUM_SKILLS> training_targets;
     FixedVector<unsigned int, NUM_SKILLS> ct_skill_points;
     FixedVector<uint8_t, NUM_SKILLS>      skill_order;
@@ -26,7 +31,6 @@ struct skill_state
     unsigned int total_experience;
     bool auto_training;
     int exp_available;
-    vector<int> manual_charges;
 
     void save();
     bool state_saved() const;
@@ -58,7 +62,7 @@ unsigned int skill_cost_needed(int level);
 int calc_skill_cost(int skill_cost_level);
 void check_skill_cost_change();
 
-bool training_restricted(skill_type sk);
+bool skill_default_shown(skill_type sk);
 void reassess_starting_skills();
 bool check_selected_skills();
 void init_train();
@@ -109,6 +113,7 @@ bool can_enable_skill(skill_type sk, bool override = false);
 bool trainable_skills(bool check_all = false);
 bool skills_being_trained();
 
+int colour_apt(skill_type skill, draconian_colour drac_colour = you.drac_colour);
 int species_apt(skill_type skill, species_type species = you.species);
 float species_apt_factor(skill_type sk, species_type sp = you.species);
 float apt_to_factor(int apt);
@@ -140,11 +145,11 @@ static const skill_type skill_display_order[] =
 {
     SK_TITLE,
     SK_FIGHTING, SK_SHORT_BLADES, SK_LONG_BLADES,
-    SK_WHIPS_FLAILS, SK_AXES, SK_POLEARMS, SK_MACES_STAVES, SK_UNARMED_COMBAT,
+    SK_WHIPS_FLAILS, SK_AXES_HAMMERS, SK_POLEARMS, SK_MACES_STAVES, SK_UNARMED_COMBAT,
 
     SK_BLANK_LINE,
 
-    SK_BOWS, SK_CROSSBOWS, SK_THROWING, SK_SLINGS,
+    SK_BOWS, SK_CROSSBOWS, SK_SLINGS,
 
     SK_BLANK_LINE,
 

@@ -20,9 +20,9 @@
 #include "mon-info.h"
 #include "monster.h"
 #include "options.h"
-#include "place.h"
 #include "stringutil.h"
 #include "tags.h"
+#include "tag-version.h"
 #include "travel.h"
 #include "unwind.h"
 #include "viewchar.h"
@@ -30,9 +30,7 @@
 #define KILLS_MAJOR_VERSION 4
 #define KILLS_MINOR_VERSION 1
 
-#ifdef CLUA_BINDINGS
 static void kill_lua_filltable(vector<kill_exp> &v);
-#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // KillMaster
@@ -62,9 +60,8 @@ bool KillMaster::empty() const
 
 void KillMaster::save(writer& outf) const
 {
-    // Write the version of the kills file
-    marshallByte(outf, KILLS_MAJOR_VERSION);
-    marshallByte(outf, KILLS_MINOR_VERSION);
+    const auto version = save_version(KILLS_MAJOR_VERSION, KILLS_MINOR_VERSION);
+    write_save_version(outf, version);
 
     for (int i = 0; i < KC_NCATEGORIES; ++i)
         categorized_kills[i].save(outf);
@@ -72,8 +69,9 @@ void KillMaster::save(writer& outf) const
 
 void KillMaster::load(reader& inf)
 {
-    int major = unmarshallByte(inf),
-        minor = unmarshallByte(inf);
+    const auto version = get_save_version(inf);
+    const auto major = version.major, minor = version.minor;
+
     if (major != KILLS_MAJOR_VERSION
         || (minor != KILLS_MINOR_VERSION && minor > 0))
     {
@@ -159,13 +157,11 @@ string KillMaster::kill_info() const
         grandt = buf;
     }
 
-#ifdef CLUA_BINDINGS
     bool custom = false;
     unwind_var<int> lthrottle(clua.throttle_unit_lines, 500000);
     // Call the kill dump Lua function with null a, to tell it we're done.
     if (!clua.callfn("c_kill_list", "ss>b", nullptr, grandt.c_str(), &custom)
         || !custom)
-#endif
     {
         // We can sum up ourselves, if Lua doesn't want to.
         if (categories > 1)
@@ -185,7 +181,6 @@ void KillMaster::add_kill_info(string &killtext,
                                const char *category,
                                bool separator) const
 {
-#ifdef CLUA_BINDINGS
     // Set a pointer to killtext as a Lua global
     lua_pushlightuserdata(clua.state(), &killtext);
     clua.setregistry("cr_skill");
@@ -204,15 +199,12 @@ void KillMaster::add_kill_info(string &killtext,
     unwind_var<int> lthrottle(clua.throttle_unit_lines, 500000);
     if (!clua.callfn("c_kill_list", 3, 1)
         || !lua_isboolean(clua, -1) || !lua_toboolean(clua, -1))
-#endif
     {
-#ifdef CLUA_BINDINGS
         if (!clua.error.empty())
         {
             killtext += "Lua error:\n";
             killtext += clua.error + "\n\n";
         }
-#endif
         if (separator)
             killtext += "\n";
 
@@ -228,9 +220,7 @@ void KillMaster::add_kill_info(string &killtext,
         killtext += make_stringf("%d creature%s vanquished.\n",
                                  count, count == 1 ? "" : "s");
     }
-#ifdef CLUA_BINDINGS
     lua_pop(clua, 1);
-#endif
 }
 
 int KillMaster::num_kills(const monster* mon, kill_category cat) const
@@ -399,7 +389,7 @@ int Kills::num_kills(kill_monster_desc desc) const
 
 kill_def::kill_def(const monster* mon) : kills(0), exp(0)
 {
-    exp = exper_value(*mon);
+    exp = mon_exper_value(*mon);
     add_kill(mon, level_id::current());
 }
 
@@ -591,7 +581,7 @@ void kill_def::load(reader& inf)
 
 kill_ghost::kill_ghost(const monster* mon)
 {
-    exp = exper_value(*mon);
+    exp = mon_exper_value(*mon);
     place = level_id::current();
     ghost_name = mon->ghost->name;
 
@@ -667,12 +657,14 @@ kill_monster_desc::kill_monster_desc(const monster* mon)
         modifier = M_SHAPESHIFTER;
 }
 
+// TODO: de-duplicate with the monster * version?
 kill_monster_desc::kill_monster_desc(const monster_info& mon)
 {
     monnum = mon.type;
     modifier = M_NORMAL;
     switch (mon.type)
     {
+        case MONS_ZOMBIE:
 #if TAG_MAJOR_VERSION == 34
         case MONS_ZOMBIE_LARGE: case MONS_ZOMBIE_SMALL:
 #endif
@@ -821,8 +813,10 @@ static int kill_lualc_holiness(lua_State *ls)
             verdict = "undead";
         else if (holi & MH_DEMONIC)
             verdict = "demonic";
-        else if (holi & MH_NONLIVING)
+        else if (holi & MH_ELEMENTAL)
             verdict = "nonliving";
+        else if (holi & MH_CONSTRUCT)
+            verdict = "construct";
         else if (holi & MH_PLANT)
             verdict = "plant";
         if (ke->modifier != kill_monster_desc::M_NORMAL
@@ -992,7 +986,6 @@ void cluaopen_kills(lua_State *ls)
     luaL_openlib(ls, "kills", kill_lib, 0);
 }
 
-#ifdef CLUA_BINDINGS
 static void kill_lua_filltable(vector<kill_exp> &v)
 {
     lua_State *ls = clua.state();
@@ -1003,4 +996,3 @@ static void kill_lua_filltable(vector<kill_exp> &v)
         lua_rawseti(ls, -2, i + 1);
     }
 }
-#endif

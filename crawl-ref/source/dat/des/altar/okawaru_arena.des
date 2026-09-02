@@ -59,10 +59,10 @@ function callback.oka_populate_cages (data, triggerable, triggerer, marker, ev)
 
   -- These are Okawaru's warriors, depth-weighted as though they are 9s.
   local monsters = ""
-  if you.absdepth() < 11 then
+  if you.absdepth() < 5 then
       monsters = "orc warrior w:15 / two-headed ogre w:5 / cyclops w:10"
                  .. " / centaur warrior w:10 / naga warrior w:10"
-  elseif you.absdepth() < 16 then
+  elseif you.absdepth() < 7 then
       monsters = "orc knight w:15 / two-headed ogre w:5 / cyclops w:10"
                  .. " / centaur warrior w:10 / naga warrior w:10"
   else
@@ -80,7 +80,7 @@ end
 }}
 
 NAME:   okawaru_arena_lexackson
-DEPTH:  D:9-
+DEPTH:  D:4-
 WEIGHT: 3
 ORIENT: float
 TAGS:   no_item_gen no_monster_gen generate_awake no_rotate no_hmirror

@@ -3,14 +3,18 @@
 menu := menu_colour
 ae   := autopickup_exceptions
 
-# Items currently not affecting you.
+# Items currently not affecting you or (in some cases) not usable
 menu += darkgrey:(melded)
+menu += darkgrey:(inert)
 
 # Bad items
 menu += lightred:.*bad_item.*
 
 # Useless items, comes here to override artefacts etc.
 menu += darkgrey:.*useless_item.*
+
+# Eventually useful items. You'll grow into it.
+menu += lightblue:.*useful_later.*
 
 # Items disliked by your god.
 menu += $forbidden:.*forbidden.*
@@ -36,9 +40,9 @@ menu += white:.*artefact.*
 #
 menu += lightblue:(^identified armour.* pair of .* of )
 menu += lightgrey:(^identified armour.* pair of )
-menu += lightblue:(^identified (weapon|armour).* of )
-menu += lightblue:(^identified weapon.* vampiric .*)
-menu += lightblue:(^identified weapon.* antimagic .*)
+menu += lightblue:(^identified (weapon|armour|shield).* of )
+menu += lightblue:(^identified (weapon|shield).* vampiric .*)
+menu += lightblue:(^identified (weapon|shield).* antimagic .*)
 
 # Possible egos
 menu += lightblue:^unidentified .*weapon.*(runed|glowing)
@@ -49,18 +53,13 @@ menu += yellow:.*emergency_item.*
 
 # Good items
 menu += cyan:.*good_item.*
-menu += cyan:.*misc.*[lL]antern
 
 # Dangerous (but still useful) items
 menu += $dangerous:.*dangerous_item.*
 
 # Defaults for normal items
 menu += lightblue:unidentified.*(potion|scroll|wand|jewellery|magical staff)
-# : if you.god() == "Nemelex Xobeh" then
-#     menu += lightblue:deck of cards
-# : end
 menu += green:uncursed
-
 
 # Colouring of autoinscribed god gifts
 menu_colour += pickup:green:god gift
@@ -69,7 +68,6 @@ menu_colour += pickup:green:god gift
 menu_colour += inventory:white:\w \+\s
 menu_colour += inventory:white:\w \#\s
 menu_colour += inventory:white:\w \*\s
-
 
 # Not really menu.
 menu_colour += notes:white:Reached XP level

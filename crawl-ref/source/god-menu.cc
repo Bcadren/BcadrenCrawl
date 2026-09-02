@@ -11,11 +11,9 @@
 #include "colour.h"
 #include "libutil.h"
 #include "religion.h"
-#ifdef USE_TILE
 #include "terrain.h"
 #include "tilepick.h"
 #include "tileview.h"
-#endif
 
 GodMenuEntry::GodMenuEntry(god_type god_, bool long_name) :
     MenuEntry(god_name(god_, long_name), MEL_ITEM, 1, 0, false),
@@ -23,6 +21,20 @@ GodMenuEntry::GodMenuEntry(god_type god_, bool long_name) :
 {
     if (god == GOD_SHINING_ONE)
         hotkeys.push_back('1');
+    else if (god == GOD_BAHAMUT_TIAMAT)
+    {
+        if (you.species != SP_DRACONIAN)
+            hotkeys.push_back('!');
+        else
+            hotkeys.push_back('B');
+    }
+    else if (god == GOD_BEOGH)
+    {
+        if (you.species == SP_DRACONIAN)
+            hotkeys.push_back('!');
+        else
+            hotkeys.push_back('B');
+    }
     else
     {
         hotkeys.push_back(text.at(0));
@@ -32,19 +44,15 @@ GodMenuEntry::GodMenuEntry(god_type god_, bool long_name) :
     colour_text = colour_to_str(c);
     data = &text;
 
-#ifdef USE_TILE
     const dungeon_feature_type feat = altar_for_god(god_);
     if (feat)
     {
         const tileidx_t idx = tileidx_feature_base(feat);
-        add_tile(tile_def(pick_dngn_tile(idx, ui_random(INT_MAX)),
-                                         get_dngn_tex(idx)));
-        // TODO: randomize tile for jiyva, xom
+        add_tile(tile_def(pick_dngn_tile(idx, ui_random(INT_MAX))));
     }
-#endif
 }
 
-string GodMenuEntry::get_text(const bool unused) const
+string GodMenuEntry::get_text(const bool) const
 {
     if (level == MEL_ITEM && hotkeys.size())
     {

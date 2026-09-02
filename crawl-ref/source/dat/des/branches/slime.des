@@ -46,7 +46,7 @@ end
 
 # Weight balancer
 NAME:  slime_dummy
-TAGS:  slime_entry
+TAGS:  slime_entry extra
 KFEAT: O = enter_slime_pits
 MAP
 O
@@ -54,45 +54,80 @@ ENDMAP
 
 # Slime entries featuring an altar to Jiyva
 NAME:   slime_altar_1
-TAGS:   slime_entry
+TAGS:   slime_entry extra
 WEIGHT: 30
 KFEAT:  Z = altar_jiyva
 KFEAT:  O = enter_slime_pits
+KFEAT:  b = slimeshroom
+KFEAT:  a = slimy_water
+SHUFFLE: OZ
+SHUFFLE: ab
 MAP
-....
+baab
 .OZ.
 ....
 ENDMAP
 
-NAME:   slime_altar_2
-TAGS:   slime_entry
-KFEAT:  _ = altar_jiyva
-SUBST:  1 : 111223
-NSUBST: 1 = 1 / 1. , 2 = 2 / 2... , 3 = 3 / 3....
-MONS:   jelly / ooze
-MONS:   acid blob / slime creature w:5
-MONS:   azure jelly
+NAME:   slime_island
+TAGS:   slime_entry extra
+WEIGHT: 30
+KFEAT:  Z = altar_jiyva
 KFEAT:  O = enter_slime_pits
+KPROP:  OZbaA = no_tele_into
+NSUBST: . = 8:b / *:a
+KFEAT:  b = slimeshroom
+KFEAT:  a = slimy_water
+KFEAT:  A = floor
+MAP
+  ......
+ ........
+..........
+...bAAb...
+...AOZA...
+...bAAb...
+.....A....
+ .....A..
+  ...@..
+ENDMAP
+
+NAME:   slime_altar_2
+TAGS:   slime_entry extra
+KFEAT:  _ = altar_jiyva
+KMONS:  0 = jelly / ooze
+KMONS:  1 = acid blob / slime creature w:5
+KMONS:  O = azure jelly
+: if crawl.coinflip() then
+SUBST:  _ = 1
+SUBST:  - = _
+: else
+SUBST:  - = 0
+: end
+KFEAT:  O = enter_slime_pits
+KFEAT:  01 = slimy_water
+KFEAT:  t = slimeshroom
 MAP
 ccccc
-c111m.
-cO1_=@
-c111m.
+ct10q.
+cO_-=@
+ct10q.
 ccccc
 ENDMAP
 
 NAME:  dpeg_slime_entry_enclosed_altar
-TAGS:  slime_entry
+TAGS:  slime_entry extra
 KFEAT: O = enter_slime_pits
 KFEAT: S = slimy_wall
 KFEAT: _ = altar_jiyva
+NSUBST: ' = 4:s / *:'
+KFEAT: ' = slimy_water
+KFEAT: s = slimeshroom
 MAP
   .....
  .ccccc.
 .ccSSScc.
-.cS...Sc.
-.cS.O.cc.
-.cS.._.+@
+.cS'''Sc.
+.cS'O'cc.
+.cS''_.+@
 .ccScccc.
 .ccccccc.
  .ccccc.
@@ -100,101 +135,147 @@ MAP
 ENDMAP
 
 NAME:   minmay_slime_entry_eyes
-TAGS:   slime_entry ruin_lair
+TAGS:   slime_entry ruin_lair extra
 WEIGHT: 2
 MONS:   eye of devastation, eye of draining
 KFEAT:  O = enter_slime_pits
+SUBST:  x = xxS
+SUBST:  ' = aaab..
+KFEAT:  a = slimy_water
+KFEAT:  b = slimeshroom
 KFEAT:  S = slimy_wall
 MAP
  ....   ....
 ..xx..x..xx..
 .xxxx.x.xxxx.
-.xxx.....xxx.
-..x.S...S.x..
- ...........
- xxS.1O2.Sxx
- ...........
-..x.S...S.x..
-.xxx.....xxx.
+.xxx'''''xxx.
+..x'S'''S'x..
+ ..'''''''..
+ xxS'1O2'Sxx
+ ..'''''''..
+..x'S'''S'x..
+.xxx'''''xxx.
 .xxxx.x.xxxx.
 ..xx..x..xx..
  ....   ....
 ENDMAP
 
-NAME:   minmay_slime_entry_pillars
-TAGS:   slime_entry ruin_lair
-MONS:   jelly / slime creature
-KFEAT:  O = enter_slime_pits
+NAME:    bcadren_minmay_slime_entry_pools
+TAGS:    slime_entry ruin_lair extra
+MONS:    jelly / slime creature
+KFEAT:   O = enter_slime_pits
+SHUFFLE: ABCD
+SUBST:   A = c
+SUBST:   B = d
+SUBST:   C = aa.
+SUBST:   D = bba
+KFEAT:   a = slimeshroom
+KFEAT:   b = slimy_water
+KFEAT:   d = slimy_wall
+MAP
+..A.....D..
+.AAA...DDD.
+AAAAA1DDDDD
+.AAA...DDD.
+..A.....D..
+..1..O..1..
+..B.....C..
+.BBB...CCC.
+BBBBB1CCCCC
+.BBB...CCC.
+..B.....C..
+ENDMAP
+
+NAME:    minmay_slime_entry_pillars
+TAGS:    slime_entry ruin_lair extra
+MONS:    jelly / slime creature
+KFEAT:   O = enter_slime_pits
+SUBST:   A : cd , B : cd , C : cd , D : cd
+KFEAT:   d = slimy_wall
 MAP
 ...........
-.ccc...ccc.
-.ccc.1.ccc.
-.ccc...ccc.
+.AAA...DDD.
+.AAA.1.DDD.
+.AAA...DDD.
 ...........
 ..1..O..1..
 ...........
-.ccc...ccc.
-.ccc.1.ccc.
-.ccc...ccc.
+.BBB...CCC.
+.BBB.1.CCC.
+.BBB...CCC.
 ...........
 ENDMAP
 
 # In-game the boxes rarely stay closed due to ruination; this is intentional.
 NAME:   minmay_slime_entry_jelly_boxes
-TAGS:   slime_entry ruin_lair
+TAGS:   slime_entry ruin_lair extra
 WEIGHT: 5
-MONS:   jelly / ooze w:1 / nothing w:1
+KMONS:  b = jelly
+NSUBST: ABCD = 1:a / 3:b
+KFEAT:  a = slimy_water
+KFEAT:  b = slimeshroom
+KFEAT:  s = slimy_wall
 KFEAT:  O = enter_slime_pits
 MAP
 .............
 .xxxxx.xxxxx.
-.xxx1x.x11xx.
-.xx11x.xx1xx.
-.xx1x...x1xx.
-.xxxx....xxx.
+.xxxAx.xDDxx.
+.xxAAx.sxDxx.
+.xxAs...sDxx.
+.xxss....sxx.
 ......O......
-.xxxx...xxxx.
-.xx1.x.x.1xx.
-.x11x.xx11xx.
-.xx1x.xxxxxx.
+.xxss...ssxx.
+.xxB.s.s.Cxx.
+.xBBx.xxCCxx.
+.xxBx.xxxCxx.
 .xxxxx.xxxxx.
 .............
 ENDMAP
 
 NAME:   minmay_slime_entry_oklob_open
-TAGS:   slime_entry
+TAGS:   slime_entry extra
 WEIGHT: 5
-MONS:   oklob plant / nothing w:20
+KMONS:  1 = oklob plant
+KFEAT:  1c = slimy_water
 KFEAT:  O = enter_slime_pits
+NSUBST: 1 = 2:1 / *:c
+NSUBST: c = 2:b / *:c
+KFEAT:  b = slimeshroom
 MAP
  .....
-.......
-..111..
-..1O1..
-..111..
-.......
+..ccc@.
+.c11@c.
+.c1O1c.
+.c111c.
+..ccc..
  .....
 ENDMAP
 
 NAME:   minmay_slime_entry_oklob_enclosed
-TAGS:   slime_entry ruin_lair
+TAGS:   slime_entry extra
 ORIENT: northeast
 WEIGHT: 5
-MONS:   oklob plant / nothing w:20
-KFEAT:  O = enter_slime_pits
+KMONS:  1 = oklob plant
+NSUBST: 1 = 2:1 / *:s
 KFEAT:  S = slimy_wall
+SUBST:  s = sssb
+KFEAT:  b = slimeshroom
+KFEAT:  1s = slimy_water
+KFEAT:  O = enter_slime_pits
 MAP
-xxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxx......xxxxxx
-xxSSxx...........xxxx
-xxS111......xx....xxx
-xSS.11....xxxx....xxx
-xS..O11.xxxxx....xxxx
-xSS..1xxxxxx.....xxxx
-xxSSSSxxxxx.....xxxxx
-xxxxxxxxxx.....xxxxxx
-xxxxxxxx.....xxxxxxxx
-xxxxxxx.@..xxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxx
+xxxSSSSxx.......xxxxxxx
+xxSS11....ssssss.xxxxxx
+xSS1...ssss....ss.xxxxx
+xS1.sss....xx..ss.xxxxx
+xSssOs..11xx..ss.xxxxxx
+xSSss.11Sxx.ssss.xxxxxx
+xxSSSSSSxx.ssss.xxxxxxx
+xxxxxxxxx.sss..xxxxxxxx
+xxxxxxxx.ss..xxxxxxxxxx
+xxxxxxx@ss@xxxxxxxxxxxx
 ENDMAP
 
 NAME:   dpeg_slime_entry_corner
@@ -203,13 +284,14 @@ ORIENT: northwest
 WEIGHT: 5
 KFEAT:  O = enter_slime_pits
 KFEAT:  S = slimy_wall
+KFEAT:  s = slimy_water w:2 / floor w:1
 MAP
 xxxxxxxxxxx
 xSSSxxxxxx
-xS...xxxx
-xS.O...xx
+xSsssxxxx
+xSsO..sxx
 xxxxxx.xx
-xxxx....x
+xxxxs..sx
 xxx...xx.
 xx..
 ENDMAP
@@ -218,10 +300,15 @@ NAME: nicolae_slime_entry_slimehenge
 TAGS: slime_entry transparent
 NSUBST: A = . / A, B = . / B, C = . / C
 SHUFFLE: ABCD
-SUBST: A = x, BCD = .
 KFEAT: O = enter_slime_pits
 KMONS: 1 = ooze / jelly / nothing
-KFEAT: x = slimy_wall
+KFEAT: A = slimy_wall
+: if crawl.one_chance_in(3) then
+KFEAT: BCD = floor
+:else
+KFEAT: B = slimeshroom
+KFEAT: CD = slimy_water
+:end
 MAP
   .........
  ...........
@@ -249,9 +336,19 @@ ORIENT: float
 SHUFFLE: abcd
 SUBST: ab : @, cd : .
 KPROP: f = no_tele_into
-SUBST: f = w.1
+SUBST: f = W'1
 KMASK: w = no_monster_gen
 KMASK: W = no_monster_gen
+{{
+local pool_contents = {}
+pool_contents["w"] = 75
+pool_contents["W"] = 20
+pool_contents["t"] = 5
+add_pools { replace = ".",
+			pool_size = 4 + crawl.random2(4),
+			contents = pool_contents,
+			frequency = 10 }
+}}
 MAP
    cccc
  ..........
@@ -274,6 +371,16 @@ ORIENT: float
 SHUFFLE: abcdefgh
 SUBST: a = @, b : @., c : @.., d : @..., efgh = .
 KMONS: j = jelly
+{{
+local pool_contents = {}
+pool_contents["w"] = 75
+pool_contents["W"] = 20
+pool_contents["t"] = 5
+add_pools { replace = ".",
+			pool_size = 4 + crawl.random2(4),
+			contents = pool_contents,
+			frequency = 10 }
+}}
 MAP
       aaaaa
     hh.....bb
@@ -299,6 +406,16 @@ TAGS: transparent extra
 DEPTH: Slime, !Slime:$
 SHUFFLE: abcde
 SUBST: a = @, bcde = .
+{{
+local pool_contents = {}
+pool_contents["w"] = 75
+pool_contents["W"] = 20
+pool_contents["t"] = 5
+add_pools { replace = ".",
+			pool_size = 8 + crawl.random2(8),
+			contents = pool_contents,
+			frequency = 10 }
+}}
 MAP
   aaaaa
  .........
@@ -333,6 +450,16 @@ DEPTH: Slime:2-, !Slime:$
 SUBST: X = x., { = {[(
 KMONS: 1 : jelly w:20 / ooze / slime creature w:30 / \
    acid blob w:5 / death ooze w:5 / azure jelly w:5
+{{
+local pool_contents = {}
+pool_contents["w"] = 75
+pool_contents["W"] = 20
+pool_contents["t"] = 5
+add_pools { replace = ".",
+			pool_size = 4 + crawl.random2(4),
+			contents = pool_contents,
+			frequency = 10 }
+}}
 MAP
       xxx
    xxxxxxxx
@@ -355,6 +482,16 @@ NSUBST: W = 4:1 / *:W
 KMONS: 1 = slime creature
 KFEAT: 1 = W
 CLEAR: _
+{{
+local pool_contents = {}
+pool_contents["w"] = 75
+pool_contents["W"] = 20
+pool_contents["t"] = 5
+add_pools { replace = ".",
+			pool_size = 8 + crawl.random2(4),
+			contents = pool_contents,
+			frequency = 10 }
+}}
 MAP
        '.......'
       '..........'
@@ -385,6 +522,16 @@ SHUFFLE: {}/()/[]
 NSUBST: a = X / .
 SUBST: X = x., z = x_, 0 = 0009.., 9 = 9998
 CLEAR: _
+{{
+local pool_contents = {}
+pool_contents["w"] = 75
+pool_contents["W"] = 20
+pool_contents["t"] = 5
+add_pools { replace = ".",
+			pool_size = 4 + crawl.random2(4),
+			contents = pool_contents,
+			frequency = 10 }
+}}
 MAP
        zzzzzzzzzzz
      zzzXXXXXXXXXzzz
@@ -419,6 +566,16 @@ WEIGHT: 2
 TAGS: extra decor transparent
 SUBST: c = ccc., X = x_, V = V..
 CLEAR: _
+{{
+local pool_contents = {}
+pool_contents["w"] = 75
+pool_contents["W"] = 20
+pool_contents["t"] = 5
+add_pools { replace = ".",
+			pool_size = 4 + crawl.random2(8),
+			contents = pool_contents,
+			frequency = 10 }
+}}
 MAP
   XXXX         XXXX
  XXxxXX       XXxxXX
@@ -448,6 +605,16 @@ DEPTH: Slime, !Slime:$
 TAGS: decor transparent ruin
 ORIENT: float
 SUBST: B = xxxW., C = W., D = VVW.
+{{
+local pool_contents = {}
+pool_contents["w"] = 75
+pool_contents["W"] = 20
+pool_contents["t"] = 5
+add_pools { replace = ".",
+			pool_size = 8 + crawl.random2(8),
+			contents = pool_contents,
+			frequency = 10 }
+}}
 MAP
 xxxxxxxxxxxxxxxxx
 xxxxxxxxxxxxxxxxx
@@ -472,6 +639,16 @@ NAME: cheibrodos_slime_lost_civilization_2
 DEPTH: Slime, !Slime:$
 TAGS: decor
 ORIENT: float
+{{
+local pool_contents = {}
+pool_contents["w"] = 75
+pool_contents["W"] = 20
+pool_contents["t"] = 5
+add_pools { replace = ".",
+			pool_size = 4 + crawl.random2(4),
+			contents = pool_contents,
+			frequency = 10 }
+}}
 MAP
    xxxxx
   xxxxxxx
@@ -493,6 +670,16 @@ ORIENT: float
 SHUFFLE: W.
 SUBST: W = WW.
 KMASK: W = no_monster_gen
+{{
+local pool_contents = {}
+pool_contents["w"] = 75
+pool_contents["W"] = 20
+pool_contents["t"] = 5
+add_pools { replace = ".",
+			pool_size = 4 + crawl.random2(4),
+			contents = pool_contents,
+			frequency = 10 }
+}}
 MAP
 xxxxxxxxxxxxx
 xWWWxWWWxWWWx
@@ -523,6 +710,16 @@ DEPTH: Slime, !Slime:$
 TAGS: decor
 SUBST: A=x, B=.
 SHUFFLE: AB
+{{
+local pool_contents = {}
+pool_contents["w"] = 75
+pool_contents["W"] = 20
+pool_contents["t"] = 5
+add_pools { replace = ".",
+			pool_size = 4 + crawl.random2(8),
+			contents = pool_contents,
+			frequency = 10 }
+}}
 MAP
      ...
     ..B..
@@ -543,6 +740,16 @@ NAME: cheibrodos_slime_lost_civilization_6
 DEPTH: Slime, !Slime:$
 TAGS: decor
 SUBST: } = }G..
+{{
+local pool_contents = {}
+pool_contents["w"] = 75
+pool_contents["W"] = 20
+pool_contents["t"] = 5
+add_pools { replace = ".",
+			pool_size = 4 + crawl.random2(4),
+			contents = pool_contents,
+			frequency = 10 }
+}}
 MAP
 .............
 .x.x.x.x.x.x.
@@ -562,6 +769,16 @@ ENDMAP
 NAME: cheibrodos_slime_lost_civilization_7
 DEPTH: Slime, !Slime:$
 TAGS: decor
+{{
+local pool_contents = {}
+pool_contents["w"] = 75
+pool_contents["W"] = 20
+pool_contents["t"] = 5
+add_pools { replace = ".",
+			pool_size = 4 + crawl.random2(4),
+			contents = pool_contents,
+			frequency = 10 }
+}}
 MAP
   ...........
  .............
@@ -581,6 +798,16 @@ DEPTH: Slime, !Slime:$
 TAGS: decor
 ORIENT: float
 SUBST: - = xxx., " = ...x
+{{
+local pool_contents = {}
+pool_contents["w"] = 75
+pool_contents["W"] = 20
+pool_contents["t"] = 5
+add_pools { replace = ".",
+			pool_size = 4 + crawl.random2(4),
+			contents = pool_contents,
+			frequency = 10 }
+}}
 MAP
 @.............
 .(..----------
@@ -603,6 +830,16 @@ DEPTH: Slime, !Slime:$
 TAGS: decor transparent
 ORIENT: float
 SUBST: x = xxx., G = G..
+{{
+local pool_contents = {}
+pool_contents["w"] = 75
+pool_contents["W"] = 20
+pool_contents["t"] = 5
+add_pools { replace = ".",
+			pool_size = 4 + crawl.random2(4),
+			contents = pool_contents,
+			frequency = 10 }
+}}
 MAP
 .............
 .xx.xx.xx.xx.
@@ -622,6 +859,14 @@ DEPTH: Slime, !Slime:$
 TAGS: decor transparent
 ORIENT: float
 SUBST: x = xxxx.
+{{
+local pool_contents = {}
+pool_contents["t"] = 100
+add_pools { replace = ".",
+			pool_size = 4 + crawl.random2(4),
+			contents = pool_contents,
+			frequency = 10 }
+}}
 MAP
 ...............
 .xxxxxxxxxxxxx.
@@ -640,15 +885,46 @@ ENDMAP
 
 # inspired by a comment of spacejung on SomethingAwful (dpeg)
 NAME:   dissolution_awaits
-DEPTH:  Slime:2-, !Slime:$
+DEPTH:  Slime:2, Slime:3
 KMONS:  1 = patrolling Dissolution, azure jelly / great orb of eyes
 MAP
- .....
-...{...
-.......
-...1...
-.[...(.
-.......
+  {
+  .
+ .1.
+[...(
+ENDMAP
+
+# Bcadren Original
+NAME:   dissolution_ruined_church
+DEPTH:  Slime: 4
+TAGS:   place_unique no_monster_gen no_item_gen transparent
+WEIGHT: 25
+KMONS:  1 = patrolling Dissolution
+KMONS:  2 = azure jelly / acid blob / death ooze
+KMONS:  3 = slime creature
+KFEAT:  1 = altar_jiyva
+KFEAT:  a = slimy_water
+NSUBST:  d : .aa
+NSUBST:  b : aat
+NSUBST:  c : 22333.
+NSUBST:  x : xxxt.
+MAP
+ddddddddddddd
+dxxxxxxxxxxxd
+dxbbbtttbbbxd
+dxb}..{..)bxd
+dxbd.....dbxd
+dxbddd1dddbxd
+dxbdddddddbxd
+dxbcccdcccbxd
+dxbdddddddbxd
+dxbcccdcccbxd
+dxbdddddddbxd
+dxbcccdcccbxd
+dxbdddddddbxd
+dxbbtt.ttbbxd
+dxxxx...xxxxd
+ddddd@@@ddddd
 ENDMAP
 
 ################################################################################
@@ -657,60 +933,20 @@ ENDMAP
 NAME:    slime_pit
 PLACE:   Slime:$
 ORIENT:  encompass
+SUBVAULT: o : royal_jelly
 TAGS:    no_rotate no_dump
-MONS:    the Royal Jelly
-MONS:    acid blob
-MONS:    great orb of eyes / nothing
 SUBST:   ' : ' .:1,  ' : ' x:1,  ' = .x
-SUBST:   " : " .:3,  " = .c
-NSUBST:  P = O / *|
-KMASK:   |O* = no_monster_gen
-KPROP:   |O* = no_jiyva
-KPROP:   |O* = no_tele_into
-KFEAT:   Z = altar_jiyva
-KITEM:   O = slimy rune of Zot
-KITEM:   * = star_item
+SUBST:   " = .taaa
+KFEAT:   t = slimeshroom
+KFEAT:   a = slimy_water
 SHUFFLE: ([{
-
 {{
--- Attach function to the Royal Jelly itself. This will follow it wherever
--- it goes, even through polymorphs, and set dgn.persist.royal_jelly_dead
--- when it dies through means other than being banished.
-local function monster_die(monster, killer_type, killer_index, silent, wizard)
-    if killer_type == "banished" then
-      crawl.mpr("You feel a great sense of loss, and a brush of the Abyss.")
-    else
-      dgn.persist.fix_slime_vaults = true
-    end
-end
-}}
-MARKER: 1 = lua: MonPropsMarker:new {monster_dies_lua_key = monster_die}
-
-{{
-local fixup_marker = TriggerableFunction:new(
-  {
-    func="fixup_slime_vaults",
-    repeated=true
-  }
-)
-
-fixup_marker:add_triggerer(DgnTriggerer:new {
-  type="monster_dies",
-  target="any"
-})
-
-fixup_marker:add_triggerer(DgnTriggerer:new {
-  type="entered_level"
-})
-
-}}
-# Doesn't matter where this marker goes, so we might as well choose
-# the altar.
-: lua_marker("Z", fixup_marker)
-
-{{
-    set_feature_name("stone_wall", "rune-carved stone wall")
-    set_feature_name("clear_stone_wall", "rune-carved clear stone wall")
+local pool_contents = {}
+pool_contents["w"] = 100
+add_pools { replace = ".",
+			pool_size = 16 + crawl.random2(16),
+			contents = pool_contents,
+			frequency = 10 }
 }}
 MAP
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -736,24 +972,24 @@ xxxxxxxxxxxxxxxxx''.........................................'xxxxxxxxxxxxxxxxxxx
 xxxxxxxxxxxxxxxx'...........................................'xxxxxxxxxxxxxxxxxxx
 xxxxxxxxxxxxx''xx'..........................................'xxxxxxxxxxxxxxxxxxx
 xxxxxxxxxxxxx'..''................""""."""""...........]....''xxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxx'x.................."cccc2ccccc".................'xxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxx'.'................"cc*cc..cc*cc".................''xxxxxxxxxxxxxxx
-xxxxxxxxxxxxx'................."cc***cc4c***cc".................xxxxxxxxxxxxxxxx
-xxxxxxxxxxxxx'................"cc*|*cc..cc*|*cc"................'xxxxxxxxxxxxxxx
-xxxxxxxxxxxx''..............."cc*|P|*n4nn*|P|*cc"...............'xxxxxxxxxxxxxxx
-xxxxxxxxxxxx'................"cc**|*nn..nn*|**cc"................'''xxxxxxxxxxxx
-xxxxxxxxxxxx'................"ccc**n|nn4n|n**ccc"..................xxxxxxxxxxxxx
-xxxxxxxxxxx'................."ccccnnnn.3nnnncccc"..................'xxxxxxxxxxxx
-xxxxxxxxxxx'................."c.4.n.4.1..4.n.4.c"..................''xxxxxxxxxxx
-xxxxxxxxxxx'..................2.c.4.n..Z.n.4.c.2....................'xxxxxxxxxxx
-xxxxxxxxxx'..........)......."ccccnnnn3.nnnncccc"...................'xxxxxxxxxxx
-xxxxxxxxxx'.................."ccc**n|nn4n|n**ccc"...................'xxxxxxxxxxx
-xxxxxxxxxx'.................."cc**|*nn..nn*|**cc"..................'xxxxxxxxxxxx
-xxxxxxxxx'..................."cc*|P|*n4nn*|P|*cc"..................'xxxxxxxxxxxx
-xxxxxxxxx''..................."cc*|*cc..cc*|*cc"..................'xxxxxxxxxxxxx
-xxxxxxxxxxx'..................."cc***cc4c***cc"...................'xxxxxxxxxxxxx
-xxxxxxxxxxxx'..................."cc*cc..cc*cc"....................'xxxxxxxxxxxxx
-xxxxxxxxxxxx'...................."cccc2ccccc"....................'xxxxxxxxxxxxxx
+xxxxxxxxxxxxx'x.................."oooooooooo".................'xxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxx'.'................"oooooooooooo".................''xxxxxxxxxxxxxxx
+xxxxxxxxxxxxx'................."oooooooooooooo".................xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxx'................"oooooooooooooooo"................'xxxxxxxxxxxxxxx
+xxxxxxxxxxxx''..............."oooooooooooooooooo"...............'xxxxxxxxxxxxxxx
+xxxxxxxxxxxx'................"oooooooooooooooooo"................'''xxxxxxxxxxxx
+xxxxxxxxxxxx'................"oooooooooooooooooo"..................xxxxxxxxxxxxx
+xxxxxxxxxxx'................."oooooooooooooooooo"..................'xxxxxxxxxxxx
+xxxxxxxxxxx'................."oooooooooooooooooo"..................''xxxxxxxxxxx
+xxxxxxxxxxx'..................oooooooooooooooooo....................'xxxxxxxxxxx
+xxxxxxxxxx'..........)......."oooooooooooooooooo"...................'xxxxxxxxxxx
+xxxxxxxxxx'.................."oooooooooooooooooo"...................'xxxxxxxxxxx
+xxxxxxxxxx'.................."oooooooooooooooooo"..................'xxxxxxxxxxxx
+xxxxxxxxx'..................."oooooooooooooooooo"..................'xxxxxxxxxxxx
+xxxxxxxxx''..................."oooooooooooooooo"..................'xxxxxxxxxxxxx
+xxxxxxxxxxx'..................."oooooooooooooo"...................'xxxxxxxxxxxxx
+xxxxxxxxxxxx'..................."oooooooooooo"....................'xxxxxxxxxxxxx
+xxxxxxxxxxxx'...................."oooooooooo"....................'xxxxxxxxxxxxxx
 xxxxxxxxxxxxx'...................."""".""""".....................'xxxxxxxxxxxxxx
 xxxxxxxxxxxxx'...........................................[........'xxxxxxxxxxxxx
 xxxxxxxxxxxx''..............................................'''....'xxxxxxxxxxxx
@@ -783,4 +1019,71 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ENDMAP
+
+NAME:    royal_jelly_end0
+TAGS:    royal_jelly no_rotate no_pool_fixup
+KMONS:   1 = the royal jelly
+KMONS:   2 = acid blob
+KFEAT:   2 = slimy_water / floor
+KMONS:   3 = great orb of eyes / nothing
+KFEAT:   3 = slimy_water / floor
+SUBST:   4 = 23
+SUBST:   ' : aa.
+SUBST:   C = cta
+NSUBST:  P = O / *|
+KMASK:   |O* = no_monster_gen
+KPROP:   |O* = no_jiyva
+KPROP:   |O* = no_tele_into
+KFEAT:   |O*a = slimy_water
+KFEAT:   t = slimeshroom
+KFEAT:   Z = altar_jiyva
+KITEM:   O = slimy rune of Zot
+KITEM:   * = star_item
+{{
+local fixup_marker = TriggerableFunction:new(
+  {
+    func="fixup_slime_vaults",
+    repeated=true
+  }
+)
+
+fixup_marker:add_triggerer(DgnTriggerer:new {
+  type="monster_dies",
+  target="any"
+})
+
+fixup_marker:add_triggerer(DgnTriggerer:new {
+  type="entered_level"
+})
+
+}}
+
+# Doesn't matter where this marker goes, so we might as well choose
+# the altar.
+: lua_marker("Z", fixup_marker)
+
+{{
+    set_feature_name("stone_wall", "rune-carved stone wall")
+    set_feature_name("clear_stone_wall", "rune-carved clear stone wall")
+}}
+MAP
+    cccc2ccccc
+   cc*cc''cc*cc
+  cc***cc4c***cc
+ cc*|*cc''cc*|*cc
+cc*|P|*n4nn*|P|*cc
+Cc**|*nn''nn*|**cC
+Ccc**n|nn4n|n**ccC
+ccccnnnn'3nnnncccc
+c'4'n'4'1.'4'n'4'c
+2'c'4'n'.Z'n'4'c'2
+ccccnnnn3'nnnncccc
+Ccc**n|nn4n|n**ccC
+Cc**|*nn''nn*|**cC
+cc*|P|*n4nn*|P|*cc
+ cc*|*cc''cc*|*cc
+  cc***cc4c***cc
+   cc*cc''cc*cc
+    cccc2ccccc
 ENDMAP

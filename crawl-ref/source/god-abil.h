@@ -15,10 +15,14 @@
 #include "recite-type.h"
 #include "spl-cast.h"
 
+class dist;
+
 #define BEOGH_RANGE_WPN_GIFT_KEY "given beogh range weapon"
 #define BEOGH_MELEE_WPN_GIFT_KEY "given beogh melee weapon"
 #define BEOGH_ARM_GIFT_KEY "given beogh armour"
 #define BEOGH_SH_GIFT_KEY "given beogh shield"
+#define BEOGH_WAND_GIFT_KEY "given beogh wand"
+#define BEOGH_JEWEL_GIFT_KEY "given beogh jewelry"
 
 #define AVAILABLE_SAC_KEY "available_sacrifices"
 #define HEALTH_SAC_KEY "current_health_sacrifice"
@@ -45,13 +49,22 @@ const char * const GOZAG_SHOP_COST_KEY       = "gozag_shop_cost_%d";
 #define GOZAG_SHOP_MOD_MULTIPLIER 25
 #define GOZAG_BRIBE_AMOUNT 3000
 #define GOZAG_MAX_BRIBABILITY 8
-#define GOZAG_MAX_POTIONS 3
+#define GOZAG_MAX_POTIONS 4
 
 #define USKAYAW_AUDIENCE_TIMER "uskayaw_audience_timer"
 #define USKAYAW_BOND_TIMER "uskayaw_bond_timer"
 #define USKAYAW_NUM_MONSTERS_HURT "uskayaw_num_monsters_hurt"
 #define USKAYAW_MONSTER_HURT_VALUE "uskayaw_monster_hurt_value"
 #define USKAYAW_AUT_SINCE_PIETY_GAIN "uskayaw_aut_since_piety_gain"
+
+#define BAHAMUT_TIAMAT_CHOICE0_KEY "first_bahamut_tiamat_ability_choice"
+#define BAHAMUT_TIAMAT_CHOICE1_KEY "second_bahamut_tiamat_ability_choice"
+#define BAHAMUT_TIAMAT_CHOICE2_KEY "third_bahamut_tiamat_ability_choice"
+#define BAHAMUT_TIAMAT_CHOICE3_KEY "fourth_bahamut_tiamat_ability_choice"
+
+#define WU_JIAN_HEAVENLY_STORM_KEY "wu_jian_heavenly_storm_amount"
+#define WU_JIAN_HEAVENLY_STORM_INITIAL 5
+#define WU_JIAN_HEAVENLY_STORM_MAX 15
 
 struct bolt;
 class stack_iterator;
@@ -69,6 +82,8 @@ recite_eligibility zin_check_recite_to_single_monster(const monster *mon,
                                                   recite_counts &eligibility,
                                                   bool quiet = false);
 int zin_check_recite_to_monsters(bool quiet = false);
+zin_eff effect_for_prayer_type(recite_type prayertype, int check, int degree, monster * mon);
+bool zin_affect(monster * mon, zin_eff effect, int degree, recite_type prayertype, int power);
 bool zin_recite_to_single_monster(const coord_def& where);
 int zin_recite_power();
 bool zin_vitalisation();
@@ -87,10 +102,13 @@ bool vehumet_supports_spell(spell_type spell);
 
 void sif_do_channel_energy(int pow);
 
-void trog_do_trogs_hand(int power);
+void trog_do_trogs_hand();
 void trog_remove_trogs_hand();
 
+void slimify_position(int iterations, coord_def pos, bool boost_slime_rate = false);
+bool jiyva_dissolution();
 bool jiyva_remove_bad_mutation();
+bool jiyva_set_targets();
 
 bool given_gift(const monster* mons);
 bool beogh_can_gift_items_to(const monster* mons, bool quiet = true);
@@ -99,11 +117,13 @@ bool beogh_resurrect();
 
 bool yred_injury_mirror();
 bool yred_can_enslave_soul(monster* mon);
+void yred_respawn_enslaved_soul();
 void yred_make_enslaved_soul(monster* mon, bool force_hostile = false);
 
-bool kiku_receive_corpses(int pow);
-bool kiku_take_corpse();
-bool kiku_gift_necronomicon();
+bool kiku_receive_corpses(int pow, bool force = false);
+monster_type random_kiku_monster(int pow);
+item_def * place_kiku_corpse(monster_type mon_type, coord_def pos);
+bool final_book_gift(god_type god);
 
 bool fedhas_passthrough_class(const monster_type mc);
 bool fedhas_passthrough(const monster* target);
@@ -140,7 +160,7 @@ bool cheibriados_slouch();
 void cheibriados_time_step(int pow);
 bool ashenzari_transfer_knowledge();
 bool ashenzari_end_transfer(bool finished = false, bool force = false);
-bool ashenzari_curse_item(int num_rc);
+bool ashenzari_curse_item();
 
 bool can_convert_to_beogh();
 void spare_beogh_convert();
@@ -161,7 +181,7 @@ bool gozag_check_bribe_branch(bool quiet = false);
 bool gozag_bribe_branch();
 
 spret qazlal_upheaval(coord_def target, bool quiet = false,
-                           bool fail = false);
+                           bool fail = false, dist *player_target=nullptr);
 spret qazlal_elemental_force(bool fail);
 bool qazlal_disaster_area();
 
@@ -193,8 +213,19 @@ bool hepliaklqana_choose_ancestor_type(int ancestor_type);
 spret hepliaklqana_idealise(bool fail);
 spret hepliaklqana_transference(bool fail);
 void hepliaklqana_choose_identity();
+void hepliaklqana_set_ai();
 
 bool wu_jian_can_wall_jump_in_principle(const coord_def& target);
 bool wu_jian_can_wall_jump(const coord_def& target, string &error_ret);
 bool wu_jian_do_wall_jump(coord_def targ, bool ability);
 spret wu_jian_wall_jump_ability();
+
+bool bahamut_tiamat_make_choice(ability_type abil);
+spret bahamut_empowered_breath();
+spret tiamat_choice_breath(bool fail);
+spret bahamut_tiamat_transform(bool bahamut);
+
+void wu_jian_heavenly_storm();
+
+void okawaru_remove_heroism();
+void okawaru_remove_finesse();

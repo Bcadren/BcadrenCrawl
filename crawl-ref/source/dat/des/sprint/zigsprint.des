@@ -32,7 +32,7 @@
 ###############################################################################
 
 {{
--- Remove this code when TAG_MAJOR > 34
+-- start TAG_MAJOR_VERSION == 34
 function callback.zig_tele(data, triggerable, triggerer, marker, ev)
   local position = dgn.point(marker:pos())
   my_slaves = dgn.find_marker_positions_by_prop("teleport_spot",
@@ -46,6 +46,7 @@ function callback.zig_tele(data, triggerable, triggerer, marker, ev)
 --                       " of Ziggurat Sprint.", "")
   end
 end
+-- end TAG_MAJOR_VERSION
 
 function callback.zig_message(data, triggerable, triggerer, marker, ev)
   if data.arena_number > 1 then
@@ -102,7 +103,7 @@ e.kitem("1 = superb_item ident:all w:590 / ration w:2 /\
             scroll of acquirement q:1 w:1 ident:all /\
             scroll of enchantment ident:all q:4 w:2 /\
             scroll of enchantment ident:all q:4 w:2 /\
-            scroll of brand weapon ident:all")
+            scroll of bless item ident:all")
 
     -- Place monsters
     if id < 7 then
@@ -130,7 +131,7 @@ function choose_mset_1(e)
     e.kmons("1 = ball python / adder / water moccasin w:5 / naga w:2")
 -- Lair
   elseif rnd < 29 then
-    e.kmons("1 = river rat / iguana / porcupine / yak w:5 /\
+    e.kmons("1 = sewer rat / iguana / porcupine / yak w:5 /\
                jackal / wolf w:5 / bullfrog w:5")
 -- Spider
   elseif rnd < 39 then
@@ -158,7 +159,7 @@ function choose_mset_1(e)
     e.kmons("1 = fire vortex / hell hound / fire elemental w:15")
 -- Ice
   elseif rnd < 85 then
-    e.kmons("1 = ice beast / polar bear / white imp / simulacrum")
+    e.kmons("1 = ice beast / polar bear / gwybwca / simulacrum")
 -- Air
   elseif rnd < 87 then
     e.kmons("1 = insubstantial wisp / air elemental w:5")
@@ -219,7 +220,7 @@ function choose_mset_2(e)
                black mamba w:5 / naga mage w:5")
 -- Lair
   elseif rnd < 29 then
-    e.kmons("1 =  river rat / iguana / porcupine / yak /\
+    e.kmons("1 =  sewer rat / iguana / porcupine / yak /\
                jackal / wolf / bullfrog / spiny frog w:5 /\
                komodo dragon w:5 / basilisk w:5 / place:Lair:1 w:30")
 -- Spider
@@ -251,8 +252,8 @@ function choose_mset_2(e)
                efreet")
 -- Ice
   elseif rnd < 86 then
-    e.kmons("1 = ice beast / polar bear / white imp / simulacrum /\
-               rime drake / freezing wraith / ice devil")
+    e.kmons("1 = ice beast / polar bear / gwybwca / simulacrum /\
+               rime drake / freezing wraith / rypuiwel")
 -- Air
   elseif rnd < 88 then
     e.kmons("1 = insubstantial wisp / air elemental / wind drake w:5")
@@ -274,7 +275,7 @@ function choose_mset_2(e)
     e.kmons("1 = lesser demon / common demon w:5 / pandemonium lord w:2")
 -- Tomb
   elseif rnd < 109 then
-    e.kmons("1 = place:Tomb:$ w:250 / greater mummy")
+    e.kmons("1 = place:Tomb:$ w:250 / royal mummy")
 -- Elf
   elseif rnd < 119 then
     e.kmons("1 = place:Elf:$")
@@ -314,7 +315,7 @@ function choose_mset_3(e)
   elseif rnd < 14 then
     e.kmons("1 = ball python / adder / water moccasin / naga /\
                black mamba / naga mage / naga warrior / nagaraja w:5 /\
-               anaconda w:5 / guardian serpent")
+               blood boa w:5 / guardian serpent")
 -- Lair
   elseif rnd < 19 then
     e.kmons("1 =  place:Lair:2 / place:Lair:4 / place:Lair:$ w:5")
@@ -348,7 +349,7 @@ function choose_mset_3(e)
     e.kmons("1 = place:Geh:1")
 -- Tartarus
   elseif rnd < 64 then
-    e.kmons("1 = zombie / skeleton / soul eater / shadow dragon w:3 /\
+    e.kmons("1 = zombie / skeleton / saelneytandi / shadow dragon w:3 /\
                  spectral thing / ghoul w:2")
 -- Dis
   elseif rnd < 69 then
@@ -363,9 +364,9 @@ function choose_mset_3(e)
                efreet / fire dragon / fire giant")
 -- Ice
   elseif rnd < 75 then
-    e.kmons("1 = ice beast / polar bear / white imp / simulacrum / rime drake/\
-               freezing wraith / ice devil / ice dragon / frost giant /\
-               blizzard demon")
+    e.kmons("1 = ice beast / polar bear / gwybwca / simulacrum / rime drake/\
+               freezing wraith / rypuiwel / ice dragon / frost giant /\
+               cenysus")
 -- Air
   elseif rnd < 77 then
     e.kmons("1 = insubstantial wisp / air elemental / wind drake / spriggan air mage /\
@@ -394,7 +395,7 @@ function choose_mset_3(e)
     e.kmons("1 = common demon / place:Pan / pandemonium lord w:5")
 -- Tomb
   elseif rnd < 93 then
-    e.kmons("1 = place:Tomb:$ w:100 / greater mummy")
+    e.kmons("1 = place:Tomb:$ w:100 / royal mummy")
 -- Elf
   elseif rnd < 98 then
     e.kmons("1 = place:Elf:$ w:100 / deep elf sorcerer / deep elf blademaster /\
@@ -419,7 +420,7 @@ function choose_mset_3(e)
                Eustachio / Gastronok / Grum / Grinder / Harold / Ijyb / Jessica /\
                Joseph / Josephine / Maurice / Menkaure / Pikel /\
                Prince Ribbit / Psyche / Purgy / Sigmund / Sonja / Terence / Urug /\
-               Agnes / Aizul / Azrael / Donald / Frances / Kirke / Louise /\
+               Agnes / Aizul / Maalik / Donald / Frances / Circe / Louise /\
                Nergalle / Nessos / Nikola / Polyphemus / Roxanne /\
                Rupert / Saint Roka / Snorg")
 -- Holy
@@ -443,7 +444,7 @@ local rnd = crawl.random2(142)
   elseif rnd < 14 then
     e.kmons("1 = ball python w:5 / adder w:5 / water moccasin / naga /\
                black mamba / naga mage / naga warrior / nagaraja /\
-               anaconda / guardian serpent")
+               blood boa / guardian serpent")
 -- Lair
   elseif rnd < 19 then
     e.kmons("1 = place:Lair:$ w:300 / hydra / catoblepas / dire elephant")
@@ -475,17 +476,17 @@ local rnd = crawl.random2(142)
     e.kfeat("1 = shallow_water")
 -- Cocytus
   elseif rnd < 57 then
-    e.kmons("1 = place:Coc:$ w:500 / ice fiend")
+    e.kmons("1 = place:Coc:$ w:500 / Vetrifl")
 -- Gehenna
   elseif rnd < 62 then
     e.kmons("1 = place:Geh:$")
 -- Tartarus
   elseif rnd < 67 then
-    e.kmons("1 = zombie / skeleton / soul eater / shadow dragon w:5 /\
+    e.kmons("1 = zombie / skeleton / saelneytandi / shadow dragon w:5 /\
                  tzitzimitl w:1 / spectral thing place:Tar:$ / ghoul w:5")
 -- Dis
   elseif rnd < 72 then
-    e.kmons("1 = place:Dis:$ w:500 / hell sentinel")
+    e.kmons("1 = place:Dis:$ w:500 / gwarchodwr")
 -- Giant
   elseif rnd < 75 then
     e.kmons("1 = cyclops / stone giant / fire giant /\
@@ -496,9 +497,9 @@ local rnd = crawl.random2(142)
                efreet / fire dragon / fire giant / orb of fire w:5 / balrug")
 -- Ice
   elseif rnd < 81 then
-    e.kmons("1 = ice beast / polar bear / white imp / simulacrum / rime drake/\
-               freezing wraith / ice devil / ice dragon / frost giant /\
-               ice fiend w:5 / blizzard demon")
+    e.kmons("1 = ice beast / polar bear / gwybwca / simulacrum / rime drake/\
+               freezing wraith / rypuiwel / ice dragon / frost giant /\
+               Vetrifl w:5 / cenysus")
 -- Air
   elseif rnd < 84 then
     e.kmons("1 = insubstantial wisp / air elemental / wind drake / spriggan air mage /\
@@ -529,7 +530,7 @@ local rnd = crawl.random2(142)
     e.kmons("1 = place:Pan w:5 / pandemonium lord")
 -- Tomb
   elseif rnd < 104 then
-    e.kmons("1 = place:Tomb:$ w:100 / greater mummy")
+    e.kmons("1 = place:Tomb:$ w:100 / royal mummy")
 -- Elf
   elseif rnd < 114 then
     e.kmons("1 = place:Elf:$ w:50 / deep elf sorcerer / deep elf blademaster /\
@@ -553,14 +554,14 @@ local rnd = crawl.random2(142)
                Eustachio / Gastronok / Grum / Grinder / Harold / Ijyb / Jessica /\
                Joseph / Josephine / Maurice / Menkaure / Pikel /\
                Prince Ribbit / Psyche / Purgy / Sigmund / Sonja / Terence / Urug /\
-               Agnes / Aizul / Azrael / Donald / Frances / Kirke / Louise /\
+               Agnes / Aizul / Maalik / Donald / Frances / Circe / Louise /\
                Nergalle / Nessos / Nikola / Polyphemus / Roxanne /\
                Rupert / Saint Roka / Snorg / Antaeus / Asmodeus /\
                Boris / Cerebov / Dispater / Dissolution / Ereshkigal /\
                Frederick / Geryon / Gloorx Vloq / Ignacio / Ilsuiw / Jory / Khufu /\
                Lom Lobon / Mara / Margery / Mennas / Mnoleg / Murray / Sojobo /\
                the Enchantress / the Lernaean hydra / the Serpent of Hell /\
-               the Royal Jelly / Tiamat / Xtahua / Nellie / Chuck")
+               the Royal Jelly / Livarra / Xtahua / Nellie / Chuck")
 -- Holy
   else
     e.kmons("1 = daeva / angel / cherub / pearl dragon / ophan / \
@@ -700,6 +701,7 @@ TAGS:  no_item_gen no_trap_gen no_pool_fixup no_rotate no_hmirror no_vmirror
 : setup_room(_G, 1)
 KFEAT:  a = altar_ashenzari
 KFEAT:  b = altar_beogh
+KFEAT:  Q = altar_bahamut_and_tiamat
 KFEAT:  c = altar_cheibriados
 KFEAT:  d = altar_dithmenos
 KFEAT:  e = altar_elyvilon
@@ -729,7 +731,7 @@ KITEM:    B = plate armour mundane not_cursed ident:all plus:5, \
               storm dragon scales mundane not_cursed ident:all plus:5, \
               shadow dragon scales mundane not_cursed ident:all plus:5, \
               gold dragon scales mundane not_cursed ident:all plus:5, \
-              crystal plate armour mundane not_cursed ident:all plus:5
+              crystal plate mundane not_cursed ident:all plus:5
 KITEM:    C = buckler mundane not_cursed ident:all plus:3, \
               heater shield mundane not_cursed ident:all plus:3, \
               scutum mundane not_cursed ident:all plus:3
@@ -744,22 +746,19 @@ KITEM:    F = demon whip mundane not_cursed ident:all plus:5, \
               giant spiked club mundane not_cursed ident:all plus:5
 KITEM:    G = dagger mundane not_cursed ident:all plus:5, \
               rapier mundane not_cursed ident:all plus:5, \
-              quick blade mundane not_cursed ident:all plus:5
+              tanto mundane not_cursed ident:all plus:5
 KITEM:    H = demon blade mundane not_cursed ident:all plus:5, \
               double sword mundane not_cursed ident:all plus:5, \
               great sword mundane not_cursed ident:all plus:5, \
               triple sword mundane not_cursed ident:all plus:5
 KITEM:    I = lajatang mundane not_cursed ident:all plus:5
 KITEM:    J = hand crossbow mundane not_cursed ident:all plus:5, \
-              bolt q:1000 mundane ident:all, \
               arbalest mundane not_cursed ident:all plus:5, \
               triple crossbow mundane not_cursed ident:all plus:5, \
               shortbow mundane not_cursed ident:all plus:5, \
-              arrow q:1000 mundane ident:all, \
               longbow mundane not_cursed ident:all plus:5, \
               hunting sling mundane not_cursed ident:all plus:5, \
-              fustibalus mundane not_cursed ident:all plus:5, \
-              sling bullet q:1000 mundane ident:all
+              fustibalus mundane not_cursed ident:all plus:5
 KITEM:    K = potion of curing q:9 ident:all, \
               potion of heal wounds q:9 ident:all, \
               potion of berserk rage q:2 ident:all, \
@@ -773,15 +772,15 @@ KITEM:    K = potion of curing q:9 ident:all, \
               potion of brilliance q:2 ident:all
 KITEM:    L = scroll of blinking q:3 ident:all, \
               scroll of fear q:2 ident:all, \
-              scroll of remove curse q:5 ident:all, \
+              scroll of bless item q:5 ident:all, \
               scroll of holy word q:1 ident:all, \
               scroll of fog q:7 ident:all, \
-              scroll of amnesia q:4 ident:all
+              potion of amnesia q:4 ident:all
 KITEM:    M = ration q:6
 KITEM:    N = wand of acid ident:all charges:7, \
               wand of iceblast ident:all charges:7, \
               wand of disintegration ident:all charges:7
-KITEM:    O = crystal ball of energy ident:all, staff of energy not_cursed ident:all
+KITEM:    O = crystal ball of energy ident:all
 KITEM:    P = ring of strength not_cursed ident:all plus:6, \
               ring of strength not_cursed ident:all plus:6, \
               ring of intelligence not_cursed ident:all plus:6, \
@@ -818,7 +817,7 @@ COLOUR:   & = magenta
 
 MAP
 ^g^h^j&A&k^l^m^
-f.........RT..n
+f^........RT.^n
 ^.............^
 e..HG.........o
 ^..IF.........^
@@ -827,8 +826,8 @@ d..JE.....S...q
 c......L..O...r
 ^...C..K..N...^
 b...B.{.......s
-^.............^
-a.............t
+^...........Q.^
+a^...........^t
 ^1^z^y^x^w^v^u^
 ENDMAP
 

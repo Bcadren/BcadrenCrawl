@@ -197,8 +197,8 @@ MAP
 ..wwwCwwwwFHwww..
 .wwwwwD...Ewwwww.
 .wwwwww.O.YYYYYY.
-.wwwwwL...wwwwww.
-.wwwwJwwXwQwwwww.
+.wwwwww...wwwwww.
+.wwwwJLwXwQwwwww.
 ..wwKIwwXwMNwww..
 ....wwwwXwwPw....
 ......wwXww......
@@ -212,7 +212,7 @@ WEIGHT: 1
 SUBST:  _ = 3., - = l.
 SUBST:  . = .:900 3:30, ' = .:400 3:30, ! = .:100 3:30
 SUBST:  ? = .:50  3:30 G:5 T:10 U:1 V:4
-MONS:   angel, rust devil, plant
+MONS:   angel, taeringu, plant
 KMASK:  12 = opaque
 KPROP:  12 = no_tele_into
 : temple_entry(_G)

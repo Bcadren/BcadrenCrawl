@@ -6,6 +6,7 @@
 #pragma once
 
 #include <functional>
+#include <vector>
 
 #include "enum.h"
 #include "gender-type.h"
@@ -14,6 +15,8 @@
 #include "mon-inv-type.h"
 #include "monuse-flags.h"
 #include "player.h"
+
+using std::vector;
 
 struct bolt;
 struct mgen_data;
@@ -24,6 +27,42 @@ struct mon_attack_def
     attack_flavour  flavour;
     int             damage;
 };
+
+#define ABOM_DEF "abomination_definition"
+
+enum abom_facet_type
+{
+    FAC_NON_FACET,
+    FAC_THAGOMIZER,
+    FAC_WINGS,
+    FAC_HYDRA,
+    FAC_TRAMPLE,
+    FAC_DRAINBLADE,
+    FAC_VILEORIFACE,
+    FAC_SPINY,
+    FAC_BEAK,
+    FAC_PLATED,
+    FAC_CLASSIC,
+    FAC_EYEBASH,
+    FAC_GOOEY,
+    FAC_INTESTINES,
+    NUM_ABOM_FACETS
+};
+
+struct abom_def
+{
+    int HD;
+    int HP;
+    int AC;
+    int EV;
+    int atk;
+    int spd;
+    abom_facet_type facets[MAX_NUM_ATTACKS];
+};
+
+abom_def mi_read_def(const monster_info & mi);
+abom_def read_def(const monster & mon);
+void write_def(monster & mon, abom_def def);
 
 // Amount of mons->speed_increment used by different actions; defaults
 // to 10.
@@ -113,6 +152,8 @@ enum mon_type_tile_variation
     TVARY_RANDOM,   ///< choose a random tile in set with every redraw
     TVARY_WATER,    ///< if in water, incr tile enum by 1 (merfolk &c)
     TVARY_SPECIES,  ///< tile varies based on player race (used for Ancestors)
+    TVARY_XMAS,     ///< Special tile for Christmas.
+    TVARY_FOOL,     ///< Special tile for April Fools.
 };
 
 /// Tiles display information for a monster type.
@@ -133,7 +174,7 @@ struct monsterentry
     monclass_flags_t bitfields;
     resists_t resists;
 
-    // Multiplier for calculated monster XP value; see exper_value() for use.
+    // Multiplier for calculated monster XP value; see mi_exper_value() for use.
     int8_t exp_mod;
 
     monster_type genus,         // "team" the monster plays for
@@ -177,11 +218,24 @@ enum mon_threat_level_type
 };
 
 void set_resist(resists_t &all, mon_resist_flags res, int lev);
+resists_t get_mons_base_resists(const monster& m);
+resists_t get_mons_current_resists(const monster& m);
 
 // In all cases this will be simplified to a bit field access, so let's let
 // the compiler inline it.
 static inline int get_resist(resists_t all, mon_resist_flags res)
 {
+    if (res > MR_VULNS)
+        return all & res ? -1 : 0;
+    if (res > MR_PHYSICALS)
+    {
+        if (all & res)
+            return 1;
+        uint32_t neg = (((uint32_t)res) << 4);
+        if (all & neg)
+            return -1;
+        return 0;
+    }
     if (res > MR_LAST_MULTI)
         return all & res ? 1 : 0;
     int v = (all / res) & 7;
@@ -196,9 +250,11 @@ monsterentry *get_monster_data(monster_type mc) IMMUTABLE;
 int get_mons_class_ac(monster_type mc) IMMUTABLE;
 int get_mons_class_ev(monster_type mc) IMMUTABLE;
 resists_t get_mons_class_resists(monster_type mc) IMMUTABLE;
+int get_mons_class_base_to_hit(monster_type mc, bool ranged);
 resists_t get_mons_resists(const monster& mon);
 int get_mons_resist(const monster& mon, mon_resist_flags res);
-const bool monster_resists_this_poison(const monster& mons, bool force = false);
+bool monster_resists_this_poison(const monster& mons, bool force = false);
+void mon_lose_staff_shield(monster & mon, beam_type flavour, int strength);
 
 void xom_insult_name();
 
@@ -239,7 +295,8 @@ int mutant_beast_tier(int xl);
 
 int mons_avg_hp(monster_type mc);
 int mons_max_hp(monster_type mc, monster_type mbase_typeg = MONS_NO_MONSTER);
-int exper_value(const monster& mon, bool real = true);
+int mi_exper_value(const monster_info& mi);
+int mon_exper_value(const monster& mon);
 
 int hit_points(int avg_hp, int scale = 10);
 
@@ -251,8 +308,10 @@ bool mons_immune_magic(const monster& mon);
 
 mon_attack_def mons_attack_spec(const monster& mon, int attk_number, bool base_flavour = true);
 string mon_attack_name(attack_type attack, bool with_object = true);
+bool is_plain_attack_type(attack_type attack);
 bool flavour_triggers_damageless(attack_flavour flavour);
 int flavour_damage(attack_flavour flavour, int HD, bool random = true);
+bool flavour_has_reach(attack_flavour flavour);
 
 corpse_effect_type mons_corpse_effect(monster_type mc);
 
@@ -279,13 +338,18 @@ int mons_demon_tier(monster_type mc);
 bool mons_class_wields_two_weapons(monster_type mc);
 bool mons_wields_two_weapons(const monster& m);
 bool mons_self_destructs(const monster& m);
+bool mons_blows_up(const monster& m);
+bool mons_destroyed_on_impact(const monster& m);
 
 mon_intel_type mons_class_intel(monster_type mc);
 mon_intel_type mons_intel(const monster& mon);
 
 // Use mons_habitat() and mons_primary_habitat() wherever possible,
 // since the class variants do not handle zombies correctly.
+habitat_type mons_habitat_type(monster_type t, monster_type base_t,
+                               bool real_amphibious = false);
 habitat_type mons_habitat(const monster& mon, bool real_amphibious = false);
+
 habitat_type mons_class_primary_habitat(monster_type mc);
 habitat_type mons_primary_habitat(const monster& mon);
 habitat_type mons_class_secondary_habitat(monster_type mc);
@@ -303,13 +367,16 @@ mon_energy_usage mons_energy(const monster& mon);
 int mons_class_zombie_base_speed(monster_type zombie_base_mc);
 int mons_base_speed(const monster& mon, bool known = false);
 
+bool monster_class_is_orcish(monster_type mc);
+bool monster_class_flies(monster_type mc);
+bool monster_inherently_flies(const monster &mons);
+
 bool mons_class_can_regenerate(monster_type mc);
 bool mons_can_regenerate(const monster& mon);
 bool mons_class_fast_regen(monster_type mc);
 int mons_zombie_size(monster_type mc);
 monster_type mons_zombie_base(const monster& mon);
 bool mons_class_is_zombified(monster_type mc);
-bool mons_class_is_hybrid(monster_type mc);
 bool mons_class_is_animated_weapon(monster_type type);
 monster_type mons_base_type(const monster& mon);
 bool mons_class_can_leave_corpse(monster_type mc);
@@ -325,6 +392,7 @@ bool mons_enslaved_body_and_soul(const monster& mon);
 bool mons_enslaved_soul(const monster& mon);
 void name_zombie(monster& mon, monster_type mc, const string &mon_name);
 void name_zombie(monster& mon, const monster& orig);
+void mi_name_zombie(monster& mon, const monster_info mi);
 
 int mons_power(monster_type mc);
 
@@ -339,7 +407,9 @@ monster_type random_draconian_job();
 monster_type random_demonspawn_monster_species();
 monster_type random_demonspawn_job();
 
-bool init_abomination(monster& mon, int hd);
+string get_species_insult(const string &species, const string &type);
+
+bool init_abomination(monster& mon, int hd, bool player = false);
 void define_monster(monster& mons);
 
 void mons_pacify(monster& mon, mon_attitude_type att = ATT_GOOD_NEUTRAL,
@@ -353,7 +423,6 @@ bool mons_has_ranged_spell(const monster& mon, bool attack_only = false,
 bool mons_has_ranged_attack(const monster& mon);
 bool mons_can_attack(const monster& mon);
 bool mons_has_incapacitating_spell(const monster& mon, const actor& foe);
-bool mons_has_incapacitating_ranged_attack(const monster& mon, const actor& foe);
 
 gender_type mons_class_gender(monster_type mc);
 const char *mons_pronoun(monster_type mon_type, pronoun_type variant,
@@ -376,6 +445,8 @@ bool mons_is_wandering(const monster& m);
 bool mons_is_seeking(const monster& m);
 bool mons_is_fleeing(const monster& m);
 bool mons_is_retreating(const monster& m);
+bool mons_wall_shielded(const monster& m);
+bool mi_wall_shielded(const monster_info& m);
 bool mons_is_cornered(const monster& m);
 bool mons_is_batty(const monster& m);
 bool mons_is_influenced_by_sanctuary(const monster& m);
@@ -386,7 +457,7 @@ bool mons_is_slime(const monster& mon);
 bool mons_class_is_plant(monster_type mc);
 bool mons_is_plant(const monster& mon);
 bool mons_eats_items(const monster& mon);
-bool actor_is_susceptible_to_vampirism(const actor& act);
+bool actor_is_susceptible_to_vampirism(const actor& act, bool chaos = false);
 monster_type mons_genus(monster_type mc);
 monster_type mons_species(monster_type mc);
 monster_type draco_or_demonspawn_subspecies(const monster& mon);
@@ -406,6 +477,7 @@ void mons_stop_fleeing_from_sanctuary(monster& mons);
 
 bool mons_class_is_stationary(monster_type mc);
 bool mons_class_is_firewood(monster_type mc);
+bool mons_class_is_test(monster_type mc);
 bool mons_is_firewood(const monster& mon);
 bool mons_is_active_ballisto(const monster& mon);
 bool mons_has_body(const monster& mon);
@@ -442,8 +514,15 @@ bool monster_senior(const monster& first, const monster& second,
 string ugly_thing_colour_name(colour_t colour);
 colour_t ugly_thing_random_colour();
 int str_to_ugly_thing_colour(const string &s);
+int str_to_chameleon_colour(const string &s);
 colour_t random_monster_colour();
 int ugly_thing_colour_offset(colour_t colour);
+int chameleon_colour_offset(colour_t colour);
+string chameleon_colour_name(colour_t colour);
+colour_t chameleon_random_colour(bool weighted = false);
+attack_flavour chameleon_colour_to_flavour(colour_t colour);
+colour_t chameleon_will_change(const monster * mons, beam_type beam, bool check = true);
+void chameleon_colour_change(monster * mons, beam_type beam);
 
 /**
  * @brief
@@ -472,6 +551,7 @@ monster_type random_monster_at_grid(const coord_def& p, bool species = false);
 void         init_mon_name_cache();
 monster_type get_monster_by_name(string name, bool substring = false);
 
+string pronoun_replacements(const string &in_msg, const monster_info mi);
 string do_mon_str_replacements(const string &msg, const monster& mons,
                                int s_type = -1);
 
@@ -506,8 +586,7 @@ bool mons_is_recallable(const actor* caller, const monster& targ);
 void init_anon();
 actor *find_agent(mid_t m, kill_category kc);
 const char* mons_class_name(monster_type mc);
-mon_threat_level_type mons_threat_level(const monster &mon,
-                                        bool real = false);
+mon_threat_level_type mons_threat_level(const monster &mon);
 int count_monsters(monster_type mtyp, bool friendly_only);
 int count_allies();
 
@@ -524,6 +603,8 @@ void reset_all_monsters();
 void debug_mondata();
 void debug_monspells();
 
+bool choose_passive_monster(const monster& mon);
+bool choose_hostile_monster(const monster& mon);
 bool choose_any_monster(const monster& mon);
 monster *choose_random_nearby_monster(
     int weight,
@@ -539,7 +620,8 @@ monster *choose_random_monster_on_level(
 
 void update_monster_symbol(monster_type mtype, cglyph_t md);
 
-void normalize_spell_freq(monster_spells &spells, int hd);
+int spell_freq_for_hd(int hd);
+void normalize_spell_freq(monster_spells &spells, int total_freq);
 
 enum mon_dam_level_type
 {
@@ -574,6 +656,12 @@ void throw_monster_bits(const monster& mon);
 
 void set_ancestor_spells(monster &ancestor, bool notify = false);
 
+void maybe_give_throw_spell(monster &mon, int depth);
+
+bool can_throw(monster* mon);
+
+bool silenceable(monster* mon);
+
 typedef function<bool (monster& mon)> monster_func;
 bool apply_monsters_around_square(monster_func mf, const coord_def& where,
                                   int radius = 1);
@@ -582,3 +670,9 @@ bool apply_visible_monsters(monster_func mf,
                             los_type los = LOS_NO_TRANS);
 
 int derived_undead_avg_hp(monster_type mtype, int hd, int scale = 10);
+
+bool is_chaotic_type(monster_type type);
+bool is_draconic_type(monster_type type);
+bool is_skeletal_type(monster_type type);
+bool is_icy_type(monster_type type);
+bool is_fiery_type(monster_type type);

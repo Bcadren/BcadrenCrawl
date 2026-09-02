@@ -5,7 +5,7 @@
 # A small portal vault fixated on nasty weapons. (Axes and polearms by now.)
 # Castle like layout, with inner bailey and moat. Medieval warfare themed.
 #
-# Currently, the depth is fixed at D:7-14 and Orc. It would be nice if the
+# Currently, the depth is fixed at D:4-7 and Orc. It would be nice if the
 # portal vault could also appear deeper, with a harder monster set. For
 # example, draconians would be an option.
 #
@@ -67,23 +67,20 @@ end
 
 -- Axes.
 function axe_returning(e)
-  e.mons("generate_awake kobold ; tomahawk ego:returning ident:type q:4 | \
-                                  tomahawk ego:returning ident:type q:3 / \
-          generate_awake hobgoblin ; tomahawk ego:returning ident:type q:4 | \
-                                     tomahawk ego:returning ident:type q:3")
+  e.mons("kobold spells:throw_tomahawk.120.natural generate_awake / \
+          hobgoblin spells:throw_tomahawk.120.natural generate_awake")
 end
 
 function kobold_axe_returning(e)
-  e.mons("generate_awake kobold ; tomahawk ego:returning ident:type q:4 | \
-                                  tomahawk ego:returning ident:type q:3")
+  e.mons("kobold spells:throw_tomahawk.120.natural")
 end
 
 function easy_axe_fighter(e)
-  e.mons("w:3 orc warrior ; hand axe w:60 | war axe . ring mail / \
-          w:7 gnoll ; hand axe w:60 | war axe . leather armour / \
-          w:10 hobgoblin ; hand axe w:60 | war axe . leather armour / \
-          w:10 orc ; hand axe w:60 | war axe . leather armour / \
-          w:12 goblin ; hand axe w:60 | war axe . leather armour")
+  e.mons("w:3 orc warrior ; hatchet w:60 | war axe . ring mail / \
+          w:7 gnoll ; hatchet w:60 | war axe . leather armour / \
+          w:10 hobgoblin ; hatchet w:60 | war axe . leather armour / \
+          w:10 orc ; hatchet w:60 | war axe . leather armour / \
+          w:12 goblin ; hatchet w:60 | war axe . leather armour")
 end
 
 function hard_axe_fighter(e)
@@ -104,27 +101,27 @@ function orc_warrior_with_polearm(e)
   e.mons("orc warrior ; \
           spear w:5 | trident w:5 | halberd | glaive | bardiche w:1 . \
           ring mail | scale mail | chain mail | plate armour |\
-          crystal plate armour w:1")
+          crystal plate w:1")
 end
 
 function orc_knight_with_polearm(e)
   e.mons("orc knight ; \
           trident w:5 | halberd | glaive | bardiche w:1 . \
           ring mail | scale mail | chain mail | plate armour | \
-          crystal plate armour w:1")
+          crystal plate w:1")
 end
 
 -- defined but not used, since the depth for the current entry vaults is 7-14
 function orc_warlord_with_polearm(e)
   e.mons("orc warlord ; \
           halberd | glaive | bardiche w:1 . \
-          chain mail w:20 | plate armour | crystal plate armour w:1")
+          chain mail w:20 | plate armour | crystal plate w:1")
 end
 
 }}
 
 # Basic bailey entries ##########################################
-default-depth: D:7-14, Orc, !Orc:$
+default-depth: D:4-7, Orc, !Orc:$
 
 NAME: enter_bailey_1
 TAGS: transparent
@@ -143,7 +140,7 @@ NAME: enter_bailey_2
 TAGS: transparent
 : local rnd = crawl.random2(2)
 : if rnd == 0 then
-ITEM: hand axe
+ITEM: hatchet
 :   bailey_portal_axe(_G)
 : elseif rnd == 1 then
 ITEM: halberd / spear
@@ -161,7 +158,7 @@ NAME: enter_bailey_3
 TAGS: transparent
 : local rnd = crawl.random2(2)
 : if rnd == 0 then
-MONS: goblin ; hand axe
+MONS: goblin ; hatchet
 :   bailey_portal_axe(_G)
 : elseif rnd == 1 then
 MONS: goblin ; spear
@@ -185,13 +182,10 @@ TAGS:   transparent
 WEIGHT: 5
 : local rnd = crawl.random2(2)
 : if rnd == 0 then
-MONS:   goblin ; hand axe / hobgoblin ; hand axe / orc ; hand axe
-MONS:   goblin ; tomahawk ego:returning ident:type q:4 | \
-                 tomahawk ego:returning ident:type q:3 / \
-        hobgoblin ; tomahawk ego:returning ident:type q:4 | \
-                    tomahawk ego:returning ident:type q:3 / \
-        orc ; tomahawk ego:returning ident:type q:4 | \
-              tomahawk ego:returning ident:type q:3
+MONS:   goblin ; hatchet / hobgoblin ; hatchet / orc ; hatchet
+MONS:   goblin spells:throw_tomahawk.100.natural / \
+        hobgoblin spells:throw_tomahawk.100.natural / \
+        orc spells:throw_tomahawk.100.natural
 SUBST: 1 = 122
 :   bailey_portal_axe(_G)
 : elseif rnd == 1 then
@@ -206,30 +200,31 @@ MAP
 .wc>...Ocw.
 .wc11111cw.
 .wcc+++ccw.
-.wwwwwwwww.
-.wwwwwwwww.
+.wwwwWwwww.
+.wwwwWwwww.
 ...........
 ENDMAP
 
 NAME: enter_bailey_5
-TAGS: transparent
+TAGS: transparent no_pool_fixup
 : local rnd = crawl.random2(2)
 : if rnd == 0 then
-MONS: goblin ; tomahawk ego:returning ident:type q:4 | \
-               tomahawk ego:returning ident:type q:3
+MONS: goblin spells:throw_tomahawk.100.natural
 :   bailey_portal_axe(_G)
 : elseif rnd == 1 then
 MONS: goblin ; spear
 :   bailey_portal_polearm(_G)
 : end
+SHUFFLE: ABCD
+SUBST: A : W, BCD : wW
 KMASK: wW = no_monster_gen
 MAP
 .......
-.wwwww.
+.wwDww.
 .w1>1w.
-.w.O.w.
+.C.O.A.
 .w1.1w.
-.wwwww.
+.wwBww.
 .......
 ENDMAP
 
@@ -268,7 +263,7 @@ NAME:   enter_bailey_7
 WEIGHT: 3
 : local rnd = crawl.random2(2)
 : if rnd == 0 then
-MONS:   gnoll ; hand axe / goblin ; hand axe
+MONS:   gnoll ; hatchet / goblin ; hatchet
 :   bailey_portal_axe(_G)
 : elseif rnd == 1 then
 MONS:   gnoll ; spear / goblin ; spear
@@ -322,9 +317,8 @@ TAGS: transparent
 WEIGHT: 1
 : local rnd = crawl.random2(2)
 : if rnd == 0 then
-MONS: orc ; tomahawk ego:returning ident:type q:3 | \
-            tomahawk ego:returning ident:type q:4 . hand axe
-MONS: gnoll ; hand axe / goblin ; hand axe
+MONS: orc spells:throw_tomahawk.100.natural ; hatchet
+MONS: gnoll ; hatchet / goblin ; hatchet
 :   bailey_portal_axe(_G)
 : elseif rnd == 1 then
 MONS: orc ; spear, gnoll ; spear / goblin ; spear
@@ -408,14 +402,14 @@ KITEM:   F = unobtainable good_item broad axe w:5 / unobtainable broad axe /\
              unobtainable good_item executioner's axe w:1
 #
 # Yes, I want everyone to wake up.
-KFEAT: ~ : known alarm trap / floor
+KFEAT: ~ : alarm trap / floor
 #
 # There is only one way up. You have to pass near the axe-throwing kobolds
 # twice. This is intended. Teleportation traps ensure you won't get
 # stranded.
 NSUBST: s = T / .
 NSUBST: t = T / .
-KFEAT:  T = known permanent teleport trap
+KFEAT:  T = permanent teleport trap
 : bailey_setup(_G)
 MAP
   XXXXXXXXX
@@ -468,9 +462,10 @@ TAGS:   bailey_axe no_rotate
 MONS:   gnoll ; mundane halberd | halberd ego:electrocution ident:type
 MONS:   orc warrior / orc knight
 NSUBST: e = 1:e / *:d
-ITEM:   potion of curing / potion of heal wounds / potion of magic / potion of mutation /\
+ITEM:   potion of curing / potion of heal wounds / potion of magic / nothing /\
         potion of might w:5 / potion of haste w:2 / potion of berserk rage w:3
-ITEM:   potion of experience q:1 / scroll of acquirement q:1
+ITEM:   potion of experience q:1 w:30 / potion of cure mutation w:30 /\
+        potion of beneficial mutation q:2 w:30
 : bailey_setup(_G)
 MAP
 ccc ccc ccccc ccc ccc
@@ -504,7 +499,7 @@ TAGS:   bailey_axe no_rotate no_item_gen no_monster_gen no_pool_fixup
 SUBST:  v : ccv
 ITEM:   any good_item
 KFEAT:  _ = altar_trog / altar_okawaru / altar_makhleb
-KFEAT:  T = known permanent teleport trap
+KFEAT:  ^ = permanent teleport trap
 #
 # Monsters defined in the header. Do not change order!
 : kobold_axe_returning(_G)
@@ -575,15 +570,14 @@ SUBST:   X = c, Y = +
 NSUBST:  C = 1:+ / *:c
 SUBST:   D = c
 #
-KFEAT:   ^ = known alarm trap
+KFEAT:   ^ = alarm trap
 SUBST:   W = w:2 .:1 W:1
 SUBST:   ? = c.
 SUBST:   N = nc
 SUBST:   H = W.
 # the following KMONS duplicates monster 1 from kobold_axe_returning
 KFEAT:   ( = exit_bailey
-KMONS:   ( = generate_awake kobold ; tomahawk ego:returning ident:type q:4 | \
-                                     tomahawk ego:returning ident:type q:3
+KMONS:   ( = kobold spells:throw_tomahawk.120.natural generate_awake
 #
 : kobold_axe_returning(_G)
 : easy_axe_fighter(_G)
@@ -638,7 +632,8 @@ ITEM:   potion of curing / potion of heal wounds / potion of resistance w:5 / \
         potion of magic w:5 / potion of haste w:5 / \
         scroll of teleportation / scroll of blinking / \
         scroll of enchantment w:7
-ITEM:   potion of experience q:1 / scroll of acquirement q:1
+ITEM:   potion of beneficial mutation q:1 w:30 / potion of cure mutation / \
+        potion of experience q:1 / scroll of acquirement q:1
 : easy_axe_fighter(_G)
 : hard_axe_fighter(_G)
 MONS:   orc warlord
@@ -719,7 +714,7 @@ NSUBST: E = 1:+ / *:c
 : orc_knight_with_polearm(_G)
 SUBST:  2 = 223.
 SUBST:  1 = 1 2:1 .
-ITEM:   good_item crystal plate armour / good_item plate armour /\
+ITEM:   good_item crystal plate / good_item plate armour /\
         good_item gold dragon scales w:5 / good_item ice dragon scales w:5 /\
         good_item fire dragon scales w:5 / good_item steam dragon scales w:5
 ITEM:   good_item cloak / good_item pair of gloves /\
@@ -764,8 +759,8 @@ ENDMAP
 NAME:   bailey_polearm_2
 ORIENT: encompass
 TAGS:   bailey_polearm no_rotate no_pool_fixup no_monster_gen
-MONS:   orc warrior w:5 ; arbalest . bolt . ring mail | scale mail / \
-        orc ; arbalest . bolt . ring mail | scale mail
+MONS:   orc warrior w:5 ; arbalest . ring mail | scale mail / \
+        orc ; arbalest . ring mail | scale mail
 : orc_with_polearm(_G)
 : orc_warrior_with_polearm(_G)
 : orc_knight_with_polearm(_G)
@@ -773,7 +768,7 @@ MONS:   orc knight
 SUBST:  2 = 23
 NSUBST: 4 = 1:4 / *:3
 SUBST:  W : W..
-KFEAT:  T = known permanent teleport trap
+KFEAT:  ^ = permanent teleport trap
 SUBST:  X = I G C
 KFEAT:  C = altar_beogh
 ITEM:   manual of armour / manual of fighting / manual of shields /\
@@ -840,10 +835,10 @@ ITEM:    scroll of enchantment q:2 / scroll of enchantment q:3 /\
          scroll of acquirement q:1 w:5 / scroll of silence q:3 /\
          scroll of fog q:3 / scroll of vulnerability q:3 /\
          scroll of immolation q:3 / any good_item book w:30 /\
-         book of annihilations w:1 / grand grimoire w:1 / necronomicon w:1
+         book of annihilations w:1 / grand grimoire w:1 / encyclopedia of Necromancy w:3
 MONS:    deep elf mage
 MONS:    deep elf knight ; short sword . leather armour /\
-         deep elf archer ; shortbow . arrow . leather armour
+         deep elf archer ; shortbow . leather armour
 : bailey_setup(_G)
 MAP
          ccccc
@@ -880,7 +875,7 @@ NAME:   bailey_polearm_4
 ORIENT: encompass
 TAGS:   bailey_polearm no_rotate no_item_gen no_monster_gen no_pool_fixup
 ITEM:   any good_item
-MONS:   orc warrior ; arbalest . bolt . ring mail | scale mail | chain mail / \
+MONS:   orc warrior ; arbalest . ring mail | scale mail | chain mail / \
         orc warrior ; halberd . ring mail | scale mail | chain mail
 : orc_with_polearm(_G)
 : orc_warrior_with_polearm(_G)
@@ -915,11 +910,11 @@ ENDMAP
 NAME:   bailey_polearm_5
 ORIENT: encompass
 TAGS:   bailey_polearm no_item_gen no_monster_gen
-ITEM:   scroll of acquirement q:1 / potion of experience q:1
+ITEM:   potion of beneficial mutation q:1 / potion of experience q:1
 ITEM:   potion of curing / potion of heal wounds / potion of might w:5 /\
         potion of berserk rage w:3 / potion of haste w:2 /\
         potion of invisibility w:3 / potion of resistance w:2
-ITEM:   scroll of brand weapon w:5 / scroll of acquirement q:1 w:5 /\
+ITEM:   scroll of bless item w:5 / scroll of acquirement q:1 w:5 /\
         scroll of enchantment q:2
 ITEM:   scroll of enchantment /\
         scroll of summoning
@@ -929,8 +924,8 @@ SUBST:  4 = 2:5 3   4:5
 SUBST:  5 = 3:5 4
 NSUBST: ! = 1:ddde / *:e
 NSUBST: ? = 1:fffg / *:g
-MONS:   orc warrior ; spear w:5 | trident w:5 | halberd | hand axe | war axe /\
-        orc w:110   ; spear w:5 | trident w:5 | halberd | hand axe | war axe
+MONS:   orc warrior ; spear w:5 | trident w:5 | halberd | hatchet | war axe /\
+        orc w:110   ; spear w:5 | trident w:5 | halberd | hatchet | war axe
 : orc_with_polearm(_G)
 : orc_warrior_with_polearm(_G)
 : orc_knight_with_polearm(_G)
@@ -955,8 +950,7 @@ ORIENT: encompass
 TAGS:   bailey_polearm no_item_gen no_monster_gen no_pool_fixup patrolling
 : orc_with_polearm(_G)
 : orc_warrior_with_polearm(_G)
-MONS:   centaur ; javelin ego:returning ident:type q:2 | \
-            javelin ego:returning ident:type q:3 . spear | trident | halberd . \
+MONS:   centaur spells:throw_javelin.80.natural ; spear | trident | halberd . \
             ring mail | scale mail | chain mail
 NSUBST: _ = 4:2 / 5:1 / *:.
 NSUBST: ; = 6:2 / 6:1 / *:.
@@ -1003,10 +997,9 @@ NAME:   bailey_polearm_gnolls_kennysheep
 ORIENT: encompass
 TAGS:   bailey_polearm no_item_gen no_monster_gen no_pool_fixup
 MONS:   gnoll ; spear | trident | halberd . \
-            ring mail | scale mail | chain mail . \
-            throwing net | nothing
+            ring mail | scale mail | chain mail
 MONS:   gnoll sergeant ; halberd | glaive | bardiche w:1 . \
-            chain mail w:20 | plate armour | crystal plate armour w:1
+            chain mail w:20 | plate armour | crystal plate w:1
 MONS:   gnoll shaman ; spear | trident | halberd . \
             ring mail | scale mail
 MONS:   hound
@@ -1076,16 +1069,17 @@ KITEM:  f = potion of curing / potion of might / potion of brilliance / \
             potion of lignification  / \
             scroll of teleportation / \
             scroll of fear / scroll of attention / scroll of magic mapping / \
-            scroll of remove curse
+            scroll of bless item
 KITEM:  F = scroll of enchantment q:2 / scroll of enchantment q:2 /\
             potion of heal wounds q:3 / potion of resistance q:2 /\
             scroll of blinking q:2 / scroll of fog q:2 / potion of ambrosia q:2 /\
+            potion of cure mutation q:1 / potion of beneficial mutation q:1 / \
             any good_item book w:30
 KITEM:  g = any food
 KITEM:  | = scroll of acquirement ident:type
 KITEM:  $ = gold
 NSUBST: | = 1:| / *:$
-KFEAT:  ^ = known zot trap
+KFEAT:  ^ = zot trap
 KFEAT:  B = altar_okawaru
 NSUBST: ^ = 1:^ / *:.
 NSUBST: w = 5:4 / *:w
@@ -1153,7 +1147,8 @@ ITEM:   potion of curing / potion of heal wounds / potion of resistance w:5 / \
             potion of magic w:5 / potion of haste w:5 / \
             scroll of teleportation / scroll of blinking / \
             scroll of enchantment w:8
-ITEM:   potion of experience q:1 / scroll of acquirement q:1
+ITEM:   potion of beneficial mutation q:1 w:30 / potion of cure mutation / \
+        potion of experience q:1 / scroll of acquirement q:1
 : easy_axe_fighter(_G)
 : kobold_axe_returning(_G)
 : hard_axe_fighter(_G)

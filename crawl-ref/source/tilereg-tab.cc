@@ -11,7 +11,7 @@
 #include "macro.h"
 #include "state.h"
 #include "stringutil.h"
-#include "tiledef-gui.h"
+#include "rltiles/tiledef-gui.h"
 #include "tiles-build-specific.h"
 
 TabbedRegion::TabbedRegion(const TileRegionInit &init) :
@@ -83,7 +83,8 @@ int TabbedRegion::_push_tab(GridRegion *reg, command_type cmd, tileidx_t tile_ta
     inf.enabled = true;
     m_tabs.push_back(inf);
 
-    tileidx_t actual_tile_tab = (cmd==CMD_NO_CMD) ? tile_tab : TILEG_TAB_BLANK;
+    tileidx_t actual_tile_tab = (cmd==CMD_NO_CMD) ? tile_tab
+                                                  : tileidx_t{TILEG_TAB_BLANK};
     const tile_info &tinf = tile_gui_info(actual_tile_tab);
     ox = max((int)tinf.width, ox);
 
@@ -334,7 +335,7 @@ void TabbedRegion::on_resize()
     }
 }
 
-int TabbedRegion::get_mouseover_tab(MouseEvent &event) const
+int TabbedRegion::get_mouseover_tab(wm_mouse_event &event) const
 {
     int x = event.px - sx;
     int y = event.py - sy;
@@ -358,7 +359,7 @@ int TabbedRegion::get_mouseover_tab(MouseEvent &event) const
     return -1;
 }
 
-int TabbedRegion::handle_mouse(MouseEvent &event)
+int TabbedRegion::handle_mouse(wm_mouse_event &event)
 {
     if (mouse_control::current_mode() != MOUSE_MODE_COMMAND
         && !tiles.get_map_display())
@@ -376,7 +377,7 @@ int TabbedRegion::handle_mouse(MouseEvent &event)
 
     if (m_mouse_tab != -1)
     {
-        if (event.event == MouseEvent::PRESS)
+        if (event.event == wm_mouse_event::PRESS)
         {
             if (m_tabs[m_mouse_tab].cmd == CMD_NO_CMD)
             {
@@ -395,7 +396,7 @@ int TabbedRegion::handle_mouse(MouseEvent &event)
     return get_tab_region(active_tab())->handle_mouse(event);
 }
 
-bool TabbedRegion::update_tab_tip_text(string &tip, bool active)
+bool TabbedRegion::update_tab_tip_text(string &/*tip*/, bool /*active*/)
 {
     return false;
 }

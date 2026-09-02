@@ -9,21 +9,70 @@
 #include "spl-other.h"
 
 #include "act-iter.h"
+#include "areas.h"
+#include "coordit.h"
 #include "delay.h"
 #include "env.h"
-#include "food.h"
 #include "god-companions.h"
 #include "libutil.h"
 #include "message.h"
-#include "misc.h"
 #include "mon-place.h"
 #include "mon-util.h"
+#include "output.h"
 #include "place.h"
-#include "player-stats.h"
-#include "potion.h"
+#include "prompt.h"
 #include "religion.h"
+#include "shout.h"
 #include "spl-util.h"
+#include "state.h"
 #include "terrain.h"
+#include "transform.h"
+
+spret cast_projected_noise(int pow, bool fail, coord_def pos)
+{
+    // Sanity.
+    if (!in_bounds(pos)) 
+        return spret::abort;
+
+    if (cell_is_solid(pos))
+    {
+        mpr("No sound can be made inside a solid wall!");
+        return spret::abort;
+    }
+        
+    if (silenced(pos))
+    {
+        mpr("No sound can be made there!");
+        return spret::abort;
+    }
+
+    fail_check();
+
+    int loudness;
+    switch (pow)
+    {
+    case 0:
+        loudness = 2;
+        break;
+    default:
+    case 1:
+        loudness = 4;
+        break;
+    case 2:
+        loudness = 8;
+        break;
+    case 3:
+        loudness = 16;
+        break;
+    }
+
+    mprf("You magically modulate your %s and send it away from you!", pow == 0 ? "whisper" 
+                                                                    : pow == 1 ? "speech" 
+                                                                    : pow == 2 ? you.shout_verb(false, 0).c_str()
+                                                                               : you.shout_verb(false, 2).c_str());
+    noisy(loudness, pos, MID_PLAYER);
+    return spret::success;
+}
 
 spret cast_sublimation_of_blood(int pow, bool fail)
 {
@@ -32,12 +81,7 @@ spret cast_sublimation_of_blood(int pow, bool fail)
     if (you.duration[DUR_DEATHS_DOOR])
         mpr("You can't draw power from your own body while in death's door.");
     else if (!you.can_bleed())
-    {
-        if (you.species == SP_VAMPIRE)
-            mpr("You don't have enough blood to draw power from your own body.");
-        else
-            mpr("Your body is bloodless.");
-    }
+        mpr("Your body is bloodless.");
     else if (!enough_hp(2, true))
         mpr("Your attempt to draw power from your own body fails.");
     else
@@ -116,7 +160,7 @@ void start_recall(recall_t type)
         rlist.push_back(m);
     }
 
-    if (type != recall_t::spell && branch_allows_followers(you.where_are_you))
+    if (type != recall_t::spell)
         populate_offlevel_recall_list(rlist);
 
     if (!rlist.empty())
@@ -243,6 +287,14 @@ static bool _feat_is_passwallable(dungeon_feature_type feat)
     }
 }
 
+bool passwall_simplified_check(const actor &act)
+{
+    for (adjacent_iterator ai(act.pos(), true); ai; ++ai)
+        if (_feat_is_passwallable(env.grid(*ai)))
+            return true;
+    return false;
+}
+
 passwall_path::passwall_path(const actor &act, const coord_def& dir, int max_range)
     : start(act.pos()), delta(dir.sgn()),
       range(max_range),
@@ -260,7 +312,7 @@ passwall_path::passwall_path(const actor &act, const coord_def& dir, int max_ran
         path.emplace_back(pos);
         if (in_bounds(pos))
         {
-            if (!_feat_is_passwallable(grd(pos)))
+            if (!_feat_is_passwallable(env.grid(pos)))
             {
                 if (!dest_found)
                 {
@@ -363,9 +415,11 @@ bool passwall_path::check_moveto() const
     // assumes is_valid()
 
     string terrain_msg;
-    if (grd(actual_dest) == DNGN_DEEP_WATER)
+    if (env.grid(actual_dest) == DNGN_DEEP_WATER)
         terrain_msg = "You sense a deep body of water on the other side of the rock.";
-    else if (grd(actual_dest) == DNGN_LAVA)
+    else if (env.grid(actual_dest) == DNGN_DEEP_SLIMY_WATER) // Probably never possible.
+        terrain_msg = "You sense a massive body of slime on the other side of the rock.";
+    else if (env.grid(actual_dest) == DNGN_LAVA)
         terrain_msg = "You sense an intense heat on the other side of the rock.";
 
     // Pre-confirm exclusions in unseen squares as well as the actual dest
@@ -428,8 +482,8 @@ static int _intoxicate_monsters(coord_def where, int pow)
     if (mons == nullptr
         || mons_intel(*mons) < I_HUMAN
         || !(mons->holiness() & MH_NATURAL)
-        || mons->check_clarity(false)
-        || monster_resists_this_poison(*mons))
+        || mons->clarity()
+        || mons->res_poison() >= 3)
     {
         return 0;
     }
@@ -441,26 +495,6 @@ static int _intoxicate_monsters(coord_def where, int pow)
         return 1;
     }
     return 0;
-}
-
-spret cast_intoxicate(int pow, bool fail)
-{
-    fail_check();
-    mpr("You attempt to intoxicate your foes!");
-    int count = apply_area_visible([pow] (coord_def where) {
-        return _intoxicate_monsters(where, pow);
-    }, you.pos());
-    if (count > 0)
-    {
-        if (x_chance_in_y(60 - pow/3, 100))
-        {
-            mprf(MSGCH_WARN, "The world spins around you!");
-            you.increase_duration(DUR_VERTIGO, 4 + random2(20 + (100 - pow) / 10));
-            you.redraw_evasion = true;
-        }
-    }
-
-    return spret::success;
 }
 
 spret cast_darkness(int pow, bool fail)
@@ -478,9 +512,15 @@ spret cast_darkness(int pow, bool fail)
 
 spret cast_SMD(const coord_def& target, int pow, bool fail)
 {
+    if (!in_bounds(target))
+    {
+        mpr("The outer wall of the dungeon cannot be deconstructed...");
+        return spret::abort;
+    }
+
     fail_check();
 
-    dungeon_feature_type grid = grd(target);
+    dungeon_feature_type grid = env.grid(target);
     int delay = 0;
 
     switch (grid)
@@ -495,12 +535,15 @@ spret cast_SMD(const coord_def& target, int pow, bool fail)
         // Stone
         case DNGN_STONE_WALL:
         case DNGN_CLEAR_STONE_WALL:
+        case DNGN_RUNED_STONE_WALL:
+        case DNGN_RUNED_CLEAR_STONE_WALL:
             delay = 8;
             break;
 
         // Metal 
         case DNGN_SILVER_WALL:
         case DNGN_METAL_WALL:
+        case DNGN_CLEAR_METAL_WALL:
             delay = 12;
             break;
 
@@ -519,3 +562,5 @@ spret cast_SMD(const coord_def& target, int pow, bool fail)
     start_delay<SMDDelay>(delay, target);
     return spret::success;
 }
+
+

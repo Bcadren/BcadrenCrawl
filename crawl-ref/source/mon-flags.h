@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cstdint>
+
+#include "enum.h"
+
 #define BIT(x) ((uint64_t)1<<(x))
 
 /// Properties of the monster class (other than resists/vulnerabilities).
@@ -19,7 +23,8 @@ enum monclass_flag_type : uint64_t
     /// monster is skilled fighter
     M_FIGHTER           = BIT(3),
 
-                     // = BIT(4), was M_NO_WAND
+    /// monster receives a randomized pronoun
+    M_GENDERED          = BIT(4),
 
                      // = BIT(5), was M_NO_HT_WAND
 
@@ -44,7 +49,8 @@ enum monclass_flag_type : uint64_t
     /// monster can split
     M_SPLITS            = BIT(12),
 
-                        //BIT(13), // was M_GLOWS
+    /// Uses spells more often
+    M_SPELLCASTER       = BIT(13),
 
     /// monster is stationary
     M_STATIONARY        = BIT(14),
@@ -63,9 +69,9 @@ enum monclass_flag_type : uint64_t
 
     /// monster digs through rock
     M_BURROWS           = BIT(19),
-
-    /// monster can submerge
-    M_SUBMERGES         = BIT(20),
+    
+    // monster recovers HP when it takes water damage.
+    M_ABSORB_WATER      = BIT(20),
 
     /// monster is a unique
     M_UNIQUE            = BIT(21),
@@ -103,7 +109,8 @@ enum monclass_flag_type : uint64_t
     /// can do damage when attacked in melee
     M_SPINY             = BIT(32),
 
-                        //BIT(33),
+    /// spawns passive
+    M_PASSIVE           = BIT(33),
 
     /// not a valid polymorph target (but can be polymorphed)
     M_NO_POLY_TO        = BIT(34),
@@ -113,8 +120,8 @@ enum monclass_flag_type : uint64_t
 
                         //BIT(36), // was M_ALWAYS_CORPSE
 
-    /// mostly doesn't try to melee
-    M_DONT_MELEE        = BIT(37),
+    /// prefer ranged attacks over melee
+    M_PREFER_RANGED     = BIT(37),
 
                         //BIT(38), // was M_ARTIFICIAL
 
@@ -146,8 +153,7 @@ enum monclass_flag_type : uint64_t
 
                         //BIT(48),
 
-    /// hybridized monster composed of other monster parts
-    M_HYBRID            = BIT(49),
+                        //BIT(49), // was M_HYBRID
 
                         //BIT(50),
 
@@ -170,6 +176,10 @@ enum monclass_flag_type : uint64_t
 
     /// uses they/them pronouns
     M_GENDER_NEUTRAL    = BIT(57),
+
+    /// is surrounded by a ring of clouds. Only one can be active at a time!
+    M_THUNDER_RING      = BIT(58),
+    M_FIRE_RING         = BIT(59),
 };
 DEF_BITFIELD(monclass_flags_t, monclass_flag_type);
 
@@ -237,10 +247,11 @@ enum monster_flag_type : uint64_t
     MF_TWO_WEAPONS        = BIT(21),
     /// Monster gets various archery boosts.
     MF_ARCHER             = BIT(22),
-
-                          //BIT(23),
+    // Permanently invisible (clone of M_INVIS).
+    MF_INVIS              = BIT(23),
                           //BIT(24),
-                          //BIT(25),
+    // Immune to all clouds.
+    MF_CLOUD_IMMUNE       = BIT(25),
 
     /// This monster cannot regenerate.
     MF_NO_REGEN           = BIT(26),

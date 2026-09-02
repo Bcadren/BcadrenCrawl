@@ -36,8 +36,8 @@ grey_dirt_b_7
 # Multiple tile definitions are STATIC, that is they may change between
 # saves but are otherwise fixed.
 
-# The colorized versions of FLOOR_PEBBLE were made from
-# pebble_gray*.png, by colorizing the non-border color
+# The colourised versions of FLOOR_PEBBLE were made from
+# pebble_gray*.png, by colourising the non-border colour
 # with hues from 28 to 37, sat 54 to 68, lum 7 to 18 in GIMP.
 %desat 31
 %desat 32
@@ -210,7 +210,6 @@ lair7
 lair7b
 
 deep_water_ice0 DEEP_ICE
-deep_water_ice1
 
 ice_cracked ICE_CRACKED
 
@@ -241,6 +240,13 @@ bog_green1
 bog_green2
 bog_green3
 
+%weight 10
+ruined_slime0 FLOOR_RUINED_SLIME
+%weight 1
+ruined_slime1
+ruined_slime2
+ruined_slime3
+
 acidic_floor0 FLOOR_SLIME_ACIDIC
 acidic_floor1
 acidic_floor2
@@ -254,6 +260,51 @@ slime_overlay_NW
 slime_overlay_NE
 slime_overlay_SE
 slime_overlay_SW
+
+snowN SNOW_OVERLAY
+snowE
+snowS
+snowW
+snowNW
+snowNE
+snowSE
+snowSW
+
+lava_overlay_N LAVA_OVERLAY
+lava_overlay_E
+lava_overlay_S
+lava_overlay_W
+lava_overlay_NW
+lava_overlay_NE
+lava_overlay_SE
+lava_overlay_SW
+
+lava_overlay_N1 LAVA_OVERLAY1
+lava_overlay_E1
+lava_overlay_S1
+lava_overlay_W1
+lava_overlay_NW1
+lava_overlay_NE1
+lava_overlay_SE1
+lava_overlay_SW1
+
+lava_overlay_N2 LAVA_OVERLAY2
+lava_overlay_E2
+lava_overlay_S2
+lava_overlay_W2
+lava_overlay_NW2
+lava_overlay_NE2
+lava_overlay_SE2
+lava_overlay_SW2
+
+lava_overlay_N3 LAVA_OVERLAY3
+lava_overlay_E3
+lava_overlay_S3
+lava_overlay_W3
+lava_overlay_NW3
+lava_overlay_NE3
+lava_overlay_SE3
+lava_overlay_SW3
 
 %weight 10
 snake-a0 FLOOR_SNAKE_A
@@ -1020,7 +1071,25 @@ etched4
 etched5
 
 deep_water_ice0 DEEP_WATER_ICE
-deep_water_ice1
+
+%weight 10
+slimeice SLIMY_WATER_ICE
+%weight 1
+slimeice1
+slimeice2
+slimeice3
+
+%weight 10
+slimeicecracked SLIMY_WATER_ICE_CRACKED
+%weight 1
+slimeicecracked1
+slimeicecracked2
+slimeicecracked3
+
+%weight 10
+snow SNOW
+%weight 1
+snow1
 
 %weight 10
 mosaic0 FLOOR_MOSAIC
@@ -1090,15 +1159,9 @@ open_sea DNGN_OPEN_SEA
 %weight 1
 open_sea2
 
-%weight 2
 deep_water DNGN_DEEP_WATER
-%weight 1
-deep_water2
 
-%weight 3
 shallow_water DNGN_SHALLOW_WATER
-%weight 1
-shallow_water2
 shallow_water_disturbance DNGN_SHALLOW_WATER_DISTURBANCE
 shallow_water_disturbance2
 %weight 2
@@ -1111,6 +1174,22 @@ shallow_water_murky DNGN_SHALLOW_WATER_MURKY
 shallow_water_murky2
 shallow_water_murky_disturbance DNGN_SHALLOW_WATER_MURKY_DISTURBANCE
 shallow_water_murky_disturbance2
+
+slime_water DNGN_SLIMY_WATER
+slime_water1
+slime_water2
+slime_water3
+slime_water_disturbance DNGN_SLIMY_WATER_DISTURBANCE
+deep_slime_water DNGN_DEEP_SLIMY_WATER
+deep_slime_water1
+deep_slime_water2
+deep_slime_water3
+
+toxic_bog1 DNGN_TOXIC_BOG
+toxic_bog2
+
+quagmire1 DNGN_QUAGMIRE
+quagmire2
 
 grey_dirt_bb SHORE_N
 grey_dirt_bl SHORE_W
@@ -1127,6 +1206,15 @@ shallow_bord_bl DNGN_WAVE_SW
 shallow_bord_lft DNGN_WAVE_W
 shallow_bord_tl DNGN_WAVE_NW
 
+deep_bord_top DEEP_WAVE_N
+deep_bord_tr DEEP_WAVE_NE
+deep_bord_rgt DEEP_WAVE_E
+deep_bord_br DEEP_WAVE_SE
+deep_bord_btm DEEP_WAVE_S
+deep_bord_bl DEEP_WAVE_SW
+deep_bord_lft DEEP_WAVE_W
+deep_bord_tl DEEP_WAVE_NW
+
 murky_bord_top MURKY_WAVE_N
 murky_bord_tr MURKY_WAVE_NE
 murky_bord_rgt MURKY_WAVE_E
@@ -1135,6 +1223,18 @@ murky_bord_btm MURKY_WAVE_S
 murky_bord_bl MURKY_WAVE_SW
 murky_bord_lft MURKY_WAVE_W
 murky_bord_tl MURKY_WAVE_NW
+
+slimy_bord_top SLIMY_WAVE_N
+slimy_bord_tr SLIMY_WAVE_NE
+slimy_bord_rgt SLIMY_WAVE_E
+slimy_bord_br SLIMY_WAVE_SE
+slimy_bord_btm SLIMY_WAVE_S
+slimy_bord_bl SLIMY_WAVE_SW
+slimy_bord_lft SLIMY_WAVE_W
+slimy_bord_tl SLIMY_WAVE_NW
+
+endless_sludge ENDLESS_SLUDGE
+endless_sludge1
 
 %weight 10
 shoals_deep_water0 SHOALS_DEEP_WATER

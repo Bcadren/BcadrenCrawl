@@ -75,7 +75,7 @@ void beogh_follower_convert(monster* mons, bool orc_hit)
     // For followers of Beogh, decide whether orcs will join you.
     if (will_have_passive(passive_t::convert_orcs)
         && mons->foe == MHITYOU
-        && mons_genus(mons->type) == MONS_ORC
+        && monster_class_is_orcish(mons->type)
         && !mons->is_summoned()
         && !mons->is_shapeshifter()
         && !testbits(mons->flags, MF_ATT_CHANGE_ATTEMPT)
@@ -111,6 +111,49 @@ void slime_convert(monster* mons)
             _jiyva_convert_slime(mons);
             stop_running();
         }
+    }
+}
+
+void god_pacify(monster* mons)
+{
+    if (mons->god == you.religion
+        && !mons->neutral()
+        && !mons->friendly()
+        && !testbits(mons->flags, MF_ATT_CHANGE_ATTEMPT))
+    {
+        switch (you.religion)
+        {
+        case GOD_CHEIBRIADOS:
+            mprf("%s acknowledges you as a friend and chills out.", mons->name(DESC_THE, true).c_str());
+            break;
+        case GOD_ELYVILON:
+            mprf("%s acknowledges you as a healer.", mons->name(DESC_THE, true).c_str());
+            break;
+        case GOD_FEDHAS:
+            mprf("%s acknowledges you as a naturalist.", mons->name(DESC_THE, true).c_str());
+            break;
+        case GOD_JIYVA:
+            mprf("%s acknowledges you as a fellow slime.", mons->name(DESC_THE, true).c_str());
+            break;
+        case GOD_SHINING_ONE:
+            mprf("%s acknowledges you as a fellow soldier.", mons->name(DESC_THE, true).c_str());
+            break;
+        case GOD_SIF_MUNA:
+            mprf("%s acknowledges you as a fellow scholar.", mons->name(DESC_THE, true).c_str());
+            break;
+        case GOD_XOM:
+            mprf("%s acknowledges you as a fellow toy.", mons->name(DESC_THE, true).c_str());
+            break;
+        case GOD_ZIN:
+            mprf("%s acknowledges you as a servant of order.", mons->name(DESC_THE, true).c_str());
+            break;
+        default:
+            return;
+        }
+
+        mons->attitude = ATT_GOOD_NEUTRAL;
+        mons->flags |= MF_WAS_NEUTRAL;
+        mons_att_changed(mons);
     }
 }
 
@@ -279,7 +322,7 @@ static void _print_converted_orc_speech(const string& key,
 void beogh_convert_orc(monster* orc, conv_t conv)
 {
     ASSERT(orc); // XXX: change to monster &orc
-    ASSERT(mons_genus(orc->type) == MONS_ORC);
+    ASSERT(monster_class_is_orcish(orc->type));
 
     switch (conv)
     {
@@ -421,7 +464,7 @@ void gozag_check_bribe(monster* traitor)
     if (branch_bribe[branch] == 0)
         return; // Do nothing if branch isn't currently bribed.
 
-    const int base_cost = max(1, exper_value(*traitor) / 20);
+    const int base_cost = max(1, mon_exper_value(*traitor) / 20);
 
     int cost = 0;
 
@@ -490,6 +533,6 @@ void gozag_break_bribe(monster* victim)
 // Conversions and bribes.
 void do_conversions(monster* target)
 {
-        beogh_follower_convert(target);
-        gozag_check_bribe(target);
+    beogh_follower_convert(target);
+    gozag_check_bribe(target);
 }

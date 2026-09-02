@@ -5,7 +5,7 @@
 # release a horde of rats. Since the trap is always in a corridor, this
 # should not be too hard, even for low-level chars.
 #
-# Inspriration taken from the H.P. Lovecraft-themed rougue-like Infra Arcana
+# Inspiration taken from the H.P. Lovecraft-themed rogue-like Infra Arcana
 {{
 function callback.rats_trap_stepped(data, triggerable, triggerer, marker, ev)
   local x, y = marker:pos()
@@ -18,42 +18,39 @@ function callback.rats_trap_stepped(data, triggerable, triggerer, marker, ev)
     if not you.see_cell(x, y) then
       return
     else
-      data.triggered = true
-      dgn.grid(x,y,"floor")
-      crawl.mpr("You hear a faint click.")
-      return
-    end
+      crawl.mpr("It appears the trap will not trigger unless you step on it yourself.")
+	  return
+	end
   end
-
-  data.triggered = true
-  dgn.grid(x, y, "floor")
 
   for slave in iter.slave_iterator("hole", 1) do
       if not dgn.is_passable(slave.x,slave.y) then
         dgn.terrain_changed(slave.x, slave.y, "floor", false)
-        dgn.create_item(slave.x, slave.y, "stone q:3 / stone q:2 / stone")
-      else
-        crawl.mpr("You hear a click.")
-        return
+		data.triggered = true
       end
   end
+  
+  dgn.grid(x, y, "floor")
 
-  crawl.mpr("You step on to a pressure plate.")
-  crawl.mpr("Suddenly a wall slides open!")
+  if data.triggered == true then
+    crawl.mpr("You step on to a pressure plate.")
+    crawl.mpr("Suddenly a wall slides open!")
+  end
 
 end
 
 }}
 
+# BCADDO: Make a harder later game version of this?
 NAME:   dk_rats_in_the_wall
-DEPTH:  D:4-10
+DEPTH:  D:1-4
 TAGS:   no_monster_gen
 KPROP:  R = no_tele_into
-MONS:   generate_awake rat, generate_awake river rat
+MONS:   generate_awake rat, generate_awake sewer rat
 SUBST:  R = 112
 KFEAT:  ^ = pressure plate trap
 # some chance for a big hole in the wall
-: if crawl.one_chance_in(4) then
+: if crawl.one_chance_in(3) then
 SUBST:  Z : z
 : else
 SUBST:  Z : x
@@ -67,10 +64,6 @@ lua_marker('z', props_marker { hole=1 })
 }}
 SUBST:  z : x
 MAP
-xxxxxxxxx
-xxxxxxxxx
-xxxxxxxxx
-xxxxxxxxx
 xxxxxxxxx
 @...^...@
 xxxZzZxxx

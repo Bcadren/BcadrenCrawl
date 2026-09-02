@@ -185,11 +185,11 @@ black bear
 Mazs melns lācis. Kā jau visi lāčveidīgie, melnais lācis satrakosies, ja tiks
 smagi savainots vai nobiedēts.
 %%%%
-blizzard demon
+cenysus
 
 Lieldēmons, kas tīts sniegā un zibeņos.
 %%%%
-Brimstone Fiend
+rhuddgoch
 
 Milzīgs un varens ugunīgām liesmām apvīts dēmons ar lieliem un zvīņainiem
 svārniem. Viens no biedējošākajiem Elles iemītniekiem.
@@ -203,7 +203,7 @@ deep elf knight
 
 Kaujās rūdīts dzīļu elfu karotājs.
 %%%%
-Executioner
+oxarmordth
 
 Briesmīgi varens un spējš dēmons, ap kura tēlu šķind izkaptveidīgu asmeņu
 mākonis.

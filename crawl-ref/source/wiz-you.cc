@@ -22,8 +22,8 @@
 #include "message.h"
 #include "misc.h" // frombool
 #include "mutation.h"
-#include "ng-setup.h"
 #include "output.h"
+#include "playable.h"
 #include "player-stats.h"
 #include "prompt.h"
 #include "religion.h"
@@ -34,40 +34,32 @@
 #include "state.h"
 #include "status.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "transform.h"
 #include "unicode.h"
-#include "unwind.h"
 #include "view.h"
 #include "xom.h"
 
 #ifdef WIZARD
 
-job_type find_job_from_string(const string &job)
+job_type find_job_from_string(const string &str)
 {
-    string spec = lowercase_string(job);
+    const string spec = lowercase_string(str);
 
-    job_type j = JOB_UNKNOWN;
+    job_type partial_match = JOB_UNKNOWN;
 
-    for (int i = 0; i < NUM_JOBS; ++i)
+    for (const auto job : playable_jobs())
     {
-        const job_type ji = static_cast<job_type>(i);
-        const string name = lowercase_string(get_job_name(ji));
+        const auto name = lowercase_string(get_job_name(job));
+        const auto pos = name.find(spec);
 
-        string::size_type pos = name.find(spec);
-        if (pos != string::npos)
-        {
-            if (pos == 0)
-            {
-                // We prefer prefixes over partial matches.
-                j = ji;
-                break;
-            }
-            else
-                j = ji;
-        }
+        if (pos == 0)
+            return job;  // We prefer prefixes over partial matches.
+        else if (pos != string::npos)
+            partial_match = job;
     }
 
-    return j;
+    return partial_match;
 }
 
 static xom_event_type _find_xom_event_from_string(const string &event_name)
@@ -103,6 +95,7 @@ void wizard_suppress()
     you.wizard = false;
     you.suppress_wizard = true;
     redraw_screen();
+    update_screen();
 }
 
 void wizard_change_job_to(job_type job)
@@ -194,7 +187,7 @@ void wizard_memorise_spec_spell()
     }
 
     if (get_spell_flags(static_cast<spell_type>(spell)) & spflag::monster)
-        mpr("Spell is monster-only - unpredictable behavior may result.");
+        mpr("Spell is monster-only - unpredictable behaviour may result.");
     if (!learn_spell(static_cast<spell_type>(spell), true))
         crawl_state.cancel_cmd_repeat();
 }
@@ -216,6 +209,7 @@ void wizard_heal(bool super_heal)
         you.duration[DUR_DOOM_HOWL] = 0;
         you.duration[DUR_WEAK] = 0;
         you.duration[DUR_NO_HOP] = 0;
+        you.duration[DUR_LOCKED_DOWN] = 0;
         you.props["corrosion_amount"] = 0;
         you.duration[DUR_BREATH_WEAPON] = 0;
         delete_all_temp_mutations("Super heal");
@@ -256,7 +250,7 @@ void wizard_set_hunger_state()
 
     mprf(MSGCH_PROMPT, "%s", hunger_prompt.c_str());
 
-    const int c = toalower(getchk());
+    const int c = toalower(getch_ck());
 
     // Values taken from food.cc.
     switch (c)
@@ -495,7 +489,7 @@ bool wizard_add_mutation()
         mpr("Ignoring mut resistance to apply mutation.");
 
     msgwin_get_line("Which mutation (name, 'good', 'bad', 'any', "
-                    "'xom', 'slime', 'qazlal')? ",
+                    "'xom', 'jiyva', 'qazlal')? ",
                     specs, sizeof(specs));
 
     if (specs[0] == '\0')
@@ -842,7 +836,7 @@ void wizard_set_xl(bool change_skills)
 
 void set_xl(const int newxl, const bool train, const bool silent)
 {
-    no_messages mx(silent);
+    msg::suppress mx(silent);
 
     if (newxl < you.experience_level)
         debug_downtick_xl(newxl);
@@ -873,6 +867,7 @@ void wizard_toggle_xray_vision()
     you.xray_vision = !you.xray_vision;
     mprf("X-ray vision %s.", you.xray_vision ? "enabled" : "disabled");
     viewwindow(true);
+    update_screen();
 }
 
 void wizard_freeze_time()
@@ -918,6 +913,83 @@ void wizard_god_mollify()
     }
     if (!mollified)
         mpr("You are not under penance.");
+}
+
+static string _colour_name(draconian_colour colour)
+{
+    switch (colour)
+    {
+    case DR_BLACK:          return "black";
+    case DR_BLOOD:          return "blood";
+    case DR_BLUE:           return "blue";
+    case DR_BROWN:          return "brown";
+    case DR_BONE:           return "bone";
+    case DR_CYAN:           return "cyan";
+    case DR_GOLDEN:         return "golden";
+    case DR_GREEN:          return "green";
+    case DR_LIME:           return "lime";
+    case DR_MAGENTA:        return "magenta";
+    case DR_OLIVE:          return "olive";
+    case DR_PEARL:          return "pearl";
+    case DR_PINK:           return "pink";
+    case DR_PLATINUM:       return "platinum";
+    case DR_PURPLE:         return "purple";
+    case DR_RED:            return "red";
+    case DR_SCINTILLATING:  return "scintillating";
+    case DR_SILVER:         return "silver";
+    case DR_TEAL:           return "turquoise";
+    case DR_WHITE:          return "white";
+    default:                break;
+    }
+    return "";
+}
+
+static draconian_colour _find_colour_from_string(const string &col)
+{
+    string spec = lowercase_string(col);
+
+    draconian_colour sp = NUM_DRAC_COLOURS;
+
+    for (int i = 0; i < NUM_DRAC_COLOURS; ++i)
+    {
+        const draconian_colour si = static_cast<draconian_colour>(i);
+        const string sp_name = lowercase_string(_colour_name(si));
+
+        string::size_type pos = sp_name.find(spec);
+        if (pos != string::npos)
+        {
+            // We prefer prefixes over partial matches.
+            sp = si;
+            break;
+        }
+    }
+
+    return sp;
+}
+
+void wizard_drac_colour()
+{
+    char col[80];
+
+    msgwin_get_line("What colour would you like to be now? ",
+        col, sizeof(col));
+
+    if (col[0] == '\0')
+    {
+        canned_msg(MSG_OK);
+        return;
+    }
+
+    const draconian_colour dr = _find_colour_from_string(col);
+
+    // Means find_species_from_string couldn't interpret `col`.
+    if (dr == NUM_DRAC_COLOURS)
+    {
+        mpr("That colour doesn't exist.");
+        return;
+    }
+
+    change_drac_colour(dr);
 }
 
 void wizard_transform()

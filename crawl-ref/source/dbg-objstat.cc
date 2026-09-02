@@ -14,15 +14,11 @@
 #include "artefact.h"
 #include "branch.h"
 #include "butcher.h"
-#include "chardump.h"
-#include "coord.h"
-#include "coordit.h"
 #include "dbg-maps.h"
 #include "dbg-util.h"
-#include "dungeon.h"
 #include "end.h"
 #include "env.h"
-#include "god-abil.h"
+#include "feature.h"
 #include "initfile.h"
 #include "invent.h"
 #include "item-name.h"
@@ -39,7 +35,7 @@
 #include "state.h"
 #include "stepdown.h"
 #include "stringutil.h"
-#include "terrain.h"
+#include "tag-version.h"
 #include "version.h"
 
 #ifdef DEBUG_STATISTICS
@@ -207,10 +203,11 @@ static item_base_type _item_base_type(const item_def &item)
     case OBJ_MISCELLANY:
         type = ITEM_MISCELLANY;
         break;
+    case OBJ_MANUALS:
+        type = ITEM_MANUALS;
+        break;
     case OBJ_BOOKS:
-        if (item.sub_type == BOOK_MANUAL)
-            type = ITEM_MANUALS;
-        else if (is_artefact(item))
+        if (is_artefact(item))
             type = ITEM_ARTEBOOKS;
         else
             type = ITEM_BOOKS;
@@ -333,11 +330,11 @@ static int _item_orig_sub_type(const item_type &item)
     case ITEM_MISCELLANY:
         type = misc_types[item.sub_type];
         break;
+    case ITEM_POTIONS:
+        type = potion_types[item.sub_type];
+        break;
     case ITEM_ARTEBOOKS:
         type = item.sub_type + BOOK_RANDART_LEVEL;
-        break;
-    case ITEM_MANUALS:
-        type = BOOK_MANUAL;
         break;
     default:
         type = item.sub_type;
@@ -353,6 +350,9 @@ static int _item_max_sub_type(item_base_type base_type)
     {
     case ITEM_MISCELLANY:
         num = misc_types.size();
+        break;
+    case ITEM_POTIONS:
+        num = potion_types.size();
         break;
     case ITEM_BOOKS:
         num = MAX_FIXED_BOOK + 1;
@@ -405,6 +405,11 @@ item_type::item_type(const item_def &item)
         sub_type = find(misc_types.begin(), misc_types.end(), item.sub_type)
                         - misc_types.begin();
         ASSERT(sub_type < (int) misc_types.size());
+    } else if (base_type == ITEM_POTIONS)
+    {
+        sub_type = find(potion_types.begin(), potion_types.end(), item.sub_type)
+                        - potion_types.begin();
+        ASSERT(sub_type < (int) potion_types.size());
     }
     else if (base_type == ITEM_ARTEBOOKS)
         sub_type = item.sub_type - BOOK_RANDART_LEVEL;
@@ -777,18 +782,18 @@ void objstat_record_monster(const monster *mons)
 
     _record_monster_stat(lev, mons_ind, "NumForIter", 1);
 
-    _record_monster_stat(lev, mons_ind, "MonsXP", exper_value(*mons));
-    _record_monster_stat(lev, mons_ind, "TotalXP", exper_value(*mons));
+    _record_monster_stat(lev, mons_ind, "MonsXP", mon_exper_value(*mons));
+    _record_monster_stat(lev, mons_ind, "TotalXP", mon_exper_value(*mons));
 
     if (from_vault)
     {
         _record_monster_stat(lev, mons_ind, "TotalVaultXP",
-                exper_value(*mons));
+                mon_exper_value(*mons));
     }
     else
     {
         _record_monster_stat(lev, mons_ind, "TotalNonVaultXP",
-                exper_value(*mons));
+                mon_exper_value(*mons));
     }
 
     _record_monster_stat(lev, mons_ind, "MonsHP", mons->max_hit_points);

@@ -146,7 +146,7 @@ static bool _valid_coord(lua_State *ls, map_lines &lines, int x, int y, bool err
 
 // Does what fill_area did, but here, so that it can be used through
 // multiple functions (including make_box).
-static int _fill_area(lua_State *ls, map_lines &lines, int x1, int y1, int x2, int y2, char fill)
+static int _fill_area(lua_State */*ls*/, map_lines &lines, int x1, int y1, int x2, int y2, char fill)
 {
     for (int y = y1; y <= y2; ++y)
         for (int x = x1; x <= x2; ++x)
@@ -504,7 +504,7 @@ static void _draw_join_the_dots_path (map_lines &lines,
 
 LUAFN(dgn_count_feature_in_box)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     int x1, y1, x2, y2;
     if (!_coords(ls, lines, x1, y1, x2, y2))
@@ -520,7 +520,7 @@ LUAFN(dgn_count_feature_in_box)
 
 LUAFN(dgn_count_antifeature_in_box)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     int x1, y1, x2, y2;
     if (!_coords(ls, lines, x1, y1, x2, y2))
@@ -537,7 +537,7 @@ LUAFN(dgn_count_antifeature_in_box)
 
 LUAFN(dgn_count_neighbors)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_STR(ls, feat, "");
     TABLE_INT(ls, x, -1);
@@ -554,7 +554,7 @@ LUAFN(dgn_count_neighbors)
 
 LUAFN(dgn_count_passable_neighbors)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_STR(ls, passable, traversable_glyphs);
     TABLE_INT(ls, x, -1);
@@ -572,7 +572,7 @@ LUAFN(dgn_count_passable_neighbors)
 
 LUAFN(dgn_is_valid_coord)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_INT(ls, x, -1);
     TABLE_INT(ls, y, -1);
@@ -595,7 +595,7 @@ LUAFN(dgn_is_valid_coord)
 
 LUAFN(dgn_extend_map)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_INT(ls, height, 1);
     TABLE_INT(ls, width, 1);
@@ -608,7 +608,7 @@ LUAFN(dgn_extend_map)
 
 LUAFN(dgn_fill_area)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     int x1, y1, x2, y2;
     if (!_coords(ls, lines, x1, y1, x2, y2))
@@ -626,7 +626,7 @@ LUAFN(dgn_fill_area)
 
 LUAFN(dgn_fill_disconnected)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     int x1, y1, x2, y2;
     if (!_coords(ls, lines, x1, y1, x2, y2))
@@ -667,7 +667,7 @@ LUAFN(dgn_fill_disconnected)
 
 LUAFN(dgn_is_passable_coord)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_INT(ls, x, -1);
     TABLE_INT(ls, y, -1);
@@ -686,7 +686,7 @@ LUAFN(dgn_is_passable_coord)
 
 LUAFN(dgn_find_in_area)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_INT(ls, x1, -1);
     TABLE_INT(ls, y1, -1);
@@ -717,7 +717,7 @@ LUAFN(dgn_find_in_area)
 
 LUAFN(dgn_height)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
     PLUARET(number, lines.height());
 }
 
@@ -784,7 +784,7 @@ LUAFN(dgn_primary_vault_dimensions)
 
 LUAFN(dgn_join_the_dots)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_INT(ls, x1, -1);
     TABLE_INT(ls, y1, -1);
@@ -833,7 +833,7 @@ LUAFN(dgn_join_the_dots)
 
 LUAFN(dgn_make_circle)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_INT(ls, x, -1);
     TABLE_INT(ls, y, -1);
@@ -854,7 +854,7 @@ LUAFN(dgn_make_circle)
 
 LUAFN(dgn_make_diamond)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_INT(ls, x, -1);
     TABLE_INT(ls, y, -1);
@@ -874,7 +874,7 @@ LUAFN(dgn_make_diamond)
 
 LUAFN(dgn_make_rounded_square)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_INT(ls, x, -1);
     TABLE_INT(ls, y, -1);
@@ -894,7 +894,7 @@ LUAFN(dgn_make_rounded_square)
 
 LUAFN(dgn_make_square)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_INT(ls, x, -1);
     TABLE_INT(ls, y, -1);
@@ -913,7 +913,7 @@ LUAFN(dgn_make_square)
 
 LUAFN(dgn_make_box)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     int x1, y1, x2, y2;
     if (!_coords(ls, lines, x1, y1, x2, y2))
@@ -932,7 +932,7 @@ LUAFN(dgn_make_box)
 
 LUAFN(dgn_make_box_doors)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     int x1, y1, x2, y2;
     if (!_coords(ls, lines, x1, y1, x2, y2))
@@ -1041,7 +1041,7 @@ LUAFN(dgn_make_box_doors)
 
 LUAFN(dgn_make_irregular_box)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     int x1, y1, x2, y2;
     if (!_coords(ls, lines, x1, y1, x2, y2))
@@ -1064,7 +1064,7 @@ LUAFN(dgn_make_irregular_box)
 
 LUAFN(dgn_make_round_box)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     int x1, y1, x2, y2;
     if (!_coords(ls, lines, x1, y1, x2, y2))
@@ -1280,7 +1280,7 @@ LUAFN(dgn_mapgrd_table)
 
 LUAFN(dgn_octa_room)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     int default_oblique = min(lines.width(), lines.height()) / 2 - 1;
     TABLE_INT(ls, oblique, default_oblique);
@@ -1315,7 +1315,7 @@ LUAFN(dgn_octa_room)
 
 LUAFN(dgn_remove_isolated_glyphs)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_STR(ls, find, "");
     TABLE_CHAR(ls, replace, '.');
@@ -1361,7 +1361,7 @@ LUAFN(dgn_remove_isolated_glyphs)
 
 LUAFN(dgn_widen_paths)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_STR(ls, find, "");
     TABLE_CHAR(ls, replace, '.');
@@ -1437,7 +1437,7 @@ LUAFN(dgn_widen_paths)
 
 LUAFN(dgn_connect_adjacent_rooms)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_STR(ls, wall, "xcvbmn");
     TABLE_STR(ls, floor, ".");
@@ -1506,7 +1506,7 @@ LUAFN(dgn_connect_adjacent_rooms)
 
 LUAFN(dgn_remove_disconnected_doors)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_STR(ls, door, "+");
     TABLE_STR(ls, open, traversable_glyphs);
@@ -1629,7 +1629,7 @@ LUAFN(dgn_remove_disconnected_doors)
 
 LUAFN(dgn_add_windows)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_STR(ls, wall, "xcvbmn");
     TABLE_STR(ls, open, traversable_glyphs);
@@ -1753,7 +1753,7 @@ LUAFN(dgn_add_windows)
 
 LUAFN(dgn_replace_area)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_STR(ls, find, 0);
     TABLE_CHAR(ls, replace, '\0');
@@ -1772,7 +1772,7 @@ LUAFN(dgn_replace_area)
 
 LUAFN(dgn_replace_first)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_INT(ls, x, 0);
     TABLE_INT(ls, y, 0);
@@ -1811,7 +1811,7 @@ LUAFN(dgn_replace_first)
 
 LUAFN(dgn_replace_random)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_CHAR(ls, find, '\0');
     TABLE_CHAR(ls, replace, '\0');
@@ -1852,7 +1852,7 @@ LUAFN(dgn_replace_random)
 
 LUAFN(dgn_replace_closest)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_INT(ls, x, 0);
     TABLE_INT(ls, y, 0);
@@ -1915,7 +1915,7 @@ LUAFN(dgn_replace_closest)
 
 LUAFN(dgn_smear_map)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_INT(ls, iterations, 1);
     TABLE_CHAR(ls, smear, 'x');
@@ -1970,7 +1970,7 @@ LUAFN(dgn_smear_map)
 
 LUAFN(dgn_spotty_map)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_STR(ls, replace, "x");
     TABLE_CHAR(ls, fill, '.');
@@ -2020,7 +2020,7 @@ LUAFN(dgn_spotty_map)
 
 LUAFN(dgn_add_pools)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     TABLE_STR(ls, replace, ".");
     TABLE_CHAR(ls, border, '.');
@@ -2188,13 +2188,13 @@ LUAFN(dgn_add_pools)
 
 static int dgn_width(lua_State *ls)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
     PLUARET(number, lines.width());
 }
 
 LUAFN(dgn_delve)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
 
     ARG_INT(ls, 2, ngb_min, 2);
     ARG_INT(ls, 3, ngb_max, 3);
@@ -2206,9 +2206,80 @@ LUAFN(dgn_delve)
     return 0;
 }
 
+LUAFN(dgn_sewer_iterate)
+{
+    LINES(ls, 1, map, lines);
+
+    UNUSED(ls);
+
+    ASSERT(lines.width() <= GXM);
+    ASSERT(lines.height() <= GYM);
+
+    int water_count = 0;
+    int floor_count = 0;
+    int solid_count = 0;
+    int edge_count  = 0;
+    const char *sewerwall = "ab";
+    const char *water     = "wW";
+    const char *floor     = ".";
+    const char *solid     = "abvxc";
+    const char *a         = "a";
+
+    for (int x = lines.width(); x >= 0; x--)
+        for (int y = lines.height(); y >= 0; y--)
+        {
+            coord_def c(x, y);
+            if (_valid_coord(ls, lines, x, y, false))
+            {
+                if (strchr(sewerwall, lines(c)))
+                {
+                    for (adjacent_iterator ai(c); ai; ++ai)
+                    {
+                        if (_valid_coord(ls, lines, ai->x, ai->y, false))
+                        {
+                            if (strchr(water, lines(*ai)))
+                                water_count++;
+                            else if (strchr(floor, lines(*ai)))
+                                floor_count++;
+                            else if (strchr(solid, lines(*ai)))
+                                solid_count++;
+                        }
+                        else
+                            edge_count++;
+                    }
+                    if (edge_count > 0)
+                        lines(c) = 'h';
+                    else if (water_count > 4)
+                        lines(c) = 'W';
+                    else if (floor_count >= 2 && coinflip())
+                        lines(c) = '.';
+                    else if (strchr(a, lines(c)))
+                        lines(c) = 'v';
+                    else
+                        lines(c) = 'c';
+                }
+                floor_count = 0;
+                water_count = 0;
+                solid_count = 0;
+                edge_count  = 0;
+            }
+        }
+    return 0;
+}
+
+LUAFN(dgn_pass_sewer_info)
+{
+    const int columns = luaL_safe_checkint(ls, 2);
+    const int row_height = luaL_safe_checkint(ls, 3);
+
+    env.properties[SEWER_COLUMNS_KEY] = columns;
+    env.properties[SEWER_ROW_POSITION_KEY] = row_height;
+    return 0;
+}
+
 LUAFN(dgn_farthest_from)
 {
-    LINES(ls, 1, lines);
+    LINES(ls, 1, map, lines);
     const char *beacons = luaL_checkstring(ls, 2);
 
     ASSERT(lines.width() <= GXM);
@@ -2269,12 +2340,14 @@ LUAFN(dgn_farthest_from)
 
 LUAFN(dgn_layout_basic)
 {
+    UNUSED(ls);
     dgn_build_basic_level();
     return 0;
 }
 
 LUAFN(dgn_layout_bigger_room)
 {
+    UNUSED(ls);
     dgn_build_bigger_room_level();
     return 0;
 }
@@ -2288,12 +2361,14 @@ LUAFN(dgn_layout_chaotic_city)
 
 LUAFN(dgn_layout_shoals)
 {
+    UNUSED(ls);
     dgn_build_shoals_level();
     return 0;
 }
 
 LUAFN(dgn_layout_swamp)
 {
+    UNUSED(ls);
     dgn_build_swamp_level();
     return 0;
 }
@@ -2314,6 +2389,8 @@ const struct luaL_reg dgn_build_dlib[] =
     { "primary_vault_dimensions", &dgn_primary_vault_dimensions },
     { "join_the_dots", &dgn_join_the_dots },
     { "make_circle", &dgn_make_circle },
+    { "sewer_iterate", &dgn_sewer_iterate },
+    { "pass_sewer_info", &dgn_pass_sewer_info},
     { "make_diamond", &dgn_make_diamond },
     { "make_rounded_square", &dgn_make_rounded_square },
     { "make_square", &dgn_make_square },

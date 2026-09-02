@@ -15,6 +15,7 @@
 #include "cio.h"
 #include "database.h"
 #include "describe.h"
+#include "directn.h"
 #include "english.h"
 #include "env.h"
 #include "eq-type-flags.h"
@@ -23,18 +24,16 @@
 #include "god-companions.h"
 #include "god-conduct.h"
 #include "god-passive.h"
-#include "god-prayer.h"
 #include "god-type.h"
 #include "item-name.h"
 #include "libutil.h"
-#include "macro.h"
 #include "menu.h"
 #include "message.h"
 #include "religion.h"
-#include "scroller.h"
 #include "skills.h"
 #include "spl-util.h"
 #include "stringutil.h"
+#include "tag-version.h"
 #include "terrain.h"
 #include "tilepick.h"
 #include "unicode.h"
@@ -109,21 +108,33 @@ static string _describe_favour(god_type which_god)
         case 6:  return "A favoured servant of " + godname + ".";
         case 5:
 
-            if (you_worship(GOD_DITHMENOS))
+            if (which_god == GOD_DITHMENOS)
                 return "A glorious shadow in the eyes of " + godname + ".";
-            else
-                return "A shining star in the eyes of " + godname + ".";
+            return "A shining star in the eyes of " + godname + ".";
 
         case 4:
 
-            if (you_worship(GOD_DITHMENOS))
+            if (which_god == GOD_DITHMENOS)
                 return "A rising shadow in the eyes of " + godname + ".";
-            else
-                return "A rising star in the eyes of " + godname + ".";
+            return "A rising star in the eyes of " + godname + ".";
 
-        case 3:  return uppercase_first(godname) + " is pleased with you.";
-        case 2:  return uppercase_first(godname) + " is aware of your devotion.";
-        default: return uppercase_first(godname) + " is noncommittal.";
+        case 3:  
+
+            if (which_god == GOD_BAHAMUT_TIAMAT)
+                return uppercase_first(godname) + " are pleased with you.";
+            return uppercase_first(godname) + " is pleased with you.";
+
+        case 2:
+
+            if (which_god == GOD_BAHAMUT_TIAMAT)
+                return uppercase_first(godname) + " are aware of your devotion.";
+            return uppercase_first(godname) + " is aware of your devotion.";
+
+        default:
+
+            if (which_god == GOD_BAHAMUT_TIAMAT)
+                return uppercase_first(godname) + " are noncommittal.";
+            return uppercase_first(godname) + " is noncommittal.";
     }
 }
 
@@ -198,7 +209,7 @@ static const char *divine_title[][8] =
 
     // Fedhas Madash -- nature theme.
     {"@Walking@ Fertiliser", "Fungal",              "Green @Genus@",            "Cultivator",
-        "Fruitful",           "Photosynthesist",       "Green Death",              "Force of Nature"},
+        "Fruitful",           "Photosynthesist",       "gwyrdd",              "Force of Nature"},
 
     // Cheibriados -- slow theme
     {"Hasty",              "Sluggish @Genus@",      "Deliberate",               "Unhurried",
@@ -241,6 +252,10 @@ static const char *divine_title[][8] =
     // Wu Jian -- animal/chinese martial arts monk theme
     {"Wooden Rat",          "Young Dog",             "Young Crane",              "Young Tiger",
         "Young Dragon",     "Red Sash",               "Golden Sash",              "Sifu"},
+
+    // Bahamut/Tiamat -- Duality theme
+    {"Disjointed",          "Entwined",             "Conjoined",                "Dualist",
+        "Merged",           "@Adj@ Unifier",         "Serendipitous",            "XXX"}, // Last one filled in below.
 };
 COMPILE_CHECK(ARRAYSZ(divine_title) == NUM_GODS);
 
@@ -255,6 +270,46 @@ string god_title(god_type which_god, species_type which_species, int piety)
         title = divine_title[which_god][_gold_level()];
     else
         title = divine_title[which_god][_piety_level(piety)];
+
+    if (which_god == GOD_BAHAMUT_TIAMAT && (_piety_level(piety) == 7))
+    {
+        int aspect_count = 0;
+        if (you.props.exists(BAHAMUT_TIAMAT_CHOICE0_KEY))
+        {
+            if (you.props[BAHAMUT_TIAMAT_CHOICE0_KEY].get_bool())
+                aspect_count++;
+            else
+                aspect_count--;
+        }
+        if (you.props.exists(BAHAMUT_TIAMAT_CHOICE1_KEY))
+        {
+            if (you.props[BAHAMUT_TIAMAT_CHOICE1_KEY].get_bool())
+                aspect_count++;
+            else
+                aspect_count--;
+        }
+        if (you.props.exists(BAHAMUT_TIAMAT_CHOICE2_KEY))
+        {
+            if (you.props[BAHAMUT_TIAMAT_CHOICE2_KEY].get_bool())
+                aspect_count++;
+            else
+                aspect_count--;
+        }
+        if (you.props.exists(BAHAMUT_TIAMAT_CHOICE3_KEY))
+        {
+            if (you.props[BAHAMUT_TIAMAT_CHOICE3_KEY].get_bool())
+                aspect_count++;
+            else
+                aspect_count--;
+        }
+
+        if (aspect_count > 0)
+            title = "Aspect of Bahamut";
+        else if (aspect_count < 0)
+            title = "Aspect of Tiamat";
+        else // if (aspect_count == 0)
+            title = "Aspect of Ouroboros";
+    } 
 
     const map<string, string> replacements =
     {
@@ -271,8 +326,8 @@ static string _describe_ash_skill_boost()
 {
     if (!you.bondage_level)
     {
-        return "Ashenzari won't support your skills until you bind yourself "
-               "with cursed items.";
+        return "Ashenzari won't support your skills until you accept your "
+               "impermanence by using fragile items.";
     }
 
     static const char* bondage_parts[NUM_ET] = { "Right hand", "Left hand",
@@ -509,7 +564,7 @@ static string _describe_god_wrath_causes(god_type which_god)
                    " later take up the worship of an evil god will be"
                    " punished. (" +
                    comma_separated_fn(begin(evil_gods), end(evil_gods),
-                                      bind(god_name, placeholders::_1, false)) +
+                                      bind(god_name, placeholders::_1, false, false)) +
                    " are evil gods.)";
 
         case GOD_ZIN:
@@ -518,11 +573,15 @@ static string _describe_god_wrath_causes(god_type which_god)
                    " later take up the worship of an evil or chaotic god will"
                    " be scourged. (" +
                    comma_separated_fn(begin(evil_gods), end(evil_gods),
-                                      bind(god_name, placeholders::_1, false)) +
+                                      bind(god_name, placeholders::_1, false, false)) +
                    " are evil, and " +
                    comma_separated_fn(begin(chaotic_gods), end(chaotic_gods),
-                                      bind(god_name, placeholders::_1, false)) +
+                                      bind(god_name, placeholders::_1, false, false)) +
                    " are chaotic.)";
+        case GOD_BAHAMUT_TIAMAT: // More plurals
+            return uppercase_first(god_name(which_god)) +
+                " do not appreciate abandonment, and will call down"
+                " fearful punishments on disloyal followers!";
         default:
             return uppercase_first(god_name(which_god)) +
                    " does not appreciate abandonment, and will call down"
@@ -543,9 +602,14 @@ static formatted_string _god_wrath_description(god_type which_god)
     _add_par(desc, _describe_god_wrath_causes(which_god));
     _add_par(desc, getLongDescription(god_name(which_god) + " wrath"));
 
-    if (which_god != GOD_RU) // Permanent wrath.
+    const bool long_wrath = initial_wrath_penance_for(which_god) > 30;
+    if (which_god == GOD_BAHAMUT_TIAMAT) // ...Plurals (yes I could fix this value; but I may mutate the duration.
     {
-        const bool long_wrath = initial_wrath_penance_for(which_god) > 30;
+        _add_par(desc, make_stringf("The wrath of the twin serpents lasts for a relatively %s duration.", 
+                              long_wrath ? "long" : "short"));
+    }
+    else if (which_god != GOD_RU) // Permanent wrath.
+    {
         _add_par(desc, apostrophise(uppercase_first(god_name(which_god)))
                               + " wrath lasts for a relatively " +
                               (long_wrath ? "long" : "short") + " duration.");
@@ -574,37 +638,25 @@ static formatted_string _beogh_extra_description()
         [] (monster* a, monster* b) { return a->experience > b->experience;});
 
     bool has_named_followers = false;
+    bool red = true;
     for (auto mons : followers)
     {
         if (!mons->is_named()) continue;
         has_named_followers = true;
 
-        desc += formatted_string(mons->full_name(DESC_PLAIN).c_str());
         if (companion_is_elsewhere(mons->mid))
         {
+            desc += formatted_string(mons->full_name(DESC_PLAIN).c_str());
             desc += formatted_string::parse_string(
                             " (<blue>on another level</blue>)");
         }
-        else if (given_gift(mons))
+        else
         {
-            mon_inv_type slot =
-                mons->props.exists(BEOGH_SH_GIFT_KEY) ? MSLOT_SHIELD :
-                mons->props.exists(BEOGH_ARM_GIFT_KEY) ? MSLOT_ARMOUR :
-                mons->props.exists(BEOGH_RANGE_WPN_GIFT_KEY) ? MSLOT_ALT_WEAPON :
-                MSLOT_WEAPON;
-
-            // An orc can still lose its gift, e.g. by being turned into a
-            // shapeshifter via a chaos cloud. TODO: should the gift prop be
-            // deleted at that point?
-            if (mons->inv[slot] != NON_ITEM)
-            {
-                desc.cprintf(" (");
-
-                item_def &gift = mitm[mons->inv[slot]];
-                desc += formatted_string::parse_string(
-                                    menu_colour_item_name(gift,DESC_PLAIN));
-                desc.cprintf(")");
-            }
+            if (red)
+                desc += formatted_string::parse_string("<lightred>" + get_monster_equipment_desc(*mons) + "</lightred>");
+            else
+                desc += formatted_string::parse_string("<lightblue>" + get_monster_equipment_desc(*mons) + "</lightblue>");
+            red = !red;
         }
         desc.cprintf("\n");
     }
@@ -623,9 +675,11 @@ static formatted_string _god_extra_description(god_type which_god)
     switch (which_god)
     {
         case GOD_ASHENZARI:
+            desc = formatted_string::parse_string(
+                       getLongDescription(god_name(which_god) + " extra"));
             if (have_passive(passive_t::bondage_skill_boost))
             {
-                _add_par(desc, "Ashenzari supports the following skills because of your curses:");
+                _add_par(desc, "Ashenzari supports the following skills because of your fragility:");
                 _add_par(desc,  _describe_ash_skill_boost());
             }
             break;
@@ -726,8 +780,26 @@ static string _raw_penance_message(god_type which_god)
         }
     }
 
-    const int initial_penance = initial_wrath_penance_for(which_god);
+    if (penance > 0 && is_necro_god(which_god) && is_necro_god(you.religion))
+        return "%s is ambivalent towards you.";
+
     // could do some math tricks to turn this into a table, but it seems fiddly
+    const int initial_penance = initial_wrath_penance_for(which_god);
+
+    // Yay special cases for plurals!
+    if (which_god == GOD_BAHAMUT_TIAMAT)
+    {
+        if (penance > initial_penance * 3 / 4)
+            return "The wrath of %s is upon you!";
+        if (penance > initial_penance / 2)
+            return "%s remember your sins.";
+        if (penance > initial_penance / 4)
+            return "%s's wrath is beginning to fade.";
+        if (penance > 0)
+            return "%s are almost ready to forgive your sins.";
+        return "%s are neutral towards you.";
+    }
+
     if (penance > initial_penance * 3 / 4)
         return "%s's wrath is upon you!";
     if (penance > initial_penance / 2)
@@ -752,6 +824,39 @@ static string _god_penance_message(god_type which_god)
     const string message = _raw_penance_message(which_god);
     return make_stringf(message.c_str(),
                         uppercase_first(god_name(which_god)).c_str());
+}
+
+static int _lifesaving_chance(god_type which_god)
+{
+    const int default_prot_chance = apply_pity(10 + you.piety/10); // chance * 100
+    if (which_god != GOD_ELYVILON)
+        return default_prot_chance;
+
+    switch (elyvilon_lifesaving())
+    {
+        case lifesaving_chance::sometimes:
+            return default_prot_chance + 100 - 3000/you.piety;
+        case lifesaving_chance::always:
+            return 100;
+        default:
+            return default_prot_chance;
+    }
+}
+
+static string _lifesave_desc(god_type which_god)
+{
+    if (which_god != you.religion)
+        return "";
+
+    switch (elyvilon_lifesaving())
+    {
+        case lifesaving_chance::sometimes:
+            return ", especially when called upon";
+        case lifesaving_chance::always:
+            return ", and always does so when called upon";
+        default:
+            return "";
+    }
 }
 
 /**
@@ -785,40 +890,32 @@ static formatted_string _describe_god_powers(god_type which_god)
 
     // mv: Some gods can protect you from harm.
     // The god isn't really protecting the player - only sometimes saving
-    // his life.
-    if (have_passive(passive_t::protect_from_harm))
+    // their life.
+    if (god_gives_passive(which_god, passive_t::protect_from_harm))
     {
         have_any = true;
 
-        int prot_chance = apply_pity(10 + piety/10); // chance * 100
-        const char *when = "";
+        const char *how = "";
+        const string when = _lifesave_desc(which_god).c_str();
+        int prot_chance = 0;
 
-        if (which_god == GOD_ELYVILON)
+        if (which_god == you.religion)
         {
-            switch (elyvilon_lifesaving())
-            {
-                case lifesaving_chance::sometimes:
-                    when = ", especially when called upon";
-                    prot_chance += 100 - 3000/piety;
-                    break;
-                case lifesaving_chance::always:
-                    when = ", and always does so when called upon";
-                    prot_chance = 100;
-                    break;
-                default:
-                    break;
-            }
+            prot_chance = _lifesaving_chance(which_god);
+            how = (prot_chance >= 85) ? "carefully " :
+                  (prot_chance >= 55) ? "often " :
+                  (prot_chance >= 25) ? "sometimes "
+                                      : "occasionally ";
         }
 
-        const char *how = (prot_chance >= 85) ? "carefully" :
-                          (prot_chance >= 55) ? "often" :
-                          (prot_chance >= 25) ? "sometimes"
-                                              : "occasionally";
+        const string substr = prot_chance > 0 ? make_stringf("%d%% ", prot_chance)
+                                              : "";
 
-        desc.cprintf("%s %s watches over you%s.\n",
+        desc.cprintf("%s %swatches over you%s (%sLifesaving).\n",
                 uppercase_first(god_name(which_god)).c_str(),
                 how,
-                when);
+                when.c_str(),
+                substr.c_str());
     }
 
     switch (which_god)
@@ -830,10 +927,24 @@ static formatted_string _describe_god_powers(god_type which_god)
             (piety >= piety_breakpoint(5)) ? "always" :
             (piety >= piety_breakpoint(3)) ? "often" :
             (piety >= piety_breakpoint(1)) ? "sometimes" :
-                                             "occasionally";
+            "occasionally";
 
         desc.cprintf("%s %s shields you from chaos.\n",
-                uppercase_first(god_name(which_god)).c_str(), how);
+            uppercase_first(god_name(which_god)).c_str(), how);
+        break;
+    }
+
+    case GOD_VEHUMET:
+    {
+        have_any = true;
+        if (you.penance[GOD_VEHUMET] || !you_worship(GOD_VEHUMET))
+            desc.textcolour(DARKGREY);
+        else
+            desc.textcolour(god_colour(which_god));
+        const bool spells = (you.num_total_gifts[GOD_VEHUMET] < 14);
+        desc.cprintf("%s grants you gifts of magicals staves%s as you gain piety.\n",
+            uppercase_first(god_name(which_god)).c_str(),
+            spells ? " and the knowledge of destructive spells" : "");
         break;
     }
 
@@ -841,7 +952,7 @@ static formatted_string _describe_god_powers(god_type which_god)
     {
         have_any = true;
         desc.cprintf("%s prevents you from stabbing unaware foes.\n",
-                uppercase_first(god_name(which_god)).c_str());
+            uppercase_first(god_name(which_god)).c_str());
         if (piety < piety_breakpoint(1))
             desc.textcolour(DARKGREY);
         else
@@ -849,10 +960,10 @@ static formatted_string _describe_god_powers(god_type which_god)
         const char *how =
             (piety >= piety_breakpoint(5)) ? "completely" :
             (piety >= piety_breakpoint(3)) ? "mostly" :
-                                             "partially";
+            "partially";
 
         desc.cprintf("%s %s shields you from negative energy.\n",
-                uppercase_first(god_name(which_god)).c_str(), how);
+            uppercase_first(god_name(which_god)).c_str(), how);
 
         const int halo_size = you_worship(which_god) ? you.halo_radius() : -1;
         if (halo_size < 0)
@@ -860,10 +971,10 @@ static formatted_string _describe_god_powers(god_type which_god)
         else
             desc.textcolour(god_colour(which_god));
         desc.cprintf("You radiate a%s righteous aura, and others within it are "
-                "easier to hit.\n",
-                halo_size > 5 ? " large" :
-                halo_size > 3 ? "" :
-                                " small");
+            "easier to hit.\n",
+            halo_size > 5 ? " large" :
+            halo_size > 3 ? "" :
+            " small");
         break;
     }
 
@@ -873,10 +984,8 @@ static formatted_string _describe_god_powers(god_type which_god)
             desc.textcolour(god_colour(which_god));
         else
             desc.textcolour(DARKGREY);
-        desc.cprintf("You gain nutrition%s when your fellow slimes consume items.\n",
-                have_passive(passive_t::slime_hp) ? ", magic and health" :
-                have_passive(passive_t::slime_mp) ? " and magic" :
-                                                    "");
+        desc.cprintf("Slain enemies are immediately consumed in Jiyva %s's sacred slime, granting you nutrition.\n",
+            you.jiyva_second_name.c_str());
         break;
 
     case GOD_FEDHAS:
@@ -896,29 +1005,13 @@ static formatted_string _describe_god_powers(god_type which_god)
         else
             desc.textcolour(DARKGREY);
         desc.cprintf("%s %sslows your movement.\n",
-                uppercase_first(god_name(which_god)).c_str(),
-                piety >= piety_breakpoint(5) ? "greatly " :
-                piety >= piety_breakpoint(2) ? "" :
-                                               "slightly ");
+            uppercase_first(god_name(which_god)).c_str(),
+            piety >= piety_breakpoint(5) ? "greatly " :
+            piety >= piety_breakpoint(2) ? "" :
+            "slightly ");
         desc.cprintf("%s supports your attributes. (+%d)\n",
-                uppercase_first(god_name(which_god)).c_str(),
-                chei_stat_boost(piety));
-        break;
-
-    case GOD_VEHUMET:
-        have_any = true;
-        if (const int numoffers = you.vehumet_gifts.size())
-        {
-            const char* offer = numoffers == 1
-                               ? spell_title(*you.vehumet_gifts.begin())
-                               : "some of Vehumet's most lethal spells";
-            desc.cprintf("You can memorise %s.\n", offer);
-        }
-        else
-        {
-            desc.textcolour(DARKGREY);
-            desc.cprintf("You can memorise some of Vehumet's spells.\n");
-        }
+            uppercase_first(god_name(which_god)).c_str(),
+            chei_stat_boost(piety));
         break;
 
     case GOD_DITHMENOS:
@@ -930,10 +1023,10 @@ static formatted_string _describe_god_powers(god_type which_god)
         else
             desc.textcolour(god_colour(which_god));
         desc.cprintf("You radiate a%s aura of darkness, enhancing your stealth "
-                "and reducing the accuracy of your foes.\n",
-                umbra_size > 5 ? " large" :
-                umbra_size > 3 ? "n" :
-                                 " small");
+            "and reducing the accuracy of your foes.\n",
+            umbra_size > 5 ? " large" :
+            umbra_size > 3 ? "n" :
+            " small");
         break;
     }
 
@@ -941,7 +1034,7 @@ static formatted_string _describe_god_powers(god_type which_god)
         have_any = true;
         desc.cprintf("You passively detect gold.\n");
         desc.cprintf("%s turns your defeated foes' bodies to gold.\n",
-                uppercase_first(god_name(which_god)).c_str());
+            uppercase_first(god_name(which_god)).c_str());
         desc.cprintf("Your enemies may become distracted by gold.\n");
         break;
 
@@ -955,9 +1048,9 @@ static formatted_string _describe_god_powers(god_type which_god)
     {
         have_any = true;
         desc.cprintf("%s prevents your magic from regenerating.\n",
-                uppercase_first(god_name(which_god)).c_str());
+            uppercase_first(god_name(which_god)).c_str());
         desc.cprintf("%s identifies device charges for you.\n",
-                uppercase_first(god_name(which_god)).c_str());
+            uppercase_first(god_name(which_god)).c_str());
         if (!you_foodless(false))
         {
             if (have_passive(passive_t::bottle_mp))
@@ -966,16 +1059,43 @@ static formatted_string _describe_god_powers(god_type which_god)
                 desc.textcolour(DARKGREY);
 
             desc.cprintf("%s will collect and distill excess magic from your "
-                    "kills.\n",
-                    uppercase_first(god_name(which_god)).c_str());
+                "kills.\n",
+                uppercase_first(god_name(which_god)).c_str());
         }
         break;
     }
 #endif
 
+    case GOD_KIKUBAAQUDGHA:
+        have_any = true;
+        desc.cprintf("Any undead you create from corpses or the souls of the recently fallen remain intact longer.\n");
+        break;
+
     case GOD_LUGONU:
         have_any = true;
         desc.cprintf("You are protected from the effects of unwielding distortion weapons.\n");
+        break;
+
+    case GOD_BAHAMUT_TIAMAT:
+        have_any = true;
+        if (you.props.exists(BAHAMUT_TIAMAT_CHOICE0_KEY) || you.props.exists(BAHAMUT_TIAMAT_CHOICE1_KEY)
+            || you.props.exists(BAHAMUT_TIAMAT_CHOICE2_KEY) || you.props.exists(BAHAMUT_TIAMAT_CHOICE3_KEY))
+        {}
+        else
+        {
+            desc.cprintf("You are offered the choice of two abilities multiple times as you gain piety.\n");
+        }
+
+        if (you.props.exists(BAHAMUT_TIAMAT_CHOICE0_KEY))
+        {
+            if (you.props[BAHAMUT_TIAMAT_CHOICE0_KEY].get_bool())
+                desc.cprintf("Bahamut protects you from slowing, confusion, petrification and sleep.\n");
+            else
+            {
+                desc.textcolour(LIGHTGREEN);
+                desc.cprintf("Tiamat may quicken your movements in retribution for hard-hitting and fiery attacks.\n");
+            }
+        }
         break;
 
     default:
@@ -987,11 +1107,34 @@ static formatted_string _describe_god_powers(god_type which_god)
         // hack: don't mention the necronomicon alone unless it
         // wasn't already mentioned by the other description
         if (power.abil == ABIL_KIKU_GIFT_NECRONOMICON
-            && you.species != SP_FELID)
+            && you.species != SP_FELID && you.species != SP_FAIRY)
         {
             continue;
         }
+
+        // BCADNOTE: This will need to be reconsidered if allowing multiple god worship.
+        if (power.rank == 1 && you_worship(GOD_KIKUBAAQUDGHA) && (!you.can_bleed(false) || you.is_fairy()))
+            continue;
+
         have_any = true;
+
+        bool tia = false;
+
+        // Give Tiamat a different god colour than Bahamut.
+        if (power.abil == ABIL_TIAMAT_ADAPTIVE_BREATH || power.abil == ABIL_TIAMAT_DRAGON_BOOK
+            || power.abil == ABIL_TIAMAT_SUMMON_DRAKES || power.abil == ABIL_TIAMAT_RETRIBUTION
+            || power.abil == ABIL_TIAMAT_TRANSFORM || power.abil == ABIL_CHOOSE_TIAMAT_BREATH
+            || power.abil == ABIL_CHOOSE_TIAMAT_DRAKE || power.abil == ABIL_CHOOSE_TIAMAT_TRANSFORM)
+        {
+            tia = true;
+        }
+
+        // The colour stuff doesn't work on webtiles.
+#if defined(USE_TILE_WEB) || defined(DGAMELAUNCH)
+        tia = false;
+#endif
+
+        desc.textcolour(DARKGREY);
 
         if (you_worship(which_god)
             && (power.rank <= 0
@@ -1000,10 +1143,19 @@ static formatted_string _describe_god_powers(god_type which_god)
             && (!player_under_penance()
                 || power.rank == -1))
         {
-            desc.textcolour(god_colour(which_god));
+            if (tia)
+                desc.textcolour(LIGHTGREEN);
+            else
+                desc.textcolour(god_colour(which_god));
         }
+
         else
-            desc.textcolour(DARKGREY);
+        {
+            if (tia)
+                desc.textcolour(GREEN);
+            else
+                desc.textcolour(DARKGREY);
+        }
 
         string buf = power.general;
         if (!isupper(buf[0])) // Complete sentence given?
@@ -1030,7 +1182,7 @@ static formatted_string _god_overview_description(god_type which_god)
 
     // Print god's description.
     const string god_desc = getLongDescription(god_name(which_god));
-    desc += formatted_string(trimmed_string(god_desc) + "\n");
+    desc += trimmed_string(god_desc) + "\n";
 
     // Title only shown for our own god.
     if (you_worship(which_god))
@@ -1072,13 +1224,13 @@ static void build_partial_god_ui(god_type which_god, shared_ptr<ui::Popup>& popu
     topline += formatted_string(uppercase_first(god_name(which_god, true)));
 
     auto vbox = make_shared<Box>(Widget::VERT);
-    vbox->align_cross = Widget::STRETCH;
+    vbox->set_cross_alignment(Widget::STRETCH);
     auto title_hbox = make_shared<Box>(Widget::HORZ);
 
 #ifdef USE_TILE
     auto icon = make_shared<Image>();
     const tileidx_t idx = tileidx_feature_base(altar_for_god(which_god));
-    icon->set_tile(tile_def(idx, get_dngn_tex(idx)));
+    icon->set_tile(tile_def(idx));
     title_hbox->add_child(move(icon));
 #endif
 
@@ -1086,8 +1238,8 @@ static void build_partial_god_ui(god_type which_god, shared_ptr<ui::Popup>& popu
     title->set_margin_for_sdl(0, 0, 0, 16);
     title_hbox->add_child(move(title));
 
-    title_hbox->align_main = Widget::CENTER;
-    title_hbox->align_cross = Widget::CENTER;
+    title_hbox->set_main_alignment(Widget::CENTER);
+    title_hbox->set_cross_alignment(Widget::CENTER);
     vbox->add_child(move(title_hbox));
 
     desc_sw = make_shared<Switcher>();
@@ -1154,6 +1306,24 @@ static void build_partial_god_ui(god_type which_god, shared_ptr<ui::Popup>& popu
     popup = make_shared<ui::Popup>(vbox);
 }
 
+static const string _god_service_fee_description(god_type which_god)
+{
+    const int fee = (which_god == GOD_GOZAG) ? gozag_service_fee() : 0;
+
+    if (which_god == GOD_GOZAG)
+    {
+        if (fee == 0)
+        {
+            return string(" (no fee if you ")
+                          + random_choose("act now", "join today") + ")";
+        }
+        else
+            return make_stringf(" (%d gold; you have %d)", fee, you.gold);
+    }
+
+    return "";
+}
+
 #ifdef USE_TILE_WEB
 static void _send_god_ui(god_type god, bool is_altar)
 {
@@ -1162,7 +1332,7 @@ static void _send_god_ui(god_type god, bool is_altar)
     const tileidx_t idx = tileidx_feature_base(altar_for_god(god));
     tiles.json_open_object("tile");
     tiles.json_write_int("t", idx);
-    tiles.json_write_int("tex", get_dngn_tex(idx));
+    tiles.json_write_int("tex", get_tile_texture(idx));
     tiles.json_close_object();
 
     tiles.json_write_int("colour", god_colour(god));
@@ -1174,7 +1344,7 @@ static void _send_god_ui(god_type god, bool is_altar)
     {
         tiles.json_write_string("title", god_title(god, you.species, you.piety));
         if (god == GOD_ASHENZARI)
-            tiles.json_write_string("bondage", ash_describe_bondage(ETF_ALL, true));
+            tiles.json_write_string("freedom", ash_describe_bondage(ETF_ALL, true));
     }
     tiles.json_write_string("favour", you_worship(god) ?
             _describe_favour(god) : _god_penance_message(god));
@@ -1188,6 +1358,8 @@ static void _send_god_ui(god_type god, bool is_altar)
             _god_wrath_description(god).to_colour_string());
     tiles.json_write_string("extra",
             _god_extra_description(god).to_colour_string());
+    tiles.json_write_string("service_fee",
+            _god_service_fee_description(god));
     tiles.push_ui_layout("describe-god", 1);
 }
 #endif
@@ -1206,10 +1378,8 @@ void describe_god(god_type which_god)
     build_partial_god_ui(which_god, popup, desc_sw, more_sw);
 
     bool done = false;
-    popup->on(Widget::slots.event, [&](wm_event ev) {
-        if (ev.type != WME_KEYDOWN)
-            return false;
-        int key = ev.key.keysym.sym;
+    popup->on_keydown_event([&](const KeyEvent& ev) {
+        const auto key = ev.key();
         if (key == '!' || key == CK_MOUSE_CMD || key == '^')
         {
             int n = (desc_sw->current() + 1) % desc_sw->num_children();
@@ -1221,39 +1391,20 @@ void describe_god(god_type which_god)
 #endif
             return true;
         }
-        return done = !popup->get_child()->on_event(ev);
+        return done = !desc_sw->current_widget()->on_event(ev);
     });
 
 #ifdef USE_TILE_WEB
     _send_god_ui(which_god, false);
+    popup->on_layout_pop([](){ tiles.pop_ui_layout(); });
 #endif
 
     ui::run_layout(popup, done);
-
-#ifdef USE_TILE_WEB
-    tiles.pop_ui_layout();
-#endif
 }
 
 bool describe_god_with_join(god_type which_god)
 {
-    const int fee = (which_god == GOD_GOZAG) ? gozag_service_fee() : 0;
-    string service_fee = "";
-    if (which_god == GOD_GOZAG)
-    {
-        if (fee == 0)
-        {
-            service_fee = string("Gozag will waive the service fee if you ")
-                          + random_choose("act now", "join today") + "!\n";
-        }
-        else
-        {
-            service_fee = make_stringf(
-                    "The service fee for joining is currently %d gold; you"
-                    " have %d.\n",
-                    fee, you.gold);
-        }
-    }
+    const string service_fee = _god_service_fee_description(which_god);
 
     shared_ptr<ui::Popup> popup;
     shared_ptr<Switcher> desc_sw;
@@ -1264,50 +1415,46 @@ bool describe_god_with_join(god_type which_god)
     {
         Text* label = static_cast<Text*>(child.get());
         formatted_string text = label->get_text();
-        text += formatted_string::parse_string("  [<w>Enter</w>]: join religion");
+        text += formatted_string::parse_string("  [<w>J</w>/<w>Enter</w>]: "
+                                               "join");
+
+        // We assume that a player who has enough gold such that
+        // the join fee plus accumulated gold overflows knows what this menu
+        // does.
+        if (text.width() + service_fee.length() + 9 <= MIN_COLS)
+            text += " religion";
+        if (!service_fee.empty())
+            text += service_fee;
         label->set_text(text);
     }
 
     // States for the state machine
     enum join_step_type {
         SHOW = -1, // Show the usual god UI
-        JOIN, // Ask whether to join
         ABANDON, // Ask whether to abandon god, if applicable
     };
 
-    // Add separate text widgets for each of the four possible join-god prompts;
+    // Add separate text widgets the possible abandon-god prompts;
     // then when a different prompt needs to be shown, we switch to that prompt.
     // This is somewhat brittle, but ensures that the UI doesn't resize when
     // switching between prompts.
-    const string prompts[] = {
-        make_stringf("%sDo you wish to %sjoin this religion?",
-                service_fee.c_str(),
-                (you.worshipped[which_god]) ? "re" : ""),
+    const string abandon_prompt =
         make_stringf("Are you sure you want to abandon %s?",
-                god_name(you.religion).c_str())
-    };
-    formatted_string prompt_fs;
-    for (int i = JOIN; i <= ABANDON; i++)
-    {
-        prompt_fs.clear();
-        prompt_fs.textcolour(channel_to_colour(MSGCH_PROMPT));
+                god_name(you.religion).c_str());
+    formatted_string prompt_fs(abandon_prompt, channel_to_colour(MSGCH_PROMPT));
 
-        prompt_fs.cprintf("%s", prompts[i].c_str());
-        more_sw->add_child(make_shared<Text>(prompt_fs));
+    more_sw->add_child(make_shared<Text>(prompt_fs));
 
-        prompt_fs.cprintf(" [Y]es or [n]o only, please.");
-        more_sw->add_child(make_shared<Text>(prompt_fs));
-    }
+    prompt_fs.cprintf(" [Y]es or [n]o only, please.");
+    more_sw->add_child(make_shared<Text>(prompt_fs));
 
     join_step_type step = SHOW;
     bool yesno_only = false;
     bool done = false, join = false;
 
     // The join-god UI state machine transition function
-    popup->on(Widget::slots.event, [&](wm_event ev) {
-        if (ev.type != WME_KEYDOWN)
-            return false;
-        int keyin = ev.key.keysym.sym;
+    popup->on_keydown_event([&](const KeyEvent& ev) {
+        const auto keyin = ev.key();
 
         // Always handle escape and pane-switching keys the same way
         if (keyin == CK_ESCAPE)
@@ -1322,64 +1469,64 @@ bool describe_god_with_join(god_type which_god)
             tiles.ui_state_change("describe-god", 0);
 #endif
             if (step == SHOW)
-                more_sw->current() = n;
-            else
             {
-                yesno_only = false;
-                goto update_ui;
+                more_sw->current() = n;
+                return true;
             }
-            return true;
+            else
+                yesno_only = false;
         }
 
         // Next, allow child widgets to handle scrolling keys
-        if (keyin != ' ' && keyin != CK_ENTER)
-        if (popup->get_child()->on_event(ev))
+        // NOTE: these key exceptions are also specified in ui-layouts.js
+        if (keyin != 'J' && keyin != CK_ENTER)
+        if (desc_sw->current_widget()->on_event(ev))
             return true;
 
-        if (step == SHOW)
+        if (step == ABANDON)
         {
-            step = JOIN;
-            goto update_ui;
-        }
+            if (keyin != 'Y' && toupper_safe(keyin) != 'N')
+                yesno_only = true;
+            else
+                yesno_only = false;
 
-        if (keyin != 'Y' && toupper_safe(keyin) != 'N')
-        {
-            yesno_only = true;
-            goto update_ui;
-        }
-        yesno_only = false;
+            if (toupper_safe(keyin) == 'N')
+            {
+                canned_msg(MSG_OK);
+                return done = true;
+            }
 
-        if (toupper_safe(keyin) == 'N')
+            if (keyin == 'Y')
+                return done = join = true;
+        }
+        else if ((keyin == 'J' || keyin == CK_ENTER) && step == SHOW)
         {
-            canned_msg(MSG_OK);
+            if (you_worship(GOD_NO_GOD))
+                return done = join = true;
+
+            step = ABANDON;
+        }
+        else
             return done = true;
-        }
 
-        if (step == ABANDON || (step == JOIN && you_worship(GOD_NO_GOD)))
-            return done = join = true;
-        step = static_cast<join_step_type>(step + 1);
-
-update_ui:
 #ifdef USE_TILE_WEB
         tiles.json_open_object();
-        string prompt = prompts[step] + (yesno_only ? " [Y]es or [n]o only, please." : "");
+        string prompt = abandon_prompt + (yesno_only ? " [Y]es or [n]o only, please." : "");
         tiles.json_write_string("prompt", prompt);
         tiles.json_write_int("pane", desc_sw->current());
         tiles.ui_state_change("describe-god", 0);
 #endif
-        more_sw->current() = desc_sw->num_children() + step*2 + yesno_only;
+        if (step == ABANDON)
+            more_sw->current() = desc_sw->num_children() + step*2 + yesno_only;
         return true;
     });
 
 #ifdef USE_TILE_WEB
     _send_god_ui(which_god, true);
+    popup->on_layout_pop([](){ tiles.pop_ui_layout(); });
 #endif
 
     ui::run_layout(popup, done);
-
-#ifdef USE_TILE_WEB
-    tiles.pop_ui_layout();
-#endif
 
     return join;
 }

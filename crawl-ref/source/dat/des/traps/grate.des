@@ -19,6 +19,7 @@ function place_grate_trap(e, plate_glyph, grate_glyph)
     local tm = TriggerableFunction:new{func="callback.grate_trap_stepped",
                                        repeated=true, data={triggered=false} }
     tm:add_triggerer(DgnTriggerer:new{type="pressure_plate"})
+
     e.lua_marker(plate_glyph, tm)
     e.lua_marker(plate_glyph, props_marker { plate = 1 })
     e.kfeat(plate_glyph .. ' = pressure plate trap')
@@ -41,19 +42,11 @@ function callback.grate_trap_stepped(data, triggerable, triggerer, marker, ev)
     end
 
     for slave in iter.slave_iterator("grate_trap", 1) do
-        -- Skip squares that are occupied, either by a monster or by the player
-        -- If there is an item on the square it will be destroyed.
-        -- TODO: deal damage to the player / monsters that are caught under a grate!
-        if (dgn.mons_at(slave.x, slave.y) ~= nil or (slave.x == you_x and slave.y == you_y)) then
-            crawl.mpr("You hear a faint grinding sound.")
-        else
-            dgn.terrain_changed(slave.x, slave.y, "iron_grate", false)
-            if (you.see_cell(slave.x, slave.y)) then
-                crawl.mpr("An iron grate slams shut!")
-            else
-                crawl.mpr("You hear an iron grate slam shut!")
-            end
-        end
+        -- Shunts monsters that are on the grate if possible
+		-- If no adjacent tile available to shunt, deals damage.
+		if dgn.is_passable(slave.x,slave.y) then
+			dgn.terrain_changed(slave.x, slave.y, "iron_grate", false, true)
+		end
     end
 
     -- Remove pressure plate(s).
