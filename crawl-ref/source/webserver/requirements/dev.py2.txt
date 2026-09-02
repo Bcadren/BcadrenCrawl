@@ -16,7 +16,7 @@ coverage==5.0.4           # via -r requirements.in/dev.txt
 distlib==0.3.0            # via virtualenv
 entrypoints==0.3          # via flake8
 enum34==1.1.10            # via flake8
-filelock==3.0.12          # via tox, virtualenv
+filelock==3.20.3          # via tox, virtualenv
 flake8-builtins==1.5.2    # via -r requirements.in/dev.txt
 flake8-commas==2.0.0      # via -r requirements.in/dev.txt
 flake8-isort==2.9.0       # via -r requirements.in/dev.txt
