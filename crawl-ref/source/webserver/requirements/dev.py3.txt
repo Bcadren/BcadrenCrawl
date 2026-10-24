@@ -45,5 +45,5 @@ tornado==6.0.4            # via -r requirements.in/base.txt
 tox==3.14.5               # via -r requirements.in/dev.txt
 typed-ast==1.4.1          # via mypy
 typing-extensions==3.7.4.1  # via mypy
-virtualenv==20.0.13       # via tox
+virtualenv==21.14.13       # via tox
 wcwidth==0.1.9            # via pytest
